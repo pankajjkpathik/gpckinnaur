@@ -1,8 +1,18 @@
 // Session configs for staff & student portals. Read on the server only.
+function requireSecret(name: string): string {
+  const value = process.env[name];
+  if (!value || value.length < 32) {
+    throw new Error(
+      `${name} is not set or is too short (must be >=32 chars). Configure it as a project secret.`,
+    );
+  }
+  return value;
+}
+
 export const staffSessionConfig = {
-  password:
-    process.env.STAFF_SESSION_SECRET ||
-    "gpkinnaur_staff_secret_change_in_prod_2024_padding_padding",
+  get password() {
+    return requireSecret("STAFF_SESSION_SECRET");
+  },
   name: "gpk_staff_sid",
   cookie: {
     httpOnly: true,
@@ -14,9 +24,9 @@ export const staffSessionConfig = {
 };
 
 export const studentSessionConfig = {
-  password:
-    process.env.STUDENT_SESSION_SECRET ||
-    "gpkinnaur_student_secret_change_in_prod_2024_padding_padding",
+  get password() {
+    return requireSecret("STUDENT_SESSION_SECRET");
+  },
   name: "gpk_student_sid",
   cookie: {
     httpOnly: true,
