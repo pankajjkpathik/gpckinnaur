@@ -35,9 +35,9 @@ function StaffDashboard() {
     if (!isLoading && !me) navigate({ to: "/staff-login" });
   }, [me, isLoading, navigate]);
 
-  if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
+  if (isLoading || !me || !me.role) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
-  const role = me.role;
+  const role = me.role as string;
   const can = (rs: string[]) => rs.includes(role);
   const showNotices = can(["super_admin", "principal", "hod"]);
   const showMats = can(["super_admin", "principal", "hod", "faculty"]);

@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentPortalRouteImport } from './routes/student-portal'
 import { Route as StudentLoginRouteImport } from './routes/student-login'
+import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
 import { Route as StaffLoginRouteImport } from './routes/staff-login'
+import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
@@ -35,9 +37,19 @@ const StudentLoginRoute = StudentLoginRouteImport.update({
   path: '/student-login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentDashboardRoute = StudentDashboardRouteImport.update({
+  id: '/student-dashboard',
+  path: '/student-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StaffLoginRoute = StaffLoginRouteImport.update({
   id: '/staff-login',
   path: '/staff-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffDashboardRoute = StaffDashboardRouteImport.update({
+  id: '/staff-dashboard',
+  path: '/staff-dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -107,7 +119,9 @@ export interface FileRoutesByFullPath {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/alumni/register': typeof AlumniRegisterRoute
@@ -124,7 +138,9 @@ export interface FileRoutesByTo {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/alumni/register': typeof AlumniRegisterRoute
@@ -142,7 +158,9 @@ export interface FileRoutesById {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/alumni/register': typeof AlumniRegisterRoute
@@ -161,7 +179,9 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/staff-dashboard'
     | '/staff-login'
+    | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
     | '/alumni/register'
@@ -178,7 +198,9 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/staff-dashboard'
     | '/staff-login'
+    | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
     | '/alumni/register'
@@ -195,7 +217,9 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/staff-dashboard'
     | '/staff-login'
+    | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
     | '/alumni/register'
@@ -213,7 +237,9 @@ export interface RootRouteChildren {
   AdmissionsRoute: typeof AdmissionsRoute
   AntiRaggingRoute: typeof AntiRaggingRoute
   ContactRoute: typeof ContactRoute
+  StaffDashboardRoute: typeof StaffDashboardRoute
   StaffLoginRoute: typeof StaffLoginRoute
+  StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLoginRoute: typeof StudentLoginRoute
   StudentPortalRoute: typeof StudentPortalRoute
   AlumniRegisterRoute: typeof AlumniRegisterRoute
@@ -241,11 +267,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student-dashboard': {
+      id: '/student-dashboard'
+      path: '/student-dashboard'
+      fullPath: '/student-dashboard'
+      preLoaderRoute: typeof StudentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/staff-login': {
       id: '/staff-login'
       path: '/staff-login'
       fullPath: '/staff-login'
       preLoaderRoute: typeof StaffLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-dashboard': {
+      id: '/staff-dashboard'
+      path: '/staff-dashboard'
+      fullPath: '/staff-dashboard'
+      preLoaderRoute: typeof StaffDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -341,7 +381,9 @@ const rootRouteChildren: RootRouteChildren = {
   AdmissionsRoute: AdmissionsRoute,
   AntiRaggingRoute: AntiRaggingRoute,
   ContactRoute: ContactRoute,
+  StaffDashboardRoute: StaffDashboardRoute,
   StaffLoginRoute: StaffLoginRoute,
+  StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,
   StudentPortalRoute: StudentPortalRoute,
   AlumniRegisterRoute: AlumniRegisterRoute,
