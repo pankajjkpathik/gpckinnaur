@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { useSession } from "@tanstack/react-start/server";
 import { z } from "zod";
 import {
+  getStaffSessionSecretIssue,
+  getStudentSessionSecretIssue,
   staffSessionConfig,
   studentSessionConfig,
   type StaffSession,
@@ -15,6 +17,8 @@ export const staffLogin = createServerFn({ method: "POST" })
     z.object({ username: z.string().min(1), password: z.string().min(1) }).parse(d),
   )
   .handler(async ({ data }) => {
+    const secretIssue = getStaffSessionSecretIssue();
+    if (secretIssue) throw new Error(secretIssue);
     const bcrypt = (await import("bcryptjs")).default;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
@@ -47,6 +51,7 @@ export const staffLogout = createServerFn({ method: "POST" }).handler(async () =
 });
 
 export const staffMe = createServerFn({ method: "GET" }).handler(async () => {
+  if (getStaffSessionSecretIssue()) return null;
   const session = await useSession<StaffSession>(staffSessionConfig);
   return session.data?.id ? session.data : null;
 });
@@ -85,6 +90,8 @@ export const studentLogin = createServerFn({ method: "POST" })
     z.object({ enrollmentNo: z.string().min(1), password: z.string().min(1) }).parse(d),
   )
   .handler(async ({ data }) => {
+    const secretIssue = getStudentSessionSecretIssue();
+    if (secretIssue) throw new Error(secretIssue);
     const bcrypt = (await import("bcryptjs")).default;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
@@ -115,6 +122,7 @@ export const studentLogout = createServerFn({ method: "POST" }).handler(async ()
 });
 
 export const studentMe = createServerFn({ method: "GET" }).handler(async () => {
+  if (getStudentSessionSecretIssue()) return null;
   const session = await useSession<StudentSession>(studentSessionConfig);
   if (!session.data?.id) return null;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

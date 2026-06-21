@@ -1,13 +1,27 @@
 // Session configs for staff & student portals. Read on the server only.
-function requireSecret(name: string): string {
+const MIN_SESSION_SECRET_LENGTH = 32;
+
+export function getSessionSecretIssue(name: string): string | null {
   const value = process.env[name];
-  if (!value || value.length < 32) {
+  if (!value) return `${name} is not configured.`;
+  if (value.length < MIN_SESSION_SECRET_LENGTH) {
+    return `${name} is too short (must be >=${MIN_SESSION_SECRET_LENGTH} chars).`;
+  }
+  return null;
+}
+
+function requireSecret(name: string): string {
+  const issue = getSessionSecretIssue(name);
+  if (issue) {
     throw new Error(
       `${name} is not set or is too short (must be >=32 chars). Configure it as a project secret.`,
     );
   }
-  return value;
+  return process.env[name]!;
 }
+
+export const getStaffSessionSecretIssue = () => getSessionSecretIssue("STAFF_SESSION_SECRET");
+export const getStudentSessionSecretIssue = () => getSessionSecretIssue("STUDENT_SESSION_SECRET");
 
 export const staffSessionConfig = {
   get password() {
