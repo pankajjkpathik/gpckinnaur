@@ -85,7 +85,7 @@ export const markContactRead = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.number() }).parse(d))
   .handler(async ({ data }) => {
     const session = await useSession<StaffSession>(staffSessionConfig);
-    if (!session.data?.id) throw new Error("Not authenticated");
+    requireInboxRole(session.data);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
       .from("contact_submissions")
