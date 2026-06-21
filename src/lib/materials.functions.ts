@@ -43,11 +43,11 @@ export const createMaterial = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await useSession<StaffSession>(staffSessionConfig);
     const user = session.data;
-    if (!user?.id) throw new Error("Not authenticated");
-    if (!["super_admin", "principal", "hod", "faculty"].includes(user.role))
+    if (!user?.id || !user.role) throw new Error("Not authenticated");
+    if (!["super_admin", "principal", "hod", "faculty"].includes(user.role as string))
       throw new Error("Insufficient permissions");
     let dept = data.department;
-    if (["hod", "faculty"].includes(user.role) && user.department) dept = user.department;
+    if (["hod", "faculty"].includes(user.role as string) && user.department) dept = user.department;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("study_materials")
@@ -71,8 +71,8 @@ export const deleteMaterial = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await useSession<StaffSession>(staffSessionConfig);
     const user = session.data;
-    if (!user?.id) throw new Error("Not authenticated");
-    if (!["super_admin", "principal", "hod"].includes(user.role))
+    if (!user?.id || !user.role) throw new Error("Not authenticated");
+    if (!["super_admin", "principal", "hod"].includes(user.role as string))
       throw new Error("Insufficient permissions");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("study_materials").delete().eq("id", data.id);

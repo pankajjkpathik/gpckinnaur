@@ -34,7 +34,7 @@ export const staffLogin = createServerFn({ method: "POST" })
     await session.update({
       id: row.id,
       username: row.username,
-      role: row.role,
+      role: row.role as StaffSession["role"],
       department: row.department,
     });
     return { success: true, role: row.role };

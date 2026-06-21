@@ -63,11 +63,12 @@ export const registerAlumni = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-function requireInboxRole(user: StaffSession | undefined) {
-  if (!user?.id) throw new Error("Not authenticated");
-  if (!["super_admin", "principal", "admin_staff"].includes(user.role))
+function requireInboxRole(user: Partial<StaffSession> | undefined) {
+  if (!user?.id || !user.role) throw new Error("Not authenticated");
+  if (!["super_admin", "principal", "admin_staff"].includes(user.role as string))
     throw new Error("Insufficient permissions");
 }
+
 
 export const listContactSubmissions = createServerFn({ method: "GET" }).handler(async () => {
   const session = await useSession<StaffSession>(staffSessionConfig);
@@ -109,8 +110,8 @@ export const verifyAlumni = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await useSession<StaffSession>(staffSessionConfig);
     const user = session.data;
-    if (!user?.id) throw new Error("Not authenticated");
-    if (!["super_admin", "principal"].includes(user.role))
+    if (!user?.id || !user.role) throw new Error("Not authenticated");
+    if (!["super_admin", "principal"].includes(user.role as string))
       throw new Error("Insufficient permissions");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
