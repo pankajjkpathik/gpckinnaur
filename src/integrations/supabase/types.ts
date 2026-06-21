@@ -14,7 +14,334 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alumni_registrations: {
+        Row: {
+          batch_year: number | null
+          branch: string | null
+          date_of_birth: string | null
+          designation_sector: string | null
+          email: string | null
+          father_name: string | null
+          id: number
+          is_verified: boolean | null
+          name: string | null
+          phone: string | null
+          present_address: string | null
+          profile_type: string | null
+          salary_package: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          batch_year?: number | null
+          branch?: string | null
+          date_of_birth?: string | null
+          designation_sector?: string | null
+          email?: string | null
+          father_name?: string | null
+          id?: never
+          is_verified?: boolean | null
+          name?: string | null
+          phone?: string | null
+          present_address?: string | null
+          profile_type?: string | null
+          salary_package?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          batch_year?: number | null
+          branch?: string | null
+          date_of_birth?: string | null
+          designation_sector?: string | null
+          email?: string | null
+          father_name?: string | null
+          id?: never
+          is_verified?: boolean | null
+          name?: string | null
+          phone?: string | null
+          present_address?: string | null
+          profile_type?: string | null
+          salary_package?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: []
+      }
+      contact_submissions: {
+        Row: {
+          email: string | null
+          id: number
+          is_read: boolean | null
+          message: string | null
+          name: string | null
+          phone: string | null
+          subject: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          email?: string | null
+          id?: never
+          is_read?: boolean | null
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          subject?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          email?: string | null
+          id?: never
+          is_read?: boolean | null
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          subject?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: []
+      }
+      departments: {
+        Row: {
+          code: string
+          description: string | null
+          id: number
+          image: string | null
+          name: string
+        }
+        Insert: {
+          code: string
+          description?: string | null
+          id?: never
+          image?: string | null
+          name: string
+        }
+        Update: {
+          code?: string
+          description?: string | null
+          id?: never
+          image?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          date: string | null
+          description: string | null
+          id: number
+          image: string | null
+          location: string | null
+          title: string
+        }
+        Insert: {
+          date?: string | null
+          description?: string | null
+          id?: never
+          image?: string | null
+          location?: string | null
+          title: string
+        }
+        Update: {
+          date?: string | null
+          description?: string | null
+          id?: never
+          image?: string | null
+          location?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      faculty: {
+        Row: {
+          department_id: number | null
+          designation: string | null
+          email: string | null
+          experience: string | null
+          id: number
+          image: string | null
+          name: string
+          qualification: string | null
+        }
+        Insert: {
+          department_id?: number | null
+          designation?: string | null
+          email?: string | null
+          experience?: string | null
+          id?: never
+          image?: string | null
+          name: string
+          qualification?: string | null
+        }
+        Update: {
+          department_id?: number | null
+          designation?: string | null
+          email?: string | null
+          experience?: string | null
+          id?: never
+          image?: string | null
+          name?: string
+          qualification?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faculty_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notices: {
+        Row: {
+          category: string | null
+          content: string | null
+          date: string | null
+          id: number
+          link: string | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          content?: string | null
+          date?: string | null
+          id?: never
+          link?: string | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          content?: string | null
+          date?: string | null
+          id?: never
+          link?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      staff_users: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          id: number
+          is_active: boolean | null
+          last_login: string | null
+          password_hash: string
+          role: string
+          staff_id: number | null
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          id?: never
+          is_active?: boolean | null
+          last_login?: string | null
+          password_hash: string
+          role: string
+          staff_id?: number | null
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          id?: never
+          is_active?: boolean | null
+          last_login?: string | null
+          password_hash?: string
+          role?: string
+          staff_id?: number | null
+          username?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          batch_year: number
+          branch: string
+          created_at: string | null
+          email: string | null
+          enrollment_no: string
+          father_name: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          password_hash: string
+          phone: string | null
+          semester: number
+        }
+        Insert: {
+          batch_year: number
+          branch: string
+          created_at?: string | null
+          email?: string | null
+          enrollment_no: string
+          father_name?: string | null
+          id?: never
+          is_active?: boolean | null
+          name: string
+          password_hash: string
+          phone?: string | null
+          semester: number
+        }
+        Update: {
+          batch_year?: number
+          branch?: string
+          created_at?: string | null
+          email?: string | null
+          enrollment_no?: string
+          father_name?: string | null
+          id?: never
+          is_active?: boolean | null
+          name?: string
+          password_hash?: string
+          phone?: string | null
+          semester?: number
+        }
+        Relationships: []
+      }
+      study_materials: {
+        Row: {
+          department: string | null
+          file_url: string
+          id: number
+          semester: number | null
+          subject: string | null
+          title: string
+          type: string
+          uploaded_at: string | null
+          uploaded_by: number | null
+        }
+        Insert: {
+          department?: string | null
+          file_url: string
+          id?: never
+          semester?: number | null
+          subject?: string | null
+          title: string
+          type: string
+          uploaded_at?: string | null
+          uploaded_by?: number | null
+        }
+        Update: {
+          department?: string | null
+          file_url?: string
+          id?: never
+          semester?: number | null
+          subject?: string | null
+          title?: string
+          type?: string
+          uploaded_at?: string | null
+          uploaded_by?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_materials_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
