@@ -9,38 +9,313 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StudentPortalRouteImport } from './routes/student-portal'
+import { Route as StudentLoginRouteImport } from './routes/student-login'
+import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
+import { Route as StaffLoginRouteImport } from './routes/staff-login'
+import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
+import { Route as AdmissionsRouteImport } from './routes/admissions'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AlumniIndexRouteImport } from './routes/alumni.index'
+import { Route as StaffNonTeachingRouteImport } from './routes/staff.non-teaching'
+import { Route as StaffFacultyRouteImport } from './routes/staff.faculty'
+import { Route as StaffCommitteesRouteImport } from './routes/staff.committees'
+import { Route as StaffAdminRouteImport } from './routes/staff.admin'
+import { Route as DepartmentsIdRouteImport } from './routes/departments.$id'
+import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 
+const StudentPortalRoute = StudentPortalRouteImport.update({
+  id: '/student-portal',
+  path: '/student-portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentLoginRoute = StudentLoginRouteImport.update({
+  id: '/student-login',
+  path: '/student-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentDashboardRoute = StudentDashboardRouteImport.update({
+  id: '/student-dashboard',
+  path: '/student-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffLoginRoute = StaffLoginRouteImport.update({
+  id: '/staff-login',
+  path: '/staff-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffDashboardRoute = StaffDashboardRouteImport.update({
+  id: '/staff-dashboard',
+  path: '/staff-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AntiRaggingRoute = AntiRaggingRouteImport.update({
+  id: '/anti-ragging',
+  path: '/anti-ragging',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdmissionsRoute = AdmissionsRouteImport.update({
+  id: '/admissions',
+  path: '/admissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlumniIndexRoute = AlumniIndexRouteImport.update({
+  id: '/alumni/',
+  path: '/alumni/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffNonTeachingRoute = StaffNonTeachingRouteImport.update({
+  id: '/staff/non-teaching',
+  path: '/staff/non-teaching',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffFacultyRoute = StaffFacultyRouteImport.update({
+  id: '/staff/faculty',
+  path: '/staff/faculty',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffCommitteesRoute = StaffCommitteesRouteImport.update({
+  id: '/staff/committees',
+  path: '/staff/committees',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAdminRoute = StaffAdminRouteImport.update({
+  id: '/staff/admin',
+  path: '/staff/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DepartmentsIdRoute = DepartmentsIdRouteImport.update({
+  id: '/departments/$id',
+  path: '/departments/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlumniRegisterRoute = AlumniRegisterRouteImport.update({
+  id: '/alumni/register',
+  path: '/alumni/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/admissions': typeof AdmissionsRoute
+  '/anti-ragging': typeof AntiRaggingRoute
+  '/contact': typeof ContactRoute
+  '/staff-dashboard': typeof StaffDashboardRoute
+  '/staff-login': typeof StaffLoginRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/student-login': typeof StudentLoginRoute
+  '/student-portal': typeof StudentPortalRoute
+  '/alumni/register': typeof AlumniRegisterRoute
+  '/departments/$id': typeof DepartmentsIdRoute
+  '/staff/admin': typeof StaffAdminRoute
+  '/staff/committees': typeof StaffCommitteesRoute
+  '/staff/faculty': typeof StaffFacultyRoute
+  '/staff/non-teaching': typeof StaffNonTeachingRoute
+  '/alumni/': typeof AlumniIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/admissions': typeof AdmissionsRoute
+  '/anti-ragging': typeof AntiRaggingRoute
+  '/contact': typeof ContactRoute
+  '/staff-dashboard': typeof StaffDashboardRoute
+  '/staff-login': typeof StaffLoginRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/student-login': typeof StudentLoginRoute
+  '/student-portal': typeof StudentPortalRoute
+  '/alumni/register': typeof AlumniRegisterRoute
+  '/departments/$id': typeof DepartmentsIdRoute
+  '/staff/admin': typeof StaffAdminRoute
+  '/staff/committees': typeof StaffCommitteesRoute
+  '/staff/faculty': typeof StaffFacultyRoute
+  '/staff/non-teaching': typeof StaffNonTeachingRoute
+  '/alumni': typeof AlumniIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/admissions': typeof AdmissionsRoute
+  '/anti-ragging': typeof AntiRaggingRoute
+  '/contact': typeof ContactRoute
+  '/staff-dashboard': typeof StaffDashboardRoute
+  '/staff-login': typeof StaffLoginRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/student-login': typeof StudentLoginRoute
+  '/student-portal': typeof StudentPortalRoute
+  '/alumni/register': typeof AlumniRegisterRoute
+  '/departments/$id': typeof DepartmentsIdRoute
+  '/staff/admin': typeof StaffAdminRoute
+  '/staff/committees': typeof StaffCommitteesRoute
+  '/staff/faculty': typeof StaffFacultyRoute
+  '/staff/non-teaching': typeof StaffNonTeachingRoute
+  '/alumni/': typeof AlumniIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/admissions'
+    | '/anti-ragging'
+    | '/contact'
+    | '/staff-dashboard'
+    | '/staff-login'
+    | '/student-dashboard'
+    | '/student-login'
+    | '/student-portal'
+    | '/alumni/register'
+    | '/departments/$id'
+    | '/staff/admin'
+    | '/staff/committees'
+    | '/staff/faculty'
+    | '/staff/non-teaching'
+    | '/alumni/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/admissions'
+    | '/anti-ragging'
+    | '/contact'
+    | '/staff-dashboard'
+    | '/staff-login'
+    | '/student-dashboard'
+    | '/student-login'
+    | '/student-portal'
+    | '/alumni/register'
+    | '/departments/$id'
+    | '/staff/admin'
+    | '/staff/committees'
+    | '/staff/faculty'
+    | '/staff/non-teaching'
+    | '/alumni'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/admissions'
+    | '/anti-ragging'
+    | '/contact'
+    | '/staff-dashboard'
+    | '/staff-login'
+    | '/student-dashboard'
+    | '/student-login'
+    | '/student-portal'
+    | '/alumni/register'
+    | '/departments/$id'
+    | '/staff/admin'
+    | '/staff/committees'
+    | '/staff/faculty'
+    | '/staff/non-teaching'
+    | '/alumni/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  AdmissionsRoute: typeof AdmissionsRoute
+  AntiRaggingRoute: typeof AntiRaggingRoute
+  ContactRoute: typeof ContactRoute
+  StaffDashboardRoute: typeof StaffDashboardRoute
+  StaffLoginRoute: typeof StaffLoginRoute
+  StudentDashboardRoute: typeof StudentDashboardRoute
+  StudentLoginRoute: typeof StudentLoginRoute
+  StudentPortalRoute: typeof StudentPortalRoute
+  AlumniRegisterRoute: typeof AlumniRegisterRoute
+  DepartmentsIdRoute: typeof DepartmentsIdRoute
+  StaffAdminRoute: typeof StaffAdminRoute
+  StaffCommitteesRoute: typeof StaffCommitteesRoute
+  StaffFacultyRoute: typeof StaffFacultyRoute
+  StaffNonTeachingRoute: typeof StaffNonTeachingRoute
+  AlumniIndexRoute: typeof AlumniIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/student-portal': {
+      id: '/student-portal'
+      path: '/student-portal'
+      fullPath: '/student-portal'
+      preLoaderRoute: typeof StudentPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-login': {
+      id: '/student-login'
+      path: '/student-login'
+      fullPath: '/student-login'
+      preLoaderRoute: typeof StudentLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-dashboard': {
+      id: '/student-dashboard'
+      path: '/student-dashboard'
+      fullPath: '/student-dashboard'
+      preLoaderRoute: typeof StudentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-login': {
+      id: '/staff-login'
+      path: '/staff-login'
+      fullPath: '/staff-login'
+      preLoaderRoute: typeof StaffLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-dashboard': {
+      id: '/staff-dashboard'
+      path: '/staff-dashboard'
+      fullPath: '/staff-dashboard'
+      preLoaderRoute: typeof StaffDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/anti-ragging': {
+      id: '/anti-ragging'
+      path: '/anti-ragging'
+      fullPath: '/anti-ragging'
+      preLoaderRoute: typeof AntiRaggingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admissions': {
+      id: '/admissions'
+      path: '/admissions'
+      fullPath: '/admissions'
+      preLoaderRoute: typeof AdmissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +323,77 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/alumni/': {
+      id: '/alumni/'
+      path: '/alumni'
+      fullPath: '/alumni/'
+      preLoaderRoute: typeof AlumniIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/non-teaching': {
+      id: '/staff/non-teaching'
+      path: '/staff/non-teaching'
+      fullPath: '/staff/non-teaching'
+      preLoaderRoute: typeof StaffNonTeachingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/faculty': {
+      id: '/staff/faculty'
+      path: '/staff/faculty'
+      fullPath: '/staff/faculty'
+      preLoaderRoute: typeof StaffFacultyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/committees': {
+      id: '/staff/committees'
+      path: '/staff/committees'
+      fullPath: '/staff/committees'
+      preLoaderRoute: typeof StaffCommitteesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/admin': {
+      id: '/staff/admin'
+      path: '/staff/admin'
+      fullPath: '/staff/admin'
+      preLoaderRoute: typeof StaffAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/departments/$id': {
+      id: '/departments/$id'
+      path: '/departments/$id'
+      fullPath: '/departments/$id'
+      preLoaderRoute: typeof DepartmentsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alumni/register': {
+      id: '/alumni/register'
+      path: '/alumni/register'
+      fullPath: '/alumni/register'
+      preLoaderRoute: typeof AlumniRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  AdmissionsRoute: AdmissionsRoute,
+  AntiRaggingRoute: AntiRaggingRoute,
+  ContactRoute: ContactRoute,
+  StaffDashboardRoute: StaffDashboardRoute,
+  StaffLoginRoute: StaffLoginRoute,
+  StudentDashboardRoute: StudentDashboardRoute,
+  StudentLoginRoute: StudentLoginRoute,
+  StudentPortalRoute: StudentPortalRoute,
+  AlumniRegisterRoute: AlumniRegisterRoute,
+  DepartmentsIdRoute: DepartmentsIdRoute,
+  StaffAdminRoute: StaffAdminRoute,
+  StaffCommitteesRoute: StaffCommitteesRoute,
+  StaffFacultyRoute: StaffFacultyRoute,
+  StaffNonTeachingRoute: StaffNonTeachingRoute,
+  AlumniIndexRoute: AlumniIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
