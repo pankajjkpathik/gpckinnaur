@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentPortalRouteImport } from './routes/student-portal'
+import { Route as StudentLoginRouteImport } from './routes/student-login'
+import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
@@ -26,6 +28,16 @@ import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 const StudentPortalRoute = StudentPortalRouteImport.update({
   id: '/student-portal',
   path: '/student-portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentLoginRoute = StudentLoginRouteImport.update({
+  id: '/student-login',
+  path: '/student-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffLoginRoute = StaffLoginRouteImport.update({
+  id: '/staff-login',
+  path: '/staff-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -95,6 +107,8 @@ export interface FileRoutesByFullPath {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/staff-login': typeof StaffLoginRoute
+  '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
@@ -110,6 +124,8 @@ export interface FileRoutesByTo {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/staff-login': typeof StaffLoginRoute
+  '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
@@ -126,6 +142,8 @@ export interface FileRoutesById {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/staff-login': typeof StaffLoginRoute
+  '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
@@ -143,6 +161,8 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/staff-login'
+    | '/student-login'
     | '/student-portal'
     | '/alumni/register'
     | '/departments/$id'
@@ -158,6 +178,8 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/staff-login'
+    | '/student-login'
     | '/student-portal'
     | '/alumni/register'
     | '/departments/$id'
@@ -173,6 +195,8 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/staff-login'
+    | '/student-login'
     | '/student-portal'
     | '/alumni/register'
     | '/departments/$id'
@@ -189,6 +213,8 @@ export interface RootRouteChildren {
   AdmissionsRoute: typeof AdmissionsRoute
   AntiRaggingRoute: typeof AntiRaggingRoute
   ContactRoute: typeof ContactRoute
+  StaffLoginRoute: typeof StaffLoginRoute
+  StudentLoginRoute: typeof StudentLoginRoute
   StudentPortalRoute: typeof StudentPortalRoute
   AlumniRegisterRoute: typeof AlumniRegisterRoute
   DepartmentsIdRoute: typeof DepartmentsIdRoute
@@ -206,6 +232,20 @@ declare module '@tanstack/react-router' {
       path: '/student-portal'
       fullPath: '/student-portal'
       preLoaderRoute: typeof StudentPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-login': {
+      id: '/student-login'
+      path: '/student-login'
+      fullPath: '/student-login'
+      preLoaderRoute: typeof StudentLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-login': {
+      id: '/staff-login'
+      path: '/staff-login'
+      fullPath: '/staff-login'
+      preLoaderRoute: typeof StaffLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -301,6 +341,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdmissionsRoute: AdmissionsRoute,
   AntiRaggingRoute: AntiRaggingRoute,
   ContactRoute: ContactRoute,
+  StaffLoginRoute: StaffLoginRoute,
+  StudentLoginRoute: StudentLoginRoute,
   StudentPortalRoute: StudentPortalRoute,
   AlumniRegisterRoute: AlumniRegisterRoute,
   DepartmentsIdRoute: DepartmentsIdRoute,
