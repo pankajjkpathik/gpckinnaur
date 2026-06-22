@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { clerkRoles, requireRole, adminRoles } from "./roles";
+import { clerkRoles, adminRoles } from "./roles";
+import { requireRole } from "./roles.server";
 
 const clerkAccess = clerkRoles.concat(adminRoles);
 

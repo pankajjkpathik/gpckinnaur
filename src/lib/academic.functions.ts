@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { adminRoles, facultyRoles, requireRole, requireStaff } from "./roles";
+import { adminRoles, facultyRoles } from "./roles";
+import { requireRole, requireStaff } from "./roles.server";
 
 const yearRe = /^\d{4}-\d{2}$/; // e.g. 2025-26
 
