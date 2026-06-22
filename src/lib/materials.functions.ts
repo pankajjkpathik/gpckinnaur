@@ -36,7 +36,10 @@ export const createMaterial = createServerFn({ method: "POST" })
         department: z.string(),
         semester: z.number().nullable().optional(),
         subject: z.string().optional(),
-        fileUrl: z.string().min(1),
+        fileUrl: z
+          .string()
+          .url()
+          .refine((v) => /^https?:\/\//i.test(v), { message: "File URL must be http(s)" }),
       })
       .parse(d),
   )
