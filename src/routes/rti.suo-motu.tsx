@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
+import { Download } from "lucide-react";
+import mdRtiPdf from "@/assets/MD-RTI.pdf.asset.json";
 
 export const Route = createFileRoute("/rti/suo-motu")({
   head: () => pageMeta({
