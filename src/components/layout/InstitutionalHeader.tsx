@@ -12,8 +12,8 @@ export function InstitutionalHeader() {
             className="w-16 h-16 object-contain shrink-0"
           />
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[color:var(--navy)] leading-tight">
-              Government Polytechnic, Kinnaur
+            <h1 className="text-xl sm:text-3xl font-bold text-[color:var(--navy)] leading-tight">
+              Government Polytechnic, Kinnaur(HP)
             </h1>
             <p className="text-sm text-muted-foreground">Himachal Pradesh</p>
             <p className="text-xs text-muted-foreground italic">
@@ -30,11 +30,7 @@ export function InstitutionalHeader() {
           </div>
         </div>
         <div className="hidden md:flex items-center">
-          <img
-            src={hpAsset.url}
-            alt="Government of Himachal Pradesh emblem"
-            className="w-20 h-16 object-contain"
-          />
+          <img src={hpAsset.url} alt="Government of Himachal Pradesh emblem" className="w-20 h-16 object-contain" />
         </div>
       </div>
     </header>
