@@ -92,6 +92,7 @@ function CreateStaffForm({ onDone }: { onDone: () => void }) {
         <option value="faculty">Faculty</option>
         <option value="hod">HoD</option>
         <option value="principal">Principal</option>
+        <option value="clerk">Clerk</option>
         <option value="admin_staff">Admin Staff</option>
         <option value="super_admin">Super Admin</option>
       </select>
