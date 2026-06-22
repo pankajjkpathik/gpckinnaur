@@ -43,7 +43,7 @@ const items: Item[] = [
     label: "RTI",
     children: [
       { label: "RTI Home", to: "/rti" },
-      { label: "Mandatory Disclosure", to: "/mandatory-disclosure" },
+      { label: "Disclosure under Section 4(1)B", to: "/mandatory-disclosure" },
       { label: "Suo Motu Disclosure", to: "/rti/suo-motu" },
     ],
   },
