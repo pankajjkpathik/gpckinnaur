@@ -16,6 +16,7 @@ import { NoticeBoard } from "@/components/home/NoticeBoard";
 import { PhotoGallery } from "@/components/home/PhotoGallery";
 import civilAsset from "@/assets/civil.png.asset.json";
 import mechAsset from "@/assets/mech.png.asset.json";
+import s6Asset from "@/assets/s6.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -167,7 +168,7 @@ function Home() {
         </div>
         <div className="relative">
           <img
-            src=s6Asset.url
+            src={s6Asset.url}
             alt="GP Kinnaur campus"
             className="rounded-xl shadow-lg w-full h-[340px] object-cover"
           />
