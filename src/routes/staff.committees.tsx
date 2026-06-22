@@ -1,8 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/staff/committees")({
-  head: () => ({ meta: [{ title: "Committees — GP Kinnaur" }, { name: "description", content: "Institutional committees of GP Kinnaur." }] }),
+  head: () => pageMeta({
+    title: "Institutional Committees — GP Kinnaur",
+    description: "Statutory and institutional committees at GP Kinnaur including IQAC, anti-ragging, grievance redressal and women's grievance cells.",
+    path: "/staff/committees",
+  }),
   component: Committees,
 });
 

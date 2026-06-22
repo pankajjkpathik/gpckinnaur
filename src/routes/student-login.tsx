@@ -5,7 +5,11 @@ import { Eye, EyeOff } from "lucide-react";
 import { studentLogin, studentMe } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/student-login")({
-  head: () => ({ meta: [{ title: "Student Login — GP Kinnaur" }] }),
+  head: () => ({ meta: [
+    { title: "Student Login — GP Kinnaur" },
+    { name: "description", content: "Sign in to the GP Kinnaur student portal to access notices, study materials and academic resources." },
+    { name: "robots", content: "noindex, nofollow" },
+  ] }),
   component: StudentLoginPage,
 });
 
