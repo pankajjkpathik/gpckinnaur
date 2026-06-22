@@ -71,6 +71,7 @@ function StudentDashboard() {
               <p className="font-medium">{me.name}</p>
               <p className="text-xs text-white/80">{me.enrollment_no}</p>
             </div>
+            <Link to="/messages" className="px-3 py-1.5 rounded border border-white/40 text-sm">Messages</Link>
             <a href="/student-change-password" className="px-3 py-1.5 rounded border border-white/40 text-sm">Change Password</a>
             <button onClick={logout} className="px-3 py-1.5 rounded border border-white/40 text-sm">Logout</button>
           </div>
