@@ -4,7 +4,7 @@ const tiles = [
   "Laboratory",
   "Library",
   "Annual Function",
-  "Sports Day",
+  "Sports Day"= src={s5Asset.url},
 ];
 
 export function PhotoGallery() {
