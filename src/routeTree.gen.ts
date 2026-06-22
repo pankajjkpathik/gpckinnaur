@@ -37,6 +37,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RtiIndexRouteImport } from './routes/rti.index'
 import { Route as AlumniIndexRouteImport } from './routes/alumni.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as StaffNonTeachingRouteImport } from './routes/staff.non-teaching'
 import { Route as StaffFacultyRouteImport } from './routes/staff.faculty'
 import { Route as StaffCommitteesRouteImport } from './routes/staff.committees'
@@ -195,6 +196,11 @@ const AlumniIndexRoute = AlumniIndexRouteImport.update({
   path: '/alumni/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const StaffNonTeachingRoute = StaffNonTeachingRouteImport.update({
   id: '/staff/non-teaching',
   path: '/staff/non-teaching',
@@ -325,13 +331,13 @@ export interface FileRoutesByFullPath {
   '/staff/committees': typeof StaffCommitteesRoute
   '/staff/faculty': typeof StaffFacultyRoute
   '/staff/non-teaching': typeof StaffNonTeachingRoute
+  '/admin/': typeof AdminIndexRoute
   '/alumni/': typeof AlumniIndexRoute
   '/rti/': typeof RtiIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRouteWithChildren
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/aicte-approval': typeof AicteApprovalRoute
@@ -372,6 +378,7 @@ export interface FileRoutesByTo {
   '/staff/committees': typeof StaffCommitteesRoute
   '/staff/faculty': typeof StaffFacultyRoute
   '/staff/non-teaching': typeof StaffNonTeachingRoute
+  '/admin': typeof AdminIndexRoute
   '/alumni': typeof AlumniIndexRoute
   '/rti': typeof RtiIndexRoute
 }
@@ -420,6 +427,7 @@ export interface FileRoutesById {
   '/staff/committees': typeof StaffCommitteesRoute
   '/staff/faculty': typeof StaffFacultyRoute
   '/staff/non-teaching': typeof StaffNonTeachingRoute
+  '/admin/': typeof AdminIndexRoute
   '/alumni/': typeof AlumniIndexRoute
   '/rti/': typeof RtiIndexRoute
 }
@@ -469,13 +477,13 @@ export interface FileRouteTypes {
     | '/staff/committees'
     | '/staff/faculty'
     | '/staff/non-teaching'
+    | '/admin/'
     | '/alumni/'
     | '/rti/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
-    | '/admin'
     | '/admin-users'
     | '/admissions'
     | '/aicte-approval'
@@ -516,6 +524,7 @@ export interface FileRouteTypes {
     | '/staff/committees'
     | '/staff/faculty'
     | '/staff/non-teaching'
+    | '/admin'
     | '/alumni'
     | '/rti'
   id:
@@ -563,6 +572,7 @@ export interface FileRouteTypes {
     | '/staff/committees'
     | '/staff/faculty'
     | '/staff/non-teaching'
+    | '/admin/'
     | '/alumni/'
     | '/rti/'
   fileRoutesById: FileRoutesById
@@ -804,6 +814,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlumniIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/staff/non-teaching': {
       id: '/staff/non-teaching'
       path: '/staff/non-teaching'
@@ -936,6 +953,7 @@ interface AdminRouteChildren {
   AdminSubjectsRoute: typeof AdminSubjectsRoute
   AdminSyllabusRoute: typeof AdminSyllabusRoute
   AdminTimetableRoute: typeof AdminTimetableRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -948,6 +966,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSubjectsRoute: AdminSubjectsRoute,
   AdminSyllabusRoute: AdminSyllabusRoute,
   AdminTimetableRoute: AdminTimetableRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
