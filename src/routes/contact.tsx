@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
 import { submitContact } from "@/lib/submissions.functions";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({ meta: [{ title: "Contact — GP Kinnaur" }, { name: "description", content: "Reach out to Government Polytechnic, Kinnaur." }] }),
+  head: () => pageMeta({
+    title: "Contact — GP Kinnaur",
+    description: "Reach Government Polytechnic, Kinnaur — phone, email, office hours and campus address. Send us a message using the contact form.",
+    path: "/contact",
+  }),
   component: Contact,
 });
 
@@ -50,8 +55,8 @@ function Contact() {
                 <Field name="email" type="email" label="Email" required />
                 <Field name="phone" type="tel" label="Phone" />
                 <div>
-                  <label className="text-xs font-medium">Subject *</label>
-                  <select name="subject" required className="mt-1 w-full border rounded-md px-3 py-2 text-sm bg-white">
+                  <label htmlFor="contact-subject" className="text-xs font-medium">Subject *</label>
+                  <select id="contact-subject" name="subject" required className="mt-1 w-full border rounded-md px-3 py-2 text-sm bg-white">
                     <option value="">Select…</option>
                     <option>General Inquiry</option>
                     <option>Admissions</option>
@@ -61,8 +66,8 @@ function Contact() {
                   </select>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-medium">Message *</label>
-                  <textarea name="message" required rows={4} className="mt-1 w-full border rounded-md px-3 py-2 text-sm" />
+                  <label htmlFor="contact-message" className="text-xs font-medium">Message *</label>
+                  <textarea id="contact-message" name="message" required rows={4} className="mt-1 w-full border rounded-md px-3 py-2 text-sm" />
                 </div>
                 {mutation.isError && <p className="sm:col-span-2 text-sm text-destructive">Failed to send. Try again.</p>}
                 <button type="submit" disabled={mutation.isPending} className="sm:col-span-2 bg-[color:var(--navy)] text-white py-3 rounded-md font-semibold disabled:opacity-50">
@@ -99,10 +104,12 @@ function InfoCard({ icon, title, lines }: { icon: string; title: string; lines: 
 }
 function Field(p: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const { label, ...rest } = p;
+  const autoId = useId();
+  const id = rest.id ?? `field-${rest.name ?? autoId}`;
   return (
     <div>
-      <label className="text-xs font-medium">{label}{p.required && " *"}</label>
-      <input {...rest} className="mt-1 w-full border rounded-md px-3 py-2 text-sm" />
+      <label htmlFor={id} className="text-xs font-medium">{label}{p.required && " *"}</label>
+      <input id={id} {...rest} className="mt-1 w-full border rounded-md px-3 py-2 text-sm" />
     </div>
   );
 }

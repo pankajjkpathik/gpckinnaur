@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /staff-login
+Disallow: /student-login
+Disallow: /staff-dashboard
+Disallow: /student-dashboard
+Disallow: /admin-users
+Disallow: /staff-change-password
+Disallow: /student-change-password
+
+Sitemap: https://gpckinnaur.lovable.app/sitemap.xml

@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/admissions")({
-  head: () => ({ meta: [
-    { title: "Admissions 2024-25 — GP Kinnaur" },
-    { name: "description", content: "Apply for the Diploma in Civil & Mechanical Engineering at Government Polytechnic, Kinnaur. Eligibility, fees and important dates." },
-  ] }),
+  head: () => pageMeta({
+    title: "Admissions 2024-25 — GP Kinnaur",
+    description: "Apply for the Diploma in Civil & Mechanical Engineering at GP Kinnaur. Eligibility, fees, important dates and counselling steps.",
+    path: "/admissions",
+  }),
   component: Admissions,
 });
 
