@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
+import { Download } from "lucide-react";
+import mdRtiPdf from "@/assets/MD-RTI.pdf.asset.json";
 
 export const Route = createFileRoute("/rti/suo-motu")({
   head: () => pageMeta({
@@ -67,7 +69,20 @@ function SuoMotu() {
     <PageLayout>
       <Breadcrumb items={[{ label: "Home" }, { label: "RTI" }, { label: "Suo Motu Disclosure" }]} />
       <PageHeader title="Suo Motu Disclosure of More Items" />
-      <div className="container mx-auto px-4 py-10">
+      <div className="container mx-auto px-4 py-10 space-y-6">
+        <div className="bg-secondary/40 border rounded-lg p-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-[color:var(--navy)] font-medium">
+            Full Mandatory Disclosure under RTI Act, 2005
+          </p>
+          <a
+            href={mdRtiPdf.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-md bg-[color:var(--navy)] text-white hover:opacity-90"
+          >
+            <Download className="w-4 h-4" /> Download MD-RTI (PDF)
+          </a>
+        </div>
         <div className="bg-white border rounded-lg p-6">
           <h2 className="text-lg font-bold text-[color:var(--navy)] mb-4">
             Suo motu disclosure of more items under Section 4 of RTI Act, 2005

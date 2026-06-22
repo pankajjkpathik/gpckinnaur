@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
-import { Scale, FileText, User, Clock, AlertCircle } from "lucide-react";
+import { Scale, FileText, User, Clock, AlertCircle, Download } from "lucide-react";
+import rtiActPdf from "@/assets/rti-act.pdf.asset.json";
+import mdRtiPdf from "@/assets/MD-RTI.pdf.asset.json";
 
 export const Route = createFileRoute("/rti/")({
   head: () => pageMeta({
@@ -41,6 +43,14 @@ function RtiHome() {
               Government Polytechnic, Kinnaur, being a public authority, is committed to providing information to
               citizens as per the provisions of the RTI Act, 2005.
             </p>
+            <a
+              href={rtiActPdf.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-md bg-[color:var(--navy)] text-white hover:opacity-90"
+            >
+              <Download className="w-4 h-4" /> Download RTI Act, 2005 (PDF)
+            </a>
           </section>
 
           <section className="bg-white border rounded-lg p-6">
@@ -139,6 +149,25 @@ function RtiHome() {
               BPL (Below Poverty Line) card holders are exempted from paying any fee. Please attach a copy of your
               BPL card with the application.
             </p>
+          </div>
+
+          <div className="bg-white border rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="w-5 h-5 text-[color:var(--navy)]" />
+              <h3 className="font-bold text-[color:var(--navy)]">Important Documents</h3>
+            </div>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <a href={rtiActPdf.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[color:var(--navy)] hover:underline">
+                  <Download className="w-4 h-4" /> RTI Act, 2005 (PDF)
+                </a>
+              </li>
+              <li>
+                <a href={mdRtiPdf.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[color:var(--navy)] hover:underline">
+                  <Download className="w-4 h-4" /> Mandatory Disclosure under RTI (PDF)
+                </a>
+              </li>
+            </ul>
           </div>
 
           <Link to="/rti/suo-motu" className="block text-center bg-[color:var(--navy)] text-white rounded-lg p-4 font-semibold hover:opacity-90">
