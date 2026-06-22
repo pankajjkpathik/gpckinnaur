@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
-import { Scale, FileText, User, Clock, AlertCircle } from "lucide-react";
+import { Scale, FileText, User, Clock, AlertCircle, Download } from "lucide-react";
+import rtiActPdf from "@/assets/rti-act.pdf.asset.json";
+import mdRtiPdf from "@/assets/MD-RTI.pdf.asset.json";
 
 export const Route = createFileRoute("/rti/")({
   head: () => pageMeta({
