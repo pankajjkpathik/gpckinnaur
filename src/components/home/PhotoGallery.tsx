@@ -4,18 +4,15 @@ import seminarAsset from "@/assets/seminar.jpeg.asset.json";
 import vanmahoatsavAsset from "@/assets/vanmahoatsav.jpeg.asset.json";
 import eventAsset from "@/assets/event.jpeg.asset.json";
 import s5Asset from "@/assets/s5.jpeg.asset.json";
-import s3_2Asset from "@/assets/s3-2.jpeg.asset.json";
 
 const tiles = [
   { title: "Campus Building", image: s6Asset.url },
-  { title: "Workshop", image: labAsset.url },
-  { title: "Laboratory", image: seminarAsset.url },
-  { title: "Tree Plantation", image: vanmahoatsavAsset.url },
-  { title: "Annual Function", image: eventAsset.url },
-  { title: "Cultural Day", image: s5Asset.url },
-  { title: "Achievements", image: s3_2Asset.url },
+  { title: "Laboratory", image: labAsset.url },
+  { title: "Seminars", image: seminarAsset.url },
+  { title: "Events", image: vanmahoatsavAsset.url },
+  { title: "Sports", image: eventAsset.url },
+  { title: "Students Events", image: s5Asset.url },
 ];
-
 
 export function PhotoGallery() {
   return (
