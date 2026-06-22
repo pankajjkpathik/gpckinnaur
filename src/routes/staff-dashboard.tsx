@@ -79,23 +79,31 @@ function StaffDashboard() {
           {showInbox && <NavBtn icon={<Mail className="w-4 h-4" />} active={view === "contact"} onClick={() => setView("contact")} label="Contact Inbox" badge={counts?.unreadContact} />}
           {showInbox && <NavBtn icon={<GraduationCap className="w-4 h-4" />} active={view === "alumni"} onClick={() => setView("alumni")} label="Alumni Records" badge={counts?.unverifiedAlumni} />}
           <NavBtn icon={<User className="w-4 h-4" />} active={view === "profile"} onClick={() => setView("profile")} label="My Profile" />
+          {/* Role-scoped portal links — each role sees only what it owns, plus read-only Views for higher roles. */}
           {(role === "super_admin" || role === "admin_staff") && (
-            <a href="/admin" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Admin Console</a>
+            <>
+              <a href="/admin" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Admin Console</a>
+              <a href="/admin-users" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> User Management</a>
+            </>
           )}
-          {(role === "super_admin" || role === "admin_staff") && (
-            <a href="/admin-users" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> User Management</a>
-          )}
-          {(role === "super_admin" || role === "clerk") && (
+          {role === "clerk" && (
             <a href="/clerk" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Clerk Portal</a>
           )}
-          {["super_admin", "principal", "hod", "faculty"].includes(role) && (
+          {role === "faculty" && (
             <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Faculty Portal</a>
           )}
-          {["super_admin", "principal", "hod"].includes(role) && (
-            <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> HOD Portal</a>
+          {role === "hod" && (
+            <>
+              <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> HOD Portal</a>
+              <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Faculty View</a>
+            </>
           )}
-          {["super_admin", "principal"].includes(role) && (
-            <a href="/principal" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Principal Portal</a>
+          {role === "principal" && (
+            <>
+              <a href="/principal" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Principal Portal</a>
+              <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> HOD View</a>
+              <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Faculty View</a>
+            </>
           )}
           <a href="/staff-change-password" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Change Password</a>
         </nav>
