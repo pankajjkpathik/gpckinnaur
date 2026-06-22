@@ -14,6 +14,7 @@ import { Route as StudentPortalRouteImport } from './routes/student-portal'
 import { Route as StudentLoginRouteImport } from './routes/student-login'
 import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
 import { Route as StudentChangePasswordRouteImport } from './routes/student-change-password'
+import { Route as StaffReportsRouteImport } from './routes/staff-reports'
 import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
@@ -47,6 +48,7 @@ import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
 import { Route as AdminSyllabusRouteImport } from './routes/admin.syllabus'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
+import { Route as AdminReportTemplatesRouteImport } from './routes/admin.report-templates'
 import { Route as AdminPeriodsRouteImport } from './routes/admin.periods'
 import { Route as AdminGradingRouteImport } from './routes/admin.grading'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
@@ -76,6 +78,11 @@ const StudentDashboardRoute = StudentDashboardRouteImport.update({
 const StudentChangePasswordRoute = StudentChangePasswordRouteImport.update({
   id: '/student-change-password',
   path: '/student-change-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffReportsRoute = StaffReportsRouteImport.update({
+  id: '/staff-reports',
+  path: '/staff-reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffLoginRoute = StaffLoginRouteImport.update({
@@ -243,6 +250,11 @@ const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
   path: '/subjects',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReportTemplatesRoute = AdminReportTemplatesRouteImport.update({
+  id: '/report-templates',
+  path: '/report-templates',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPeriodsRoute = AdminPeriodsRouteImport.update({
   id: '/periods',
   path: '/periods',
@@ -290,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/staff-reports': typeof StaffReportsRoute
   '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
@@ -300,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -335,6 +349,7 @@ export interface FileRoutesByTo {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/staff-reports': typeof StaffReportsRoute
   '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
@@ -345,6 +360,7 @@ export interface FileRoutesByTo {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -381,6 +397,7 @@ export interface FileRoutesById {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/staff-reports': typeof StaffReportsRoute
   '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
@@ -391,6 +408,7 @@ export interface FileRoutesById {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -428,6 +446,7 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/staff-reports'
     | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
@@ -438,6 +457,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
+    | '/admin/report-templates'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -473,6 +493,7 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/staff-reports'
     | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
@@ -483,6 +504,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
+    | '/admin/report-templates'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -518,6 +540,7 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/staff-reports'
     | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
@@ -528,6 +551,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
+    | '/admin/report-templates'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -564,6 +588,7 @@ export interface RootRouteChildren {
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
   StaffLoginRoute: typeof StaffLoginRoute
+  StaffReportsRoute: typeof StaffReportsRoute
   StudentChangePasswordRoute: typeof StudentChangePasswordRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLoginRoute: typeof StudentLoginRoute
@@ -616,6 +641,13 @@ declare module '@tanstack/react-router' {
       path: '/student-change-password'
       fullPath: '/student-change-password'
       preLoaderRoute: typeof StudentChangePasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-reports': {
+      id: '/staff-reports'
+      path: '/staff-reports'
+      fullPath: '/staff-reports'
+      preLoaderRoute: typeof StaffReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff-login': {
@@ -849,6 +881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubjectsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/report-templates': {
+      id: '/admin/report-templates'
+      path: '/report-templates'
+      fullPath: '/admin/report-templates'
+      preLoaderRoute: typeof AdminReportTemplatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/periods': {
       id: '/admin/periods'
       path: '/periods'
@@ -893,6 +932,7 @@ interface AdminRouteChildren {
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminGradingRoute: typeof AdminGradingRoute
   AdminPeriodsRoute: typeof AdminPeriodsRoute
+  AdminReportTemplatesRoute: typeof AdminReportTemplatesRoute
   AdminSubjectsRoute: typeof AdminSubjectsRoute
   AdminSyllabusRoute: typeof AdminSyllabusRoute
   AdminTimetableRoute: typeof AdminTimetableRoute
@@ -904,6 +944,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCalendarRoute: AdminCalendarRoute,
   AdminGradingRoute: AdminGradingRoute,
   AdminPeriodsRoute: AdminPeriodsRoute,
+  AdminReportTemplatesRoute: AdminReportTemplatesRoute,
   AdminSubjectsRoute: AdminSubjectsRoute,
   AdminSyllabusRoute: AdminSyllabusRoute,
   AdminTimetableRoute: AdminTimetableRoute,
@@ -932,6 +973,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaffChangePasswordRoute: StaffChangePasswordRoute,
   StaffDashboardRoute: StaffDashboardRoute,
   StaffLoginRoute: StaffLoginRoute,
+  StaffReportsRoute: StaffReportsRoute,
   StudentChangePasswordRoute: StudentChangePasswordRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,

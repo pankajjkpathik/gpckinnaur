@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { LogOut, ArrowLeft, MessageSquare } from "lucide-react";
+import { LogOut, ArrowLeft, MessageSquare, FileSpreadsheet } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { staffLogout } from "@/lib/auth.functions";
 import { unreadCount } from "@/lib/messages.functions";
@@ -51,6 +51,9 @@ export function PortalShell({
             <span className="text-xs text-white/80 hidden sm:inline">
               {me.username} · {me.role}
             </span>
+            <Link to="/staff-reports" className="text-xs px-3 py-1.5 border border-white/40 rounded inline-flex items-center gap-1" title="Report Templates">
+              <FileSpreadsheet className="w-3 h-3" /> <span className="hidden sm:inline">Reports</span>
+            </Link>
             <MessagesLink />
             <Link to="/staff-dashboard" className="text-xs px-3 py-1.5 border border-white/40 rounded inline-flex items-center gap-1">
               <ArrowLeft className="w-3 h-3" /> Dashboard

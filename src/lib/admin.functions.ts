@@ -92,6 +92,47 @@ export const adminToggleStaffActive = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const adminUpdateStaff = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({
+      id: z.number().int(),
+      username: z.string().min(3).max(40).optional(),
+      role: z.enum(["super_admin", "principal", "hod", "faculty", "admin_staff", "clerk"]).optional(),
+      department: z.string().optional().nullable(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const me = await requireAdmin();
+    const { id, ...patch } = data;
+    if (patch.role === "super_admin" && me.role !== "super_admin")
+      throw new Error("Only super admin can assign super admin");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("staff_users").update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminDeleteStaff = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
+  .handler(async ({ data }) => {
+    const me = await requireSuperAdmin();
+    if (data.id === me.id) throw new Error("Cannot delete yourself");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("staff_users").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminDeleteStudent = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("students").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // -------- Students --------
 
 export const adminListStudents = createServerFn({ method: "GET" }).handler(async () => {
