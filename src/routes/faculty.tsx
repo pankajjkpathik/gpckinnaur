@@ -143,7 +143,7 @@ function AttendanceTab({ ay, me }: { ay: string; me: any }) {
   const rosterQ = useQuery({
     enabled: !!a && !!pno,
     queryKey: ["att", a?.branch, a?.semester, a?.subject_id, date, pno],
-    queryFn: () => getAttendance({ data: { branch: a.branch, semester: a.semester, subject_id: a.subject_id, date, period_no: Number(pno) } }),
+    queryFn: () => getAttendance({ data: { branch: a!.branch, semester: a!.semester, subject_id: a!.subject_id, date, period_no: Number(pno) } }),
   });
   const [marks, setMarks] = useState<Record<number, string>>({});
   useEffect(() => {
@@ -154,7 +154,7 @@ function AttendanceTab({ ay, me }: { ay: string; me: any }) {
     }
   }, [rosterQ.data]);
   const save = useMutation({
-    mutationFn: () => submitAttendance({ data: { subject_id: a.subject_id, date, period_no: Number(pno), entries: Object.entries(marks).map(([id, st]) => ({ student_id: Number(id), status: st as any })) } }),
+    mutationFn: () => submitAttendance({ data: { subject_id: a!.subject_id, date, period_no: Number(pno), entries: Object.entries(marks).map(([id, st]) => ({ student_id: Number(id), status: st as any })) } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["att"] }),
   });
 
@@ -229,7 +229,7 @@ function MarksTab({ ay, me }: { ay: string; me: any }) {
   const data = useQuery({
     enabled: !!a,
     queryKey: ["marks", a?.subject_id, examType, ay],
-    queryFn: () => getMarks({ data: { branch: a.branch, semester: a.semester, subject_id: a.subject_id, exam_type: examType, academic_year: ay } }),
+    queryFn: () => getMarks({ data: { branch: a!.branch, semester: a!.semester, subject_id: a!.subject_id, exam_type: examType, academic_year: ay } }),
   });
   const [entries, setEntries] = useState<Record<number, { obtained: string; remarks: string }>>({});
   useEffect(() => {
@@ -450,12 +450,12 @@ function ReportsTab({ ay, me }: { ay: string; me: any }) {
   const attQ = useQuery({
     enabled: kind === "attendance" && !!a,
     queryKey: ["att-rep", a?.id, from, to],
-    queryFn: () => attendanceReport({ data: { branch: a.branch, semester: a.semester, subject_id: a.subject_id, from_date: from, to_date: to } }),
+    queryFn: () => attendanceReport({ data: { branch: a!.branch, semester: a!.semester, subject_id: a!.subject_id, from_date: from, to_date: to } }),
   });
   const mkQ = useQuery({
     enabled: kind === "marks" && !!a,
     queryKey: ["marks-rep", a?.id, examType, ay],
-    queryFn: () => marksReport({ data: { branch: a.branch, semester: a.semester, subject_id: a.subject_id, exam_type: examType, academic_year: ay } }),
+    queryFn: () => marksReport({ data: { branch: a!.branch, semester: a!.semester, subject_id: a!.subject_id, exam_type: examType, academic_year: ay } }),
   });
 
   const title = kind === "attendance"
