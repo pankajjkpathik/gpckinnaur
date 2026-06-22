@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BookOpen, Clock, GraduationCap, Calendar, LayoutGrid, UserCheck, Award, Users, ScrollText, MessageSquare,
+  BookOpen, Clock, GraduationCap, Calendar, LayoutGrid, UserCheck, Award, Users, ScrollText, MessageSquare, FileSpreadsheet,
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
@@ -21,6 +21,7 @@ const tiles = [
   { to: "/admin/calendar", icon: Calendar, title: "Academic Calendar", desc: "Semester dates, exams, holidays" },
   { to: "/admin/timetable", icon: LayoutGrid, title: "Timetable Builder", desc: "Class-wise weekly schedule" },
   { to: "/admin/assignments", icon: UserCheck, title: "Faculty Assignments", desc: "Map faculty to subjects & classes" },
+  { to: "/admin/report-templates", icon: FileSpreadsheet, title: "Report Templates", desc: "Upload .xlsx for Attendance, Sessionals, Practicals" },
   { to: "/admin-users", icon: Users, title: "User Management", desc: "Staff & student accounts" },
   { to: "/admin/audit", icon: ScrollText, title: "Audit Log", desc: "System actions & login trail" },
   { to: "/messages", icon: MessageSquare, title: "Messages", desc: "Direct messages to staff & students" },
