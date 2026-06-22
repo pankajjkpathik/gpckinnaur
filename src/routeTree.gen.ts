@@ -17,6 +17,7 @@ import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
+import { Route as AdminUsersRouteImport } from './routes/admin-users'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AlumniIndexRouteImport } from './routes/alumni.index'
@@ -65,6 +66,11 @@ const AntiRaggingRoute = AntiRaggingRouteImport.update({
 const AdmissionsRoute = AdmissionsRouteImport.update({
   id: '/admissions',
   path: '/admissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin-users',
+  path: '/admin-users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -116,6 +122,7 @@ const AlumniRegisterRoute = AlumniRegisterRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
@@ -234,6 +246,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdmissionsRoute: typeof AdmissionsRoute
   AntiRaggingRoute: typeof AntiRaggingRoute
   ContactRoute: typeof ContactRoute
@@ -309,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdmissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-users': {
+      id: '/admin-users'
+      path: '/admin-users'
+      fullPath: '/admin-users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -378,6 +398,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdmissionsRoute: AdmissionsRoute,
   AntiRaggingRoute: AntiRaggingRoute,
   ContactRoute: ContactRoute,
