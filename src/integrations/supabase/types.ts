@@ -651,6 +651,39 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: number
+          read_at: string | null
+          recipient_id: number
+          recipient_kind: string
+          sender_id: number
+          sender_kind: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: number
+          read_at?: string | null
+          recipient_id: number
+          recipient_kind: string
+          sender_id: number
+          sender_kind: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: number
+          read_at?: string | null
+          recipient_id?: number
+          recipient_kind?: string
+          sender_id?: number
+          sender_kind?: string
+        }
+        Relationships: []
+      }
       notices: {
         Row: {
           category: string | null
