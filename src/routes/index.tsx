@@ -14,6 +14,8 @@ import { HeroSlider } from "@/components/home/HeroSlider";
 import { NewsTicker } from "@/components/home/NewsTicker";
 import { NoticeBoard } from "@/components/home/NoticeBoard";
 import { PhotoGallery } from "@/components/home/PhotoGallery";
+import civilAsset from "@/assets/civil.png.asset.json";
+import mechAsset from "@/assets/mech.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -89,8 +91,7 @@ const programs = [
   {
     title: "Department of Civil Engineering",
     blurb: "3-year AICTE-approved diploma in surveying, structures and construction technology.",
-    image:
-      "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=70",
+    image: civilAsset.url,
     accent: "var(--gold)",
     icon: Building2,
     to: "/departments/1",
@@ -98,8 +99,7 @@ const programs = [
   {
     title: "Department of Mechanical Engineering",
     blurb: "3-year AICTE-approved diploma in design, manufacturing and thermal systems.",
-    image:
-      "https://images.unsplash.com/photo-1581091870622-1c6b6e2b5b2d?auto=format&fit=crop&w=1200&q=70",
+    image: mechAsset.url,
     accent: "#3b82f6",
     icon: Hammer,
     to: "/departments/2",
