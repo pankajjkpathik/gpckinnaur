@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
-import pdfAsset from "@/assets/MD-CWP.pdf.asset.json";
+import pdfAsset from "@/assets/MD-RTI.pdf.asset.json";
 
 export const Route = createFileRoute("/mandatory-disclosure")({
   head: () => pageMeta({
