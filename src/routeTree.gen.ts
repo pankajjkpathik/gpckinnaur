@@ -17,6 +17,7 @@ import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as FacultyRouteImport } from './routes/faculty'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ClerkRouteImport } from './routes/clerk'
 import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
@@ -78,6 +79,11 @@ const StaffChangePasswordRoute = StaffChangePasswordRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyRoute = FacultyRouteImport.update({
+  id: '/faculty',
+  path: '/faculty',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/anti-ragging': typeof AntiRaggingRoute
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
+  '/faculty': typeof FacultyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/anti-ragging': typeof AntiRaggingRoute
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
+  '/faculty': typeof FacultyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/anti-ragging': typeof AntiRaggingRoute
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
+  '/faculty': typeof FacultyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/anti-ragging'
     | '/clerk'
     | '/contact'
+    | '/faculty'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/anti-ragging'
     | '/clerk'
     | '/contact'
+    | '/faculty'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/anti-ragging'
     | '/clerk'
     | '/contact'
+    | '/faculty'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -396,6 +408,7 @@ export interface RootRouteChildren {
   AntiRaggingRoute: typeof AntiRaggingRoute
   ClerkRoute: typeof ClerkRoute
   ContactRoute: typeof ContactRoute
+  FacultyRoute: typeof FacultyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
@@ -469,6 +482,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty': {
+      id: '/faculty'
+      path: '/faculty'
+      fullPath: '/faculty'
+      preLoaderRoute: typeof FacultyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -659,6 +679,7 @@ const rootRouteChildren: RootRouteChildren = {
   AntiRaggingRoute: AntiRaggingRoute,
   ClerkRoute: ClerkRoute,
   ContactRoute: ContactRoute,
+  FacultyRoute: FacultyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
   StaffDashboardRoute: StaffDashboardRoute,
