@@ -92,6 +92,9 @@ function StaffDashboard() {
           {["super_admin", "principal", "hod"].includes(role) && (
             <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> HOD Portal</a>
           )}
+          {["super_admin", "principal"].includes(role) && (
+            <a href="/principal" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Principal Portal</a>
+          )}
           <a href="/staff-change-password" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Change Password</a>
         </nav>
         <div className="p-3 border-t border-white/10">
