@@ -133,8 +133,37 @@ function StatCard({ label, value }: { label: string; value: number | string }) {
   );
 }
 
+const portalForRole: Record<string, { href: string; title: string; desc: string; accent: string }[]> = {
+  super_admin: [
+    { href: "/admin", title: "Admin Console", desc: "Master data, timetable, syllabus, calendar", accent: "bg-rose-50 text-rose-700 ring-rose-200" },
+    { href: "/principal", title: "Principal Portal", desc: "Institute-wide monitoring & circulars", accent: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
+    { href: "/hod", title: "HOD Portal", desc: "Approvals & department monitoring", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+    { href: "/faculty", title: "Faculty Portal", desc: "Attendance, marks, lesson plans, leave", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
+    { href: "/clerk", title: "Clerk Portal", desc: "Student & staff records", accent: "bg-amber-50 text-amber-700 ring-amber-200" },
+  ],
+  principal: [
+    { href: "/principal", title: "Open Principal Portal", desc: "Institute-wide monitoring & circulars", accent: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
+    { href: "/hod", title: "HOD View", desc: "Approvals & department drill-down", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+  ],
+  hod: [
+    { href: "/hod", title: "Open HOD Portal", desc: "Approvals & department monitoring", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+    { href: "/faculty", title: "Faculty View", desc: "Mark attendance & enter marks", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
+  ],
+  faculty: [
+    { href: "/faculty", title: "Open Faculty Portal", desc: "Attendance, marks, lesson plans, leave", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
+  ],
+  clerk: [
+    { href: "/clerk", title: "Open Clerk Portal", desc: "Student & staff master records", accent: "bg-amber-50 text-amber-700 ring-amber-200" },
+  ],
+  admin_staff: [
+    { href: "/admin", title: "Open Admin Console", desc: "System configuration", accent: "bg-rose-50 text-rose-700 ring-rose-200" },
+    { href: "/admin-users", title: "User Management", desc: "Staff & student accounts", accent: "bg-slate-50 text-slate-700 ring-slate-200" },
+  ],
+};
+
 function DashboardHome({ me, counts }: any) {
   const { data: notices = [] } = useQuery({ queryKey: ["notices"], queryFn: () => listNotices() });
+  const portals = portalForRole[me.role] ?? [];
   return (
     <div className="space-y-6">
       <div className="bg-white border rounded-lg p-5">
@@ -144,6 +173,23 @@ function DashboardHome({ me, counts }: any) {
           {me.department && <> · Department: <span className="capitalize font-medium">{me.department}</span></>}
         </p>
       </div>
+
+      {portals.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Workspaces</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {portals.map((p) => (
+              <a key={p.href} href={p.href}
+                 className={`block rounded-lg p-4 ring-1 transition hover:shadow-md ${p.accent}`}>
+                <p className="font-semibold">{p.title}</p>
+                <p className="text-xs opacity-80 mt-1">{p.desc}</p>
+                <p className="text-xs font-medium mt-3">Open →</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Total Notices" value={counts?.totalNotices ?? 0} />
         <StatCard label="Study Materials" value={counts?.totalMaterials ?? 0} />
@@ -160,6 +206,7 @@ function DashboardHome({ me, counts }: any) {
               <span className="font-medium">{n.title}</span>
             </li>
           ))}
+          {notices.length === 0 && <li className="px-4 py-6 text-sm text-muted-foreground text-center">No notices yet.</li>}
         </ul>
       </div>
     </div>
