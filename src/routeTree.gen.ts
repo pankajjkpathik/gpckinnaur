@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentPortalRouteImport } from './routes/student-portal'
 import { Route as StudentLoginRouteImport } from './routes/student-login'
 import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
+import { Route as StudentChangePasswordRouteImport } from './routes/student-change-password'
 import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
@@ -42,6 +43,11 @@ const StudentLoginRoute = StudentLoginRouteImport.update({
 const StudentDashboardRoute = StudentDashboardRouteImport.update({
   id: '/student-dashboard',
   path: '/student-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentChangePasswordRoute = StudentChangePasswordRouteImport.update({
+  id: '/student-change-password',
+  path: '/student-change-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffLoginRoute = StaffLoginRouteImport.update({
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
@@ -265,6 +277,7 @@ export interface RootRouteChildren {
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
   StaffLoginRoute: typeof StaffLoginRoute
+  StudentChangePasswordRoute: typeof StudentChangePasswordRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLoginRoute: typeof StudentLoginRoute
   StudentPortalRoute: typeof StudentPortalRoute
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       path: '/student-dashboard'
       fullPath: '/student-dashboard'
       preLoaderRoute: typeof StudentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-change-password': {
+      id: '/student-change-password'
+      path: '/student-change-password'
+      fullPath: '/student-change-password'
+      preLoaderRoute: typeof StudentChangePasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff-login': {
@@ -425,6 +445,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaffChangePasswordRoute: StaffChangePasswordRoute,
   StaffDashboardRoute: StaffDashboardRoute,
   StaffLoginRoute: StaffLoginRoute,
+  StudentChangePasswordRoute: StudentChangePasswordRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,
   StudentPortalRoute: StudentPortalRoute,
