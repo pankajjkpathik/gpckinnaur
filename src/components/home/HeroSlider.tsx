@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import s1Asset from "@/assets/s1.jpg.asset.json";
+import s2Asset from "@/assets/s2.jpg.asset.json";
+import s3Asset from "@/assets/s3.jpg.asset.json";
 
 const slides = [
   {
@@ -8,24 +11,21 @@ const slides = [
     subtitle: "Empowering youth of Kinnaur through quality technical education.",
     cta: "Explore Courses",
     to: "/departments/1",
-    image:
-      "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=70",
+    image: s1Asset.url,
   },
   {
     title: "Admissions Open 2025-26",
     subtitle: "Diploma in Civil & Mechanical Engineering — apply now.",
     cta: "Apply Now",
     to: "/admissions",
-    image:
-      "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1600&q=70",
+    image: s2Asset.url,
   },
   {
     title: "Community & Outreach",
     subtitle: "Engaging with society through meaningful initiatives and programmes.",
     cta: "Learn More",
     to: "/about",
-    image:
-      "https://images.unsplash.com/photo-1532649538693-f3a2ec1bf8bd?auto=format&fit=crop&w=1600&q=70",
+    image: s3Asset.url,
   },
 ];
 
