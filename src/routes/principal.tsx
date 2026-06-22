@@ -42,6 +42,7 @@ function PrincipalPortal() {
             <h1 className="text-2xl font-bold mt-1">Principal Portal</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Link to="/messages" className="text-xs text-white/90 border border-white/40 rounded px-2 py-1 hover:bg-white/10">Messages</Link>
             <label className="text-xs text-white/70">Academic Year</label>
             <input value={year} onChange={(e) => setYear(e.target.value)} className="bg-white/10 border border-white/20 rounded px-2 py-1 text-sm w-24" placeholder="2025-26" />
           </div>
