@@ -6,7 +6,7 @@ import { ArrowLeft, Download } from "lucide-react";
 import { listAuditLog } from "@/lib/audit.functions";
 import { exportRows } from "@/lib/report-export";
 
-export const Route = createFileRoute("/admin.audit")({
+export const Route = createFileRoute("/admin/audit")({
   head: () => ({ meta: [
     { title: "Audit Log — GP Kinnaur" },
     { name: "description", content: "System audit trail of administrative actions." },
