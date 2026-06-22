@@ -106,8 +106,8 @@ function StudentsTab() {
           </tbody>
         </table>
       </div>
-      {adding && <StudentFormModal title="Add Student" requirePassword onClose={() => setAdding(false)} onSave={(d) => create.mutate(d)} pending={create.isPending} error={create.error?.message} />}
-      {editing && <StudentFormModal title={`Edit ${editing.enrollment_no}`} initial={editing} onClose={() => setEditing(null)} onSave={(d) => update.mutate({ id: editing.id, ...d })} pending={update.isPending} error={update.error?.message} />}
+      {adding && <StudentFormModal title="Add Student" requirePassword onClose={() => setAdding(false)} onSave={(d: any) => create.mutate(d)} pending={create.isPending} error={create.error?.message} />}
+      {editing && <StudentFormModal title={`Edit ${editing.enrollment_no}`} initial={editing} onClose={() => setEditing(null)} onSave={(d: any) => update.mutate({ id: editing.id, ...d })} pending={update.isPending} error={update.error?.message} />}
     </div>
   );
 }

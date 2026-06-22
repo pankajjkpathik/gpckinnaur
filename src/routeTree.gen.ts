@@ -18,6 +18,7 @@ import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ClerkRouteImport } from './routes/clerk'
 import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
 import { Route as AdminUsersRouteImport } from './routes/admin-users'
@@ -82,6 +83,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClerkRoute = ClerkRouteImport.update({
+  id: '/clerk',
+  path: '/clerk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AntiRaggingRoute = AntiRaggingRouteImport.update({
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
+  '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
+  '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
+  '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
+    | '/clerk'
     | '/contact'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
+    | '/clerk'
     | '/contact'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
+    | '/clerk'
     | '/contact'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -382,6 +394,7 @@ export interface RootRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AdmissionsRoute: typeof AdmissionsRoute
   AntiRaggingRoute: typeof AntiRaggingRoute
+  ClerkRoute: typeof ClerkRoute
   ContactRoute: typeof ContactRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
@@ -463,6 +476,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clerk': {
+      id: '/clerk'
+      path: '/clerk'
+      fullPath: '/clerk'
+      preLoaderRoute: typeof ClerkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/anti-ragging': {
@@ -637,6 +657,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AdmissionsRoute: AdmissionsRoute,
   AntiRaggingRoute: AntiRaggingRoute,
+  ClerkRoute: ClerkRoute,
   ContactRoute: ContactRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
