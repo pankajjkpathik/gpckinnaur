@@ -166,12 +166,12 @@ function StudentFormModal({ title, initial = {}, requirePassword = false, onClos
   );
 }
 
-const STUDENT_COLS = ["enrollment_no","name","father_name","branch","semester","batch_year","email","phone"] as const;
+const STUDENT_COLS = ["enrollment_no","name","father_name","branch","semester","batch_year","email","phone"];
 
 function downloadSampleXlsx() {
   const wb = XLSX.utils.book_new();
-  const data = [
-    STUDENT_COLS,
+  const data: any[][] = [
+    [...STUDENT_COLS],
     ["CE2301","Ram Kumar","Sham Lal","civil",1,2025,"ram@example.com","9999999999"],
     ["ME2302","Sita Devi","Mohan Lal","mechanical",1,2025,"sita@example.com","9888888888"],
   ];

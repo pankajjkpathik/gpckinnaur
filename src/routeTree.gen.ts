@@ -47,6 +47,7 @@ import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
 import { Route as AdminSyllabusRouteImport } from './routes/admin.syllabus'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
+import { Route as AdminReportTemplatesRouteImport } from './routes/admin.report-templates'
 import { Route as AdminPeriodsRouteImport } from './routes/admin.periods'
 import { Route as AdminGradingRouteImport } from './routes/admin.grading'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
@@ -243,6 +244,11 @@ const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
   path: '/subjects',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReportTemplatesRoute = AdminReportTemplatesRouteImport.update({
+  id: '/report-templates',
+  path: '/report-templates',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPeriodsRoute = AdminPeriodsRouteImport.update({
   id: '/periods',
   path: '/periods',
@@ -300,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByTo {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -438,6 +447,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
+    | '/admin/report-templates'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
+    | '/admin/report-templates'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -528,6 +539,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
+    | '/admin/report-templates'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -849,6 +861,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubjectsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/report-templates': {
+      id: '/admin/report-templates'
+      path: '/report-templates'
+      fullPath: '/admin/report-templates'
+      preLoaderRoute: typeof AdminReportTemplatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/periods': {
       id: '/admin/periods'
       path: '/periods'
@@ -893,6 +912,7 @@ interface AdminRouteChildren {
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminGradingRoute: typeof AdminGradingRoute
   AdminPeriodsRoute: typeof AdminPeriodsRoute
+  AdminReportTemplatesRoute: typeof AdminReportTemplatesRoute
   AdminSubjectsRoute: typeof AdminSubjectsRoute
   AdminSyllabusRoute: typeof AdminSyllabusRoute
   AdminTimetableRoute: typeof AdminTimetableRoute
@@ -904,6 +924,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCalendarRoute: AdminCalendarRoute,
   AdminGradingRoute: AdminGradingRoute,
   AdminPeriodsRoute: AdminPeriodsRoute,
+  AdminReportTemplatesRoute: AdminReportTemplatesRoute,
   AdminSubjectsRoute: AdminSubjectsRoute,
   AdminSyllabusRoute: AdminSyllabusRoute,
   AdminTimetableRoute: AdminTimetableRoute,
