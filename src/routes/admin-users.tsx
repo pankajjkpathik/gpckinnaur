@@ -230,6 +230,7 @@ function StudentPanel({ rows, onChange }: { rows: any[]; onChange: () => void })
   const reset = useMutation({ mutationFn: (d: any) => adminResetStudentPassword({ data: d }), onSuccess: onChange });
   const toggle = useMutation({ mutationFn: (d: any) => adminToggleStudentActive({ data: d }), onSuccess: onChange });
   const [q, setQ] = useState("");
+  const [resetTarget, setResetTarget] = useState<{ id: number; label: string } | null>(null);
   const filtered = rows.filter((r) => !q || r.enrollment_no.toLowerCase().includes(q.toLowerCase()) || r.name.toLowerCase().includes(q.toLowerCase()));
   return (
     <>
@@ -256,10 +257,7 @@ function StudentPanel({ rows, onChange }: { rows: any[]; onChange: () => void })
                 <td className="px-3 py-2">{r.batch_year}</td>
                 <td className="px-3 py-2">{r.is_active ? <span className="text-green-700">Active</span> : <span className="text-rose-700">Disabled</span>}</td>
                 <td className="px-3 py-2 flex gap-2">
-                  <button onClick={() => {
-                    const p = prompt(`New password for ${r.enrollment_no} (min 6 chars):`);
-                    if (p && p.length >= 6) reset.mutate({ id: r.id, newPassword: p });
-                  }} className="text-xs px-2 py-1 border rounded">Reset PW</button>
+                  <button onClick={() => setResetTarget({ id: r.id, label: r.enrollment_no })} className="text-xs px-2 py-1 border rounded">Reset PW</button>
                   <button onClick={() => toggle.mutate({ id: r.id, active: !r.is_active })}
                     className={`text-xs px-2 py-1 rounded ${r.is_active ? "bg-rose-100 text-rose-700" : "bg-green-100 text-green-700"}`}>
                     {r.is_active ? "Disable" : "Enable"}
@@ -270,6 +268,14 @@ function StudentPanel({ rows, onChange }: { rows: any[]; onChange: () => void })
           </tbody>
         </table>
       </div>
+      {resetTarget && (
+        <ResetPasswordDialog
+          label={resetTarget.label}
+          minLen={6}
+          onCancel={() => setResetTarget(null)}
+          onSubmit={(pw) => { reset.mutate({ id: resetTarget.id, newPassword: pw }); setResetTarget(null); }}
+        />
+      )}
     </>
   );
 }
