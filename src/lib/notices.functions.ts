@@ -19,7 +19,12 @@ export const createNotice = createServerFn({ method: "POST" })
         title: z.string().min(1).max(300),
         content: z.string().optional(),
         category: z.string().default("general"),
-        link: z.string().optional(),
+        link: z
+          .string()
+          .url()
+          .refine((v) => /^https?:\/\//i.test(v), { message: "Link must be http(s) URL" })
+          .optional()
+          .or(z.literal("").transform(() => undefined)),
       })
       .parse(d),
   )
