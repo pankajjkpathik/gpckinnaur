@@ -41,6 +41,7 @@ import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
 import { Route as AdminPeriodsRouteImport } from './routes/admin.periods'
 import { Route as AdminGradingRouteImport } from './routes/admin.grading'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAssignmentsRouteImport } from './routes/admin.assignments'
 
 const StudentPortalRoute = StudentPortalRouteImport.update({
@@ -203,6 +204,11 @@ const AdminCalendarRoute = AdminCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAssignmentsRoute = AdminAssignmentsRouteImport.update({
   id: '/assignments',
   path: '/assignments',
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
@@ -338,6 +347,7 @@ export interface FileRouteTypes {
     | '/student-login'
     | '/student-portal'
     | '/admin/assignments'
+    | '/admin/audit'
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
@@ -373,6 +383,7 @@ export interface FileRouteTypes {
     | '/student-login'
     | '/student-portal'
     | '/admin/assignments'
+    | '/admin/audit'
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
@@ -408,6 +419,7 @@ export interface FileRouteTypes {
     | '/student-login'
     | '/student-portal'
     | '/admin/assignments'
+    | '/admin/audit'
     | '/admin/calendar'
     | '/admin/grading'
     | '/admin/periods'
@@ -678,6 +690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCalendarRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/assignments': {
       id: '/admin/assignments'
       path: '/assignments'
@@ -690,6 +709,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAssignmentsRoute: typeof AdminAssignmentsRoute
+  AdminAuditRoute: typeof AdminAuditRoute
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminGradingRoute: typeof AdminGradingRoute
   AdminPeriodsRoute: typeof AdminPeriodsRoute
@@ -700,6 +720,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAssignmentsRoute: AdminAssignmentsRoute,
+  AdminAuditRoute: AdminAuditRoute,
   AdminCalendarRoute: AdminCalendarRoute,
   AdminGradingRoute: AdminGradingRoute,
   AdminPeriodsRoute: AdminPeriodsRoute,
