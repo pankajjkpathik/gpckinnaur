@@ -108,6 +108,7 @@ function CreateStaffForm({ onDone }: { onDone: () => void }) {
 function StaffPanel({ rows, canToggle, onChange }: { rows: any[]; canToggle: boolean; onChange: () => void }) {
   const reset = useMutation({ mutationFn: (d: any) => adminResetStaffPassword({ data: d }), onSuccess: onChange });
   const toggle = useMutation({ mutationFn: (d: any) => adminToggleStaffActive({ data: d }), onSuccess: onChange });
+  const [resetTarget, setResetTarget] = useState<{ id: number; label: string } | null>(null);
   return (
     <>
       <CreateStaffForm onDone={onChange} />
@@ -132,10 +133,7 @@ function StaffPanel({ rows, canToggle, onChange }: { rows: any[]; canToggle: boo
                 <td className="px-3 py-2">{r.is_active ? <span className="text-green-700">Active</span> : <span className="text-rose-700">Disabled</span>}</td>
                 <td className="px-3 py-2 text-xs">{r.last_login ? new Date(r.last_login).toLocaleString() : "—"}</td>
                 <td className="px-3 py-2 flex gap-2">
-                  <button onClick={() => {
-                    const p = prompt(`New password for ${r.username} (min 8 chars):`);
-                    if (p && p.length >= 8) reset.mutate({ id: r.id, newPassword: p });
-                  }} className="text-xs px-2 py-1 border rounded">Reset PW</button>
+                  <button onClick={() => setResetTarget({ id: r.id, label: r.username })} className="text-xs px-2 py-1 border rounded">Reset PW</button>
                   {canToggle && (
                     <button onClick={() => toggle.mutate({ id: r.id, active: !r.is_active })}
                       className={`text-xs px-2 py-1 rounded ${r.is_active ? "bg-rose-100 text-rose-700" : "bg-green-100 text-green-700"}`}>
@@ -148,9 +146,46 @@ function StaffPanel({ rows, canToggle, onChange }: { rows: any[]; canToggle: boo
           </tbody>
         </table>
       </div>
+      {resetTarget && (
+        <ResetPasswordDialog
+          label={resetTarget.label}
+          minLen={8}
+          onCancel={() => setResetTarget(null)}
+          onSubmit={(pw) => { reset.mutate({ id: resetTarget.id, newPassword: pw }); setResetTarget(null); }}
+        />
+      )}
     </>
   );
 }
+
+function ResetPasswordDialog({ label, minLen, onSubmit, onCancel }: { label: string; minLen: number; onSubmit: (pw: string) => void; onCancel: () => void }) {
+  const [pw, setPw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onCancel}>
+      <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-5" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-semibold text-[color:var(--navy)] mb-1">Reset Password</h3>
+        <p className="text-xs text-muted-foreground mb-3">For <b>{label}</b> (min {minLen} chars)</p>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (pw.length < minLen) { setErr(`Must be at least ${minLen} characters`); return; }
+          if (pw !== confirm) { setErr("Passwords do not match"); return; }
+          onSubmit(pw);
+        }} className="space-y-2">
+          <input autoFocus type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password" className="w-full border rounded px-3 py-2 text-sm" />
+          <input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm password" className="w-full border rounded px-3 py-2 text-sm" />
+          {err && <p className="text-xs text-destructive">{err}</p>}
+          <div className="flex gap-2 justify-end pt-1">
+            <button type="button" onClick={onCancel} className="text-sm px-3 py-1.5 border rounded">Cancel</button>
+            <button type="submit" className="text-sm px-3 py-1.5 bg-[color:var(--navy)] text-white rounded">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 
 function CreateStudentForm({ onDone }: { onDone: () => void }) {
   const [msg, setMsg] = useState<string | null>(null);
