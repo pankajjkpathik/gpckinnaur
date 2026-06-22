@@ -1,11 +1,16 @@
+import logoAsset from "@/assets/logo.png.asset.json";
+import hpAsset from "@/assets/hp.png.asset.json";
+
 export function InstitutionalHeader() {
   return (
     <header className="bg-white border-b">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-xl shrink-0">
-            GPK
-          </div>
+          <img
+            src={logoAsset.url}
+            alt="Government Polytechnic Kinnaur logo"
+            className="w-16 h-16 object-contain shrink-0"
+          />
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-[color:var(--navy)] leading-tight">
               Government Polytechnic, Kinnaur
@@ -25,9 +30,11 @@ export function InstitutionalHeader() {
           </div>
         </div>
         <div className="hidden md:flex items-center">
-          <div className="w-16 h-16 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-xs text-center leading-tight">
-            HP<br/>GOVT
-          </div>
+          <img
+            src={hpAsset.url}
+            alt="Government of Himachal Pradesh emblem"
+            className="w-20 h-16 object-contain"
+          />
         </div>
       </div>
     </header>
