@@ -37,7 +37,7 @@ export const adminCreateStaff = createServerFn({ method: "POST" })
     z
       .object({
         username: z.string().min(3).max(40),
-        name: z.string().min(2).max(100),
+        name: z.string().min(2).max(100).optional(),
         role: z.enum(["super_admin", "principal", "hod", "faculty", "admin_staff"]),
         department: z.string().optional().nullable(),
         password: z.string().min(8).max(100),
