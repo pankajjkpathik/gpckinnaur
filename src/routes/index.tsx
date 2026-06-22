@@ -14,6 +14,8 @@ import { HeroSlider } from "@/components/home/HeroSlider";
 import { NewsTicker } from "@/components/home/NewsTicker";
 import { NoticeBoard } from "@/components/home/NoticeBoard";
 import { PhotoGallery } from "@/components/home/PhotoGallery";
+import civilAsset from "@/assets/civil.png.asset.json";
+import mechAsset from "@/assets/mech.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
