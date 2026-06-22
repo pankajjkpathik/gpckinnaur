@@ -10,6 +10,7 @@ import { listMaterials, createMaterial, deleteMaterial } from "@/lib/materials.f
 import {
   listContactSubmissions, markContactRead, listAlumniSubmissions, verifyAlumni, submissionCounts,
 } from "@/lib/submissions.functions";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/staff-dashboard")({
   head: () => ({ meta: [{ title: "Staff Dashboard — GP Kinnaur" }, { name: "description", content: "Staff Dashboard — GP Kinnaur at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -53,7 +54,7 @@ function StaffDashboard() {
       <aside className="w-60 bg-[color:var(--navy)] text-white flex flex-col shrink-0">
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold">GPK</div>
+            <img src={logoAsset.url} alt="GP Kinnaur logo" className="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
             <div>
               <p className="text-xs text-[color:var(--gold)] font-semibold uppercase tracking-wider">Staff Portal</p>
               <p className="text-xs text-white/70">GP Kinnaur</p>
