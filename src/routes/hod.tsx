@@ -10,6 +10,7 @@ import {
 } from "@/lib/hod.functions";
 import { reviewLessonPlan, pendingLeavesForReview, reviewLeave } from "@/lib/faculty.functions";
 import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
+import { BarStats, PieStats } from "@/components/portal/Charts";
 
 export const Route = createFileRoute("/hod")({
   head: () => portalMeta("HOD Portal"),
@@ -78,14 +79,32 @@ function OverviewTab({ ay }: { ay: string }) {
     { label: "Marks batches awaiting approval", value: q.data.pending_marks, color: "bg-amber-100 text-amber-800" },
     { label: "Leave applications pending", value: q.data.pending_leaves, color: "bg-rose-100 text-rose-800" },
   ];
+  const chartData = [
+    { label: "Lessons", value: q.data.pending_lessons },
+    { label: "Marks", value: q.data.pending_marks },
+    { label: "Leaves", value: q.data.pending_leaves },
+  ];
   return (
-    <div className="grid sm:grid-cols-3 gap-4">
-      {cards.map((c) => (
-        <PortalCard key={c.label} className="p-4">
-          <p className="text-xs text-muted-foreground">{c.label}</p>
-          <p className={`text-3xl font-bold mt-1 inline-block px-3 py-1 rounded ${c.color}`}>{c.value}</p>
+    <div className="space-y-4">
+      <div className="grid sm:grid-cols-3 gap-4">
+        {cards.map((c) => (
+          <PortalCard key={c.label} className="p-4">
+            <p className="text-xs text-muted-foreground">{c.label}</p>
+            <p className={`text-3xl font-bold mt-1 inline-block px-3 py-1 rounded ${c.color}`}>{c.value}</p>
+          </PortalCard>
+        ))}
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <PortalCard className="p-4">
+          <SectionTitle>Pending Workload</SectionTitle>
+          <BarStats data={chartData} color="#6366f1" />
         </PortalCard>
-      ))}
+        <PortalCard className="p-4">
+          <SectionTitle>Workload Distribution</SectionTitle>
+          <PieStats data={chartData.filter((d) => d.value > 0)} />
+          {chartData.every((d) => d.value === 0) && <p className="text-xs text-center text-muted-foreground">No pending items — all caught up.</p>}
+        </PortalCard>
+      </div>
     </div>
   );
 }
