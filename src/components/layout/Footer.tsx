@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 export function Footer() {
   return (
@@ -6,7 +7,7 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12 grid md:grid-cols-4 gap-8">
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold">GPK</div>
+            <img src={logoAsset.url} alt="GP Kinnaur logo" className="w-12 h-12 object-contain rounded-full bg-white p-1" />
             <h3 className="text-white font-bold">GP Kinnaur</h3>
           </div>
           <p className="text-sm text-white/70 leading-relaxed">

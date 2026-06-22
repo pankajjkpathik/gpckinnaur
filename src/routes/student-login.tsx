@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
 import { studentLogin, studentMe } from "@/lib/auth.functions";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/student-login")({
   head: () => ({ meta: [
@@ -39,7 +40,7 @@ function StudentLoginPage() {
     <div className="min-h-screen bg-secondary/40 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md bg-white border rounded-lg shadow-sm p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-[color:var(--student)] text-white flex items-center justify-center font-bold">GPK</div>
+          <img src={logoAsset.url} alt="GP Kinnaur logo" className="w-12 h-12 object-contain" />
           <div>
             <p className="font-bold text-[color:var(--student)]">GP Kinnaur</p>
             <p className="text-xs text-muted-foreground">Student Portal</p>

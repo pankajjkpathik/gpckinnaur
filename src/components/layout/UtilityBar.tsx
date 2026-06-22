@@ -10,16 +10,18 @@ export function UtilityBar() {
           <a
             className="px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-500"
             href="https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Online Fee
           </a>
-          <a className="px-3 py-1 rounded-full bg-orange-500 hover:bg-orange-400" href="#">
+          <a className="px-3 py-1 rounded-full bg-orange-500 hover:bg-orange-400" href="/training-placement">
             Placements
           </a>
-          <a className="px-3 py-1 rounded-full bg-sky-600 hover:bg-sky-500" href="#">
+          <a className="px-3 py-1 rounded-full bg-sky-600 hover:bg-sky-500" href="/grievance">
             Student Grievance
           </a>
-          <a className="px-3 py-1 rounded-full border border-white/40 hover:bg-white/10" href="#">
+          <a className="px-3 py-1 rounded-full border border-white/40 hover:bg-white/10" href="/mandatory-disclosure">
             Mandatory Disclosure
           </a>
         </div>
