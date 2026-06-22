@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { useSession } from "@tanstack/react-start/server";
+import { getCookie, useSession } from "@tanstack/react-start/server";
 import { z } from "zod";
 import {
   getStaffSessionSecretIssue,
