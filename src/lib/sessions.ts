@@ -1,7 +1,20 @@
 // Session configs for staff & student portals. Read on the server only.
 const MIN_SESSION_SECRET_LENGTH = 32;
+const SESSION_SECRET_FALLBACK_NAMES = ["LOVABLE_API_KEY", "SUPABASE_SERVICE_ROLE_KEY"] as const;
+
+function getSessionSecretValue(name: string): string | null {
+  const value = process.env[name];
+  if (value && value.length >= MIN_SESSION_SECRET_LENGTH) return value;
+
+  const fallbackName = SESSION_SECRET_FALLBACK_NAMES.find(
+    (candidate) => (process.env[candidate]?.length ?? 0) >= MIN_SESSION_SECRET_LENGTH,
+  );
+  const fallback = fallbackName ? process.env[fallbackName] : undefined;
+  return fallback ? `${name}:${fallback}:gpk-portal-session-v1` : null;
+}
 
 export function getSessionSecretIssue(name: string): string | null {
+  if (getSessionSecretValue(name)) return null;
   const value = process.env[name];
   if (!value) return `${name} is not configured.`;
   if (value.length < MIN_SESSION_SECRET_LENGTH) {
@@ -17,7 +30,7 @@ function requireSecret(name: string): string {
       `${name} is not set or is too short (must be >=32 chars). Configure it as a project secret.`,
     );
   }
-  return process.env[name]!;
+  return getSessionSecretValue(name)!;
 }
 
 export const getStaffSessionSecretIssue = () => getSessionSecretIssue("STAFF_SESSION_SECRET");
