@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrainingPlacementRouteImport } from './routes/training-placement'
 import { Route as StudentPortalRouteImport } from './routes/student-portal'
 import { Route as StudentLoginRouteImport } from './routes/student-login'
 import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
@@ -18,21 +19,27 @@ import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrincipalRouteImport } from './routes/principal'
+import { Route as MandatoryDisclosureRouteImport } from './routes/mandatory-disclosure'
+import { Route as HptsbAffiliationRouteImport } from './routes/hptsb-affiliation'
 import { Route as HodRouteImport } from './routes/hod'
+import { Route as GrievanceRouteImport } from './routes/grievance'
 import { Route as FacultyRouteImport } from './routes/faculty'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ClerkRouteImport } from './routes/clerk'
 import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
+import { Route as AicteApprovalRouteImport } from './routes/aicte-approval'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
 import { Route as AdminUsersRouteImport } from './routes/admin-users'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RtiIndexRouteImport } from './routes/rti.index'
 import { Route as AlumniIndexRouteImport } from './routes/alumni.index'
 import { Route as StaffNonTeachingRouteImport } from './routes/staff.non-teaching'
 import { Route as StaffFacultyRouteImport } from './routes/staff.faculty'
 import { Route as StaffCommitteesRouteImport } from './routes/staff.committees'
 import { Route as StaffAdminRouteImport } from './routes/staff.admin'
+import { Route as RtiSuoMotuRouteImport } from './routes/rti.suo-motu'
 import { Route as DepartmentsIdRouteImport } from './routes/departments.$id'
 import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
@@ -44,6 +51,11 @@ import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAssignmentsRouteImport } from './routes/admin.assignments'
 
+const TrainingPlacementRoute = TrainingPlacementRouteImport.update({
+  id: '/training-placement',
+  path: '/training-placement',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentPortalRoute = StudentPortalRouteImport.update({
   id: '/student-portal',
   path: '/student-portal',
@@ -89,9 +101,24 @@ const PrincipalRoute = PrincipalRouteImport.update({
   path: '/principal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MandatoryDisclosureRoute = MandatoryDisclosureRouteImport.update({
+  id: '/mandatory-disclosure',
+  path: '/mandatory-disclosure',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HptsbAffiliationRoute = HptsbAffiliationRouteImport.update({
+  id: '/hptsb-affiliation',
+  path: '/hptsb-affiliation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HodRoute = HodRouteImport.update({
   id: '/hod',
   path: '/hod',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GrievanceRoute = GrievanceRouteImport.update({
+  id: '/grievance',
+  path: '/grievance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FacultyRoute = FacultyRouteImport.update({
@@ -112,6 +139,11 @@ const ClerkRoute = ClerkRouteImport.update({
 const AntiRaggingRoute = AntiRaggingRouteImport.update({
   id: '/anti-ragging',
   path: '/anti-ragging',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AicteApprovalRoute = AicteApprovalRouteImport.update({
+  id: '/aicte-approval',
+  path: '/aicte-approval',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdmissionsRoute = AdmissionsRouteImport.update({
@@ -139,6 +171,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RtiIndexRoute = RtiIndexRouteImport.update({
+  id: '/rti/',
+  path: '/rti/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AlumniIndexRoute = AlumniIndexRouteImport.update({
   id: '/alumni/',
   path: '/alumni/',
@@ -162,6 +199,11 @@ const StaffCommitteesRoute = StaffCommitteesRouteImport.update({
 const StaffAdminRoute = StaffAdminRouteImport.update({
   id: '/staff/admin',
   path: '/staff/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RtiSuoMotuRoute = RtiSuoMotuRouteImport.update({
+  id: '/rti/suo-motu',
+  path: '/rti/suo-motu',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DepartmentsIdRoute = DepartmentsIdRouteImport.update({
@@ -221,11 +263,15 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
+  '/aicte-approval': typeof AicteApprovalRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
+  '/grievance': typeof GrievanceRoute
   '/hod': typeof HodRoute
+  '/hptsb-affiliation': typeof HptsbAffiliationRoute
+  '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -235,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/training-placement': typeof TrainingPlacementRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
@@ -245,11 +292,13 @@ export interface FileRoutesByFullPath {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
   '/staff/committees': typeof StaffCommitteesRoute
   '/staff/faculty': typeof StaffFacultyRoute
   '/staff/non-teaching': typeof StaffNonTeachingRoute
   '/alumni/': typeof AlumniIndexRoute
+  '/rti/': typeof RtiIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -257,11 +306,15 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRouteWithChildren
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
+  '/aicte-approval': typeof AicteApprovalRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
+  '/grievance': typeof GrievanceRoute
   '/hod': typeof HodRoute
+  '/hptsb-affiliation': typeof HptsbAffiliationRoute
+  '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -271,6 +324,7 @@ export interface FileRoutesByTo {
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/training-placement': typeof TrainingPlacementRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
@@ -281,11 +335,13 @@ export interface FileRoutesByTo {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
   '/staff/committees': typeof StaffCommitteesRoute
   '/staff/faculty': typeof StaffFacultyRoute
   '/staff/non-teaching': typeof StaffNonTeachingRoute
   '/alumni': typeof AlumniIndexRoute
+  '/rti': typeof RtiIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -294,11 +350,15 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
+  '/aicte-approval': typeof AicteApprovalRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
+  '/grievance': typeof GrievanceRoute
   '/hod': typeof HodRoute
+  '/hptsb-affiliation': typeof HptsbAffiliationRoute
+  '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -308,6 +368,7 @@ export interface FileRoutesById {
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/training-placement': typeof TrainingPlacementRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
@@ -318,11 +379,13 @@ export interface FileRoutesById {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
   '/staff/committees': typeof StaffCommitteesRoute
   '/staff/faculty': typeof StaffFacultyRoute
   '/staff/non-teaching': typeof StaffNonTeachingRoute
   '/alumni/': typeof AlumniIndexRoute
+  '/rti/': typeof RtiIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -332,11 +395,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-users'
     | '/admissions'
+    | '/aicte-approval'
     | '/anti-ragging'
     | '/clerk'
     | '/contact'
     | '/faculty'
+    | '/grievance'
     | '/hod'
+    | '/hptsb-affiliation'
+    | '/mandatory-disclosure'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -346,6 +413,7 @@ export interface FileRouteTypes {
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/training-placement'
     | '/admin/assignments'
     | '/admin/audit'
     | '/admin/calendar'
@@ -356,11 +424,13 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/rti/suo-motu'
     | '/staff/admin'
     | '/staff/committees'
     | '/staff/faculty'
     | '/staff/non-teaching'
     | '/alumni/'
+    | '/rti/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -368,11 +438,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-users'
     | '/admissions'
+    | '/aicte-approval'
     | '/anti-ragging'
     | '/clerk'
     | '/contact'
     | '/faculty'
+    | '/grievance'
     | '/hod'
+    | '/hptsb-affiliation'
+    | '/mandatory-disclosure'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -382,6 +456,7 @@ export interface FileRouteTypes {
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/training-placement'
     | '/admin/assignments'
     | '/admin/audit'
     | '/admin/calendar'
@@ -392,11 +467,13 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/rti/suo-motu'
     | '/staff/admin'
     | '/staff/committees'
     | '/staff/faculty'
     | '/staff/non-teaching'
     | '/alumni'
+    | '/rti'
   id:
     | '__root__'
     | '/'
@@ -404,11 +481,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-users'
     | '/admissions'
+    | '/aicte-approval'
     | '/anti-ragging'
     | '/clerk'
     | '/contact'
     | '/faculty'
+    | '/grievance'
     | '/hod'
+    | '/hptsb-affiliation'
+    | '/mandatory-disclosure'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -418,6 +499,7 @@ export interface FileRouteTypes {
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/training-placement'
     | '/admin/assignments'
     | '/admin/audit'
     | '/admin/calendar'
@@ -428,11 +510,13 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/rti/suo-motu'
     | '/staff/admin'
     | '/staff/committees'
     | '/staff/faculty'
     | '/staff/non-teaching'
     | '/alumni/'
+    | '/rti/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -441,11 +525,15 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
   AdmissionsRoute: typeof AdmissionsRoute
+  AicteApprovalRoute: typeof AicteApprovalRoute
   AntiRaggingRoute: typeof AntiRaggingRoute
   ClerkRoute: typeof ClerkRoute
   ContactRoute: typeof ContactRoute
   FacultyRoute: typeof FacultyRoute
+  GrievanceRoute: typeof GrievanceRoute
   HodRoute: typeof HodRoute
+  HptsbAffiliationRoute: typeof HptsbAffiliationRoute
+  MandatoryDisclosureRoute: typeof MandatoryDisclosureRoute
   PrincipalRoute: typeof PrincipalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
@@ -455,17 +543,27 @@ export interface RootRouteChildren {
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLoginRoute: typeof StudentLoginRoute
   StudentPortalRoute: typeof StudentPortalRoute
+  TrainingPlacementRoute: typeof TrainingPlacementRoute
   AlumniRegisterRoute: typeof AlumniRegisterRoute
   DepartmentsIdRoute: typeof DepartmentsIdRoute
+  RtiSuoMotuRoute: typeof RtiSuoMotuRoute
   StaffAdminRoute: typeof StaffAdminRoute
   StaffCommitteesRoute: typeof StaffCommitteesRoute
   StaffFacultyRoute: typeof StaffFacultyRoute
   StaffNonTeachingRoute: typeof StaffNonTeachingRoute
   AlumniIndexRoute: typeof AlumniIndexRoute
+  RtiIndexRoute: typeof RtiIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/training-placement': {
+      id: '/training-placement'
+      path: '/training-placement'
+      fullPath: '/training-placement'
+      preLoaderRoute: typeof TrainingPlacementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student-portal': {
       id: '/student-portal'
       path: '/student-portal'
@@ -529,11 +627,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrincipalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mandatory-disclosure': {
+      id: '/mandatory-disclosure'
+      path: '/mandatory-disclosure'
+      fullPath: '/mandatory-disclosure'
+      preLoaderRoute: typeof MandatoryDisclosureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hptsb-affiliation': {
+      id: '/hptsb-affiliation'
+      path: '/hptsb-affiliation'
+      fullPath: '/hptsb-affiliation'
+      preLoaderRoute: typeof HptsbAffiliationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hod': {
       id: '/hod'
       path: '/hod'
       fullPath: '/hod'
       preLoaderRoute: typeof HodRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grievance': {
+      id: '/grievance'
+      path: '/grievance'
+      fullPath: '/grievance'
+      preLoaderRoute: typeof GrievanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faculty': {
@@ -562,6 +681,13 @@ declare module '@tanstack/react-router' {
       path: '/anti-ragging'
       fullPath: '/anti-ragging'
       preLoaderRoute: typeof AntiRaggingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aicte-approval': {
+      id: '/aicte-approval'
+      path: '/aicte-approval'
+      fullPath: '/aicte-approval'
+      preLoaderRoute: typeof AicteApprovalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admissions': {
@@ -599,6 +725,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rti/': {
+      id: '/rti/'
+      path: '/rti'
+      fullPath: '/rti/'
+      preLoaderRoute: typeof RtiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/alumni/': {
       id: '/alumni/'
       path: '/alumni'
@@ -632,6 +765,13 @@ declare module '@tanstack/react-router' {
       path: '/staff/admin'
       fullPath: '/staff/admin'
       preLoaderRoute: typeof StaffAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rti/suo-motu': {
+      id: '/rti/suo-motu'
+      path: '/rti/suo-motu'
+      fullPath: '/rti/suo-motu'
+      preLoaderRoute: typeof RtiSuoMotuRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/departments/$id': {
@@ -737,11 +877,15 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
   AdmissionsRoute: AdmissionsRoute,
+  AicteApprovalRoute: AicteApprovalRoute,
   AntiRaggingRoute: AntiRaggingRoute,
   ClerkRoute: ClerkRoute,
   ContactRoute: ContactRoute,
   FacultyRoute: FacultyRoute,
+  GrievanceRoute: GrievanceRoute,
   HodRoute: HodRoute,
+  HptsbAffiliationRoute: HptsbAffiliationRoute,
+  MandatoryDisclosureRoute: MandatoryDisclosureRoute,
   PrincipalRoute: PrincipalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
@@ -751,13 +895,16 @@ const rootRouteChildren: RootRouteChildren = {
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,
   StudentPortalRoute: StudentPortalRoute,
+  TrainingPlacementRoute: TrainingPlacementRoute,
   AlumniRegisterRoute: AlumniRegisterRoute,
   DepartmentsIdRoute: DepartmentsIdRoute,
+  RtiSuoMotuRoute: RtiSuoMotuRoute,
   StaffAdminRoute: StaffAdminRoute,
   StaffCommitteesRoute: StaffCommitteesRoute,
   StaffFacultyRoute: StaffFacultyRoute,
   StaffNonTeachingRoute: StaffNonTeachingRoute,
   AlumniIndexRoute: AlumniIndexRoute,
+  RtiIndexRoute: RtiIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

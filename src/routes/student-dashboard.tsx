@@ -11,6 +11,7 @@ import {
   studentSyllabus, studentMyLeaves, studentApplyLeave, studentCancelLeave,
   studentCalendar, studentCirculars,
 } from "@/lib/student.functions";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/student-dashboard")({
   head: () => ({ meta: [{ title: "Student Dashboard — GP Kinnaur" }, { name: "description", content: "Student Dashboard — GP Kinnaur at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -62,7 +63,7 @@ function StudentDashboard() {
       <header className="bg-[color:var(--student)] text-white">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white text-[color:var(--student)] flex items-center justify-center font-bold">GPK</div>
+            <img src={logoAsset.url} alt="GP Kinnaur logo" className="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
             <p className="font-bold">Student Portal</p>
           </div>
           <div className="flex items-center gap-3 text-sm">

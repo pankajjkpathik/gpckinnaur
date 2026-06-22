@@ -10,8 +10,8 @@ const items: Item[] = [
     label: "About",
     children: [
       { label: "Institute", to: "/about" },
-      { label: "AICTE Approval", to: "/about" },
-      { label: "HPTSB Affiliation", to: "/about" },
+      { label: "AICTE Approval", to: "/aicte-approval" },
+      { label: "HPTSB Affiliation", to: "/hptsb-affiliation" },
     ],
   },
   {
@@ -33,6 +33,14 @@ const items: Item[] = [
   },
   { label: "Anti-Ragging", to: "/anti-ragging" },
   {
+    label: "Students Corner",
+    children: [
+      { label: "Training & Placement", to: "/training-placement" },
+      { label: "Student Grievance", to: "/grievance" },
+      { label: "Anti-Ragging", to: "/anti-ragging" },
+    ],
+  },
+  {
     label: "Alumni",
     children: [
       { label: "Our Alumni", to: "/alumni" },
@@ -42,11 +50,9 @@ const items: Item[] = [
   {
     label: "RTI",
     children: [
-      { label: "RTI Home", to: "/about" },
-      { label: "RTI Act 2005", to: "/about" },
-      { label: "Mandatory Disclosure", to: "/about" },
-      { label: "Section 4(1)B", to: "/about" },
-      { label: "Suo-moto Disclosure", to: "/about" },
+      { label: "RTI Home", to: "/rti" },
+      { label: "Mandatory Disclosure", to: "/mandatory-disclosure" },
+      { label: "Suo Motu Disclosure", to: "/rti/suo-motu" },
     ],
   },
   { label: "Contact", to: "/contact" },
