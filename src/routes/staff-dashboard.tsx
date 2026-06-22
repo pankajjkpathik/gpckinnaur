@@ -146,28 +146,26 @@ function StatCard({ label, value }: { label: string; value: number | string }) {
 const portalForRole: Record<string, { href: string; title: string; desc: string; accent: string }[]> = {
   super_admin: [
     { href: "/admin", title: "Admin Console", desc: "Master data, timetable, syllabus, calendar", accent: "bg-rose-50 text-rose-700 ring-rose-200" },
-    { href: "/principal", title: "Principal Portal", desc: "Institute-wide monitoring & circulars", accent: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
-    { href: "/hod", title: "HOD Portal", desc: "Approvals & department monitoring", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
-    { href: "/faculty", title: "Faculty Portal", desc: "Attendance, marks, lesson plans, leave", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
-    { href: "/clerk", title: "Clerk Portal", desc: "Student & staff records", accent: "bg-amber-50 text-amber-700 ring-amber-200" },
+    { href: "/admin-users", title: "User Management", desc: "Staff & student accounts", accent: "bg-slate-50 text-slate-700 ring-slate-200" },
+  ],
+  admin_staff: [
+    { href: "/admin", title: "Admin Console", desc: "Master data, timetable, syllabus, calendar", accent: "bg-rose-50 text-rose-700 ring-rose-200" },
+    { href: "/admin-users", title: "User Management", desc: "Staff & student accounts", accent: "bg-slate-50 text-slate-700 ring-slate-200" },
   ],
   principal: [
-    { href: "/principal", title: "Open Principal Portal", desc: "Institute-wide monitoring & circulars", accent: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
-    { href: "/hod", title: "HOD View", desc: "Approvals & department drill-down", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+    { href: "/principal", title: "Principal Portal", desc: "Institute-wide monitoring & circulars", accent: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
+    { href: "/hod", title: "HOD View", desc: "Read-only department drill-down", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+    { href: "/faculty", title: "Faculty View", desc: "Read-only faculty workload", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
   ],
   hod: [
-    { href: "/hod", title: "Open HOD Portal", desc: "Approvals & department monitoring", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
-    { href: "/faculty", title: "Faculty View", desc: "Mark attendance & enter marks", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
+    { href: "/hod", title: "HOD Portal", desc: "Approvals & department monitoring", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+    { href: "/faculty", title: "Faculty View", desc: "Read-only faculty workload", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
   ],
   faculty: [
     { href: "/faculty", title: "Open Faculty Portal", desc: "Attendance, marks, lesson plans, leave", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
   ],
   clerk: [
     { href: "/clerk", title: "Open Clerk Portal", desc: "Student & staff master records", accent: "bg-amber-50 text-amber-700 ring-amber-200" },
-  ],
-  admin_staff: [
-    { href: "/admin", title: "Open Admin Console", desc: "System configuration", accent: "bg-rose-50 text-rose-700 ring-rose-200" },
-    { href: "/admin-users", title: "User Management", desc: "Staff & student accounts", accent: "bg-slate-50 text-slate-700 ring-slate-200" },
   ],
 };
 
