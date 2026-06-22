@@ -182,7 +182,7 @@ function CreateStudentForm({ onDone }: { onDone: () => void }) {
       <input name="batch_year" type="number" min={2000} max={2100} placeholder="Batch Year" required className="border rounded px-2 py-1.5 text-sm" />
       <input name="email" type="email" placeholder="Email (optional)" className="border rounded px-2 py-1.5 text-sm" />
       <input name="phone" placeholder="Phone (optional)" className="border rounded px-2 py-1.5 text-sm" />
-      <input name="password" placeholder="Temp password (≥6)" required minLength={6} className="border rounded px-2 py-1.5 text-sm" />
+      <input name="password" type="password" placeholder="Temp password (≥6)" required minLength={6} autoComplete="new-password" className="border rounded px-2 py-1.5 text-sm" />
       <button disabled={m.isPending} className="md:col-span-4 bg-[color:var(--student)] text-white rounded px-3 py-2 text-sm font-semibold disabled:opacity-50">
         {m.isPending ? "Creating…" : "+ Add Student"}
       </button>
