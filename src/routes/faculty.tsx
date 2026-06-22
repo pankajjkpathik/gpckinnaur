@@ -41,9 +41,17 @@ function FacultyPortal() {
   const [ay] = useState(defaultAY());
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
+  const isViewer = me.role !== "faculty"; // HOD / Principal / Admin see this as read-only "Faculty View"
+  const portalTitle = isViewer ? "Faculty View (Read-only)" : "Faculty Portal";
+
   return (
-    <PortalShell title="Faculty Portal" subtitle={`Academic Year ${ay}`} me={me as any} accent="teal">
+    <PortalShell title={portalTitle} subtitle={`Academic Year ${ay}`} me={me as any} accent="teal">
       <div className="container mx-auto px-4 py-6 space-y-4">
+        {isViewer && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded px-3 py-2">
+            You are viewing the Faculty portal as <strong className="capitalize">{me.role}</strong>. Edits (attendance, marks, lesson plans, leave) are disabled — open from a Faculty account to make changes.
+          </div>
+        )}
         <div className="flex gap-1 border-b overflow-x-auto">
           {([
             ["home", "Dashboard", Calendar],
@@ -58,12 +66,14 @@ function FacultyPortal() {
             </button>
           ))}
         </div>
+        <fieldset disabled={isViewer} className={isViewer ? "pointer-events-none opacity-90" : ""}>
         {tab === "home" && <DashboardTab ay={ay} me={me as any} />}
         {tab === "attendance" && <AttendanceTab ay={ay} me={me as any} />}
         {tab === "marks" && <MarksTab ay={ay} me={me as any} />}
         {tab === "lessons" && <LessonsTab ay={ay} me={me as any} />}
         {tab === "leave" && <LeaveTab />}
         {tab === "reports" && <ReportsTab ay={ay} me={me as any} />}
+        </fieldset>
       </div>
     </PortalShell>
   );
@@ -168,14 +178,14 @@ function AttendanceTab({ ay, me }: { ay: string; me: any }) {
             <option key={x.id} value={x.id}>{x.subjects?.code} · {x.branch}-Sem{x.semester}</option>
           ))}
         </select>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} max={today} className="border rounded px-2 py-1.5" />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} min={today} className="border rounded px-2 py-1.5" />
         <select value={pno} onChange={(e) => setPno(e.target.value ? Number(e.target.value) : "")} className="border rounded px-2 py-1.5">
           <option value="">Period…</option>
           {(periods.data ?? []).filter((p: any) => !p.is_break).map((p: any) => (
             <option key={p.id} value={p.period_no}>P{p.period_no} {p.start_time}-{p.end_time}</option>
           ))}
         </select>
-        {date !== today && <span className="text-xs text-amber-700 self-center">Editing past date — entries will be locked.</span>}
+        <span className="text-xs text-muted-foreground self-center">Past dates are locked — only today onward can be marked.</span>
       </div>
       {rosterQ.isLoading && <p className="text-sm">Loading roster…</p>}
       {rosterQ.data && rosterQ.data.length === 0 && <p className="text-sm text-muted-foreground">No students in this class.</p>}
@@ -218,7 +228,7 @@ function AttendanceTab({ ay, me }: { ay: string; me: any }) {
 }
 
 // ============ MARKS ============
-const EXAM_TYPES = ["internal", "assignment", "mid_sessional", "final_sessional", "practical", "viva"] as const;
+const EXAM_TYPES = ["first_class_test", "second_class_test", "house_test", "internal", "assignment", "mid_sessional", "final_sessional", "practical", "viva"] as const;
 function MarksTab({ ay, me }: { ay: string; me: any }) {
   const qc = useQueryClient();
   const asg = useQuery({ queryKey: ["fac-asg", me.id, ay], queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }) });

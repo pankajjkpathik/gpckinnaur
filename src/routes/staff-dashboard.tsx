@@ -40,9 +40,10 @@ function StaffDashboard() {
 
   const role = me.role as string;
   const can = (rs: string[]) => rs.includes(role);
-  const showNotices = can(["super_admin", "principal", "hod"]);
-  const showMats = can(["super_admin", "principal", "hod", "faculty"]);
-  const showInbox = can(["super_admin", "principal", "admin_staff"]);
+  // Admin/Super-Admin are admin-only — they do not curate notices/materials/inbox.
+  const showNotices = can(["principal", "hod"]);
+  const showMats = can(["hod", "faculty"]); // Principal & Admin no longer manage study material here
+  const showInbox = can(["principal", "admin_staff", "super_admin"]);
 
   async function logout() {
     await staffLogout({});
@@ -78,23 +79,31 @@ function StaffDashboard() {
           {showInbox && <NavBtn icon={<Mail className="w-4 h-4" />} active={view === "contact"} onClick={() => setView("contact")} label="Contact Inbox" badge={counts?.unreadContact} />}
           {showInbox && <NavBtn icon={<GraduationCap className="w-4 h-4" />} active={view === "alumni"} onClick={() => setView("alumni")} label="Alumni Records" badge={counts?.unverifiedAlumni} />}
           <NavBtn icon={<User className="w-4 h-4" />} active={view === "profile"} onClick={() => setView("profile")} label="My Profile" />
+          {/* Role-scoped portal links — each role sees only what it owns, plus read-only Views for higher roles. */}
           {(role === "super_admin" || role === "admin_staff") && (
-            <a href="/admin" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Admin Console</a>
+            <>
+              <a href="/admin" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Admin Console</a>
+              <a href="/admin-users" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> User Management</a>
+            </>
           )}
-          {(role === "super_admin" || role === "admin_staff") && (
-            <a href="/admin-users" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> User Management</a>
-          )}
-          {(role === "super_admin" || role === "clerk") && (
+          {role === "clerk" && (
             <a href="/clerk" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Clerk Portal</a>
           )}
-          {["super_admin", "principal", "hod", "faculty"].includes(role) && (
+          {role === "faculty" && (
             <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Faculty Portal</a>
           )}
-          {["super_admin", "principal", "hod"].includes(role) && (
-            <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> HOD Portal</a>
+          {role === "hod" && (
+            <>
+              <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> HOD Portal</a>
+              <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Faculty View</a>
+            </>
           )}
-          {["super_admin", "principal"].includes(role) && (
-            <a href="/principal" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Principal Portal</a>
+          {role === "principal" && (
+            <>
+              <a href="/principal" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Principal Portal</a>
+              <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> HOD View</a>
+              <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><GraduationCap className="w-4 h-4" /> Faculty View</a>
+            </>
           )}
           <a href="/staff-change-password" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Change Password</a>
         </nav>
@@ -137,28 +146,26 @@ function StatCard({ label, value }: { label: string; value: number | string }) {
 const portalForRole: Record<string, { href: string; title: string; desc: string; accent: string }[]> = {
   super_admin: [
     { href: "/admin", title: "Admin Console", desc: "Master data, timetable, syllabus, calendar", accent: "bg-rose-50 text-rose-700 ring-rose-200" },
-    { href: "/principal", title: "Principal Portal", desc: "Institute-wide monitoring & circulars", accent: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
-    { href: "/hod", title: "HOD Portal", desc: "Approvals & department monitoring", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
-    { href: "/faculty", title: "Faculty Portal", desc: "Attendance, marks, lesson plans, leave", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
-    { href: "/clerk", title: "Clerk Portal", desc: "Student & staff records", accent: "bg-amber-50 text-amber-700 ring-amber-200" },
+    { href: "/admin-users", title: "User Management", desc: "Staff & student accounts", accent: "bg-slate-50 text-slate-700 ring-slate-200" },
+  ],
+  admin_staff: [
+    { href: "/admin", title: "Admin Console", desc: "Master data, timetable, syllabus, calendar", accent: "bg-rose-50 text-rose-700 ring-rose-200" },
+    { href: "/admin-users", title: "User Management", desc: "Staff & student accounts", accent: "bg-slate-50 text-slate-700 ring-slate-200" },
   ],
   principal: [
-    { href: "/principal", title: "Open Principal Portal", desc: "Institute-wide monitoring & circulars", accent: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
-    { href: "/hod", title: "HOD View", desc: "Approvals & department drill-down", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+    { href: "/principal", title: "Principal Portal", desc: "Institute-wide monitoring & circulars", accent: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
+    { href: "/hod", title: "HOD View", desc: "Read-only department drill-down", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+    { href: "/faculty", title: "Faculty View", desc: "Read-only faculty workload", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
   ],
   hod: [
-    { href: "/hod", title: "Open HOD Portal", desc: "Approvals & department monitoring", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
-    { href: "/faculty", title: "Faculty View", desc: "Mark attendance & enter marks", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
+    { href: "/hod", title: "HOD Portal", desc: "Approvals & department monitoring", accent: "bg-sky-50 text-sky-700 ring-sky-200" },
+    { href: "/faculty", title: "Faculty View", desc: "Read-only faculty workload", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
   ],
   faculty: [
     { href: "/faculty", title: "Open Faculty Portal", desc: "Attendance, marks, lesson plans, leave", accent: "bg-teal-50 text-teal-700 ring-teal-200" },
   ],
   clerk: [
     { href: "/clerk", title: "Open Clerk Portal", desc: "Student & staff master records", accent: "bg-amber-50 text-amber-700 ring-amber-200" },
-  ],
-  admin_staff: [
-    { href: "/admin", title: "Open Admin Console", desc: "System configuration", accent: "bg-rose-50 text-rose-700 ring-rose-200" },
-    { href: "/admin-users", title: "User Management", desc: "Staff & student accounts", accent: "bg-slate-50 text-slate-700 ring-slate-200" },
   ],
 };
 

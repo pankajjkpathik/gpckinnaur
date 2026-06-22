@@ -35,9 +35,16 @@ function HodPortal() {
   const [tab, setTab] = useState<Tab>("home");
   const ay = defaultAY();
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
+  const isViewer = me.role !== "hod"; // Principal / Admin see this as read-only HOD View
+  const title = isViewer ? "HOD View (Read-only)" : "HOD Portal";
   return (
-    <PortalShell title="HOD Portal" subtitle={`Academic Year ${ay}`} me={me as any} accent="indigo">
+    <PortalShell title={title} subtitle={`Academic Year ${ay}`} me={me as any} accent="indigo">
       <div className="container mx-auto px-4 py-6 space-y-4">
+        {isViewer && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded px-3 py-2">
+            You are viewing the HOD portal as <strong className="capitalize">{me.role}</strong>. Approvals are disabled — sign in as the relevant HOD to take action.
+          </div>
+        )}
         <div className="flex gap-1 border-b overflow-x-auto">
           {([
             ["home", "Overview", LayoutDashboard],
@@ -51,11 +58,13 @@ function HodPortal() {
             </button>
           ))}
         </div>
+        <fieldset disabled={isViewer} className={isViewer ? "pointer-events-none opacity-90" : ""}>
         {tab === "home" && <OverviewTab ay={ay} />}
         {tab === "lessons" && <LessonsReviewTab ay={ay} />}
         {tab === "marks" && <MarksApprovalsTab ay={ay} />}
         {tab === "leave" && <LeaveApprovalsTab />}
         {tab === "monitor" && <ClassMonitorTab />}
+        </fieldset>
       </div>
     </PortalShell>
   );
