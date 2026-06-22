@@ -17,11 +17,16 @@
 - New `messages` table (sender_role/id, recipient_role/id, body, read_at).
 - "Messages" tab in every portal: compose, inbox, sent. 30 s polling.
 
-## Phase 4 — Clerk Bulk Excel + Sample Template
-- Switch `clerkBulkImportStudents` to accept .xlsx via SheetJS.
-- Add **download Sample.xlsx** button per entity (students, staff, alumni).
-- Add User Modify / Delete UI in admin-users + extend to clerk role.
-- New `staff_salary` table + Clerk "Salary" tab (monthly entry).
+## Phase 4 — Clerk Bulk Excel + Salary  ✅ done
+- `clerkBulkImportStudents` now accepts .xlsx upload (SheetJS) in addition to CSV paste.
+- "Download Sample.xlsx" button in Clerk Import tab.
+- Admin Users page: Delete buttons for staff (super-admin) and students.
+- New `staff_salary` table + Clerk "Salary" tab with month/year filter, upsert, delete, export to xlsx.
+
+## Phase 6 — Admin Upload Formats  ✅ done
+- New `report_templates` table (kind: monthly_attendance / mid_sessional / final_sessional / external_practical / other) storing base64 xlsx.
+- `/admin/report-templates` admin route: upload, list, delete.
+- `/staff-reports` route for every staff role: pick branch+semester, download a copy of the template with class roster appended as a "Roster" sheet.
 
 ## Phase 5 — Department-wise display
 - Add a Department filter (Civil / Mechanical / Applied Science) to every attendance & marks list in HOD/Principal/Admin.
