@@ -40,6 +40,7 @@ import { Route as StaffFacultyRouteImport } from './routes/staff.faculty'
 import { Route as StaffCommitteesRouteImport } from './routes/staff.committees'
 import { Route as StaffAdminRouteImport } from './routes/staff.admin'
 import { Route as RtiSuoMotuRouteImport } from './routes/rti.suo-motu'
+import { Route as RtiDisclosureSection41bRouteImport } from './routes/rti.disclosure-section-4-1b'
 import { Route as DepartmentsIdRouteImport } from './routes/departments.$id'
 import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
@@ -206,6 +207,11 @@ const RtiSuoMotuRoute = RtiSuoMotuRouteImport.update({
   path: '/rti/suo-motu',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RtiDisclosureSection41bRoute = RtiDisclosureSection41bRouteImport.update({
+  id: '/rti/disclosure-section-4-1b',
+  path: '/rti/disclosure-section-4-1b',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DepartmentsIdRoute = DepartmentsIdRouteImport.update({
   id: '/departments/$id',
   path: '/departments/$id',
@@ -292,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
   '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
   '/staff/committees': typeof StaffCommitteesRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
   '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
   '/staff/committees': typeof StaffCommitteesRoute
@@ -379,6 +387,7 @@ export interface FileRoutesById {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
   '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
   '/staff/committees': typeof StaffCommitteesRoute
@@ -424,6 +433,7 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/rti/disclosure-section-4-1b'
     | '/rti/suo-motu'
     | '/staff/admin'
     | '/staff/committees'
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/rti/disclosure-section-4-1b'
     | '/rti/suo-motu'
     | '/staff/admin'
     | '/staff/committees'
@@ -510,6 +521,7 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/rti/disclosure-section-4-1b'
     | '/rti/suo-motu'
     | '/staff/admin'
     | '/staff/committees'
@@ -546,6 +558,7 @@ export interface RootRouteChildren {
   TrainingPlacementRoute: typeof TrainingPlacementRoute
   AlumniRegisterRoute: typeof AlumniRegisterRoute
   DepartmentsIdRoute: typeof DepartmentsIdRoute
+  RtiDisclosureSection41bRoute: typeof RtiDisclosureSection41bRoute
   RtiSuoMotuRoute: typeof RtiSuoMotuRoute
   StaffAdminRoute: typeof StaffAdminRoute
   StaffCommitteesRoute: typeof StaffCommitteesRoute
@@ -774,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RtiSuoMotuRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rti/disclosure-section-4-1b': {
+      id: '/rti/disclosure-section-4-1b'
+      path: '/rti/disclosure-section-4-1b'
+      fullPath: '/rti/disclosure-section-4-1b'
+      preLoaderRoute: typeof RtiDisclosureSection41bRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/departments/$id': {
       id: '/departments/$id'
       path: '/departments/$id'
@@ -898,6 +918,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrainingPlacementRoute: TrainingPlacementRoute,
   AlumniRegisterRoute: AlumniRegisterRoute,
   DepartmentsIdRoute: DepartmentsIdRoute,
+  RtiDisclosureSection41bRoute: RtiDisclosureSection41bRoute,
   RtiSuoMotuRoute: RtiSuoMotuRoute,
   StaffAdminRoute: StaffAdminRoute,
   StaffCommitteesRoute: StaffCommitteesRoute,

@@ -25,7 +25,7 @@ function DisclosureSection4_1B() {
               href={pdfAsset.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm px-3 py-1.5 rounded-1.5 rounded-md bg-[color:var(--navy)] text-white"
+              className="text-sm px-3 py-1.5 rounded-md bg-[color:var(--navy)] text-white"
             >
               Download PDF
             </a>
