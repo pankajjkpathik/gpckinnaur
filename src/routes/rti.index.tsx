@@ -151,6 +151,25 @@ function RtiHome() {
             </p>
           </div>
 
+          <div className="bg-white border rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="w-5 h-5 text-[color:var(--navy)]" />
+              <h3 className="font-bold text-[color:var(--navy)]">Important Documents</h3>
+            </div>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <a href={rtiActPdf.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[color:var(--navy)] hover:underline">
+                  <Download className="w-4 h-4" /> RTI Act, 2005 (PDF)
+                </a>
+              </li>
+              <li>
+                <a href={mdRtiPdf.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[color:var(--navy)] hover:underline">
+                  <Download className="w-4 h-4" /> Mandatory Disclosure under RTI (PDF)
+                </a>
+              </li>
+            </ul>
+          </div>
+
           <Link to="/rti/suo-motu" className="block text-center bg-[color:var(--navy)] text-white rounded-lg p-4 font-semibold hover:opacity-90">
             View Suo Motu Disclosure →
           </Link>
