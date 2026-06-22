@@ -738,6 +738,98 @@ export type Database = {
         }
         Relationships: []
       }
+      report_templates: {
+        Row: {
+          created_at: string
+          file_b64: string
+          file_name: string
+          id: number
+          kind: string
+          name: string
+          updated_at: string
+          uploaded_by: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_b64: string
+          file_name: string
+          id?: number
+          kind: string
+          name: string
+          updated_at?: string
+          uploaded_by?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_b64?: string
+          file_name?: string
+          id?: number
+          kind?: string
+          name?: string
+          updated_at?: string
+          uploaded_by?: number | null
+        }
+        Relationships: []
+      }
+      staff_salary: {
+        Row: {
+          basic: number
+          created_at: string
+          da: number
+          deductions: number
+          hra: number
+          id: number
+          month: number
+          net_pay: number | null
+          other_allow: number
+          paid_on: string | null
+          remarks: string | null
+          staff_id: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          basic?: number
+          created_at?: string
+          da?: number
+          deductions?: number
+          hra?: number
+          id?: number
+          month: number
+          net_pay?: number | null
+          other_allow?: number
+          paid_on?: string | null
+          remarks?: string | null
+          staff_id: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          basic?: number
+          created_at?: string
+          da?: number
+          deductions?: number
+          hra?: number
+          id?: number
+          month?: number
+          net_pay?: number | null
+          other_allow?: number
+          paid_on?: string | null
+          remarks?: string | null
+          staff_id?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_salary_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_users: {
         Row: {
           created_at: string | null
