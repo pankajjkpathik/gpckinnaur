@@ -12,7 +12,7 @@ import {
 } from "@/lib/submissions.functions";
 
 export const Route = createFileRoute("/staff-dashboard")({
-  head: () => ({ meta: [{ title: "Staff Dashboard — GP Kinnaur" }] }),
+  head: () => ({ meta: [{ title: "Staff Dashboard — GP Kinnaur" }, { name: "description", content: "Staff Dashboard — GP Kinnaur at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: StaffDashboard,
 });
 
