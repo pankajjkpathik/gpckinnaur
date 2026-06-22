@@ -1,7 +1,9 @@
+import s6Asset from "@/assets/s6.jpg.asset.json";
+
 const tiles = [
   {
     title: "Campus Building",
-    image: src={s6Asset.url}",
+    image: s6Asset.url,
   },
   {
     title: "Workshop",
