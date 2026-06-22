@@ -53,7 +53,6 @@ export const adminCreateStaff = createServerFn({ method: "POST" })
     const hash = await bcrypt.hash(data.password, 12);
     const { error } = await supabaseAdmin.from("staff_users").insert({
       username: data.username.toLowerCase(),
-      name: data.name,
       role: data.role,
       department: data.department || null,
       password_hash: hash,
