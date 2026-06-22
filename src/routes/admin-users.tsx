@@ -7,6 +7,7 @@ import {
   adminCreateStaff, adminCreateStudent,
   adminResetStaffPassword, adminResetStudentPassword,
   adminToggleStaffActive, adminToggleStudentActive,
+  adminDeleteStaff, adminDeleteStudent,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin-users")({
@@ -109,6 +110,7 @@ function CreateStaffForm({ onDone }: { onDone: () => void }) {
 function StaffPanel({ rows, canToggle, onChange }: { rows: any[]; canToggle: boolean; onChange: () => void }) {
   const reset = useMutation({ mutationFn: (d: any) => adminResetStaffPassword({ data: d }), onSuccess: onChange });
   const toggle = useMutation({ mutationFn: (d: any) => adminToggleStaffActive({ data: d }), onSuccess: onChange });
+  const del = useMutation({ mutationFn: (d: any) => adminDeleteStaff({ data: d }), onSuccess: onChange });
   const [resetTarget, setResetTarget] = useState<{ id: number; label: string } | null>(null);
   return (
     <>
@@ -133,13 +135,17 @@ function StaffPanel({ rows, canToggle, onChange }: { rows: any[]; canToggle: boo
                 <td className="px-3 py-2">{r.department ?? "—"}</td>
                 <td className="px-3 py-2">{r.is_active ? <span className="text-green-700">Active</span> : <span className="text-rose-700">Disabled</span>}</td>
                 <td className="px-3 py-2 text-xs">{r.last_login ? new Date(r.last_login).toLocaleString() : "—"}</td>
-                <td className="px-3 py-2 flex gap-2">
+                <td className="px-3 py-2 flex gap-2 flex-wrap">
                   <button onClick={() => setResetTarget({ id: r.id, label: r.username })} className="text-xs px-2 py-1 border rounded">Reset PW</button>
                   {canToggle && (
                     <button onClick={() => toggle.mutate({ id: r.id, active: !r.is_active })}
                       className={`text-xs px-2 py-1 rounded ${r.is_active ? "bg-rose-100 text-rose-700" : "bg-green-100 text-green-700"}`}>
                       {r.is_active ? "Disable" : "Enable"}
                     </button>
+                  )}
+                  {canToggle && (
+                    <button onClick={() => { if (confirm(`Delete ${r.username}? This cannot be undone.`)) del.mutate({ id: r.id }); }}
+                      className="text-xs px-2 py-1 rounded bg-rose-600 text-white">Delete</button>
                   )}
                 </td>
               </tr>
@@ -230,6 +236,7 @@ function CreateStudentForm({ onDone }: { onDone: () => void }) {
 function StudentPanel({ rows, onChange }: { rows: any[]; onChange: () => void }) {
   const reset = useMutation({ mutationFn: (d: any) => adminResetStudentPassword({ data: d }), onSuccess: onChange });
   const toggle = useMutation({ mutationFn: (d: any) => adminToggleStudentActive({ data: d }), onSuccess: onChange });
+  const del = useMutation({ mutationFn: (d: any) => adminDeleteStudent({ data: d }), onSuccess: onChange });
   const [q, setQ] = useState("");
   const [resetTarget, setResetTarget] = useState<{ id: number; label: string } | null>(null);
   const filtered = rows.filter((r) => !q || r.enrollment_no.toLowerCase().includes(q.toLowerCase()) || r.name.toLowerCase().includes(q.toLowerCase()));
@@ -257,12 +264,14 @@ function StudentPanel({ rows, onChange }: { rows: any[]; onChange: () => void })
                 <td className="px-3 py-2">{r.semester}</td>
                 <td className="px-3 py-2">{r.batch_year}</td>
                 <td className="px-3 py-2">{r.is_active ? <span className="text-green-700">Active</span> : <span className="text-rose-700">Disabled</span>}</td>
-                <td className="px-3 py-2 flex gap-2">
+                <td className="px-3 py-2 flex gap-2 flex-wrap">
                   <button onClick={() => setResetTarget({ id: r.id, label: r.enrollment_no })} className="text-xs px-2 py-1 border rounded">Reset PW</button>
                   <button onClick={() => toggle.mutate({ id: r.id, active: !r.is_active })}
                     className={`text-xs px-2 py-1 rounded ${r.is_active ? "bg-rose-100 text-rose-700" : "bg-green-100 text-green-700"}`}>
                     {r.is_active ? "Disable" : "Enable"}
                   </button>
+                  <button onClick={() => { if (confirm(`Delete ${r.enrollment_no}? This cannot be undone.`)) del.mutate({ id: r.id }); }}
+                    className="text-xs px-2 py-1 rounded bg-rose-600 text-white">Delete</button>
                 </td>
               </tr>
             ))}
