@@ -40,9 +40,10 @@ function StaffDashboard() {
 
   const role = me.role as string;
   const can = (rs: string[]) => rs.includes(role);
-  const showNotices = can(["super_admin", "principal", "hod"]);
-  const showMats = can(["super_admin", "principal", "hod", "faculty"]);
-  const showInbox = can(["super_admin", "principal", "admin_staff"]);
+  // Admin/Super-Admin are admin-only — they do not curate notices/materials/inbox.
+  const showNotices = can(["principal", "hod"]);
+  const showMats = can(["hod", "faculty"]); // Principal & Admin no longer manage study material here
+  const showInbox = can(["principal", "admin_staff", "super_admin"]);
 
   async function logout() {
     await staffLogout({});
