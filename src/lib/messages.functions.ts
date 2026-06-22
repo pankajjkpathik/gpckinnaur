@@ -11,7 +11,7 @@ async function whoAmI(): Promise<Me> {
   if (staff) return { kind: "staff", id: staff.id, name: staff.username };
   if (getCookie(studentSessionConfig.name)) {
     const s = await useSession<StudentSession>(studentSessionConfig);
-    if (s.data?.id) return { kind: "student", id: s.data.id, name: s.data.name };
+    if (s.data?.id) return { kind: "student", id: s.data.id, name: s.data.name ?? "" };
   }
   throw new Error("Not authenticated");
 }
