@@ -18,9 +18,11 @@ import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ClerkRouteImport } from './routes/clerk'
 import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
 import { Route as AdminUsersRouteImport } from './routes/admin-users'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AlumniIndexRouteImport } from './routes/alumni.index'
@@ -30,6 +32,13 @@ import { Route as StaffCommitteesRouteImport } from './routes/staff.committees'
 import { Route as StaffAdminRouteImport } from './routes/staff.admin'
 import { Route as DepartmentsIdRouteImport } from './routes/departments.$id'
 import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
+import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
+import { Route as AdminSyllabusRouteImport } from './routes/admin.syllabus'
+import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
+import { Route as AdminPeriodsRouteImport } from './routes/admin.periods'
+import { Route as AdminGradingRouteImport } from './routes/admin.grading'
+import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
+import { Route as AdminAssignmentsRouteImport } from './routes/admin.assignments'
 
 const StudentPortalRoute = StudentPortalRouteImport.update({
   id: '/student-portal',
@@ -76,6 +85,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClerkRoute = ClerkRouteImport.update({
+  id: '/clerk',
+  path: '/clerk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AntiRaggingRoute = AntiRaggingRouteImport.update({
   id: '/anti-ragging',
   path: '/anti-ragging',
@@ -89,6 +103,11 @@ const AdmissionsRoute = AdmissionsRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin-users',
   path: '/admin-users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -136,13 +155,50 @@ const AlumniRegisterRoute = AlumniRegisterRouteImport.update({
   path: '/alumni/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTimetableRoute = AdminTimetableRouteImport.update({
+  id: '/timetable',
+  path: '/timetable',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSyllabusRoute = AdminSyllabusRouteImport.update({
+  id: '/syllabus',
+  path: '/syllabus',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPeriodsRoute = AdminPeriodsRouteImport.update({
+  id: '/periods',
+  path: '/periods',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGradingRoute = AdminGradingRouteImport.update({
+  id: '/grading',
+  path: '/grading',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCalendarRoute = AdminCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAssignmentsRoute = AdminAssignmentsRouteImport.update({
+  id: '/assignments',
+  path: '/assignments',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
+  '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -152,6 +208,13 @@ export interface FileRoutesByFullPath {
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/grading': typeof AdminGradingRoute
+  '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/syllabus': typeof AdminSyllabusRoute
+  '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
   '/staff/admin': typeof StaffAdminRoute
@@ -163,9 +226,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
+  '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -175,6 +240,13 @@ export interface FileRoutesByTo {
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/grading': typeof AdminGradingRoute
+  '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/syllabus': typeof AdminSyllabusRoute
+  '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
   '/staff/admin': typeof StaffAdminRoute
@@ -187,9 +259,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
+  '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -199,6 +273,13 @@ export interface FileRoutesById {
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/grading': typeof AdminGradingRoute
+  '/admin/periods': typeof AdminPeriodsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/syllabus': typeof AdminSyllabusRoute
+  '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
   '/staff/admin': typeof StaffAdminRoute
@@ -212,9 +293,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
     | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
+    | '/clerk'
     | '/contact'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -224,6 +307,13 @@ export interface FileRouteTypes {
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/admin/assignments'
+    | '/admin/calendar'
+    | '/admin/grading'
+    | '/admin/periods'
+    | '/admin/subjects'
+    | '/admin/syllabus'
+    | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
     | '/staff/admin'
@@ -235,9 +325,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admin'
     | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
+    | '/clerk'
     | '/contact'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -247,6 +339,13 @@ export interface FileRouteTypes {
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/admin/assignments'
+    | '/admin/calendar'
+    | '/admin/grading'
+    | '/admin/periods'
+    | '/admin/subjects'
+    | '/admin/syllabus'
+    | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
     | '/staff/admin'
@@ -258,9 +357,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/admin'
     | '/admin-users'
     | '/admissions'
     | '/anti-ragging'
+    | '/clerk'
     | '/contact'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -270,6 +371,13 @@ export interface FileRouteTypes {
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/admin/assignments'
+    | '/admin/calendar'
+    | '/admin/grading'
+    | '/admin/periods'
+    | '/admin/subjects'
+    | '/admin/syllabus'
+    | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
     | '/staff/admin'
@@ -282,9 +390,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
   AdmissionsRoute: typeof AdmissionsRoute
   AntiRaggingRoute: typeof AntiRaggingRoute
+  ClerkRoute: typeof ClerkRoute
   ContactRoute: typeof ContactRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
@@ -368,6 +478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clerk': {
+      id: '/clerk'
+      path: '/clerk'
+      fullPath: '/clerk'
+      preLoaderRoute: typeof ClerkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/anti-ragging': {
       id: '/anti-ragging'
       path: '/anti-ragging'
@@ -387,6 +504,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-users'
       fullPath: '/admin-users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -452,15 +576,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlumniRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/timetable': {
+      id: '/admin/timetable'
+      path: '/timetable'
+      fullPath: '/admin/timetable'
+      preLoaderRoute: typeof AdminTimetableRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/syllabus': {
+      id: '/admin/syllabus'
+      path: '/syllabus'
+      fullPath: '/admin/syllabus'
+      preLoaderRoute: typeof AdminSyllabusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/subjects': {
+      id: '/admin/subjects'
+      path: '/subjects'
+      fullPath: '/admin/subjects'
+      preLoaderRoute: typeof AdminSubjectsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/periods': {
+      id: '/admin/periods'
+      path: '/periods'
+      fullPath: '/admin/periods'
+      preLoaderRoute: typeof AdminPeriodsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/grading': {
+      id: '/admin/grading'
+      path: '/grading'
+      fullPath: '/admin/grading'
+      preLoaderRoute: typeof AdminGradingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/calendar': {
+      id: '/admin/calendar'
+      path: '/calendar'
+      fullPath: '/admin/calendar'
+      preLoaderRoute: typeof AdminCalendarRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/assignments': {
+      id: '/admin/assignments'
+      path: '/assignments'
+      fullPath: '/admin/assignments'
+      preLoaderRoute: typeof AdminAssignmentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminAssignmentsRoute: typeof AdminAssignmentsRoute
+  AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminGradingRoute: typeof AdminGradingRoute
+  AdminPeriodsRoute: typeof AdminPeriodsRoute
+  AdminSubjectsRoute: typeof AdminSubjectsRoute
+  AdminSyllabusRoute: typeof AdminSyllabusRoute
+  AdminTimetableRoute: typeof AdminTimetableRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAssignmentsRoute: AdminAssignmentsRoute,
+  AdminCalendarRoute: AdminCalendarRoute,
+  AdminGradingRoute: AdminGradingRoute,
+  AdminPeriodsRoute: AdminPeriodsRoute,
+  AdminSubjectsRoute: AdminSubjectsRoute,
+  AdminSyllabusRoute: AdminSyllabusRoute,
+  AdminTimetableRoute: AdminTimetableRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
   AdmissionsRoute: AdmissionsRoute,
   AntiRaggingRoute: AntiRaggingRoute,
+  ClerkRoute: ClerkRoute,
   ContactRoute: ContactRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
@@ -481,13 +678,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

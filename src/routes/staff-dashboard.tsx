@@ -78,7 +78,13 @@ function StaffDashboard() {
           {showInbox && <NavBtn icon={<GraduationCap className="w-4 h-4" />} active={view === "alumni"} onClick={() => setView("alumni")} label="Alumni Records" badge={counts?.unverifiedAlumni} />}
           <NavBtn icon={<User className="w-4 h-4" />} active={view === "profile"} onClick={() => setView("profile")} label="My Profile" />
           {(role === "super_admin" || role === "admin_staff") && (
+            <a href="/admin" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Admin Console</a>
+          )}
+          {(role === "super_admin" || role === "admin_staff") && (
             <a href="/admin-users" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> User Management</a>
+          )}
+          {(role === "super_admin" || role === "clerk") && (
+            <a href="/clerk" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Clerk Portal</a>
           )}
           <a href="/staff-change-password" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Change Password</a>
         </nav>
