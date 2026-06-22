@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BookOpen, Clock, GraduationCap, Calendar, LayoutGrid, UserCheck, Award, Users,
+  BookOpen, Clock, GraduationCap, Calendar, LayoutGrid, UserCheck, Award, Users, ScrollText,
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
@@ -22,6 +22,7 @@ const tiles = [
   { to: "/admin/timetable", icon: LayoutGrid, title: "Timetable Builder", desc: "Class-wise weekly schedule" },
   { to: "/admin/assignments", icon: UserCheck, title: "Faculty Assignments", desc: "Map faculty to subjects & classes" },
   { to: "/admin-users", icon: Users, title: "User Management", desc: "Staff & student accounts" },
+  { to: "/admin/audit", icon: ScrollText, title: "Audit Log", desc: "System actions & login trail" },
 ];
 
 function AdminHub() {
