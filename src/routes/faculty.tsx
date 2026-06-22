@@ -218,7 +218,7 @@ function AttendanceTab({ ay, me }: { ay: string; me: any }) {
 }
 
 // ============ MARKS ============
-const EXAM_TYPES = ["internal", "assignment", "mid_sessional", "final_sessional", "practical", "viva"] as const;
+const EXAM_TYPES = ["first_class_test", "second_class_test", "house_test", "internal", "assignment", "mid_sessional", "final_sessional", "practical", "viva"] as const;
 function MarksTab({ ay, me }: { ay: string; me: any }) {
   const qc = useQueryClient();
   const asg = useQuery({ queryKey: ["fac-asg", me.id, ay], queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }) });
