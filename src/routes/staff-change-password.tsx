@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { staffMe, staffChangePassword } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/staff-change-password")({
-  head: () => ({ meta: [{ title: "Change Password — Staff" }] }),
+  head: () => ({ meta: [{ title: "Change Password — Staff" }, { name: "description", content: "Change Password — Staff at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: Page,
 });
 

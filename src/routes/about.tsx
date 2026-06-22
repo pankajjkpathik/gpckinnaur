@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
-    meta: [
-      { title: "About — Government Polytechnic, Kinnaur" },
-      { name: "description", content: "Established in 2013, GP Kinnaur provides diploma programs in Civil and Mechanical Engineering. Affiliated to HPTSB, approved by AICTE." },
-    ],
+  head: () => pageMeta({
+    title: "About — Government Polytechnic, Kinnaur",
+    description: "Established in 2013, GP Kinnaur offers AICTE-approved diploma programs in Civil and Mechanical Engineering, affiliated to HPTSB.",
+    path: "/about",
   }),
   component: About,
 });

@@ -7,7 +7,7 @@ import { listMaterials } from "@/lib/materials.functions";
 import { listNotices } from "@/lib/notices.functions";
 
 export const Route = createFileRoute("/student-dashboard")({
-  head: () => ({ meta: [{ title: "Student Dashboard — GP Kinnaur" }] }),
+  head: () => ({ meta: [{ title: "Student Dashboard — GP Kinnaur" }, { name: "description", content: "Student Dashboard — GP Kinnaur at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: StudentDashboard,
 });
 

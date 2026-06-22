@@ -5,7 +5,11 @@ import { Eye, EyeOff } from "lucide-react";
 import { staffLogin, staffMe } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/staff-login")({
-  head: () => ({ meta: [{ title: "Staff Login — GP Kinnaur" }] }),
+  head: () => ({ meta: [
+    { title: "Staff Login — GP Kinnaur" },
+    { name: "description", content: "Sign in to the GP Kinnaur staff portal to manage notices, study materials and submissions." },
+    { name: "robots", content: "noindex, nofollow" },
+  ] }),
   component: StaffLoginPage,
 });
 

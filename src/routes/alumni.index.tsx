@@ -1,8 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/alumni/")({
-  head: () => ({ meta: [{ title: "Alumni — GP Kinnaur" }, { name: "description", content: "Placed alumni of Government Polytechnic, Kinnaur." }] }),
+  head: () => pageMeta({
+    title: "Alumni — GP Kinnaur",
+    description: "Meet the placed alumni of Government Polytechnic, Kinnaur working across leading manufacturing and engineering companies in India.",
+    path: "/alumni",
+  }),
   component: AlumniPage,
 });
 

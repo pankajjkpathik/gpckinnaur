@@ -10,7 +10,7 @@ import {
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin-users")({
-  head: () => ({ meta: [{ title: "User Management — GP Kinnaur" }] }),
+  head: () => ({ meta: [{ title: "User Management — GP Kinnaur" }, { name: "description", content: "User Management — GP Kinnaur at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: AdminUsersPage,
 });
 

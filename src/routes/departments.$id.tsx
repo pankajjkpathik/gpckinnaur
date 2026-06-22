@@ -3,16 +3,16 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
 import { getDepartment } from "@/lib/directory.functions";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/departments/$id")({
   head: ({ params }) => {
     const name = params.id === "1" ? "Civil Engineering" : params.id === "2" ? "Mechanical Engineering" : "Department";
-    return {
-      meta: [
-        { title: `${name} — GP Kinnaur` },
-        { name: "description", content: `Diploma in ${name} at Government Polytechnic, Kinnaur. 3-year program, 30-seat intake, qualified faculty, well-equipped labs.` },
-      ],
-    };
+    return pageMeta({
+      title: `${name} — GP Kinnaur`,
+      description: `Diploma in ${name} at Government Polytechnic, Kinnaur. 3-year AICTE-approved program, 30-seat intake, qualified faculty and well-equipped labs.`,
+      path: `/departments/${params.id}`,
+    });
   },
   component: DepartmentPage,
 });

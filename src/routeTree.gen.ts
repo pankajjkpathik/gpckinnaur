@@ -16,6 +16,7 @@ import { Route as StudentChangePasswordRouteImport } from './routes/student-chan
 import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
@@ -63,6 +64,11 @@ const StaffDashboardRoute = StaffDashboardRouteImport.update({
 const StaffChangePasswordRoute = StaffChangePasswordRouteImport.update({
   id: '/staff-change-password',
   path: '/staff-change-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/admissions': typeof AdmissionsRoute
   '/anti-ragging': typeof AntiRaggingRoute
   '/contact': typeof ContactRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/anti-ragging'
     | '/contact'
+    | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   AdmissionsRoute: typeof AdmissionsRoute
   AntiRaggingRoute: typeof AntiRaggingRoute
   ContactRoute: typeof ContactRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
   StaffLoginRoute: typeof StaffLoginRoute
@@ -339,6 +352,13 @@ declare module '@tanstack/react-router' {
       path: '/staff-change-password'
       fullPath: '/staff-change-password'
       preLoaderRoute: typeof StaffChangePasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -442,6 +462,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdmissionsRoute: AdmissionsRoute,
   AntiRaggingRoute: AntiRaggingRoute,
   ContactRoute: ContactRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
   StaffDashboardRoute: StaffDashboardRoute,
   StaffLoginRoute: StaffLoginRoute,

@@ -2,9 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
 import { NoticeBoard } from "@/components/home/NoticeBoard";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/student-portal")({
-  head: () => ({ meta: [{ title: "Student Portal — GP Kinnaur" }, { name: "description", content: "Student resources, study materials, notices and forms." }] }),
+  head: () => pageMeta({
+    title: "Student Portal — GP Kinnaur",
+    description: "Student resources at GP Kinnaur: study materials, notices, downloadable forms and quick links to academic services.",
+    path: "/student-portal",
+  }),
   component: StudentPortal,
 });
 

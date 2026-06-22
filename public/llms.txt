@@ -1,0 +1,21 @@
+# Government Polytechnic, Kinnaur
+
+> AICTE-approved, HPTSB-affiliated government polytechnic in Himachal Pradesh offering 3-year diploma programs in Civil and Mechanical Engineering.
+
+GP Kinnaur is a state-run technical institute under the Department of Technical Education, Himachal Pradesh, currently operating from a camp campus at Government Polytechnic Rohru, Distt. Shimla.
+
+## Pages
+
+- [Home](/): Institute overview, programs and announcements.
+- [About](/about): History, vision, accreditation and facilities.
+- [Admissions](/admissions): Eligibility, fees, dates and counselling steps.
+- [Civil Engineering Department](/departments/1): Curriculum, labs, careers and faculty.
+- [Mechanical Engineering Department](/departments/2): Curriculum, labs, careers and faculty.
+- [Faculty](/staff/faculty): Teaching faculty profiles.
+- [Administrative Staff](/staff/admin): Administrative team.
+- [Non-Teaching Staff](/staff/non-teaching): Support staff.
+- [Committees](/staff/committees): Institutional committees.
+- [Alumni](/alumni): Placed alumni working across the industry.
+- [Alumni Registration](/alumni/register): Registration form for alumni.
+- [Anti-Ragging](/anti-ragging): Anti-ragging policy, helpline and committee.
+- [Contact](/contact): Address, phone, email and contact form.

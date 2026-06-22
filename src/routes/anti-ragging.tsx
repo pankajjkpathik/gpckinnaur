@@ -1,8 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/anti-ragging")({
-  head: () => ({ meta: [{ title: "Anti-Ragging — GP Kinnaur" }, { name: "description", content: "Anti-ragging policy, helpline and committee details for GP Kinnaur." }] }),
+  head: () => pageMeta({
+    title: "Anti-Ragging — GP Kinnaur",
+    description: "GP Kinnaur's anti-ragging policy, prohibited acts, committee members, and UGC anti-ragging helpline details for students and parents.",
+    path: "/anti-ragging",
+  }),
   component: AntiRagging,
 });
 

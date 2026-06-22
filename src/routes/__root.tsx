@@ -77,23 +77,42 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Kinnaur Connect Portal is a full-stack institutional website for Government Polytechnic, Kinnaur." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Kinnaur Connect Portal is a full-stack institutional website for Government Polytechnic, Kinnaur." },
+      { title: "Government Polytechnic, Kinnaur — Diploma in Civil & Mechanical Engineering" },
+      {
+        name: "description",
+        content:
+          "Government Polytechnic, Kinnaur (HP) — AICTE-approved, HPTSB-affiliated institute offering 3-year diploma programs in Civil and Mechanical Engineering.",
+      },
+      { property: "og:site_name", content: "Government Polytechnic, Kinnaur" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "Kinnaur Connect Portal is a full-stack institutional website for Government Polytechnic, Kinnaur." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/92c29151-5cbd-47e1-ab5c-f6e3a080f11e/id-preview-d0348655--5b7c47fb-4aaa-41c5-8202-070054a68a49.lovable.app-1782114486624.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/92c29151-5cbd-47e1-ab5c-f6e3a080f11e/id-preview-d0348655--5b7c47fb-4aaa-41c5-8202-070054a68a49.lovable.app-1782114486624.png" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "EducationalOrganization",
+          name: "Government Polytechnic, Kinnaur",
+          alternateName: "GP Kinnaur",
+          url: "https://gpckinnaur.lovable.app",
+          email: "gpckinnaur@gmail.com",
+          telephone: "+91-1781-292440",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "Camp at Government Polytechnic Rohru",
+            addressLocality: "Shimla",
+            addressRegion: "Himachal Pradesh",
+            postalCode: "171207",
+            addressCountry: "IN",
+          },
+        }),
       },
     ],
   }),

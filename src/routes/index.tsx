@@ -20,16 +20,34 @@ import mechAsset from "@/assets/mech.png.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Government Polytechnic, Kinnaur — Diploma in Civil & Mechanical Engineering" },
+      { title: "GP Kinnaur — Diploma in Civil & Mechanical Engineering" },
       {
         name: "description",
         content:
-          "Government Polytechnic, Kinnaur (HP) — affiliated to HPTSB, approved by AICTE. Diploma programs in Civil and Mechanical Engineering.",
+          "Government Polytechnic, Kinnaur (HP) — AICTE-approved, HPTSB-affiliated. 3-year diploma programs in Civil and Mechanical Engineering with modern labs.",
       },
-      { property: "og:title", content: "Government Polytechnic, Kinnaur" },
+      { property: "og:title", content: "GP Kinnaur — Diploma in Civil & Mechanical Engineering" },
       {
         property: "og:description",
         content: "Empowering youth of Kinnaur through quality technical education.",
+      },
+      { property: "og:url", content: "https://gpckinnaur.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://gpckinnaur.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "EducationalOrganization",
+          name: "Government Polytechnic, Kinnaur",
+          url: "https://gpckinnaur.lovable.app",
+          department: [
+            { "@type": "EducationalOrganization", name: "Department of Civil Engineering" },
+            { "@type": "EducationalOrganization", name: "Department of Mechanical Engineering" },
+          ],
+        }),
       },
     ],
   }),

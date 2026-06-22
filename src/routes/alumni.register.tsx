@@ -3,9 +3,14 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
 import { registerAlumni } from "@/lib/submissions.functions";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/alumni/register")({
-  head: () => ({ meta: [{ title: "Alumni Registration — GP Kinnaur" }, { name: "description", content: "Register as an alumnus of Government Polytechnic, Kinnaur." }] }),
+  head: () => pageMeta({
+    title: "Alumni Registration — GP Kinnaur",
+    description: "Register as an alumnus of Government Polytechnic, Kinnaur to stay connected, receive updates and contribute to mentoring current students.",
+    path: "/alumni/register",
+  }),
   component: AlumniRegister,
 });
 

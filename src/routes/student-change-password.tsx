@@ -5,7 +5,7 @@ import { studentMe } from "@/lib/auth.functions";
 import { studentChangePassword } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/student-change-password")({
-  head: () => ({ meta: [{ title: "Change Password — Student" }] }),
+  head: () => ({ meta: [{ title: "Change Password — Student" }, { name: "description", content: "Change Password — Student at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: Page,
 });
 
