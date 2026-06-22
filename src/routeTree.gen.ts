@@ -19,6 +19,7 @@ import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrincipalRouteImport } from './routes/principal'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MandatoryDisclosureRouteImport } from './routes/mandatory-disclosure'
 import { Route as HptsbAffiliationRouteImport } from './routes/hptsb-affiliation'
 import { Route as HodRouteImport } from './routes/hod'
@@ -100,6 +101,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const PrincipalRoute = PrincipalRouteImport.update({
   id: '/principal',
   path: '/principal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MandatoryDisclosureRoute = MandatoryDisclosureRouteImport.update({
@@ -278,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/hod': typeof HodRoute
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
+  '/messages': typeof MessagesRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/hod': typeof HodRoute
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
+  '/messages': typeof MessagesRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/hod': typeof HodRoute
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
+  '/messages': typeof MessagesRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -413,6 +422,7 @@ export interface FileRouteTypes {
     | '/hod'
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
+    | '/messages'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/hod'
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
+    | '/messages'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -501,6 +512,7 @@ export interface FileRouteTypes {
     | '/hod'
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
+    | '/messages'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -546,6 +558,7 @@ export interface RootRouteChildren {
   HodRoute: typeof HodRoute
   HptsbAffiliationRoute: typeof HptsbAffiliationRoute
   MandatoryDisclosureRoute: typeof MandatoryDisclosureRoute
+  MessagesRoute: typeof MessagesRoute
   PrincipalRoute: typeof PrincipalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
@@ -638,6 +651,13 @@ declare module '@tanstack/react-router' {
       path: '/principal'
       fullPath: '/principal'
       preLoaderRoute: typeof PrincipalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mandatory-disclosure': {
@@ -906,6 +926,7 @@ const rootRouteChildren: RootRouteChildren = {
   HodRoute: HodRoute,
   HptsbAffiliationRoute: HptsbAffiliationRoute,
   MandatoryDisclosureRoute: MandatoryDisclosureRoute,
+  MessagesRoute: MessagesRoute,
   PrincipalRoute: PrincipalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
