@@ -124,6 +124,7 @@ export const studentLogout = createServerFn({ method: "POST" }).handler(async ()
 
 export const studentMe = createServerFn({ method: "GET" }).handler(async () => {
   if (getStudentSessionSecretIssue()) return null;
+  if (!getCookie(studentSessionConfig.name)) return null;
   const session = await useSession<StudentSession>(studentSessionConfig);
   if (!session.data?.id) return null;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
