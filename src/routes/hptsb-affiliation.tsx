@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
-import pdfAsset from "@/assets/MD-CWP.pdf.asset.json";
+import pdfAsset from "@/assets/HPTSB.pdf.asset.json";
 
 export const Route = createFileRoute("/hptsb-affiliation")({
   head: () => pageMeta({
