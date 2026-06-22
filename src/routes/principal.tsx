@@ -8,6 +8,7 @@ import {
 } from "@/lib/principal.functions";
 import { exportRows } from "@/lib/report-export";
 import { Trash2, Plus, Download, ArrowLeft } from "lucide-react";
+import { BarStats, PieStats } from "@/components/portal/Charts";
 
 export const Route = createFileRoute("/principal")({
   head: () => ({ meta: [
@@ -41,6 +42,7 @@ function PrincipalPortal() {
             <h1 className="text-2xl font-bold mt-1">Principal Portal</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Link to="/messages" className="text-xs text-white/90 border border-white/40 rounded px-2 py-1 hover:bg-white/10">Messages</Link>
             <label className="text-xs text-white/70">Academic Year</label>
             <input value={year} onChange={(e) => setYear(e.target.value)} className="bg-white/10 border border-white/20 rounded px-2 py-1 text-sm w-24" placeholder="2025-26" />
           </div>
@@ -78,6 +80,15 @@ function Dashboard({ year }: { year: string }) {
   const fn = useServerFn(principalDashboard);
   const { data, isLoading } = useQuery({ queryKey: ["principal-dash", year], queryFn: () => fn({ data: { academic_year: year } }) });
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const populationData = [
+    { label: "Students", value: data.students },
+    { label: "Staff", value: data.staff },
+  ];
+  const pendingData = [
+    { label: "Lessons", value: data.pending_lessons },
+    { label: "Marks", value: data.pending_marks },
+    { label: "Leaves", value: data.pending_leaves },
+  ];
   return (
     <div className="space-y-4">
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -87,6 +98,16 @@ function Dashboard({ year }: { year: string }) {
         <Card label="Pending Lesson Plans" value={data.pending_lessons} tone={data.pending_lessons ? "ring-1 ring-amber-300" : ""} />
         <Card label="Marks Awaiting Approval" value={data.pending_marks} tone={data.pending_marks ? "ring-1 ring-amber-300" : ""} />
         <Card label="Pending Leave Requests" value={data.pending_leaves} tone={data.pending_leaves ? "ring-1 ring-amber-300" : ""} />
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white border rounded-lg p-4">
+          <p className="text-sm font-semibold text-[color:var(--navy)] mb-2">Institute Population</p>
+          <PieStats data={populationData} />
+        </div>
+        <div className="bg-white border rounded-lg p-4">
+          <p className="text-sm font-semibold text-[color:var(--navy)] mb-2">Pending Approvals</p>
+          <BarStats data={pendingData} color="#0ea5e9" />
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">Use the tabs above to drill into institute-wide attendance, results, syllabus compliance, and circulars.</p>
     </div>

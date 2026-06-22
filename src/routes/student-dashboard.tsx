@@ -1,8 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, Calendar, FileText, BookOpen, Clock, ClipboardList, Megaphone, GraduationCap } from "lucide-react";
+import { BarStats, AttendanceGauge } from "@/components/portal/Charts";
 import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { listMaterials } from "@/lib/materials.functions";
 import { listNotices } from "@/lib/notices.functions";
@@ -71,6 +72,7 @@ function StudentDashboard() {
               <p className="font-medium">{me.name}</p>
               <p className="text-xs text-white/80">{me.enrollment_no}</p>
             </div>
+            <Link to="/messages" className="px-3 py-1.5 rounded border border-white/40 text-sm">Messages</Link>
             <a href="/student-change-password" className="px-3 py-1.5 rounded border border-white/40 text-sm">Change Password</a>
             <button onClick={logout} className="px-3 py-1.5 rounded border border-white/40 text-sm">Logout</button>
           </div>
@@ -133,9 +135,12 @@ function Stat({ label, value, tone }: { label: string; value: string | number; t
 
 function HomeTab({ setTab }: { setTab: (t: Tab) => void }) {
   const fn = useServerFn(studentDashboard);
+  const fnAtt = useServerFn(studentAttendance);
   const { data, isLoading } = useQuery({ queryKey: ["student-dash"], queryFn: () => fn() });
+  const attQ = useQuery({ queryKey: ["student-att-summary"], queryFn: () => fnAtt() });
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">Loading…</p>;
   const lowAttendance = data.attendance_pct > 0 && data.attendance_pct < 75;
+  const subjAtt: any[] = (attQ.data?.by_subject ?? []).map((s: any) => ({ label: s.code, value: s.pct }));
   return (
     <div className="space-y-5">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -143,6 +148,16 @@ function HomeTab({ setTab }: { setTab: (t: Tab) => void }) {
         <Stat label="Periods Attended" value={`${data.present_periods} / ${data.total_periods}`} />
         <Stat label="Pending Leave Requests" value={data.pending_leaves} />
         <Stat label="Today's Periods" value={data.today_periods.length} />
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white border rounded-lg p-4">
+          <p className="text-sm font-semibold text-[color:var(--student)] mb-2">Overall Attendance</p>
+          <AttendanceGauge percent={data.attendance_pct} />
+        </div>
+        <div className="bg-white border rounded-lg p-4">
+          <p className="text-sm font-semibold text-[color:var(--student)] mb-2">Attendance by Subject</p>
+          {subjAtt.length > 0 ? <BarStats data={subjAtt} color="#10b981" /> : <p className="text-xs text-muted-foreground text-center py-8">No attendance recorded yet.</p>}
+        </div>
       </div>
       {lowAttendance && (
         <div className="bg-rose-50 border border-rose-200 rounded p-3 text-sm text-rose-800">
