@@ -17,6 +17,7 @@ import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as PrincipalRouteImport } from './routes/principal'
 import { Route as HodRouteImport } from './routes/hod'
 import { Route as FacultyRouteImport } from './routes/faculty'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -80,6 +81,11 @@ const StaffChangePasswordRoute = StaffChangePasswordRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrincipalRoute = PrincipalRouteImport.update({
+  id: '/principal',
+  path: '/principal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HodRoute = HodRouteImport.update({
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
   '/hod': typeof HodRoute
+  '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -248,6 +255,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
   '/hod': typeof HodRoute
+  '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
   '/hod': typeof HodRoute
+  '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faculty'
     | '/hod'
+    | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faculty'
     | '/hod'
+    | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -387,6 +398,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faculty'
     | '/hod'
+    | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -422,6 +434,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FacultyRoute: typeof FacultyRoute
   HodRoute: typeof HodRoute
+  PrincipalRoute: typeof PrincipalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
@@ -495,6 +508,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/principal': {
+      id: '/principal'
+      path: '/principal'
+      fullPath: '/principal'
+      preLoaderRoute: typeof PrincipalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hod': {
@@ -701,6 +721,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FacultyRoute: FacultyRoute,
   HodRoute: HodRoute,
+  PrincipalRoute: PrincipalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
   StaffDashboardRoute: StaffDashboardRoute,

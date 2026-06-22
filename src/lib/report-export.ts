@@ -43,3 +43,18 @@ export function exportCSV(filename: string, header: string[], rows: (string | nu
   a.click();
   URL.revokeObjectURL(url);
 }
+
+export type ExportColumn = { key: string; label: string };
+export function exportRows(opts: {
+  filename: string;
+  title?: string;
+  columns: ExportColumn[];
+  rows: Record<string, any>[];
+  format: "pdf" | "xlsx" | "csv";
+}) {
+  const header = opts.columns.map((c) => c.label);
+  const rows = opts.rows.map((r) => opts.columns.map((c) => (r[c.key] ?? "") as string | number));
+  if (opts.format === "pdf") return exportPDF(opts.filename, opts.title || opts.filename, "", header, rows);
+  if (opts.format === "xlsx") return exportExcel(opts.filename, "Report", header, rows);
+  return exportCSV(opts.filename, header, rows);
+}

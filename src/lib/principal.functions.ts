@@ -1,0 +1,169 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { principalRoles } from "./roles";
+import { requireRole } from "./roles.server";
+
+const yearRe = /^\d{4}-\d{2}$/;
+
+// ============ PRINCIPAL DASHBOARD ============
+export const principalDashboard = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(principalRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [students, staff, pendingLessons, pendingMarks, pendingLeaves, circulars] = await Promise.all([
+      supabaseAdmin.from("students").select("id", { count: "exact", head: true }).eq("is_active", true),
+      supabaseAdmin.from("staff_users").select("id", { count: "exact", head: true }).eq("is_active", true),
+      supabaseAdmin.from("lesson_plans").select("id", { count: "exact", head: true }).eq("status", "submitted").eq("academic_year", data.academic_year),
+      supabaseAdmin.from("marks").select("id", { count: "exact", head: true }).eq("submitted_to_hod", true).eq("approved_by_hod", false).eq("academic_year", data.academic_year),
+      supabaseAdmin.from("leave_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      supabaseAdmin.from("circulars").select("id", { count: "exact", head: true }),
+    ]);
+    return {
+      students: students.count ?? 0,
+      staff: staff.count ?? 0,
+      pending_lessons: pendingLessons.count ?? 0,
+      pending_marks: pendingMarks.count ?? 0,
+      pending_leaves: pendingLeaves.count ?? 0,
+      circulars: circulars.count ?? 0,
+    };
+  });
+
+// ============ INSTITUTE-WIDE ATTENDANCE BY DEPARTMENT ============
+export const instituteAttendance = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({ from_date: z.string(), to_date: z.string() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(principalRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: students } = await supabaseAdmin
+      .from("students").select("id, branch, semester").eq("is_active", true);
+    const ids = (students ?? []).map((s: any) => s.id);
+    if (ids.length === 0) return [];
+    const { data: marks } = await supabaseAdmin
+      .from("attendance").select("student_id, status")
+      .in("student_id", ids).gte("date", data.from_date).lte("date", data.to_date);
+    const sMap = new Map<number, { branch: string; semester: number }>();
+    (students ?? []).forEach((s: any) => sMap.set(s.id, { branch: s.branch, semester: s.semester }));
+    const agg = new Map<string, { branch: string; semester: number; t: number; p: number; students: Set<number> }>();
+    (marks ?? []).forEach((m: any) => {
+      const s = sMap.get(m.student_id);
+      if (!s) return;
+      const k = `${s.branch}|${s.semester}`;
+      if (!agg.has(k)) agg.set(k, { branch: s.branch, semester: s.semester, t: 0, p: 0, students: new Set() });
+      const a = agg.get(k)!;
+      a.t += 1; a.students.add(m.student_id);
+      if (m.status === "present" || m.status === "late") a.p += 1;
+    });
+    return Array.from(agg.values()).map((a) => ({
+      branch: a.branch, semester: a.semester, total: a.t, present: a.p,
+      pct: a.t ? Math.round((a.p / a.t) * 1000) / 10 : 0,
+      students: a.students.size,
+    })).sort((a, b) => a.branch.localeCompare(b.branch) || a.semester - b.semester);
+  });
+
+// ============ SYLLABUS COMPLIANCE ============
+export const syllabusCompliance = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(principalRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: plans } = await supabaseAdmin
+      .from("lesson_plans")
+      .select("subject_id, status, coverage_pct, subjects(code,name,branch,semester)")
+      .eq("academic_year", data.academic_year);
+    const agg = new Map<number, any>();
+    (plans ?? []).forEach((p: any) => {
+      if (!agg.has(p.subject_id)) agg.set(p.subject_id, {
+        subject_id: p.subject_id,
+        code: p.subjects?.code, name: p.subjects?.name,
+        branch: p.subjects?.branch, semester: p.subjects?.semester,
+        units: 0, coverage_sum: 0, approved: 0,
+      });
+      const a = agg.get(p.subject_id);
+      a.units += 1;
+      a.coverage_sum += Number(p.coverage_pct || 0);
+      if (p.status === "approved") a.approved += 1;
+    });
+    return Array.from(agg.values()).map((a) => ({
+      ...a,
+      avg_coverage: a.units ? Math.round((a.coverage_sum / a.units) * 10) / 10 : 0,
+      approved_pct: a.units ? Math.round((a.approved / a.units) * 100) : 0,
+    })).sort((a, b) => (a.branch || "").localeCompare(b.branch || "") || a.semester - b.semester);
+  });
+
+// ============ RESULTS OVERVIEW ============
+export const instituteResults = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe), exam_type: z.string() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(principalRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("marks")
+      .select("obtained, max_marks, subjects(branch,semester)")
+      .eq("academic_year", data.academic_year)
+      .eq("exam_type", data.exam_type)
+      .eq("approved_by_hod", true);
+    const agg = new Map<string, { branch: string; semester: number; total: number; pass: number; sum: number }>();
+    (rows ?? []).forEach((r: any) => {
+      const b = r.subjects?.branch, s = r.subjects?.semester;
+      if (!b || !s) return;
+      const k = `${b}|${s}`;
+      if (!agg.has(k)) agg.set(k, { branch: b, semester: s, total: 0, pass: 0, sum: 0 });
+      const a = agg.get(k)!;
+      a.total += 1;
+      const pct = (Number(r.obtained) / Number(r.max_marks)) * 100;
+      a.sum += pct;
+      if (pct >= 35) a.pass += 1;
+    });
+    return Array.from(agg.values()).map((a) => ({
+      branch: a.branch, semester: a.semester, entries: a.total,
+      pass_pct: a.total ? Math.round((a.pass / a.total) * 1000) / 10 : 0,
+      avg_pct: a.total ? Math.round((a.sum / a.total) * 10) / 10 : 0,
+    })).sort((a, b) => a.branch.localeCompare(b.branch) || a.semester - b.semester);
+  });
+
+// ============ CIRCULARS ============
+export const listCirculars = createServerFn({ method: "GET" })
+  .handler(async () => {
+    await requireRole(principalRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("circulars")
+      .select("*, staff_users:published_by(username)")
+      .order("published_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const createCircular = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({
+      title: z.string().min(2),
+      body: z.string().min(2),
+      audience: z.enum(["all", "staff", "students", "faculty", "hod"]).default("all"),
+      attachment_url: z.string().url().optional().nullable(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const session = await requireRole(principalRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("circulars").insert({
+      title: data.title, body: data.body, audience: data.audience,
+      attachment_url: data.attachment_url ?? null,
+      published_by: session.id,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteCircular = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(principalRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("circulars").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
