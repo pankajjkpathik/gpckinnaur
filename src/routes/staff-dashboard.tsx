@@ -77,6 +77,10 @@ function StaffDashboard() {
           {showInbox && <NavBtn icon={<Mail className="w-4 h-4" />} active={view === "contact"} onClick={() => setView("contact")} label="Contact Inbox" badge={counts?.unreadContact} />}
           {showInbox && <NavBtn icon={<GraduationCap className="w-4 h-4" />} active={view === "alumni"} onClick={() => setView("alumni")} label="Alumni Records" badge={counts?.unverifiedAlumni} />}
           <NavBtn icon={<User className="w-4 h-4" />} active={view === "profile"} onClick={() => setView("profile")} label="My Profile" />
+          {(role === "super_admin" || role === "admin_staff") && (
+            <a href="/admin-users" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> User Management</a>
+          )}
+          <a href="/staff-change-password" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"><User className="w-4 h-4" /> Change Password</a>
         </nav>
         <div className="p-3 border-t border-white/10">
           <button onClick={logout} className="w-full flex items-center justify-center gap-2 bg-[color:var(--gold)] text-[color:var(--navy)] py-2 rounded-md font-semibold">

@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { useSession } from "@tanstack/react-start/server";
+import { getCookie, useSession } from "@tanstack/react-start/server";
 import { z } from "zod";
 import {
   getStaffSessionSecretIssue,
@@ -52,6 +52,7 @@ export const staffLogout = createServerFn({ method: "POST" }).handler(async () =
 
 export const staffMe = createServerFn({ method: "GET" }).handler(async () => {
   if (getStaffSessionSecretIssue()) return null;
+  if (!getCookie(staffSessionConfig.name)) return null;
   const session = await useSession<StaffSession>(staffSessionConfig);
   return session.data?.id ? session.data : null;
 });
@@ -123,6 +124,7 @@ export const studentLogout = createServerFn({ method: "POST" }).handler(async ()
 
 export const studentMe = createServerFn({ method: "GET" }).handler(async () => {
   if (getStudentSessionSecretIssue()) return null;
+  if (!getCookie(studentSessionConfig.name)) return null;
   const session = await useSession<StudentSession>(studentSessionConfig);
   if (!session.data?.id) return null;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
