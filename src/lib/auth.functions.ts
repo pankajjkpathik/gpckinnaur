@@ -52,6 +52,7 @@ export const staffLogout = createServerFn({ method: "POST" }).handler(async () =
 
 export const staffMe = createServerFn({ method: "GET" }).handler(async () => {
   if (getStaffSessionSecretIssue()) return null;
+  if (!getCookie(staffSessionConfig.name)) return null;
   const session = await useSession<StaffSession>(staffSessionConfig);
   return session.data?.id ? session.data : null;
 });
