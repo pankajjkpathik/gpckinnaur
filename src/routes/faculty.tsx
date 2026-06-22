@@ -13,6 +13,7 @@ import {
   attendanceReport, marksReport,
 } from "@/lib/faculty.functions";
 import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
+import { BarStats, PieStats } from "@/components/portal/Charts";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
@@ -84,7 +85,26 @@ function DashboardTab({ ay }: { ay: string; me: any }) {
   const dash = useQuery({ queryKey: ["fac-dash", ay], queryFn: () => facultyDashboard({ data: { academic_year: ay } }) });
   if (dash.isLoading) return <p className="text-sm">Loading…</p>;
   const d = dash.data!;
+  const subjChart = d.assignments.map((a: any) => ({ label: a.subjects?.code || `#${a.id}`, value: 1 }));
+  const lessonStatus = (() => {
+    const m: Record<string, number> = {};
+    d.pending_lessons.forEach((p: any) => { m[p.status] = (m[p.status] || 0) + 1; });
+    return Object.entries(m).map(([label, value]) => ({ label, value }));
+  })();
   return (
+    <>
+    {(subjChart.length > 0 || lessonStatus.length > 0) && (
+      <div className="grid md:grid-cols-2 gap-4 mb-4">
+        <PortalCard className="p-4">
+          <SectionTitle>My Subjects this Year</SectionTitle>
+          <BarStats data={subjChart} color="#0d9488" />
+        </PortalCard>
+        <PortalCard className="p-4">
+          <SectionTitle>Lesson Plan Status</SectionTitle>
+          {lessonStatus.length > 0 ? <PieStats data={lessonStatus} /> : <p className="text-xs text-center text-muted-foreground py-12">All lesson plans are approved.</p>}
+        </PortalCard>
+      </div>
+    )}
     <div className="grid md:grid-cols-2 gap-4">
       <PortalCard className="p-4">
         <SectionTitle>Today's Schedule ({DAY_LABELS[d.day_of_week]})</SectionTitle>
@@ -137,6 +157,7 @@ function DashboardTab({ ay }: { ay: string; me: any }) {
         )}
       </PortalCard>
     </div>
+    </>
   );
 }
 
