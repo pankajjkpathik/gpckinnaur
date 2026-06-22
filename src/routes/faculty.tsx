@@ -244,7 +244,7 @@ function MarksTab({ ay, me }: { ay: string; me: any }) {
     mutationFn: (submit: boolean) =>
       saveMarks({
         data: {
-          subject_id: a.subject_id, exam_type: examType, academic_year: ay, max_marks: maxMarks, submit_to_hod: submit,
+          subject_id: a!.subject_id, exam_type: examType, academic_year: ay, max_marks: maxMarks, submit_to_hod: submit,
           entries: Object.entries(entries).map(([id, v]) => ({
             student_id: Number(id), obtained: v.obtained === "" ? null : Number(v.obtained), remarks: v.remarks || null,
           })),
