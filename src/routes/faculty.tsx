@@ -168,14 +168,14 @@ function AttendanceTab({ ay, me }: { ay: string; me: any }) {
             <option key={x.id} value={x.id}>{x.subjects?.code} · {x.branch}-Sem{x.semester}</option>
           ))}
         </select>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} max={today} className="border rounded px-2 py-1.5" />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} min={today} className="border rounded px-2 py-1.5" />
         <select value={pno} onChange={(e) => setPno(e.target.value ? Number(e.target.value) : "")} className="border rounded px-2 py-1.5">
           <option value="">Period…</option>
           {(periods.data ?? []).filter((p: any) => !p.is_break).map((p: any) => (
             <option key={p.id} value={p.period_no}>P{p.period_no} {p.start_time}-{p.end_time}</option>
           ))}
         </select>
-        {date !== today && <span className="text-xs text-amber-700 self-center">Editing past date — entries will be locked.</span>}
+        <span className="text-xs text-muted-foreground self-center">Past dates are locked — only today onward can be marked.</span>
       </div>
       {rosterQ.isLoading && <p className="text-sm">Loading roster…</p>}
       {rosterQ.data && rosterQ.data.length === 0 && <p className="text-sm text-muted-foreground">No students in this class.</p>}
