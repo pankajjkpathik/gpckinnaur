@@ -78,7 +78,7 @@ function SubjectsPage() {
               </tr>
             </thead>
             <tbody>
-              {(subjectsQ.data ?? []).map((s: Subject) => (
+              {(subjectsQ.data ?? []).map((s: any) => (
                 <tr key={s.id} className="border-t">
                   <td className="px-3 py-2 font-mono">{s.code}</td>
                   <td className="px-3 py-2">{s.name}</td>
@@ -103,7 +103,7 @@ function SubjectsPage() {
           <SubjectModal
             initial={editing}
             onClose={() => setEditing(null)}
-            onSave={(d) => save.mutate(d)}
+            onSave={(d: any) => save.mutate(d)}
             pending={save.isPending}
             error={save.error?.message}
           />

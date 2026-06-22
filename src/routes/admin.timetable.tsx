@@ -108,7 +108,7 @@ function TimetablePage() {
                           day={d.v}
                           subjects={subjQ.data ?? []}
                           staff={staffQ.data ?? []}
-                          onSave={(payload) => save.mutate({ branch, semester: sem, day_of_week: d.v, period_no: p.period_no, academic_year: year, ...payload })}
+                          onSave={(payload: any) => save.mutate({ branch, semester: sem, day_of_week: d.v, period_no: p.period_no, academic_year: year, ...payload })}
                         />
                       </td>
                     );

@@ -52,7 +52,7 @@ function SyllabusPage() {
             <UnitForm
               subjectId={subjectId}
               nextUnitNo={((unitsQ.data ?? []).at(-1)?.unit_no ?? 0) + 1}
-              onSave={(d) => save.mutate(d)}
+              onSave={(d: any) => save.mutate(d)}
               pending={save.isPending}
               error={save.error?.message}
             />
