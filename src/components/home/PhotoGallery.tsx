@@ -1,4 +1,4 @@
-const tiles = ["Campus Building", "Workshop", "Laboratory", "Library", "Annual Function", "Sports Day={s5Asset.url}"];
+const tiles = ["Campus Building", "Workshop", "Laboratory", "Library", "Annual Function", "Sports Day"];
 
 export function PhotoGallery() {
   return (
