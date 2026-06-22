@@ -167,7 +167,7 @@ function Home() {
         </div>
         <div className="relative">
           <img
-            src="https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?auto=format&fit=crop&w=1200&q=70"
+            src=s6Asset.url
             alt="GP Kinnaur campus"
             className="rounded-xl shadow-lg w-full h-[340px] object-cover"
           />
