@@ -26,7 +26,7 @@ export const adminListStaff = createServerFn({ method: "GET" }).handler(async ()
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("staff_users")
-    .select("id, username, name, role, department, is_active, last_login, created_at")
+    .select("id, username, role, department, is_active, last_login, created_at")
     .order("id");
   if (error) throw new Error(error.message);
   return data ?? [];
