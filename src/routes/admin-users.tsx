@@ -96,7 +96,7 @@ function CreateStaffForm({ onDone }: { onDone: () => void }) {
         <option value="super_admin">Super Admin</option>
       </select>
       <input name="department" placeholder="Department (optional)" className="border rounded px-2 py-1.5 text-sm" />
-      <input name="password" type="text" placeholder="Temp password (≥8)" required minLength={8} className="border rounded px-2 py-1.5 text-sm" />
+      <input name="password" type="password" placeholder="Temp password (≥8)" required minLength={8} autoComplete="new-password" className="border rounded px-2 py-1.5 text-sm" />
       <button disabled={m.isPending} className="bg-[color:var(--navy)] text-white rounded px-3 py-1.5 text-sm font-semibold disabled:opacity-50">
         {m.isPending ? "Creating…" : "+ Add Staff"}
       </button>
