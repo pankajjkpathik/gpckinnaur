@@ -33,14 +33,6 @@ const items: Item[] = [
   },
   { label: "Anti-Ragging", to: "/anti-ragging" },
   {
-    label: "Students Corner",
-    children: [
-      { label: "Training & Placement", to: "/training-placement" },
-      { label: "Student Grievance", to: "/grievance" },
-      { label: "Anti-Ragging", to: "/anti-ragging" },
-    ],
-  },
-  {
     label: "Alumni",
     children: [
       { label: "Our Alumni", to: "/alumni" },
@@ -99,10 +91,7 @@ export function Navbar() {
                 <ul className="hidden group-hover:block absolute top-full left-0 bg-white text-[color:var(--navy)] min-w-[220px] shadow-lg rounded-b-md overflow-hidden">
                   {it.children.map((c) => (
                     <li key={c.label}>
-                      <Link
-                        to={c.to}
-                        className="block px-4 py-2 text-sm hover:bg-[color:var(--accent)]"
-                      >
+                      <Link to={c.to} className="block px-4 py-2 text-sm hover:bg-[color:var(--accent)]">
                         {c.label}
                       </Link>
                     </li>
@@ -113,11 +102,7 @@ export function Navbar() {
           ))}
         </ul>
 
-        <button
-          className="lg:hidden py-3"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label="Toggle menu"
-        >
+        <button className="lg:hidden py-3" onClick={() => setMobileOpen((v) => !v)} aria-label="Toggle menu">
           {mobileOpen ? <X /> : <Menu />}
         </button>
 
