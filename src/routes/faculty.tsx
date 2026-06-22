@@ -41,9 +41,17 @@ function FacultyPortal() {
   const [ay] = useState(defaultAY());
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
+  const isViewer = me.role !== "faculty"; // HOD / Principal / Admin see this as read-only "Faculty View"
+  const portalTitle = isViewer ? "Faculty View (Read-only)" : "Faculty Portal";
+
   return (
-    <PortalShell title="Faculty Portal" subtitle={`Academic Year ${ay}`} me={me as any} accent="teal">
+    <PortalShell title={portalTitle} subtitle={`Academic Year ${ay}`} me={me as any} accent="teal">
       <div className="container mx-auto px-4 py-6 space-y-4">
+        {isViewer && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded px-3 py-2">
+            You are viewing the Faculty portal as <strong className="capitalize">{me.role}</strong>. Edits (attendance, marks, lesson plans, leave) are disabled — open from a Faculty account to make changes.
+          </div>
+        )}
         <div className="flex gap-1 border-b overflow-x-auto">
           {([
             ["home", "Dashboard", Calendar],
@@ -58,12 +66,14 @@ function FacultyPortal() {
             </button>
           ))}
         </div>
+        <fieldset disabled={isViewer} className={isViewer ? "pointer-events-none opacity-90" : ""}>
         {tab === "home" && <DashboardTab ay={ay} me={me as any} />}
         {tab === "attendance" && <AttendanceTab ay={ay} me={me as any} />}
         {tab === "marks" && <MarksTab ay={ay} me={me as any} />}
         {tab === "lessons" && <LessonsTab ay={ay} me={me as any} />}
         {tab === "leave" && <LeaveTab />}
         {tab === "reports" && <ReportsTab ay={ay} me={me as any} />}
+        </fieldset>
       </div>
     </PortalShell>
   );
