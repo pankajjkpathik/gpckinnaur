@@ -6,7 +6,7 @@ import { staffSessionConfig, type StaffSession } from "./sessions";
 async function requireAdmin(): Promise<StaffSession> {
   if (!getCookie(staffSessionConfig.name)) throw new Error("Not authenticated");
   const session = await useSession<StaffSession>(staffSessionConfig);
-  const me = session.data;
+  const me = session.data as StaffSession | undefined;
   if (!me?.id) throw new Error("Not authenticated");
   if (me.role !== "super_admin" && me.role !== "admin_staff")
     throw new Error("Forbidden: admin access required");
