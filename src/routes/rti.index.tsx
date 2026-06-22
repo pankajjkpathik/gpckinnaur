@@ -43,6 +43,14 @@ function RtiHome() {
               Government Polytechnic, Kinnaur, being a public authority, is committed to providing information to
               citizens as per the provisions of the RTI Act, 2005.
             </p>
+            <a
+              href={rtiActPdf.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-md bg-[color:var(--navy)] text-white hover:opacity-90"
+            >
+              <Download className="w-4 h-4" /> Download RTI Act, 2005 (PDF)
+            </a>
           </section>
 
           <section className="bg-white border rounded-lg p-6">
