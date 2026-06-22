@@ -15,7 +15,7 @@ export function InstitutionalHeader() {
             <h1 className="text-xl sm:text-3xl font-bold text-[color:var(--navy)] leading-tight">
               Government Polytechnic, Kinnaur(HP)
             </h1>
-            <p className="text-sm text-muted-foreground">Himachal Pradesh</p>
+            <p className="text-sm text-muted-foreground">(Department of Technical Education, Himachal Pradesh)</p>
             <p className="text-xs text-muted-foreground italic">
               Camp at Government Polytechnic Rohru, Distt. Shimla (HP)
             </p>
