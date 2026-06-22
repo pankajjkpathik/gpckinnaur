@@ -75,6 +75,9 @@ function MessagesLink() {
       {n > 0 && <span className="bg-rose-500 text-white text-[10px] rounded-full px-1.5 ml-1">{n}</span>}
     </Link>
   );
+}
+
+
 
 export function PortalCard({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`bg-white border rounded-lg ${className}`}>{children}</div>;
