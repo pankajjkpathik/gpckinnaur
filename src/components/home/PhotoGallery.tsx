@@ -7,49 +7,38 @@ const tiles = [
   },
   {
     title: "Workshop",
-    image: "/images/workshop.jpg",
+    image: lab.url,
   },
   {
     title: "Laboratory",
-    image: "/images/laboratory.jpg",
+    image: seminar.url,
   },
   {
     title: "Library",
-    image: "/images/library.jpg",
+    image: vanmahoatsav.url,
   },
   {
     title: "Annual Function",
-    image: "/images/annual-function.jpg",
+    image: event.url,
   },
   {
     title: "Sports Day",
-    image: "/images/sports-day.jpg",
+    image: event.url,
   },
 ];
 
 export function PhotoGallery() {
   return (
     <section>
-      <h3 className="text-2xl font-bold text-[color:var(--navy)] mb-4">
-        Campus Life
-      </h3>
+      <h3 className="text-2xl font-bold text-[color:var(--navy)] mb-4">Campus Life</h3>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {tiles.map((tile) => (
-          <div
-            key={tile.title}
-            className="relative aspect-[4/3] rounded-lg overflow-hidden group cursor-pointer"
-          >
-            <img
-              src={tile.image}
-              alt={tile.title}
-              className="w-full h-full object-cover"
-            />
+          <div key={tile.title} className="relative aspect-[4/3] rounded-lg overflow-hidden group cursor-pointer">
+            <img src={tile.image} alt={tile.title} className="w-full h-full object-cover" />
 
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/60 transition-all flex items-center justify-center">
-              <span className="text-white opacity-0 group-hover:opacity-100 font-semibold">
-                {tile.title}
-              </span>
+              <span className="text-white opacity-0 group-hover:opacity-100 font-semibold">{tile.title}</span>
             </div>
           </div>
         ))}
