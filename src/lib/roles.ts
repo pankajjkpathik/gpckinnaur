@@ -9,3 +9,4 @@ export const adminRoles: StaffRole[] = ["super_admin", "admin_staff"];
 export const clerkRoles: StaffRole[] = ["super_admin", "clerk"];
 export const hodRoles: StaffRole[] = ["super_admin", "principal", "hod"];
 export const facultyRoles: StaffRole[] = ["super_admin", "principal", "hod", "faculty"];
+export const principalRoles: StaffRole[] = ["super_admin", "principal"];
