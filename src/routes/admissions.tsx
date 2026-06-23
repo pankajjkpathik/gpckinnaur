@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
 import { AlertCircle, CalendarDays, ClipboardList, Download, FileText, Phone, Mail, CheckCircle2 } from "lucide-react";
+import feesImg from "@/assets/fees.jpeg.asset.json";
 
 export const Route = createFileRoute("/admissions")({
   head: () =>
@@ -216,7 +217,7 @@ function Admissions() {
                 </a>
               </li>
               <li>
-                <a className="text-[color:var(--navy)] hover:underline" href="#">
+                <a className="text-[color:var(--navy)] hover:underline" href={feesImg.url} target="_blank" rel="noopener noreferrer">
                   Fee Structure Details
                 </a>
               </li>
