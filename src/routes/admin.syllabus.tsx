@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
-import { listSubjects, listSyllabus, upsertSyllabusUnit, deleteSyllabusUnit } from "@/lib/academic.functions";
+import { listSubjects, listSyllabus, upsertSyllabusUnit, deleteSyllabusUnit, bulkImportSyllabus } from "@/lib/academic.functions";
+
 
 export const Route = createFileRoute("/admin/syllabus")({
   head: () => portalMeta("Syllabus"),
