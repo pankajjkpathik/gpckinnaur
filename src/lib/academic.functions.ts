@@ -40,11 +40,6 @@ export const upsertSubject = createServerFn({ method: "POST" })
         practical_hours: z.number().int().min(0).max(40).default(0),
         dcs_bs_hours: z.number().int().min(0).max(40).default(0),
         total_weekly_load: z.number().int().min(0).max(60).default(0),
-        internal_theory_marks: z.number().int().min(0).max(500).default(0),
-        internal_practical_marks: z.number().int().min(0).max(500).default(0),
-        external_theory_marks: z.number().int().min(0).max(500).default(0),
-        external_practical_marks: z.number().int().min(0).max(500).default(0),
-        total_marks: z.number().int().min(0).max(2000).default(0),
       })
       .parse(d),
   )
@@ -443,11 +438,6 @@ const subjectRowSchema = z.object({
   practical_hours: z.number().int().min(0).default(0),
   dcs_bs_hours: z.number().int().min(0).default(0),
   total_weekly_load: z.number().int().min(0).default(0),
-  internal_theory_marks: z.number().int().min(0).default(0),
-  internal_practical_marks: z.number().int().min(0).default(0),
-  external_theory_marks: z.number().int().min(0).default(0),
-  external_practical_marks: z.number().int().min(0).default(0),
-  total_marks: z.number().int().min(0).default(0),
 });
 
 export const bulkImportSubjects = createServerFn({ method: "POST" })
@@ -477,11 +467,6 @@ export const bulkImportSubjects = createServerFn({ method: "POST" })
           practical_hours: numOr0(pick(raw, "practical_hours", "P", "Practical Hours", "practical")),
           dcs_bs_hours: numOr0(pick(raw, "dcs_bs_hours", "DCS/BS Hours", "dcs_bs")),
           total_weekly_load: numOr0(pick(raw, "total_weekly_load", "Total Weekly Load")),
-          internal_theory_marks: numOr0(pick(raw, "internal_theory_marks", "Internal Theory Marks")),
-          internal_practical_marks: numOr0(pick(raw, "internal_practical_marks", "Internal Practical Marks")),
-          external_theory_marks: numOr0(pick(raw, "external_theory_marks", "External Theory Marks")),
-          external_practical_marks: numOr0(pick(raw, "external_practical_marks", "External Practical Marks")),
-          total_marks: numOr0(pick(raw, "total_marks", "Total Marks")),
         };
         valid.push(subjectRowSchema.parse(norm));
       } catch (e: any) {
