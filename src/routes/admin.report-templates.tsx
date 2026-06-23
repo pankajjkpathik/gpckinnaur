@@ -43,6 +43,16 @@ function ReportTemplatesAdmin() {
   const [name, setName] = useState("");
   const [kind, setKind] = useState("monthly_attendance");
   const [file, setFile] = useState<File | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const bulkDel = useMutation({
+    mutationFn: (ids: number[]) => templatesBulkDelete({ data: { ids } }),
+    onSuccess: () => { setSelected(new Set()); qc.invalidateQueries({ queryKey: ["report-templates"] }); },
+  });
+  const toggle = (id: number) => { const s = new Set(selected); s.has(id) ? s.delete(id) : s.add(id); setSelected(s); };
+  const toggleAll = () => {
+    const ids = (list.data ?? []).map((r: any) => r.id);
+    setSelected(selected.size === ids.length ? new Set() : new Set(ids));
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
