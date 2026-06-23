@@ -1,18 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Upload, Download } from "lucide-react";
-import * as XLSX from "xlsx";
+import { Plus, Trash2 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
-import { listSubjects, listSyllabus, upsertSyllabusUnit, deleteSyllabusUnit, bulkImportSyllabus } from "@/lib/academic.functions";
-
+import { listSubjects, listSyllabus, upsertSyllabusUnit, deleteSyllabusUnit, bulkImportSyllabus, bulkDeleteSyllabus } from "@/lib/academic.functions";
+import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
 
 export const Route = createFileRoute("/admin/syllabus")({
   head: () => portalMeta("Syllabus"),
   component: SyllabusPage,
 });
+
+const SYLLABUS_SAMPLE = [
+  { subject_code: "CE301", branch: "civil", semester: 3, unit_no: 1, title: "Introduction to Surveying", hours: 6, topics: "Definitions|Classifications|Principles" },
+  { subject_code: "CE301", branch: "civil", semester: 3, unit_no: 2, title: "Chain Surveying", hours: 8, topics: "Instruments\nRanging\nOffsets" },
+];
 
 function SyllabusPage() {
   const nav = useNavigate();
@@ -25,6 +29,7 @@ function SyllabusPage() {
   }, [me, isLoading, nav]);
 
   const [subjectId, setSubjectId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
   const subjQ = useQuery({ queryKey: ["subjects-all"], queryFn: () => listSubjects({ data: {} as any }), enabled: !!me });
   const unitsQ = useQuery({
     queryKey: ["syllabus", subjectId],
@@ -34,6 +39,10 @@ function SyllabusPage() {
   const save = useMutation({ mutationFn: (d: any) => upsertSyllabusUnit({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["syllabus"] }) });
   const del = useMutation({ mutationFn: (id: number) => deleteSyllabusUnit({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["syllabus"] }) });
 
+  const toggle = (id: number) => {
+    const s = new Set(selected); s.has(id) ? s.delete(id) : s.add(id); setSelected(s);
+  };
+
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
   return (
@@ -41,15 +50,30 @@ function SyllabusPage() {
       <div className="container mx-auto px-4 py-6 space-y-4">
         <div className="bg-white border rounded p-3 flex flex-wrap items-center gap-2">
           <label className="text-sm font-semibold">Subject:</label>
-          <select value={subjectId ?? ""} onChange={(e) => setSubjectId(e.target.value ? Number(e.target.value) : null)} className="border rounded px-3 py-2 text-sm bg-white">
+          <select value={subjectId ?? ""} onChange={(e) => { setSubjectId(e.target.value ? Number(e.target.value) : null); setSelected(new Set()); }} className="border rounded px-3 py-2 text-sm bg-white">
             <option value="">— Select a subject —</option>
             {(subjQ.data ?? []).map((s: any) => (
               <option key={s.id} value={s.id}>{s.branch.toUpperCase()} · Sem {s.semester} · {s.code} — {s.name}</option>
             ))}
           </select>
-          <div className="ml-auto"><SyllabusBulkBar onImported={() => qc.invalidateQueries({ queryKey: ["syllabus"] })} /></div>
+          <div className="ml-auto">
+            <BulkOpsBar
+              sample={SYLLABUS_SAMPLE}
+              sampleName="syllabus-sample"
+              onImport={async (rows) => {
+                const r = await bulkImportSyllabus({ data: { rows } });
+                qc.invalidateQueries({ queryKey: ["syllabus"] });
+                return r;
+              }}
+              selectedCount={selected.size}
+              onBulkDelete={async () => {
+                await bulkDeleteSyllabus({ data: { ids: Array.from(selected) } });
+                setSelected(new Set());
+                qc.invalidateQueries({ queryKey: ["syllabus"] });
+              }}
+            />
+          </div>
         </div>
-
 
         {subjectId && (
           <>
@@ -63,10 +87,13 @@ function SyllabusPage() {
             <div className="space-y-2">
               {(unitsQ.data ?? []).map((u: any) => (
                 <div key={u.id} className="bg-white border rounded p-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-semibold">Unit {u.unit_no}: {u.title}</p>
-                      <p className="text-xs text-muted-foreground">{u.hours} hours</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2">
+                      <input type="checkbox" className="mt-1" checked={selected.has(u.id)} onChange={() => toggle(u.id)} />
+                      <div>
+                        <p className="font-semibold">Unit {u.unit_no}: {u.title}</p>
+                        <p className="text-xs text-muted-foreground">{u.hours} hours</p>
+                      </div>
                     </div>
                     <button onClick={() => confirm("Delete unit?") && del.mutate(u.id)} className="p-1.5 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="w-4 h-4" /></button>
                   </div>
@@ -116,56 +143,3 @@ function UnitForm({ subjectId, nextUnitNo, onSave, pending, error }: any) {
     </form>
   );
 }
-
-const SYLLABUS_SAMPLE = [
-  { subject_code: "CE301", branch: "civil", semester: 3, unit_no: 1, title: "Introduction to Surveying", hours: 6, topics: "Definitions|Classifications|Principles" },
-  { subject_code: "CE301", branch: "civil", semester: 3, unit_no: 2, title: "Chain Surveying", hours: 8, topics: "Instruments\nRanging\nOffsets" },
-];
-
-function SyllabusBulkBar({ onImported }: { onImported: () => void }) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [result, setResult] = useState<{ inserted: number; errors: { row: number; error: string }[] } | null>(null);
-  const imp = useMutation({
-    mutationFn: (rows: any[]) => bulkImportSyllabus({ data: { rows } }),
-    onSuccess: (r) => { setResult(r); onImported(); },
-  });
-
-  const downloadSample = () => {
-    const ws = XLSX.utils.json_to_sheet(SYLLABUS_SAMPLE);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Syllabus");
-    XLSX.writeFile(wb, "syllabus-sample.xlsx");
-  };
-
-  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setResult(null);
-    const buf = await f.arrayBuffer();
-    const wb = XLSX.read(buf);
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<any>(ws, { defval: "" });
-    if (rows.length === 0) { alert("Empty sheet"); return; }
-    imp.mutate(rows);
-    e.target.value = "";
-  };
-
-  return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <button type="button" onClick={downloadSample} className="px-3 py-2 border rounded text-sm inline-flex items-center gap-1">
-        <Download className="w-4 h-4" /> Sample.xlsx
-      </button>
-      <button type="button" onClick={() => fileRef.current?.click()} disabled={imp.isPending} className="px-3 py-2 bg-emerald-700 text-white rounded text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50">
-        <Upload className="w-4 h-4" /> {imp.isPending ? "Importing…" : "Bulk Upload"}
-      </button>
-      <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={onFile} />
-      {imp.error && <span className="text-xs text-destructive">{(imp.error as any).message}</span>}
-      {result && (
-        <span className="text-xs text-muted-foreground">
-          ✓ {result.inserted} imported{result.errors.length ? ` · ${result.errors.length} errors (row ${result.errors.slice(0,3).map(e=>e.row).join(", ")}${result.errors.length>3?"…":""})` : ""}
-        </span>
-      )}
-    </div>
-  );
-}
-
