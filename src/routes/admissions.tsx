@@ -207,6 +207,8 @@ function Admissions() {
                 <a
                   className="text-[color:var(--navy)] hover:underline"
                   href="https://www.hptechboard.com/storage/files/1/PAT_LEET_2026/LEET%20-2026%20Prospectus_.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Download Prospectus Polytechnic Admission (LEET-2026)
                 </a>
