@@ -323,41 +323,82 @@ function Home() {
         </div>
       </section>
 
-      {/* Events + Notices */}
-      <section className="container mx-auto px-4 py-14 grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <div className="flex items-center gap-2 mb-5">
-            <Calendar className="w-5 h-5 text-[color:var(--gold-dark)]" />
-            <h2 className="text-2xl font-bold text-[color:var(--navy)]">Upcoming Events</h2>
+      {/* Combined: News Clippings + Upcoming Events + Notice Board */}
+      <section className="container mx-auto px-4 py-14">
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* News Clippings (Images only) */}
+          <div className="bg-white rounded-lg border shadow-sm flex flex-col">
+            <div className="px-4 py-3 border-b flex items-center gap-2">
+              <Newspaper className="w-5 h-5 text-[color:var(--gold-dark)]" />
+              <h3 className="text-lg font-bold text-[color:var(--navy)] border-b-2 border-[color:var(--gold)] pb-1">
+                News Clippings
+              </h3>
+            </div>
+            <div className="p-4 grid grid-cols-2 gap-3 max-h-[420px] overflow-y-auto">
+              {[
+                { src: eventAsset.url, alt: "News clipping — Annual Sports Meet" },
+                { src: seminarAsset.url, alt: "News clipping — Seminar coverage" },
+                { src: vanmahoatsavAsset.url, alt: "News clipping — Van Mahotsav" },
+                { src: s5Asset.url, alt: "News clipping — Student events" },
+              ].map((img) => (
+                <a
+                  key={img.src}
+                  href={img.src}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block aspect-[4/5] rounded-md overflow-hidden border hover:shadow-md transition group"
+                >
+                  <img
+                    src={img.src}
+                    alt={img.alt}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    loading="lazy"
+                  />
+                </a>
+              ))}
+            </div>
+            <div className="px-4 py-2 border-t bg-secondary/40 text-right">
+              <a href="#" className="text-xs font-semibold text-[color:var(--navy)] hover:underline">
+                View All →
+              </a>
+            </div>
           </div>
-          <div className="space-y-3">
-            {events.map((e) => (
-              <article
-                key={e.title}
-                className="flex gap-4 bg-white border rounded-lg p-4 hover:shadow-md transition"
-              >
-                <div className="flex-shrink-0 w-16 text-center bg-[color:var(--navy)] text-white rounded-md py-2">
-                  <p className="text-xs font-semibold text-[color:var(--gold)]">{e.month}</p>
-                  <p className="text-2xl font-bold leading-none">{e.day}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-[color:var(--navy)]">{e.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{e.desc}</p>
-                  <p className="text-xs text-[color:var(--gold-dark)] mt-1">📍 {e.venue}</p>
-                </div>
-              </article>
-            ))}
+
+          {/* Upcoming Events */}
+          <div className="bg-white rounded-lg border shadow-sm flex flex-col">
+            <div className="px-4 py-3 border-b flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-[color:var(--gold-dark)]" />
+              <h3 className="text-lg font-bold text-[color:var(--navy)] border-b-2 border-[color:var(--gold)] pb-1">
+                Upcoming Events
+              </h3>
+            </div>
+            <ul className="divide-y max-h-[420px] overflow-y-auto">
+              {events.map((e) => (
+                <li key={e.title} className="px-4 py-3 hover:bg-secondary/40">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-14 text-center bg-[color:var(--navy)] text-white rounded-md py-1.5">
+                      <p className="text-[10px] font-semibold text-[color:var(--gold)]">{e.month}</p>
+                      <p className="text-xl font-bold leading-none">{e.day}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-semibold text-[color:var(--navy)]">{e.title}</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{e.desc}</p>
+                      <p className="text-[11px] text-[color:var(--gold-dark)] mt-1">📍 {e.venue}</p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="px-4 py-2 border-t bg-secondary/40 text-right">
+              <Link to="/about" className="text-xs font-semibold text-[color:var(--navy)] hover:underline">
+                View All →
+              </Link>
+            </div>
           </div>
-          <Link
-            to="/about"
-            className="inline-block mt-4 text-sm font-semibold text-[color:var(--navy)] hover:text-[color:var(--gold-dark)]"
-          >
-            View All Events →
-          </Link>
-        </div>
-        <aside>
+
+          {/* Notice Board */}
           <NoticeBoard />
-        </aside>
+        </div>
       </section>
 
       {/* Photo Gallery */}
@@ -371,53 +412,6 @@ function Home() {
             </p>
           </div>
           <PhotoGallery />
-        </div>
-      </section>
-
-      {/* News Clippings */}
-      <section className="container mx-auto px-4 py-14">
-        <div className="flex items-center gap-2 mb-2">
-          <Newspaper className="w-5 h-5 text-[color:var(--gold-dark)]" />
-          <h2 className="text-2xl md:text-3xl font-bold text-[color:var(--navy)]">News Clippings</h2>
-        </div>
-        <p className="text-muted-foreground mb-6">GP Kinnaur in the news — recent media coverage.</p>
-        <div className="grid md:grid-cols-2 gap-4">
-          {news.map((n) => (
-            <article
-              key={n.title}
-              className="flex gap-3 bg-white border rounded-lg p-4 hover:shadow-md transition"
-            >
-              <div className="flex-shrink-0 w-10 h-10 rounded-md bg-[color:var(--navy)]/10 flex items-center justify-center">
-                <Newspaper className="w-5 h-5 text-[color:var(--navy)]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 text-[10px] font-bold mb-1">
-                  <span className="px-2 py-0.5 rounded bg-[color:var(--gold)]/20 text-[color:var(--gold-dark)]">
-                    {n.tag}
-                  </span>
-                  <span className="text-muted-foreground">· {n.source}</span>
-                </div>
-                <h3 className="font-semibold text-[color:var(--navy)] leading-snug">{n.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{n.date}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA banner */}
-      <section className="bg-[color:var(--navy)] text-white py-12">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-lg md:text-xl mb-5 max-w-2xl mx-auto">
-            Applications are now open for the academic session 2025-2026. Secure your future with
-            technical excellence.
-          </p>
-          <Link
-            to="/admissions"
-            className="inline-flex items-center gap-2 px-7 py-3 rounded-md bg-[color:var(--gold)] text-[color:var(--navy)] font-bold hover:opacity-90"
-          >
-            Admission Process →
-          </Link>
         </div>
       </section>
     </PageLayout>
