@@ -14,7 +14,7 @@ const slides = [
     image: s1Asset.url,
   },
   {
-    title: "Admissions Open 2025-26",
+    title: "Admissions Open 2026-27",
     subtitle: "Diploma in Civil & Mechanical Engineering — apply now.",
     cta: "Apply Now",
     to: "/admissions",
@@ -46,9 +46,7 @@ export function HeroSlider() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
         <div className="relative container mx-auto px-4 h-full flex items-center">
           <div className="max-w-xl">
-            <h2 className="text-3xl md:text-5xl font-bold text-[color:var(--gold)] drop-shadow-md mb-3">
-              {s.title}
-            </h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-[color:var(--gold)] drop-shadow-md mb-3">{s.title}</h2>
             <p className="text-base md:text-lg text-white/90 mb-6">{s.subtitle}</p>
             <Link
               to={s.to}
