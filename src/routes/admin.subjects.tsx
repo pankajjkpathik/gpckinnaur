@@ -61,7 +61,7 @@ function SubjectsPage() {
             <option value="">All semesters</option>
             {[1,2,3,4,5,6].map((s) => <option key={s} value={s}>Sem {s}</option>)}
           </select>
-          <BulkBar onImported={() => qc.invalidateQueries({ queryKey: ["subjects"] })} />
+          <div className="ml-auto"><BulkBar onImported={() => qc.invalidateQueries({ queryKey: ["subjects"] })} /></div>
           <button onClick={() => setEditing({ kind: "theory", credits: 4 })} className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1">
             <Plus className="w-4 h-4" /> Add Subject
           </button>
