@@ -5,7 +5,8 @@ import { Plus, Trash2, Save } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
-import { listGrading, replaceGrading } from "@/lib/academic.functions";
+import { listGrading, replaceGrading, bulkImportGrading } from "@/lib/academic.functions";
+import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
 
 export const Route = createFileRoute("/admin/grading")({
   head: () => portalMeta("Grading Scheme"),
