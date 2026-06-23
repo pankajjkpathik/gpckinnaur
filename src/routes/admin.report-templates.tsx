@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 import { Upload, Trash2, Download, FileSpreadsheet } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { adminRoles } from "@/lib/roles";
-import { templatesList, templateUpload, templateDelete, templateDownload } from "@/lib/report-templates.functions";
+import { templatesList, templateUpload, templateDelete, templateDownload, templatesBulkDelete } from "@/lib/report-templates.functions";
 
 export const Route = createFileRoute("/admin/report-templates")({
   head: () => ({ meta: [{ title: "Report Templates — Admin · GP Kinnaur" }, { name: "robots", content: "noindex, nofollow" }] }),
