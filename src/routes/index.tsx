@@ -20,6 +20,10 @@ import { PhotoGallery } from "@/components/home/PhotoGallery";
 import civilAsset from "@/assets/civil.png.asset.json";
 import mechAsset from "@/assets/mech.png.asset.json";
 import s6Asset from "@/assets/s6.jpg.asset.json";
+import s5Asset from "@/assets/s5.jpeg.asset.json";
+import eventAsset from "@/assets/event.jpeg.asset.json";
+import seminarAsset from "@/assets/seminar.jpeg.asset.json";
+import vanmahoatsavAsset from "@/assets/vanmahoatsav.jpeg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
