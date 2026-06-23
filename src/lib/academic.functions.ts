@@ -457,15 +457,31 @@ export const bulkImportSubjects = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const errors: { row: number; error: string }[] = [];
     const valid: any[] = [];
+    const numOr0 = (v: any) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+    const pick = (raw: any, ...keys: string[]) => {
+      for (const k of keys) if (raw[k] !== undefined && raw[k] !== "") return raw[k];
+      return undefined;
+    };
     data.rows.forEach((raw, i) => {
       try {
+        const catRaw = String(pick(raw, "category", "Category") ?? "").trim();
         const norm = {
-          code: String(raw.code ?? raw.Code ?? "").trim(),
-          name: String(raw.name ?? raw.Name ?? "").trim(),
-          branch: String(raw.branch ?? raw.Branch ?? "").trim().toLowerCase(),
-          semester: Number(raw.semester ?? raw.Semester ?? raw.sem ?? 0),
-          kind: String(raw.kind ?? raw.Kind ?? "theory").trim().toLowerCase(),
-          credits: Number(raw.credits ?? raw.Credits ?? 0),
+          code: String(pick(raw, "code", "Code") ?? "").trim(),
+          name: String(pick(raw, "name", "Name") ?? "").trim(),
+          branch: String(pick(raw, "branch", "Branch") ?? "").trim().toLowerCase(),
+          semester: numOr0(pick(raw, "semester", "Semester", "sem")),
+          kind: String(pick(raw, "kind", "Kind", "theory_practical") ?? "theory").trim().toLowerCase(),
+          credits: numOr0(pick(raw, "credits", "Credits")),
+          category: catRaw ? catRaw : null,
+          lecture_hours: numOr0(pick(raw, "lecture_hours", "L", "Lecture Hours", "lecture")),
+          practical_hours: numOr0(pick(raw, "practical_hours", "P", "Practical Hours", "practical")),
+          dcs_bs_hours: numOr0(pick(raw, "dcs_bs_hours", "DCS/BS Hours", "dcs_bs")),
+          total_weekly_load: numOr0(pick(raw, "total_weekly_load", "Total Weekly Load")),
+          internal_theory_marks: numOr0(pick(raw, "internal_theory_marks", "Internal Theory Marks")),
+          internal_practical_marks: numOr0(pick(raw, "internal_practical_marks", "Internal Practical Marks")),
+          external_theory_marks: numOr0(pick(raw, "external_theory_marks", "External Theory Marks")),
+          external_practical_marks: numOr0(pick(raw, "external_practical_marks", "External Practical Marks")),
+          total_marks: numOr0(pick(raw, "total_marks", "Total Marks")),
         };
         valid.push(subjectRowSchema.parse(norm));
       } catch (e: any) {
