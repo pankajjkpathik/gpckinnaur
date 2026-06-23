@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
 import { AlertCircle, CalendarDays, ClipboardList, Download, FileText, Phone, Mail, CheckCircle2 } from "lucide-react";
+import feesImg from "@/assets/fees.jpeg.asset.json";
 
 export const Route = createFileRoute("/admissions")({
   head: () =>
