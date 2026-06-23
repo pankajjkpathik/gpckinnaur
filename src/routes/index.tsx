@@ -148,20 +148,17 @@ function Home() {
       {/* About snippet */}
       <section className="container mx-auto px-4 py-14 grid lg:grid-cols-2 gap-10 items-center">
         <div>
-          <p className="text-xs font-bold tracking-widest text-[color:var(--gold-dark)]">
-            ABOUT OUR INSTITUTE
-          </p>
+          <p className="text-xs font-bold tracking-widest text-[color:var(--gold-dark)]">ABOUT OUR INSTITUTE</p>
           <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)] mt-2 mb-4">
             Building Tomorrow's Engineers in the Hills of Kinnaur
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-3">
-            Government Polytechnic, Kinnaur is a premier technical institute affiliated to HPTSB and
-            approved by AICTE, offering diploma programs with modern, well-equipped facilities and a
-            conducive learning environment.
+            Government Polytechnic, Kinnaur is a premier technical institute affiliated to HPTSB and approved by AICTE,
+            offering diploma programs with modern, well-equipped facilities and a conducive learning environment.
           </p>
           <p className="text-muted-foreground leading-relaxed mb-5">
-            Our institution creates skilled professionals ready to meet the challenges of the modern
-            industrial landscape through rigorous academic curriculum and practical exposure.
+            Our institution creates skilled professionals ready to meet the challenges of the modern industrial
+            landscape through rigorous academic curriculum and practical exposure.
           </p>
           <ul className="grid sm:grid-cols-2 gap-2 mb-6">
             {["AICTE Approved", "Highly Qualified Faculty", "Modern Laboratories", "Industry Oriented Curriculum"].map(
@@ -209,9 +206,7 @@ function Home() {
       <section className="bg-secondary/40 py-14 border-y">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)]">
-              Our Academic Programs
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)]">Our Academic Programs</h2>
             <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-2 mb-3" />
             <p className="text-muted-foreground">
               Offering diploma courses designed to build strong technical foundations.
@@ -267,9 +262,7 @@ function Home() {
         />
         <div className="relative container mx-auto px-4">
           <div className="text-center mb-10">
-            <p className="text-xs font-bold tracking-widest text-[color:var(--gold)]">
-              PAY ONLINE — SECURE & INSTANT
-            </p>
+            <p className="text-xs font-bold tracking-widest text-[color:var(--gold)]">PAY ONLINE — SECURE & INSTANT</p>
             <h2 className="text-3xl md:text-4xl font-bold text-white mt-2">Fees Payment Portal</h2>
             <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-3" />
           </div>
@@ -289,7 +282,7 @@ function Home() {
                 subtitle: "For Freshly Admitted Students",
                 desc: "Complete your admission by paying the prescribed first-year fees online.",
                 icon: GraduationCap,
-                href: "https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805",
+                href: "https://form.qfixonline.com/gpckaf",
                 accent: "from-amber-500 to-orange-600",
                 cta: "Pay Admission Fee",
               },
@@ -418,9 +411,7 @@ function Home() {
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)]">Photo Gallery</h2>
             <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-2 mb-3" />
-            <p className="text-muted-foreground">
-              Glimpses of campus life, labs, and events at GP Kinnaur.
-            </p>
+            <p className="text-muted-foreground">Glimpses of campus life, labs, and events at GP Kinnaur.</p>
           </div>
           <PhotoGallery />
         </div>
