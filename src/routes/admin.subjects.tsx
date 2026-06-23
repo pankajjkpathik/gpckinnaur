@@ -15,7 +15,7 @@ export const Route = createFileRoute("/admin/subjects")({
 
 const CATEGORIES = ["BS","HS","ES","PCC","PE","OE","AU","Project"] as const;
 
-const ROMAN = ["","I","II","III","IV","V","VI"] as const;
+const ROMAN = ["","I","II","III","IV","V","VI"];
 
 function toRoman(n: number) { return ROMAN[n] ?? String(n); }
 
