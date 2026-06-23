@@ -40,11 +40,6 @@ export const upsertSubject = createServerFn({ method: "POST" })
         practical_hours: z.number().int().min(0).max(40).default(0),
         dcs_bs_hours: z.number().int().min(0).max(40).default(0),
         total_weekly_load: z.number().int().min(0).max(60).default(0),
-        internal_theory_marks: z.number().int().min(0).max(500).default(0),
-        internal_practical_marks: z.number().int().min(0).max(500).default(0),
-        external_theory_marks: z.number().int().min(0).max(500).default(0),
-        external_practical_marks: z.number().int().min(0).max(500).default(0),
-        total_marks: z.number().int().min(0).max(2000).default(0),
       })
       .parse(d),
   )
