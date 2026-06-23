@@ -39,15 +39,17 @@ function SyllabusPage() {
   return (
     <PortalShell title="Syllabus" subtitle="Admin · Unit-wise Topics" me={me as any} accent="rose">
       <div className="container mx-auto px-4 py-6 space-y-4">
-        <div className="bg-white border rounded p-3">
-          <label className="text-sm font-semibold mr-2">Subject:</label>
+        <div className="bg-white border rounded p-3 flex flex-wrap items-center gap-2">
+          <label className="text-sm font-semibold">Subject:</label>
           <select value={subjectId ?? ""} onChange={(e) => setSubjectId(e.target.value ? Number(e.target.value) : null)} className="border rounded px-3 py-2 text-sm bg-white">
             <option value="">— Select a subject —</option>
             {(subjQ.data ?? []).map((s: any) => (
               <option key={s.id} value={s.id}>{s.branch.toUpperCase()} · Sem {s.semester} · {s.code} — {s.name}</option>
             ))}
           </select>
+          <div className="ml-auto"><SyllabusBulkBar onImported={() => qc.invalidateQueries({ queryKey: ["syllabus"] })} /></div>
         </div>
+
 
         {subjectId && (
           <>
