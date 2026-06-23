@@ -52,6 +52,7 @@ function SubjectsPage() {
   const [branch, setBranch] = useState("");
   const [sem, setSem] = useState<number | "">("");
   const [editing, setEditing] = useState<Partial<Subject> | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const subjectsQ = useQuery({
     queryKey: ["subjects", branch, sem],
@@ -67,6 +68,14 @@ function SubjectsPage() {
     mutationFn: (id: number) => deleteSubject({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["subjects"] }),
   });
+
+  const toggle = (id: number) => {
+    const s = new Set(selected); s.has(id) ? s.delete(id) : s.add(id); setSelected(s);
+  };
+  const toggleAll = () => {
+    const ids = (subjectsQ.data ?? []).map((r: any) => r.id);
+    setSelected(selected.size === ids.length ? new Set() : new Set(ids));
+  };
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
