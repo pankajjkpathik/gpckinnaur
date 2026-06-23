@@ -217,7 +217,7 @@ function Admissions() {
                 </a>
               </li>
               <li>
-                <a className="text-[color:var(--navy)] hover:underline" href="/__l5e/assets-v1/" target="_blank" rel="noopener noreferrer" id="fee-link-placeholder">
+                <a className="text-[color:var(--navy)] hover:underline" href={feesImg.url} target="_blank" rel="noopener noreferrer">
                   Fee Structure Details
                 </a>
               </li>
