@@ -4,10 +4,13 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
+  CreditCard,
   GraduationCap,
   Hammer,
   Newspaper,
+  Receipt,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { HeroSlider } from "@/components/home/HeroSlider";
