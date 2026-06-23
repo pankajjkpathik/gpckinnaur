@@ -2,12 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
 import { AlertCircle, CalendarDays, ClipboardList, Download, FileText, Phone, Mail, CheckCircle2 } from "lucide-react";
-import feesImg from "@/assets/fees.jpeg.asset.json";
 
 export const Route = createFileRoute("/admissions")({
   head: () =>
     pageMeta({
-      title: "Admissions 2025-26 — GP Kinnaur",
+      title: "Admissions 2026-27 — GP Kinnaur",
       description:
         "Admission process, eligibility, important dates, fee structure and documents required for Diploma in Civil & Mechanical Engineering at GP Kinnaur.",
       path: "/admissions",
@@ -217,7 +216,7 @@ function Admissions() {
                 </a>
               </li>
               <li>
-                <a className="text-[color:var(--navy)] hover:underline" href={feesImg.url} target="_blank" rel="noopener noreferrer">
+                <a className="text-[color:var(--navy)] hover:underline" href="#">
                   Fee Structure Details
                 </a>
               </li>
