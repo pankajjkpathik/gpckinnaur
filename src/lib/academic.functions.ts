@@ -22,6 +22,8 @@ export const listSubjects = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
+const subjectCategoryEnum = z.enum(["BS","HS","ES","PCC","PE","OE","AU","Project"]);
+
 export const upsertSubject = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
@@ -30,18 +32,28 @@ export const upsertSubject = createServerFn({ method: "POST" })
         code: z.string().min(1).max(20),
         name: z.string().min(2).max(150),
         branch: z.string().min(1).max(50),
-        semester: z.number().int().min(1).max(8),
+        semester: z.number().int().min(1).max(6),
         kind: z.enum(["theory", "practical"]).default("theory"),
         credits: z.number().int().min(0).max(20).default(0),
+        category: subjectCategoryEnum.optional().nullable(),
+        lecture_hours: z.number().int().min(0).max(40).default(0),
+        practical_hours: z.number().int().min(0).max(40).default(0),
+        dcs_bs_hours: z.number().int().min(0).max(40).default(0),
+        total_weekly_load: z.number().int().min(0).max(60).default(0),
+        internal_theory_marks: z.number().int().min(0).max(500).default(0),
+        internal_practical_marks: z.number().int().min(0).max(500).default(0),
+        external_theory_marks: z.number().int().min(0).max(500).default(0),
+        external_practical_marks: z.number().int().min(0).max(500).default(0),
+        total_marks: z.number().int().min(0).max(2000).default(0),
       })
       .parse(d),
   )
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const payload = { code: data.code, name: data.name, branch: data.branch, semester: data.semester, kind: data.kind, credits: data.credits };
-    const { error } = data.id
-      ? await supabaseAdmin.from("subjects").update(payload).eq("id", data.id)
+    const { id, ...payload } = data;
+    const { error } = id
+      ? await supabaseAdmin.from("subjects").update(payload).eq("id", id)
       : await supabaseAdmin.from("subjects").insert(payload);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -423,9 +435,19 @@ const subjectRowSchema = z.object({
   code: z.string().min(1).max(20),
   name: z.string().min(2).max(150),
   branch: z.string().min(1).max(50),
-  semester: z.number().int().min(1).max(8),
+  semester: z.number().int().min(1).max(6),
   kind: z.enum(["theory", "practical"]).default("theory"),
   credits: z.number().int().min(0).max(20).default(0),
+  category: z.enum(["BS","HS","ES","PCC","PE","OE","AU","Project"]).nullable().optional(),
+  lecture_hours: z.number().int().min(0).default(0),
+  practical_hours: z.number().int().min(0).default(0),
+  dcs_bs_hours: z.number().int().min(0).default(0),
+  total_weekly_load: z.number().int().min(0).default(0),
+  internal_theory_marks: z.number().int().min(0).default(0),
+  internal_practical_marks: z.number().int().min(0).default(0),
+  external_theory_marks: z.number().int().min(0).default(0),
+  external_practical_marks: z.number().int().min(0).default(0),
+  total_marks: z.number().int().min(0).default(0),
 });
 
 export const bulkImportSubjects = createServerFn({ method: "POST" })
