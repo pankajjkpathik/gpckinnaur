@@ -91,7 +91,23 @@ function SubjectsPage() {
             <option value="">All semesters</option>
             {[1,2,3,4,5,6].map((s) => <option key={s} value={s}>Sem {toRoman(s)}</option>)}
           </select>
-          <div className="ml-auto"><BulkBar onImported={() => qc.invalidateQueries({ queryKey: ["subjects"] })} /></div>
+          <div className="ml-auto">
+            <BulkOpsBar
+              sample={SUBJECT_SAMPLE}
+              sampleName="subjects-sample"
+              onImport={async (rows) => {
+                const r = await bulkImportSubjects({ data: { rows } });
+                qc.invalidateQueries({ queryKey: ["subjects"] });
+                return r;
+              }}
+              selectedCount={selected.size}
+              onBulkDelete={async () => {
+                await bulkDeleteSubjects({ data: { ids: Array.from(selected) } });
+                setSelected(new Set());
+                qc.invalidateQueries({ queryKey: ["subjects"] });
+              }}
+            />
+          </div>
           <button onClick={() => setEditing({ kind: "theory", credits: 4, semester: 1, branch: "civil", category: "PCC" })} className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1">
             <Plus className="w-4 h-4" /> Add Subject
           </button>
@@ -101,6 +117,7 @@ function SubjectsPage() {
           <table className="w-full text-xs">
             <thead className="bg-secondary">
               <tr>
+                <th className="px-2 py-2"><input type="checkbox" checked={selected.size > 0 && selected.size === (subjectsQ.data ?? []).length} onChange={toggleAll} /></th>
                 <th className="text-left px-2 py-2">Code</th>
                 <th className="text-left px-2 py-2">Name</th>
                 <th className="text-left px-2 py-2">Branch</th>
@@ -118,6 +135,7 @@ function SubjectsPage() {
             <tbody>
               {(subjectsQ.data ?? []).map((s: any) => (
                 <tr key={s.id} className="border-t">
+                  <td className="px-2 py-2"><input type="checkbox" checked={selected.has(s.id)} onChange={() => toggle(s.id)} /></td>
                   <td className="px-2 py-2 font-mono">{s.code}</td>
                   <td className="px-2 py-2">{s.name}</td>
                   <td className="px-2 py-2 capitalize">{s.branch}</td>
@@ -136,7 +154,7 @@ function SubjectsPage() {
                 </tr>
               ))}
               {(subjectsQ.data ?? []).length === 0 && (
-                <tr><td colSpan={12} className="text-center py-6 text-muted-foreground">No subjects yet.</td></tr>
+                <tr><td colSpan={13} className="text-center py-6 text-muted-foreground">No subjects yet.</td></tr>
               )}
             </tbody>
           </table>
