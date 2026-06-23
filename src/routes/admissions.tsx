@@ -18,7 +18,7 @@ const dates = [
   { l: "Polytechnic Admission Test (PAT-2026)", v: "17-05-2026 (Sunday) 10:00 A.M. to 01:00 P.M." },
   { l: "Lateral Entry Entrance Test (LEET-2026)", v: "24-05-2026 (Sunday) 10:00 A.M. to 12:00 Noon" },
   { l: "Application Start", v: "March/April 2026" },
-  { l: "Last Date to Apply", v: "To be announced" },
+  { l: "Last Date to Apply", v: "See the Prospectus" },
   { l: "Merit List", v: "Results declared" },
   { l: "Counseling", v: "Dates announced" },
   { l: "Session Starts", v: "August 2026" },
