@@ -7,7 +7,9 @@ import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
 import {
   listPeriods, listSubjects, listStaffByRole, listTimetable, upsertTimetableSlot, publishTimetable,
+  bulkImportTimetable, bulkDeleteTimetable,
 } from "@/lib/academic.functions";
+import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
 
 export const Route = createFileRoute("/admin/timetable")({
   head: () => portalMeta("Timetable Builder"),
@@ -78,6 +80,28 @@ function TimetablePage() {
           <button disabled={pub.isPending} onClick={() => pub.mutate(!isPublished)} className="bg-rose-700 text-white px-3 py-1.5 rounded text-sm font-semibold disabled:opacity-50">
             {isPublished ? "Unpublish" : "Publish"}
           </button>
+        </div>
+
+        <div className="flex justify-end">
+          <BulkOpsBar
+            sample={[
+              { branch: "civil", semester: 3, day_of_week: "Mon", period_no: 1, subject_code: "CE301", username: "prof.sharma", room: "R-101", academic_year: "2025-26" },
+              { branch: "civil", semester: 3, day_of_week: "Tue", period_no: 2, subject_code: "CE302", username: "prof.kumar", room: "R-101", academic_year: "2025-26" },
+            ]}
+            sampleName="timetable-sample"
+            onImport={async (rows) => {
+              const r = await bulkImportTimetable({ data: { rows } });
+              qc.invalidateQueries({ queryKey: ["timetable"] });
+              return r;
+            }}
+            selectedCount={(ttQ.data ?? []).length}
+            onBulkDelete={async () => {
+              const ids = (ttQ.data ?? []).map((s: any) => s.id);
+              if (!ids.length) return;
+              await bulkDeleteTimetable({ data: { ids } });
+              qc.invalidateQueries({ queryKey: ["timetable"] });
+            }}
+          />
         </div>
 
         {save.error && <p className="text-xs text-destructive bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>}

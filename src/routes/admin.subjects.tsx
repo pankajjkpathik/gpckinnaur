@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Upload, Download } from "lucide-react";
-import * as XLSX from "xlsx";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
-import { listSubjects, upsertSubject, deleteSubject, bulkImportSubjects } from "@/lib/academic.functions";
+import { listSubjects, upsertSubject, deleteSubject, bulkImportSubjects, bulkDeleteSubjects } from "@/lib/academic.functions";
+import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
 
 export const Route = createFileRoute("/admin/subjects")({
   head: () => portalMeta("Subjects"),
@@ -52,6 +52,7 @@ function SubjectsPage() {
   const [branch, setBranch] = useState("");
   const [sem, setSem] = useState<number | "">("");
   const [editing, setEditing] = useState<Partial<Subject> | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const subjectsQ = useQuery({
     queryKey: ["subjects", branch, sem],
@@ -68,6 +69,14 @@ function SubjectsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["subjects"] }),
   });
 
+  const toggle = (id: number) => {
+    const s = new Set(selected); s.has(id) ? s.delete(id) : s.add(id); setSelected(s);
+  };
+  const toggleAll = () => {
+    const ids = (subjectsQ.data ?? []).map((r: any) => r.id);
+    setSelected(selected.size === ids.length ? new Set() : new Set(ids));
+  };
+
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
   return (
@@ -82,7 +91,23 @@ function SubjectsPage() {
             <option value="">All semesters</option>
             {[1,2,3,4,5,6].map((s) => <option key={s} value={s}>Sem {toRoman(s)}</option>)}
           </select>
-          <div className="ml-auto"><BulkBar onImported={() => qc.invalidateQueries({ queryKey: ["subjects"] })} /></div>
+          <div className="ml-auto">
+            <BulkOpsBar
+              sample={SUBJECT_SAMPLE}
+              sampleName="subjects-sample"
+              onImport={async (rows) => {
+                const r = await bulkImportSubjects({ data: { rows } });
+                qc.invalidateQueries({ queryKey: ["subjects"] });
+                return r;
+              }}
+              selectedCount={selected.size}
+              onBulkDelete={async () => {
+                await bulkDeleteSubjects({ data: { ids: Array.from(selected) } });
+                setSelected(new Set());
+                qc.invalidateQueries({ queryKey: ["subjects"] });
+              }}
+            />
+          </div>
           <button onClick={() => setEditing({ kind: "theory", credits: 4, semester: 1, branch: "civil", category: "PCC" })} className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1">
             <Plus className="w-4 h-4" /> Add Subject
           </button>
@@ -92,6 +117,7 @@ function SubjectsPage() {
           <table className="w-full text-xs">
             <thead className="bg-secondary">
               <tr>
+                <th className="px-2 py-2"><input type="checkbox" checked={selected.size > 0 && selected.size === (subjectsQ.data ?? []).length} onChange={toggleAll} /></th>
                 <th className="text-left px-2 py-2">Code</th>
                 <th className="text-left px-2 py-2">Name</th>
                 <th className="text-left px-2 py-2">Branch</th>
@@ -109,6 +135,7 @@ function SubjectsPage() {
             <tbody>
               {(subjectsQ.data ?? []).map((s: any) => (
                 <tr key={s.id} className="border-t">
+                  <td className="px-2 py-2"><input type="checkbox" checked={selected.has(s.id)} onChange={() => toggle(s.id)} /></td>
                   <td className="px-2 py-2 font-mono">{s.code}</td>
                   <td className="px-2 py-2">{s.name}</td>
                   <td className="px-2 py-2 capitalize">{s.branch}</td>
@@ -127,7 +154,7 @@ function SubjectsPage() {
                 </tr>
               ))}
               {(subjectsQ.data ?? []).length === 0 && (
-                <tr><td colSpan={12} className="text-center py-6 text-muted-foreground">No subjects yet.</td></tr>
+                <tr><td colSpan={13} className="text-center py-6 text-muted-foreground">No subjects yet.</td></tr>
               )}
             </tbody>
           </table>
@@ -247,49 +274,3 @@ const SUBJECT_SAMPLE = [
   },
 ];
 
-function BulkBar({ onImported }: { onImported: () => void }) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [result, setResult] = useState<{ inserted: number; errors: { row: number; error: string }[] } | null>(null);
-  const imp = useMutation({
-    mutationFn: (rows: any[]) => bulkImportSubjects({ data: { rows } }),
-    onSuccess: (r) => { setResult(r); onImported(); },
-  });
-
-  const downloadSample = () => {
-    const ws = XLSX.utils.json_to_sheet(SUBJECT_SAMPLE);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Subjects");
-    XLSX.writeFile(wb, "subjects-sample.xlsx");
-  };
-
-  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setResult(null);
-    const buf = await f.arrayBuffer();
-    const wb = XLSX.read(buf);
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<any>(ws, { defval: "" });
-    if (rows.length === 0) { alert("Empty sheet"); return; }
-    imp.mutate(rows);
-    e.target.value = "";
-  };
-
-  return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <button type="button" onClick={downloadSample} className="px-3 py-2 border rounded text-sm inline-flex items-center gap-1">
-        <Download className="w-4 h-4" /> Sample.xlsx
-      </button>
-      <button type="button" onClick={() => fileRef.current?.click()} disabled={imp.isPending} className="px-3 py-2 bg-emerald-700 text-white rounded text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50">
-        <Upload className="w-4 h-4" /> {imp.isPending ? "Importing…" : "Bulk Upload"}
-      </button>
-      <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={onFile} />
-      {imp.error && <span className="text-xs text-destructive">{(imp.error as any).message}</span>}
-      {result && (
-        <span className="text-xs text-muted-foreground">
-          ✓ {result.inserted} imported{result.errors.length ? ` · ${result.errors.length} errors (row ${result.errors.slice(0,3).map(e=>e.row).join(", ")}${result.errors.length>3?"…":""})` : ""}
-        </span>
-      )}
-    </div>
-  );
-}

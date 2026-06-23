@@ -5,7 +5,8 @@ import { Plus, Trash2, Save } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
-import { listGrading, replaceGrading } from "@/lib/academic.functions";
+import { listGrading, replaceGrading, bulkImportGrading } from "@/lib/academic.functions";
+import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
 
 export const Route = createFileRoute("/admin/grading")({
   head: () => portalMeta("Grading Scheme"),
@@ -51,7 +52,18 @@ function GradingPage() {
   return (
     <PortalShell title="Grading Scheme" subtitle="Admin · Result Configuration" me={me as any} accent="rose">
       <div className="container mx-auto px-4 py-6 space-y-4 max-w-3xl">
-        <p className="text-sm text-muted-foreground">Define grade boundaries from highest to lowest. Used when results are computed.</p>
+        <div className="flex items-start justify-between gap-2 flex-wrap">
+          <p className="text-sm text-muted-foreground">Define grade boundaries from highest to lowest. Used when results are computed.</p>
+          <BulkOpsBar
+            sample={DEFAULT_ROWS}
+            sampleName="grading-scheme-sample"
+            onImport={async (rowsIn) => {
+              const r = await bulkImportGrading({ data: { rows: rowsIn } });
+              qc.invalidateQueries({ queryKey: ["grading"] });
+              return r;
+            }}
+          />
+        </div>
         <div className="bg-white border rounded overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-secondary"><tr>

@@ -561,3 +561,273 @@ export const bulkImportSyllabus = createServerFn({ method: "POST" })
     return { inserted, errors };
   });
 
+
+// ============ BULK DELETE: generic id-list ============
+
+const idsInput = z.object({ ids: z.array(z.number().int()).min(1).max(5000) });
+
+export const bulkDeleteSubjects = createServerFn({ method: "POST" })
+  .inputValidator((d) => idsInput.parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error, count } = await supabaseAdmin.from("subjects").delete({ count: "exact" }).in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? data.ids.length };
+  });
+
+export const bulkDeleteSyllabus = createServerFn({ method: "POST" })
+  .inputValidator((d) => idsInput.parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error, count } = await supabaseAdmin.from("syllabus_units").delete({ count: "exact" }).in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? data.ids.length };
+  });
+
+export const bulkDeletePeriods = createServerFn({ method: "POST" })
+  .inputValidator((d) => idsInput.parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error, count } = await supabaseAdmin.from("periods_master").delete({ count: "exact" }).in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? data.ids.length };
+  });
+
+export const bulkDeleteAssignments = createServerFn({ method: "POST" })
+  .inputValidator((d) => idsInput.parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error, count } = await supabaseAdmin.from("faculty_assignments").delete({ count: "exact" }).in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? data.ids.length };
+  });
+
+export const bulkDeleteTimetable = createServerFn({ method: "POST" })
+  .inputValidator((d) => idsInput.parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error, count } = await supabaseAdmin.from("timetable").delete({ count: "exact" }).in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? data.ids.length };
+  });
+
+// ============ BULK IMPORT: PERIODS ============
+
+const periodRowSchema = z.object({
+  period_no: z.number().int().min(1).max(12),
+  start_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  end_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  is_break: z.boolean().default(false),
+  label: z.string().max(30).optional().nullable(),
+});
+
+export const bulkImportPeriods = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(50) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const errors: { row: number; error: string }[] = [];
+    const valid: any[] = [];
+    data.rows.forEach((raw, i) => {
+      try {
+        const norm = periodRowSchema.parse({
+          period_no: Number(raw.period_no ?? raw["Period #"] ?? raw.Period ?? 0),
+          start_time: String(raw.start_time ?? raw.Start ?? "").trim().slice(0, 8),
+          end_time: String(raw.end_time ?? raw.End ?? "").trim().slice(0, 8),
+          is_break: String(raw.is_break ?? raw.Break ?? "").toLowerCase() === "true" || raw.is_break === true,
+          label: raw.label ? String(raw.label).trim() : null,
+        });
+        valid.push(norm);
+      } catch (e: any) {
+        errors.push({ row: i + 2, error: e?.message ?? "Invalid row" });
+      }
+    });
+    let inserted = 0;
+    if (valid.length) {
+      const { error, count } = await supabaseAdmin.from("periods_master").upsert(valid, { onConflict: "period_no", count: "exact" });
+      if (error) throw new Error(error.message);
+      inserted = count ?? valid.length;
+    }
+    return { inserted, errors };
+  });
+
+// ============ BULK IMPORT: FACULTY ASSIGNMENTS ============
+
+const assignRowSchema = z.object({
+  username: z.string().min(1),
+  subject_code: z.string().min(1),
+  branch: z.string().min(1),
+  semester: z.number().int().min(1).max(8),
+  academic_year: z.string().regex(yearRe),
+});
+
+export const bulkImportAssignments = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(2000) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const errors: { row: number; error: string }[] = [];
+    const parsed: z.infer<typeof assignRowSchema>[] = [];
+    data.rows.forEach((raw, i) => {
+      try {
+        parsed.push(assignRowSchema.parse({
+          username: String(raw.username ?? raw.Username ?? raw.faculty ?? "").trim(),
+          subject_code: String(raw.subject_code ?? raw.code ?? raw.Code ?? "").trim(),
+          branch: String(raw.branch ?? raw.Branch ?? "").trim().toLowerCase(),
+          semester: Number(raw.semester ?? raw.Semester ?? 0),
+          academic_year: String(raw.academic_year ?? raw["Academic Year"] ?? "").trim(),
+        }));
+      } catch (e: any) {
+        errors.push({ row: i + 2, error: e?.message ?? "Invalid row" });
+      }
+    });
+
+    const usernames = Array.from(new Set(parsed.map((r) => r.username)));
+    const codes = Array.from(new Set(parsed.map((r) => r.subject_code)));
+    const [{ data: staff }, { data: subs }] = await Promise.all([
+      supabaseAdmin.from("staff_users").select("id, username").in("username", usernames),
+      supabaseAdmin.from("subjects").select("id, code, branch, semester").in("code", codes),
+    ]);
+    const sMap = new Map((staff ?? []).map((s: any) => [s.username, s.id]));
+    const subMap = new Map((subs ?? []).map((s: any) => [`${s.code}|${s.branch}|${s.semester}`, s.id]));
+
+    const payload: any[] = [];
+    parsed.forEach((r, i) => {
+      const staff_id = sMap.get(r.username);
+      const subject_id = subMap.get(`${r.subject_code}|${r.branch}|${r.semester}`);
+      if (!staff_id) { errors.push({ row: i + 2, error: `Faculty not found: ${r.username}` }); return; }
+      if (!subject_id) { errors.push({ row: i + 2, error: `Subject not found: ${r.subject_code} (${r.branch} sem ${r.semester})` }); return; }
+      payload.push({ staff_id, subject_id, branch: r.branch, semester: r.semester, academic_year: r.academic_year });
+    });
+
+    let inserted = 0;
+    if (payload.length) {
+      const { error, count } = await supabaseAdmin.from("faculty_assignments").upsert(payload, {
+        onConflict: "staff_id,subject_id,branch,semester,academic_year", count: "exact",
+      });
+      if (error) throw new Error(error.message);
+      inserted = count ?? payload.length;
+    }
+    return { inserted, errors };
+  });
+
+// ============ BULK IMPORT: TIMETABLE ============
+
+const ttRowSchema = z.object({
+  branch: z.string().min(1),
+  semester: z.number().int().min(1).max(8),
+  day_of_week: z.number().int().min(1).max(6),
+  period_no: z.number().int().min(1).max(12),
+  academic_year: z.string().regex(yearRe),
+  subject_code: z.string().optional().nullable(),
+  username: z.string().optional().nullable(),
+  room: z.string().max(30).optional().nullable(),
+});
+
+const DAY_MAP: Record<string, number> = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+
+export const bulkImportTimetable = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(5000) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const errors: { row: number; error: string }[] = [];
+    const parsed: z.infer<typeof ttRowSchema>[] = [];
+    data.rows.forEach((raw, i) => {
+      try {
+        const dayRaw = String(raw.day_of_week ?? raw.day ?? raw.Day ?? "").trim().toLowerCase();
+        const dow = DAY_MAP[dayRaw] ?? Number(dayRaw);
+        parsed.push(ttRowSchema.parse({
+          branch: String(raw.branch ?? raw.Branch ?? "").trim().toLowerCase(),
+          semester: Number(raw.semester ?? raw.Semester ?? 0),
+          day_of_week: dow,
+          period_no: Number(raw.period_no ?? raw["Period"] ?? raw.period ?? 0),
+          academic_year: String(raw.academic_year ?? raw["Academic Year"] ?? "").trim(),
+          subject_code: raw.subject_code ? String(raw.subject_code).trim() : null,
+          username: raw.username ? String(raw.username).trim() : null,
+          room: raw.room ? String(raw.room).trim() : null,
+        }));
+      } catch (e: any) {
+        errors.push({ row: i + 2, error: e?.message ?? "Invalid row" });
+      }
+    });
+
+    const codes = Array.from(new Set(parsed.map((r) => r.subject_code).filter(Boolean) as string[]));
+    const usernames = Array.from(new Set(parsed.map((r) => r.username).filter(Boolean) as string[]));
+    const [{ data: subs }, { data: staff }] = await Promise.all([
+      codes.length ? supabaseAdmin.from("subjects").select("id, code, branch, semester").in("code", codes) : Promise.resolve({ data: [] as any[] }),
+      usernames.length ? supabaseAdmin.from("staff_users").select("id, username").in("username", usernames) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const subMap = new Map((subs ?? []).map((s: any) => [`${s.code}|${s.branch}|${s.semester}`, s.id]));
+    const sMap = new Map((staff ?? []).map((s: any) => [s.username, s.id]));
+
+    const payload: any[] = [];
+    parsed.forEach((r, i) => {
+      let subject_id: number | null = null;
+      let staff_id: number | null = null;
+      if (r.subject_code) {
+        subject_id = subMap.get(`${r.subject_code}|${r.branch}|${r.semester}`) ?? null;
+        if (!subject_id) { errors.push({ row: i + 2, error: `Subject not found: ${r.subject_code}` }); return; }
+      }
+      if (r.username) {
+        staff_id = sMap.get(r.username) ?? null;
+        if (!staff_id) { errors.push({ row: i + 2, error: `Faculty not found: ${r.username}` }); return; }
+      }
+      payload.push({
+        branch: r.branch, semester: r.semester, day_of_week: r.day_of_week, period_no: r.period_no,
+        academic_year: r.academic_year, subject_id, staff_id, room: r.room || null,
+      });
+    });
+
+    let inserted = 0;
+    if (payload.length) {
+      const { error, count } = await supabaseAdmin.from("timetable").upsert(payload, {
+        onConflict: "branch,semester,day_of_week,period_no,academic_year", count: "exact",
+      });
+      if (error) throw new Error(error.message);
+      inserted = count ?? payload.length;
+    }
+    return { inserted, errors };
+  });
+
+// ============ BULK IMPORT: GRADING (replace) ============
+
+const gradeRowSchema = z.object({
+  min_pct: z.number().min(0).max(100),
+  max_pct: z.number().min(0).max(100),
+  grade: z.string().min(1).max(5),
+  grade_point: z.number().min(0).max(10),
+  is_pass: z.boolean().default(true),
+});
+
+export const bulkImportGrading = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(50) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const errors: { row: number; error: string }[] = [];
+    const valid: any[] = [];
+    data.rows.forEach((raw, i) => {
+      try {
+        valid.push(gradeRowSchema.parse({
+          min_pct: Number(raw.min_pct ?? raw["Min %"] ?? 0),
+          max_pct: Number(raw.max_pct ?? raw["Max %"] ?? 0),
+          grade: String(raw.grade ?? raw.Grade ?? "").trim(),
+          grade_point: Number(raw.grade_point ?? raw["Grade Pt"] ?? 0),
+          is_pass: String(raw.is_pass ?? raw.Pass ?? "true").toLowerCase() !== "false",
+        }));
+      } catch (e: any) {
+        errors.push({ row: i + 2, error: e?.message ?? "Invalid row" });
+      }
+    });
+    if (errors.length && !valid.length) return { inserted: 0, errors };
+    await supabaseAdmin.from("grading_scheme").delete().neq("id", -1);
+    const { error, count } = await supabaseAdmin.from("grading_scheme").insert(valid, { count: "exact" });
+    if (error) throw new Error(error.message);
+    return { inserted: count ?? valid.length, errors };
+  });

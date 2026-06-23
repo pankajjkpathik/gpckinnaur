@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 import { Upload, Trash2, Download, FileSpreadsheet } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { adminRoles } from "@/lib/roles";
-import { templatesList, templateUpload, templateDelete, templateDownload } from "@/lib/report-templates.functions";
+import { templatesList, templateUpload, templateDelete, templateDownload, templatesBulkDelete } from "@/lib/report-templates.functions";
 
 export const Route = createFileRoute("/admin/report-templates")({
   head: () => ({ meta: [{ title: "Report Templates — Admin · GP Kinnaur" }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -43,6 +43,16 @@ function ReportTemplatesAdmin() {
   const [name, setName] = useState("");
   const [kind, setKind] = useState("monthly_attendance");
   const [file, setFile] = useState<File | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const bulkDel = useMutation({
+    mutationFn: (ids: number[]) => templatesBulkDelete({ data: { ids } }),
+    onSuccess: () => { setSelected(new Set()); qc.invalidateQueries({ queryKey: ["report-templates"] }); },
+  });
+  const toggle = (id: number) => { const s = new Set(selected); s.has(id) ? s.delete(id) : s.add(id); setSelected(s); };
+  const toggleAll = () => {
+    const ids = (list.data ?? []).map((r: any) => r.id);
+    setSelected(selected.size === ids.length ? new Set() : new Set(ids));
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -105,9 +115,19 @@ function ReportTemplatesAdmin() {
           {up.isSuccess && <p className="md:col-span-4 text-xs text-green-700">Uploaded.</p>}
         </form>
 
+        {selected.size > 0 && (
+          <div className="flex items-center gap-3 bg-rose-50 border border-rose-200 rounded p-2">
+            <span className="text-sm">{selected.size} selected</span>
+            <button onClick={() => { if (confirm(`Delete ${selected.size} template(s)?`)) bulkDel.mutate(Array.from(selected)); }} disabled={bulkDel.isPending} className="text-xs px-3 py-1.5 bg-rose-700 text-white rounded inline-flex items-center gap-1 disabled:opacity-50">
+              <Trash2 className="w-3.5 h-3.5" /> {bulkDel.isPending ? "Deleting…" : "Delete Selected"}
+            </button>
+          </div>
+        )}
+
         <div className="bg-white border rounded overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-secondary"><tr>
+              <th className="px-3 py-2"><input type="checkbox" checked={selected.size > 0 && selected.size === (list.data ?? []).length} onChange={toggleAll} /></th>
               <th className="px-3 py-2 text-left">Name</th>
               <th className="px-3 py-2 text-left">Kind</th>
               <th className="px-3 py-2 text-left">File</th>
@@ -117,6 +137,7 @@ function ReportTemplatesAdmin() {
             <tbody>
               {(list.data ?? []).map((r: any) => (
                 <tr key={r.id} className="border-t">
+                  <td className="px-3 py-2"><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} /></td>
                   <td className="px-3 py-2 font-medium">{r.name}</td>
                   <td className="px-3 py-2">{KINDS.find((k) => k.value === r.kind)?.label ?? r.kind}</td>
                   <td className="px-3 py-2 text-xs inline-flex items-center gap-1"><FileSpreadsheet className="w-3.5 h-3.5" /> {r.file_name}</td>
@@ -127,7 +148,7 @@ function ReportTemplatesAdmin() {
                   </td>
                 </tr>
               ))}
-              {(list.data ?? []).length === 0 && <tr><td colSpan={5} className="text-center py-6 text-muted-foreground">No templates uploaded yet.</td></tr>}
+              {(list.data ?? []).length === 0 && <tr><td colSpan={6} className="text-center py-6 text-muted-foreground">No templates uploaded yet.</td></tr>}
             </tbody>
           </table>
         </div>

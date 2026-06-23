@@ -131,3 +131,67 @@ export const contacts = createServerFn({ method: "GET" })
       return (rows ?? []).map((r: any) => ({ id: r.id, label: r.name, sub: `${r.enrollment_no} · ${r.branch}-Sem${r.semester}` }));
     }
   });
+
+// ============ BULK BROADCAST (staff/admin only) ============
+
+export const broadcastMessage = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({
+    recipients: z.array(z.object({
+      kind: z.enum(["staff", "student"]),
+      identifier: z.string().min(1), // username for staff, enrollment_no for student
+    })).min(1).max(2000),
+    body: z.string().min(1).max(4000),
+  }).parse(d))
+  .handler(async ({ data }) => {
+    const me = await whoAmI();
+    if (me.kind !== "staff") throw new Error("Only staff may broadcast");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const staffNames = Array.from(new Set(data.recipients.filter((r) => r.kind === "staff").map((r) => r.identifier)));
+    const studentEnr = Array.from(new Set(data.recipients.filter((r) => r.kind === "student").map((r) => r.identifier)));
+    const [{ data: staff }, { data: students }] = await Promise.all([
+      staffNames.length ? supabaseAdmin.from("staff_users").select("id, username").in("username", staffNames) : Promise.resolve({ data: [] as any[] }),
+      studentEnr.length ? supabaseAdmin.from("students").select("id, enrollment_no").in("enrollment_no", studentEnr) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const sMap = new Map((staff ?? []).map((s: any) => [s.username, s.id]));
+    const stMap = new Map((students ?? []).map((s: any) => [s.enrollment_no, s.id]));
+
+    const errors: { identifier: string; error: string }[] = [];
+    const rows: any[] = [];
+    data.recipients.forEach((r) => {
+      const id = r.kind === "staff" ? sMap.get(r.identifier) : stMap.get(r.identifier);
+      if (!id) { errors.push({ identifier: r.identifier, error: "Not found" }); return; }
+      rows.push({
+        sender_kind: me.kind, sender_id: me.id,
+        recipient_kind: r.kind, recipient_id: id, body: data.body,
+      });
+    });
+    let inserted = 0;
+    if (rows.length) {
+      // chunk inserts to avoid huge payloads
+      for (let i = 0; i < rows.length; i += 500) {
+        const chunk = rows.slice(i, i + 500);
+        const { error, count } = await supabaseAdmin.from("messages").insert(chunk, { count: "exact" });
+        if (error) throw new Error(error.message);
+        inserted += count ?? chunk.length;
+      }
+    }
+    return { inserted, errors };
+  });
+
+export const bulkDeleteMessages = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({
+    ids: z.array(z.number().int()).min(1).max(2000),
+    scope: z.enum(["inbox", "sent"]),
+  }).parse(d))
+  .handler(async ({ data }) => {
+    const me = await whoAmI();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const col = data.scope === "inbox" ? "recipient" : "sender";
+    const { error, count } = await supabaseAdmin
+      .from("messages").delete({ count: "exact" })
+      .in("id", data.ids)
+      .eq(`${col}_kind`, me.kind).eq(`${col}_id`, me.id);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? 0 };
+  });
