@@ -1,7 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageHeader, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
 import { ExternalLink } from "lucide-react";
+import hpAct from "@/assets/HPAntiraggingAct2009.pdf.asset.json";
+import aicteRules from "@/assets/anti-ragging-aicte.pdf.asset.json";
+import arc from "@/assets/ARC.pdf.asset.json";
+import ars from "@/assets/ARS.pdf.asset.json";
 
 export const Route = createFileRoute("/anti-ragging")({
   head: () => pageMeta({
