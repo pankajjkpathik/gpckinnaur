@@ -14,8 +14,26 @@ export const Route = createFileRoute("/admin/subjects")({
   component: SubjectsPage,
 });
 
+const CATEGORIES = ["BS","HS","ES","PCC","PE","OE","AU","Project"] as const;
+
 type Subject = {
-  id: number; code: string; name: string; branch: string; semester: number; kind: "theory" | "practical"; credits: number;
+  id: number;
+  code: string;
+  name: string;
+  branch: string;
+  semester: number;
+  kind: "theory" | "practical";
+  credits: number;
+  category?: string | null;
+  lecture_hours?: number;
+  practical_hours?: number;
+  dcs_bs_hours?: number;
+  total_weekly_load?: number;
+  internal_theory_marks?: number;
+  internal_practical_marks?: number;
+  external_theory_marks?: number;
+  external_practical_marks?: number;
+  total_marks?: number;
 };
 
 function SubjectsPage() {
@@ -62,42 +80,62 @@ function SubjectsPage() {
             {[1,2,3,4,5,6].map((s) => <option key={s} value={s}>Sem {s}</option>)}
           </select>
           <div className="ml-auto"><BulkBar onImported={() => qc.invalidateQueries({ queryKey: ["subjects"] })} /></div>
-          <button onClick={() => setEditing({ kind: "theory", credits: 4 })} className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1">
+          <button onClick={() => setEditing({ kind: "theory", credits: 4, semester: 1, branch: "civil", category: "PCC" })} className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1">
             <Plus className="w-4 h-4" /> Add Subject
           </button>
         </div>
 
 
         <div className="bg-white border rounded overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead className="bg-secondary">
               <tr>
-                <th className="text-left px-3 py-2">Code</th>
-                <th className="text-left px-3 py-2">Name</th>
-                <th className="text-left px-3 py-2">Branch</th>
-                <th className="text-left px-3 py-2">Sem</th>
-                <th className="text-left px-3 py-2">Kind</th>
-                <th className="text-left px-3 py-2">Credits</th>
+                <th className="text-left px-2 py-2">Code</th>
+                <th className="text-left px-2 py-2">Name</th>
+                <th className="text-left px-2 py-2">Branch</th>
+                <th className="text-left px-2 py-2">Sem</th>
+                <th className="text-left px-2 py-2">Cat</th>
+                <th className="text-left px-2 py-2">T/P</th>
+                <th className="text-right px-2 py-2">Cr</th>
+                <th className="text-right px-2 py-2">L</th>
+                <th className="text-right px-2 py-2">P</th>
+                <th className="text-right px-2 py-2">DCS/BS</th>
+                <th className="text-right px-2 py-2">Load</th>
+                <th className="text-right px-2 py-2">IT</th>
+                <th className="text-right px-2 py-2">IP</th>
+                <th className="text-right px-2 py-2">ET</th>
+                <th className="text-right px-2 py-2">EP</th>
+                <th className="text-right px-2 py-2">Total</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {(subjectsQ.data ?? []).map((s: any) => (
                 <tr key={s.id} className="border-t">
-                  <td className="px-3 py-2 font-mono">{s.code}</td>
-                  <td className="px-3 py-2">{s.name}</td>
-                  <td className="px-3 py-2 capitalize">{s.branch}</td>
-                  <td className="px-3 py-2">{s.semester}</td>
-                  <td className="px-3 py-2 capitalize">{s.kind}</td>
-                  <td className="px-3 py-2">{s.credits}</td>
-                  <td className="px-3 py-2 flex gap-1 justify-end">
+                  <td className="px-2 py-2 font-mono">{s.code}</td>
+                  <td className="px-2 py-2">{s.name}</td>
+                  <td className="px-2 py-2 capitalize">{s.branch}</td>
+                  <td className="px-2 py-2">{s.semester}</td>
+                  <td className="px-2 py-2">{s.category ?? "—"}</td>
+                  <td className="px-2 py-2 capitalize">{s.kind?.[0]?.toUpperCase()}</td>
+                  <td className="px-2 py-2 text-right">{s.credits}</td>
+                  <td className="px-2 py-2 text-right">{s.lecture_hours ?? 0}</td>
+                  <td className="px-2 py-2 text-right">{s.practical_hours ?? 0}</td>
+                  <td className="px-2 py-2 text-right">{s.dcs_bs_hours ?? 0}</td>
+                  <td className="px-2 py-2 text-right">{s.total_weekly_load ?? 0}</td>
+                  <td className="px-2 py-2 text-right">{s.internal_theory_marks ?? 0}</td>
+                  <td className="px-2 py-2 text-right">{s.internal_practical_marks ?? 0}</td>
+                  <td className="px-2 py-2 text-right">{s.external_theory_marks ?? 0}</td>
+                  <td className="px-2 py-2 text-right">{s.external_practical_marks ?? 0}</td>
+                  <td className="px-2 py-2 text-right font-semibold">{s.total_marks ?? 0}</td>
+                  <td className="px-2 py-2 flex gap-1 justify-end">
                     <button onClick={() => setEditing(s)} className="p-1.5 hover:bg-secondary rounded"><Pencil className="w-4 h-4" /></button>
                     <button onClick={() => confirm("Delete subject?") && del.mutate(s.id)} className="p-1.5 hover:bg-destructive/10 text-destructive rounded"><Trash2 className="w-4 h-4" /></button>
                   </td>
                 </tr>
               ))}
               {(subjectsQ.data ?? []).length === 0 && (
-                <tr><td colSpan={7} className="text-center py-6 text-muted-foreground">No subjects yet.</td></tr>
+                <tr><td colSpan={17} className="text-center py-6 text-muted-foreground">No subjects yet.</td></tr>
               )}
             </tbody>
           </table>
@@ -118,13 +156,27 @@ function SubjectsPage() {
 }
 
 function SubjectModal({ initial, onClose, onSave, pending, error }: any) {
+  const [L, setL] = useState<number>(Number(initial.lecture_hours ?? 0));
+  const [P, setP] = useState<number>(Number(initial.practical_hours ?? 0));
+  const [D, setD] = useState<number>(Number(initial.dcs_bs_hours ?? 0));
+  const [load, setLoad] = useState<number>(Number(initial.total_weekly_load ?? 0));
+  const autoLoad = L + P + D;
+
+  const [it, setIt] = useState<number>(Number(initial.internal_theory_marks ?? 0));
+  const [ip, setIp] = useState<number>(Number(initial.internal_practical_marks ?? 0));
+  const [et, setEt] = useState<number>(Number(initial.external_theory_marks ?? 0));
+  const [ep, setEp] = useState<number>(Number(initial.external_practical_marks ?? 0));
+  const [total, setTotal] = useState<number>(Number(initial.total_marks ?? 0));
+  const autoTotal = it + ip + et + ep;
+
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg max-w-md w-full p-5" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-lg max-w-2xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-bold text-[color:var(--navy)] mb-3">{initial.id ? "Edit" : "Add"} Subject</h3>
         <form onSubmit={(e) => {
           e.preventDefault();
           const f = new FormData(e.currentTarget);
+          const cat = String(f.get("category") || "");
           onSave({
             id: initial.id,
             code: String(f.get("code")),
@@ -133,20 +185,57 @@ function SubjectModal({ initial, onClose, onSave, pending, error }: any) {
             semester: Number(f.get("semester")),
             kind: String(f.get("kind")),
             credits: Number(f.get("credits")),
+            category: cat || null,
+            lecture_hours: L,
+            practical_hours: P,
+            dcs_bs_hours: D,
+            total_weekly_load: load || autoLoad,
+            internal_theory_marks: it,
+            internal_practical_marks: ip,
+            external_theory_marks: et,
+            external_practical_marks: ep,
+            total_marks: total || autoTotal,
           });
-        }} className="space-y-2">
-          <input name="code" defaultValue={initial.code} required placeholder="Code (e.g. CS301)" className="w-full border rounded px-3 py-2 text-sm" />
-          <input name="name" defaultValue={initial.name} required placeholder="Subject Name" className="w-full border rounded px-3 py-2 text-sm" />
+        }} className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
+            <input name="code" defaultValue={initial.code} required placeholder="Subject Code (e.g. CE301)" className="border rounded px-3 py-2 text-sm" />
+            <input name="name" defaultValue={initial.name} required placeholder="Subject Name" className="border rounded px-3 py-2 text-sm" />
+          </div>
+          <div className="grid grid-cols-4 gap-2">
             <select name="branch" defaultValue={initial.branch ?? "civil"} required className="border rounded px-3 py-2 text-sm bg-white">
               <option value="civil">Civil</option><option value="mechanical">Mechanical</option><option value="applied_science">Applied Science</option>
             </select>
-            <input name="semester" type="number" min={1} max={8} defaultValue={initial.semester ?? 1} required className="border rounded px-3 py-2 text-sm" placeholder="Semester" />
+            <select name="semester" defaultValue={initial.semester ?? 1} required className="border rounded px-3 py-2 text-sm bg-white">
+              {[1,2,3,4,5,6].map((s) => <option key={s} value={s}>Sem {s}</option>)}
+            </select>
+            <select name="category" defaultValue={initial.category ?? "PCC"} className="border rounded px-3 py-2 text-sm bg-white">
+              <option value="">— Category —</option>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
             <select name="kind" defaultValue={initial.kind ?? "theory"} className="border rounded px-3 py-2 text-sm bg-white">
               <option value="theory">Theory</option><option value="practical">Practical</option>
             </select>
-            <input name="credits" type="number" min={0} max={20} defaultValue={initial.credits ?? 4} required className="border rounded px-3 py-2 text-sm" placeholder="Credits" />
           </div>
+
+          <div className="grid grid-cols-5 gap-2">
+            <LabeledNum label="Credits" name="credits" defaultValue={initial.credits ?? 4} />
+            <LabeledNumCtl label="L (Lecture)" value={L} setValue={setL} />
+            <LabeledNumCtl label="P (Practical)" value={P} setValue={setP} />
+            <LabeledNumCtl label="DCS/BS" value={D} setValue={setD} />
+            <LabeledNumCtl label={`Weekly Load (auto ${autoLoad})`} value={load} setValue={setLoad} />
+          </div>
+
+          <div className="border-t pt-2">
+            <div className="text-xs font-semibold text-muted-foreground mb-1">Marks</div>
+            <div className="grid grid-cols-5 gap-2">
+              <LabeledNumCtl label="Internal Theory" value={it} setValue={setIt} />
+              <LabeledNumCtl label="Internal Practical" value={ip} setValue={setIp} />
+              <LabeledNumCtl label="External Theory" value={et} setValue={setEt} />
+              <LabeledNumCtl label="External Practical" value={ep} setValue={setEp} />
+              <LabeledNumCtl label={`Total (auto ${autoTotal})`} value={total} setValue={setTotal} />
+            </div>
+          </div>
+
           {error && <p className="text-xs text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
@@ -158,9 +247,39 @@ function SubjectModal({ initial, onClose, onSave, pending, error }: any) {
   );
 }
 
+function LabeledNum({ label, name, defaultValue }: { label: string; name: string; defaultValue: any }) {
+  return (
+    <label className="text-xs text-muted-foreground">
+      {label}
+      <input name={name} type="number" min={0} defaultValue={defaultValue} className="w-full border rounded px-2 py-1.5 text-sm mt-0.5" />
+    </label>
+  );
+}
+
+function LabeledNumCtl({ label, value, setValue }: { label: string; value: number; setValue: (n: number) => void }) {
+  return (
+    <label className="text-xs text-muted-foreground">
+      {label}
+      <input type="number" min={0} value={value} onChange={(e) => setValue(Number(e.target.value) || 0)} className="w-full border rounded px-2 py-1.5 text-sm mt-0.5" />
+    </label>
+  );
+}
+
 const SUBJECT_SAMPLE = [
-  { code: "CE301", name: "Surveying", branch: "civil", semester: 3, kind: "theory", credits: 4 },
-  { code: "CE301P", name: "Surveying Lab", branch: "civil", semester: 3, kind: "practical", credits: 2 },
+  {
+    code: "CE301", name: "Surveying", branch: "civil", semester: 3,
+    category: "PCC", kind: "theory", credits: 4,
+    lecture_hours: 4, practical_hours: 0, dcs_bs_hours: 0, total_weekly_load: 4,
+    internal_theory_marks: 20, internal_practical_marks: 0,
+    external_theory_marks: 80, external_practical_marks: 0, total_marks: 100,
+  },
+  {
+    code: "CE301P", name: "Surveying Lab", branch: "civil", semester: 3,
+    category: "PCC", kind: "practical", credits: 2,
+    lecture_hours: 0, practical_hours: 3, dcs_bs_hours: 0, total_weekly_load: 3,
+    internal_theory_marks: 0, internal_practical_marks: 30,
+    external_theory_marks: 0, external_practical_marks: 20, total_marks: 50,
+  },
 ];
 
 function BulkBar({ onImported }: { onImported: () => void }) {
@@ -209,4 +328,3 @@ function BulkBar({ onImported }: { onImported: () => void }) {
     </div>
   );
 }
-

@@ -970,35 +970,65 @@ export type Database = {
       subjects: {
         Row: {
           branch: string
+          category: Database["public"]["Enums"]["subject_category"] | null
           code: string
           created_at: string
           credits: number
+          dcs_bs_hours: number
+          external_practical_marks: number
+          external_theory_marks: number
           id: number
+          internal_practical_marks: number
+          internal_theory_marks: number
           kind: string
+          lecture_hours: number
           name: string
+          practical_hours: number
           semester: number
+          total_marks: number
+          total_weekly_load: number
           updated_at: string
         }
         Insert: {
           branch: string
+          category?: Database["public"]["Enums"]["subject_category"] | null
           code: string
           created_at?: string
           credits?: number
+          dcs_bs_hours?: number
+          external_practical_marks?: number
+          external_theory_marks?: number
           id?: number
+          internal_practical_marks?: number
+          internal_theory_marks?: number
           kind?: string
+          lecture_hours?: number
           name: string
+          practical_hours?: number
           semester: number
+          total_marks?: number
+          total_weekly_load?: number
           updated_at?: string
         }
         Update: {
           branch?: string
+          category?: Database["public"]["Enums"]["subject_category"] | null
           code?: string
           created_at?: string
           credits?: number
+          dcs_bs_hours?: number
+          external_practical_marks?: number
+          external_theory_marks?: number
           id?: number
+          internal_practical_marks?: number
+          internal_theory_marks?: number
           kind?: string
+          lecture_hours?: number
           name?: string
+          practical_hours?: number
           semester?: number
+          total_marks?: number
+          total_weekly_load?: number
           updated_at?: string
         }
         Relationships: []
@@ -1112,7 +1142,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      subject_category:
+        | "BS"
+        | "HS"
+        | "ES"
+        | "PCC"
+        | "PE"
+        | "OE"
+        | "AU"
+        | "Project"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1239,6 +1277,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      subject_category: ["BS", "HS", "ES", "PCC", "PE", "OE", "AU", "Project"],
+    },
   },
 } as const
