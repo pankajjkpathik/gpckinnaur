@@ -93,10 +93,10 @@ function AntiRagging() {
           <div>
             <h3 className="font-semibold text-[color:var(--navy)] mb-2">Important Links</h3>
             <ul className="space-y-2 text-sm">
-              <li><a className="text-[color:var(--navy)] hover:underline inline-flex items-center gap-1" href="https://www.aicte-india.org/" target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3.5 h-3.5" /> Anti - Ragging rules (AICTE)</a></li>
-              <li><a className="text-[color:var(--navy)] underline inline-flex items-center gap-1" href="https://techedu.hp.gov.in/" target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3.5 h-3.5" /> Himachal Pradesh Prohibition of Ragging Act 2009</a></li>
-              <li><Link className="text-[color:var(--navy)] hover:underline inline-flex items-center gap-1" to="/staff/committees"><ExternalLink className="w-3.5 h-3.5" /> Anti-Ragging Committee</Link></li>
-              <li><Link className="text-[color:var(--navy)] hover:underline inline-flex items-center gap-1" to="/staff/committees"><ExternalLink className="w-3.5 h-3.5" /> Anti-Ragging Squad</Link></li>
+              <li><a className="text-[color:var(--navy)] hover:underline inline-flex items-center gap-1" href={aicteRules.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3.5 h-3.5" /> Anti - Ragging rules (AICTE)</a></li>
+              <li><a className="text-[color:var(--navy)] underline inline-flex items-center gap-1" href={hpAct.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3.5 h-3.5" /> Himachal Pradesh Prohibition of Ragging Act 2009</a></li>
+              <li><a className="text-[color:var(--navy)] hover:underline inline-flex items-center gap-1" href={arc.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3.5 h-3.5" /> Anti-Ragging Committee</a></li>
+              <li><a className="text-[color:var(--navy)] hover:underline inline-flex items-center gap-1" href={ars.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3.5 h-3.5" /> Anti-Ragging Squad</a></li>
             </ul>
           </div>
         </article>
