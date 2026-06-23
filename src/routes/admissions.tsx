@@ -196,8 +196,11 @@ function Admissions() {
             </div>
             <ul className="text-sm space-y-2">
               <li>
-                <a className="text-[color:var(--navy)] hover:underline" href="#">
-                  Admission Brochure 2025-26
+                <a
+                  className="text-[color:var(--navy)] hover:underline"
+                  href="https://www.hptechboard.com/storage/files/1/PAT_LEET_2026/PAT%202026%20Prospectus_.pdf"
+                >
+                  Download Prospectus Polytechnic Admission (PAT-2026)
                 </a>
               </li>
               <li>
