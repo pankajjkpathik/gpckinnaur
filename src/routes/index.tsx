@@ -20,10 +20,10 @@ import { PhotoGallery } from "@/components/home/PhotoGallery";
 import civilAsset from "@/assets/civil.png.asset.json";
 import mechAsset from "@/assets/mech.png.asset.json";
 import s6Asset from "@/assets/s6.jpg.asset.json";
-import s5Asset from "@/assets/s5.jpeg.asset.json";
-import eventAsset from "@/assets/event.jpeg.asset.json";
-import seminarAsset from "@/assets/seminar.jpeg.asset.json";
-import vanmahoatsavAsset from "@/assets/vanmahoatsav.jpeg.asset.json";
+import news1Asset from "@/assets/news/news1.jpg.asset.json";
+import news2Asset from "@/assets/news/news2.jpg.asset.json";
+import news3Asset from "@/assets/news/news3.jpg.asset.json";
+import news4Asset from "@/assets/news/news4.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -64,25 +64,32 @@ export const Route = createFileRoute("/")({
 
 const events = [
   {
-    day: "15",
-    month: "OCT",
-    title: "Annual Sports Meet 2025",
-    desc: "Inter-departmental sports competition to be held on the main ground.",
-    venue: "Main Ground",
+    day: "06",
+    month: "JUL",
+    title: "First Round of Admission — PAT",
+    desc: "First counselling round for Polytechnic Admission Test (PAT) candidates.",
+    venue: "GP Kinnaur (Camp Rohru)",
   },
   {
-    day: "22",
-    month: "OCT",
-    title: "Industrial Visit — Cement Plant",
-    desc: "Civil Engineering 3rd-semester field visit to a local cement facility.",
-    venue: "Kinnaur",
+    day: "08",
+    month: "JUL",
+    title: "First Round of Admission — LEET",
+    desc: "First counselling round for Lateral Entry Entrance Test (LEET) candidates.",
+    venue: "GP Kinnaur (Camp Rohru)",
   },
   {
-    day: "05",
-    month: "NOV",
-    title: "AutoCAD Skill Workshop",
-    desc: "5-day workshop conducted by the Civil Engineering department.",
-    venue: "Drawing Hall",
+    day: "25",
+    month: "JUL",
+    title: "Second Round of Admission — PAT",
+    desc: "Second counselling round for Polytechnic Admission Test (PAT) candidates.",
+    venue: "GP Kinnaur (Camp Rohru)",
+  },
+  {
+    day: "27",
+    month: "JUL",
+    title: "Second Round of Admission — LEET",
+    desc: "Second counselling round for Lateral Entry Entrance Test (LEET) candidates.",
+    venue: "GP Kinnaur (Camp Rohru)",
   },
 ];
 
@@ -340,10 +347,10 @@ function Home() {
             </div>
             <div className="p-4 grid grid-cols-2 gap-3 max-h-[420px] overflow-y-auto">
               {[
-                { src: eventAsset.url, alt: "News clipping — Annual Sports Meet" },
-                { src: seminarAsset.url, alt: "News clipping — Seminar coverage" },
-                { src: vanmahoatsavAsset.url, alt: "News clipping — Van Mahotsav" },
-                { src: s5Asset.url, alt: "News clipping — Student events" },
+                { src: news1Asset.url, alt: "News clipping — Nitin Negi selected at Lemon Tree Hotels" },
+                { src: news2Asset.url, alt: "News clipping — 10 students placed at GP Kinnaur" },
+                { src: news3Asset.url, alt: "News clipping — Himachal Aas Paas placement coverage" },
+                { src: news4Asset.url, alt: "News clipping — Digital Media News placement coverage" },
               ].map((img) => (
                 <a
                   key={img.src}
