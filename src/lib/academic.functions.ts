@@ -438,11 +438,6 @@ const subjectRowSchema = z.object({
   practical_hours: z.number().int().min(0).default(0),
   dcs_bs_hours: z.number().int().min(0).default(0),
   total_weekly_load: z.number().int().min(0).default(0),
-  internal_theory_marks: z.number().int().min(0).default(0),
-  internal_practical_marks: z.number().int().min(0).default(0),
-  external_theory_marks: z.number().int().min(0).default(0),
-  external_practical_marks: z.number().int().min(0).default(0),
-  total_marks: z.number().int().min(0).default(0),
 });
 
 export const bulkImportSubjects = createServerFn({ method: "POST" })
