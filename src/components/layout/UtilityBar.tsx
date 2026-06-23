@@ -7,14 +7,6 @@ export function UtilityBar() {
           <span>✉ gpkinnaur@rediffmail.com</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <a
-            className="px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-500"
-            href="https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Online Fee
-          </a>
           <a className="px-3 py-1 rounded-full bg-orange-500 hover:bg-orange-400" href="/training-placement">
             Placements
           </a>

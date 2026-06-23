@@ -4,10 +4,13 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
+  CreditCard,
   GraduationCap,
   Hammer,
   Newspaper,
+  Receipt,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { HeroSlider } from "@/components/home/HeroSlider";
@@ -238,6 +241,85 @@ function Home() {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Events + Notices */}
+      {/* Fees Payment block */}
+      <section className="relative py-14 overflow-hidden bg-[color:var(--navy)]">
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            background:
+              "radial-gradient(circle at 20% 30%, rgba(245,179,66,0.35), transparent 45%), radial-gradient(circle at 80% 70%, rgba(59,130,246,0.35), transparent 50%)",
+          }}
+        />
+        <div className="relative container mx-auto px-4">
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold tracking-widest text-[color:var(--gold)]">
+              PAY ONLINE — SECURE & INSTANT
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mt-2">Fees Payment Portal</h2>
+            <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-3" />
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                title: "Online Fees Payment",
+                subtitle: "For Existing Students",
+                desc: "Semester fees, tuition and other dues for currently enrolled students.",
+                icon: CreditCard,
+                href: "https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805",
+                accent: "from-emerald-500 to-emerald-700",
+                cta: "Pay Semester Fee",
+              },
+              {
+                title: "New Admission Fees",
+                subtitle: "For Freshly Admitted Students",
+                desc: "Complete your admission by paying the prescribed first-year fees online.",
+                icon: GraduationCap,
+                href: "https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805",
+                accent: "from-amber-500 to-orange-600",
+                cta: "Pay Admission Fee",
+              },
+              {
+                title: "Fine Payment",
+                subtitle: "Library / Hostel / Misc.",
+                desc: "Clear outstanding fines such as library, hostel or other miscellaneous dues.",
+                icon: Receipt,
+                href: "https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805",
+                accent: "from-rose-500 to-red-700",
+                cta: "Pay Fine",
+              },
+            ].map((c) => (
+              <a
+                key={c.title}
+                href={c.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative rounded-2xl bg-white/95 backdrop-blur p-6 shadow-xl hover:-translate-y-1 hover:shadow-2xl transition border border-white/40"
+              >
+                <div
+                  className={`inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${c.accent} text-white shadow-md mb-4`}
+                >
+                  <c.icon className="w-7 h-7" />
+                </div>
+                <p className="text-[10px] tracking-widest font-bold text-[color:var(--gold-dark)]">
+                  {c.subtitle.toUpperCase()}
+                </p>
+                <h3 className="text-xl font-bold text-[color:var(--navy)] mt-1">{c.title}</h3>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{c.desc}</p>
+                <span
+                  className={`mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r ${c.accent} text-white text-sm font-semibold group-hover:opacity-90`}
+                >
+                  <Wallet className="w-4 h-4" /> {c.cta} →
+                </span>
+              </a>
+            ))}
+          </div>
+          <p className="text-center text-xs text-white/70 mt-6">
+            Payments are processed securely via Eduqfix PayDirect. Keep your receipt for records.
+          </p>
         </div>
       </section>
 
