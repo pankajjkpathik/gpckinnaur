@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
-import { listSubjects, listSyllabus, upsertSyllabusUnit, deleteSyllabusUnit } from "@/lib/academic.functions";
+import { listSubjects, listSyllabus, upsertSyllabusUnit, deleteSyllabusUnit, bulkImportSyllabus } from "@/lib/academic.functions";
+
 
 export const Route = createFileRoute("/admin/syllabus")({
   head: () => portalMeta("Syllabus"),
@@ -37,15 +39,17 @@ function SyllabusPage() {
   return (
     <PortalShell title="Syllabus" subtitle="Admin · Unit-wise Topics" me={me as any} accent="rose">
       <div className="container mx-auto px-4 py-6 space-y-4">
-        <div className="bg-white border rounded p-3">
-          <label className="text-sm font-semibold mr-2">Subject:</label>
+        <div className="bg-white border rounded p-3 flex flex-wrap items-center gap-2">
+          <label className="text-sm font-semibold">Subject:</label>
           <select value={subjectId ?? ""} onChange={(e) => setSubjectId(e.target.value ? Number(e.target.value) : null)} className="border rounded px-3 py-2 text-sm bg-white">
             <option value="">— Select a subject —</option>
             {(subjQ.data ?? []).map((s: any) => (
               <option key={s.id} value={s.id}>{s.branch.toUpperCase()} · Sem {s.semester} · {s.code} — {s.name}</option>
             ))}
           </select>
+          <div className="ml-auto"><SyllabusBulkBar onImported={() => qc.invalidateQueries({ queryKey: ["syllabus"] })} /></div>
         </div>
+
 
         {subjectId && (
           <>
@@ -112,3 +116,56 @@ function UnitForm({ subjectId, nextUnitNo, onSave, pending, error }: any) {
     </form>
   );
 }
+
+const SYLLABUS_SAMPLE = [
+  { subject_code: "CE301", branch: "civil", semester: 3, unit_no: 1, title: "Introduction to Surveying", hours: 6, topics: "Definitions|Classifications|Principles" },
+  { subject_code: "CE301", branch: "civil", semester: 3, unit_no: 2, title: "Chain Surveying", hours: 8, topics: "Instruments\nRanging\nOffsets" },
+];
+
+function SyllabusBulkBar({ onImported }: { onImported: () => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [result, setResult] = useState<{ inserted: number; errors: { row: number; error: string }[] } | null>(null);
+  const imp = useMutation({
+    mutationFn: (rows: any[]) => bulkImportSyllabus({ data: { rows } }),
+    onSuccess: (r) => { setResult(r); onImported(); },
+  });
+
+  const downloadSample = () => {
+    const ws = XLSX.utils.json_to_sheet(SYLLABUS_SAMPLE);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Syllabus");
+    XLSX.writeFile(wb, "syllabus-sample.xlsx");
+  };
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setResult(null);
+    const buf = await f.arrayBuffer();
+    const wb = XLSX.read(buf);
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json<any>(ws, { defval: "" });
+    if (rows.length === 0) { alert("Empty sheet"); return; }
+    imp.mutate(rows);
+    e.target.value = "";
+  };
+
+  return (
+    <div className="flex flex-wrap gap-2 items-center">
+      <button type="button" onClick={downloadSample} className="px-3 py-2 border rounded text-sm inline-flex items-center gap-1">
+        <Download className="w-4 h-4" /> Sample.xlsx
+      </button>
+      <button type="button" onClick={() => fileRef.current?.click()} disabled={imp.isPending} className="px-3 py-2 bg-emerald-700 text-white rounded text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50">
+        <Upload className="w-4 h-4" /> {imp.isPending ? "Importing…" : "Bulk Upload"}
+      </button>
+      <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={onFile} />
+      {imp.error && <span className="text-xs text-destructive">{(imp.error as any).message}</span>}
+      {result && (
+        <span className="text-xs text-muted-foreground">
+          ✓ {result.inserted} imported{result.errors.length ? ` · ${result.errors.length} errors (row ${result.errors.slice(0,3).map(e=>e.row).join(", ")}${result.errors.length>3?"…":""})` : ""}
+        </span>
+      )}
+    </div>
+  );
+}
+

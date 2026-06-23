@@ -416,3 +416,125 @@ export const listStaffByRole = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return rows ?? [];
   });
+
+// ============ BULK IMPORT: SUBJECTS ============
+
+const subjectRowSchema = z.object({
+  code: z.string().min(1).max(20),
+  name: z.string().min(2).max(150),
+  branch: z.string().min(1).max(50),
+  semester: z.number().int().min(1).max(8),
+  kind: z.enum(["theory", "practical"]).default("theory"),
+  credits: z.number().int().min(0).max(20).default(0),
+});
+
+export const bulkImportSubjects = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(2000) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const errors: { row: number; error: string }[] = [];
+    const valid: any[] = [];
+    data.rows.forEach((raw, i) => {
+      try {
+        const norm = {
+          code: String(raw.code ?? raw.Code ?? "").trim(),
+          name: String(raw.name ?? raw.Name ?? "").trim(),
+          branch: String(raw.branch ?? raw.Branch ?? "").trim().toLowerCase(),
+          semester: Number(raw.semester ?? raw.Semester ?? raw.sem ?? 0),
+          kind: String(raw.kind ?? raw.Kind ?? "theory").trim().toLowerCase(),
+          credits: Number(raw.credits ?? raw.Credits ?? 0),
+        };
+        valid.push(subjectRowSchema.parse(norm));
+      } catch (e: any) {
+        errors.push({ row: i + 2, error: e?.message ?? "Invalid row" });
+      }
+    });
+    let inserted = 0;
+    if (valid.length > 0) {
+      const { error, count } = await supabaseAdmin
+        .from("subjects")
+        .upsert(valid, { onConflict: "code,branch,semester", count: "exact" });
+      if (error) throw new Error(error.message);
+      inserted = count ?? valid.length;
+    }
+    return { inserted, errors };
+  });
+
+// ============ BULK IMPORT: SYLLABUS ============
+// Expected columns: subject_code, branch, semester, unit_no, title, hours, topics
+// topics = newline-separated or "|" separated within the cell.
+
+const syllabusRowSchema = z.object({
+  subject_code: z.string().min(1),
+  branch: z.string().min(1),
+  semester: z.number().int().min(1).max(8),
+  unit_no: z.number().int().min(1).max(20),
+  title: z.string().min(1).max(200),
+  hours: z.number().int().min(0).default(0),
+  topics: z.array(z.string()).default([]),
+});
+
+export const bulkImportSyllabus = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(5000) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const errors: { row: number; error: string }[] = [];
+    const parsed: z.infer<typeof syllabusRowSchema>[] = [];
+    data.rows.forEach((raw, i) => {
+      try {
+        const topicsRaw = String(raw.topics ?? raw.Topics ?? "");
+        const topics = topicsRaw
+          .split(/\r?\n|\|/)
+          .map((t) => t.trim())
+          .filter(Boolean);
+        parsed.push(
+          syllabusRowSchema.parse({
+            subject_code: String(raw.subject_code ?? raw.code ?? raw.Code ?? "").trim(),
+            branch: String(raw.branch ?? raw.Branch ?? "").trim().toLowerCase(),
+            semester: Number(raw.semester ?? raw.Semester ?? 0),
+            unit_no: Number(raw.unit_no ?? raw.Unit ?? raw.unit ?? 0),
+            title: String(raw.title ?? raw.Title ?? "").trim(),
+            hours: Number(raw.hours ?? raw.Hours ?? 0),
+            topics,
+          }),
+        );
+      } catch (e: any) {
+        errors.push({ row: i + 2, error: e?.message ?? "Invalid row" });
+      }
+    });
+
+    // Resolve subject_code → subject_id
+    const keys = Array.from(new Set(parsed.map((r) => `${r.subject_code}|${r.branch}|${r.semester}`)));
+    const codes = Array.from(new Set(parsed.map((r) => r.subject_code)));
+    const { data: subs, error: subErr } = await supabaseAdmin
+      .from("subjects")
+      .select("id, code, branch, semester")
+      .in("code", codes);
+    if (subErr) throw new Error(subErr.message);
+    const map = new Map<string, number>();
+    (subs ?? []).forEach((s: any) => map.set(`${s.code}|${s.branch}|${s.semester}`, s.id));
+
+    const payload: any[] = [];
+    parsed.forEach((r, i) => {
+      const id = map.get(`${r.subject_code}|${r.branch}|${r.semester}`);
+      if (!id) {
+        errors.push({ row: i + 2, error: `Subject not found: ${r.subject_code} (${r.branch} sem ${r.semester})` });
+        return;
+      }
+      payload.push({ subject_id: id, unit_no: r.unit_no, title: r.title, hours: r.hours, topics: r.topics });
+    });
+
+    let inserted = 0;
+    if (payload.length > 0) {
+      const { error, count } = await supabaseAdmin
+        .from("syllabus_units")
+        .upsert(payload, { onConflict: "subject_id,unit_no", count: "exact" });
+      if (error) throw new Error(error.message);
+      inserted = count ?? payload.length;
+    }
+    void keys;
+    return { inserted, errors };
+  });
+
