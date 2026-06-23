@@ -71,3 +71,13 @@ export const templateDownload = createServerFn({ method: "POST" })
 
     return { file_name: tpl.file_name, file_b64: tpl.file_b64, name: tpl.name, roster };
   });
+
+export const templatesBulkDelete = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ ids: z.array(z.number().int()).min(1).max(500) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error, count } = await supabaseAdmin.from("report_templates").delete({ count: "exact" }).in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? data.ids.length };
+  });
