@@ -7,7 +7,9 @@ import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
 import {
   listPeriods, listSubjects, listStaffByRole, listTimetable, upsertTimetableSlot, publishTimetable,
+  bulkImportTimetable, bulkDeleteTimetable,
 } from "@/lib/academic.functions";
+import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
 
 export const Route = createFileRoute("/admin/timetable")({
   head: () => portalMeta("Timetable Builder"),
