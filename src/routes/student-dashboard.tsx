@@ -61,29 +61,31 @@ function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-secondary/30">
-      <header className="bg-[color:var(--student)] text-white">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logoAsset.url} alt="GP Kinnaur logo" className="w-10 h-10 object-contain rounded-full bg-white p-0.5" />
-            <p className="font-bold">Student Portal</p>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <div className="text-right hidden sm:block">
-              <p className="font-medium">{me.name}</p>
-              <p className="text-xs text-white/80">{me.enrollment_no}</p>
+      <header className="bg-gradient-to-r from-emerald-800 via-green-700 to-emerald-800 text-white shadow-sm">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src={logoAsset.url} alt="GP Kinnaur logo" className="w-10 h-10 object-contain rounded-full bg-white p-0.5 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/70">GP Kinnaur · Student</p>
+              <p className="font-bold flex items-center gap-1.5"><span aria-hidden>🎓</span> Student Portal</p>
             </div>
-            <Link to="/messages" className="px-3 py-1.5 rounded border border-white/40 text-sm">Messages</Link>
-            <a href="/student-change-password" className="px-3 py-1.5 rounded border border-white/40 text-sm">Change Password</a>
-            <button onClick={logout} className="px-3 py-1.5 rounded border border-white/40 text-sm">Logout</button>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-lime-300/90 text-emerald-900 uppercase tracking-wider">
+              <span aria-hidden>👤</span> {me.name.toUpperCase()} · {me.enrollment_no}
+            </span>
+            <Link to="/messages" className="px-3 py-1.5 rounded border border-white/30 hover:bg-white/10 text-xs">Messages</Link>
+            <a href="/student-change-password" className="px-3 py-1.5 rounded border border-white/30 hover:bg-white/10 text-xs">Change Password</a>
+            <button onClick={logout} className="px-3 py-1.5 rounded border border-white/30 hover:bg-white/10 text-xs">Logout</button>
           </div>
         </div>
       </header>
 
       <div className="bg-[color:var(--student-light)] border-b">
         <div className="container mx-auto px-4 py-5 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[color:var(--student)] text-white flex items-center justify-center font-bold text-lg">{initials}</div>
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-700 to-green-600 text-white flex items-center justify-center font-bold text-lg shadow-md">{initials}</div>
           <div>
-            <p className="text-xl font-bold text-[color:var(--student)]">{me.name}</p>
+            <p className="text-xl font-bold text-[color:var(--student)] uppercase tracking-wide">{me.name}</p>
             <div className="flex flex-wrap gap-2 mt-1 text-xs">
               <Badge>📚 Branch: <strong className="capitalize">{me.branch}</strong></Badge>
               <Badge>📖 Semester: <strong>{me.semester}</strong></Badge>
@@ -93,6 +95,7 @@ function StudentDashboard() {
           </div>
         </div>
       </div>
+
 
       <div className="container mx-auto px-4 pt-4">
         <div className="flex flex-wrap gap-1 border-b overflow-x-auto">
