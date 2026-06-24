@@ -33,16 +33,22 @@ function PrincipalPortal() {
 
   return (
     <div className="min-h-screen bg-secondary/30">
-      <header className="bg-[color:var(--navy)] text-white">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <Link to="/staff-dashboard" className="text-xs text-white/70 flex items-center gap-1 hover:text-white">
-              <ArrowLeft className="w-3 h-3" /> Staff Dashboard
-            </Link>
-            <h1 className="text-2xl font-bold mt-1">Principal Portal</h1>
+      <header className="bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900 text-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-2xl shrink-0" aria-hidden>🏛️</div>
+            <div className="min-w-0">
+              <Link to="/staff-dashboard" className="text-[11px] text-white/70 flex items-center gap-1 hover:text-white">
+                <ArrowLeft className="w-3 h-3" /> Staff Dashboard
+              </Link>
+              <h1 className="text-2xl font-bold mt-0.5">Principal Portal</h1>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/messages" className="text-xs text-white/90 border border-white/40 rounded px-2 py-1 hover:bg-white/10">Messages</Link>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-300/90 text-indigo-900 uppercase tracking-wider">
+              <span aria-hidden>👤</span> PRINCIPAL
+            </span>
+            <Link to="/messages" className="text-xs text-white/90 border border-white/30 hover:bg-white/10 rounded px-2 py-1">Messages</Link>
             <label className="text-xs text-white/70">Academic Year</label>
             <input value={year} onChange={(e) => setYear(e.target.value)} className="bg-white/10 border border-white/20 rounded px-2 py-1 text-sm w-24" placeholder="2025-26" />
           </div>
@@ -50,12 +56,13 @@ function PrincipalPortal() {
         <nav className="max-w-7xl mx-auto px-6 flex gap-1 text-sm">
           {(["dashboard","attendance","results","syllabus","circulars"] as Tab[]).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 capitalize ${tab === t ? "bg-[color:var(--gold)] text-[color:var(--navy)] font-semibold" : "text-white/80 hover:text-white"}`}>
+              className={`px-4 py-2 capitalize ${tab === t ? "bg-amber-300 text-indigo-900 font-semibold" : "text-white/80 hover:text-white"}`}>
               {t}
             </button>
           ))}
         </nav>
       </header>
+
       <main className="max-w-7xl mx-auto p-6">
         {tab === "dashboard" && <Dashboard year={year} />}
         {tab === "attendance" && <AttendanceMonitor />}
