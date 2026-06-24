@@ -405,15 +405,23 @@ function Home() {
         </div>
       </section>
 
-      {/* Important Links */}
-      <section className="w-full bg-gradient-to-r from-[color:var(--navy-dark)] via-[color:var(--navy)] to-[color:var(--navy-dark)] py-10 border-y border-white/10">
+      {/* Photo Gallery */}
+      <section className="bg-secondary/40 py-14 border-y">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-6">
-            <p className="text-xs font-bold tracking-widest text-[color:var(--gold)]">EXTERNAL RESOURCES</p>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mt-1">Important Links</h2>
-            <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-3" />
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)]">Photo Gallery</h2>
+            <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-2 mb-3" />
+            <p className="text-muted-foreground">Glimpses of campus life, labs, and events at GP Kinnaur.</p>
+
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <PhotoGallery />
+        </div>
+      </section>
+
+      {/* Important Links Strip */}
+      <section className="w-full bg-gradient-to-r from-[color:var(--navy-dark)] via-[color:var(--navy)] to-[color:var(--navy-dark)] py-3 border-y border-white/10">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
             {[
               { label: "Directorate of Technical Education", href: "https://techedu.hp.gov.in/", icon: "🏛️" },
               { label: "HP Takniki Shiksha Board", href: "https://www.hptechboard.com/", icon: "📜" },
@@ -427,27 +435,14 @@ function Home() {
                 href={l.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col items-center justify-center text-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 hover:border-[color:var(--gold)] backdrop-blur px-3 py-4 transition"
+                className="group flex items-center gap-1.5 text-[11px] font-medium text-white/80 hover:text-[color:var(--gold)] transition py-1"
               >
-                <span className="text-2xl" aria-hidden>{l.icon}</span>
-                <span className="text-xs font-semibold text-white leading-tight">{l.label}</span>
-                <span className="text-[10px] text-[color:var(--gold)] opacity-0 group-hover:opacity-100 transition">Visit →</span>
+                <span aria-hidden>{l.icon}</span>
+                <span>{l.label}</span>
+                <span className="opacity-0 group-hover:opacity-100 transition text-[10px]">→</span>
               </a>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Photo Gallery */}
-      <section className="bg-secondary/40 py-14 border-y">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)]">Photo Gallery</h2>
-            <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-2 mb-3" />
-            <p className="text-muted-foreground">Glimpses of campus life, labs, and events at GP Kinnaur.</p>
-
-          </div>
-          <PhotoGallery />
         </div>
       </section>
     </PageLayout>
