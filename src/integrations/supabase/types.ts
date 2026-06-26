@@ -1321,40 +1321,70 @@ export type Database = {
       }
       staff_users: {
         Row: {
+          address: string | null
           created_at: string | null
+          date_of_joining: string | null
+          date_of_retirement: string | null
           department: string | null
+          designation: string | null
+          dob: string | null
+          email: string | null
           id: number
           image_url: string | null
+          ip_number: string | null
           is_active: boolean | null
           last_login: string | null
+          last_salary_drawn: number | null
           name: string | null
           password_hash: string
+          phone: string | null
+          pmis_number: string | null
           role: string
           staff_id: number | null
           username: string
         }
         Insert: {
+          address?: string | null
           created_at?: string | null
+          date_of_joining?: string | null
+          date_of_retirement?: string | null
           department?: string | null
+          designation?: string | null
+          dob?: string | null
+          email?: string | null
           id?: never
           image_url?: string | null
+          ip_number?: string | null
           is_active?: boolean | null
           last_login?: string | null
+          last_salary_drawn?: number | null
           name?: string | null
           password_hash: string
+          phone?: string | null
+          pmis_number?: string | null
           role: string
           staff_id?: number | null
           username: string
         }
         Update: {
+          address?: string | null
           created_at?: string | null
+          date_of_joining?: string | null
+          date_of_retirement?: string | null
           department?: string | null
+          designation?: string | null
+          dob?: string | null
+          email?: string | null
           id?: never
           image_url?: string | null
+          ip_number?: string | null
           is_active?: boolean | null
           last_login?: string | null
+          last_salary_drawn?: number | null
           name?: string | null
           password_hash?: string
+          phone?: string | null
+          pmis_number?: string | null
           role?: string
           staff_id?: number | null
           username?: string
@@ -1363,8 +1393,10 @@ export type Database = {
       }
       students: {
         Row: {
+          aadhaar_number: string | null
           address: string | null
           admission_date: string | null
+          bank_account_number: string | null
           batch_year: number
           branch: string
           created_at: string | null
@@ -1372,18 +1404,22 @@ export type Database = {
           email: string | null
           enrollment_no: string
           father_name: string | null
+          guardian_name: string | null
           guardian_phone: string | null
           id: number
           image_url: string | null
           is_active: boolean | null
           name: string
+          parent_phone: string | null
           password_hash: string
           phone: string | null
           semester: number
         }
         Insert: {
+          aadhaar_number?: string | null
           address?: string | null
           admission_date?: string | null
+          bank_account_number?: string | null
           batch_year: number
           branch: string
           created_at?: string | null
@@ -1391,18 +1427,22 @@ export type Database = {
           email?: string | null
           enrollment_no: string
           father_name?: string | null
+          guardian_name?: string | null
           guardian_phone?: string | null
           id?: never
           image_url?: string | null
           is_active?: boolean | null
           name: string
+          parent_phone?: string | null
           password_hash: string
           phone?: string | null
           semester: number
         }
         Update: {
+          aadhaar_number?: string | null
           address?: string | null
           admission_date?: string | null
+          bank_account_number?: string | null
           batch_year?: number
           branch?: string
           created_at?: string | null
@@ -1410,11 +1450,13 @@ export type Database = {
           email?: string | null
           enrollment_no?: string
           father_name?: string | null
+          guardian_name?: string | null
           guardian_phone?: string | null
           id?: never
           image_url?: string | null
           is_active?: boolean | null
           name?: string
+          parent_phone?: string | null
           password_hash?: string
           phone?: string | null
           semester?: number
