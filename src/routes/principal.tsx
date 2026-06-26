@@ -3,19 +3,32 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  principalDashboard, instituteAttendance, syllabusCompliance,
-  instituteResults, listCirculars, createCircular, deleteCircular,
+  principalDashboard,
+  instituteAttendance,
+  syllabusCompliance,
+  instituteResults,
+  listCirculars,
+  createCircular,
+  deleteCircular,
 } from "@/lib/principal.functions";
+import {
+  principalListStudents,
+  listDisciplinaryActions,
+  createDisciplinaryAction,
+  deleteDisciplinaryAction,
+} from "@/lib/assignments.functions";
 import { exportRows } from "@/lib/report-export";
 import { Trash2, Plus, Download, ArrowLeft } from "lucide-react";
 import { BarStats, PieStats } from "@/components/portal/Charts";
 
 export const Route = createFileRoute("/principal")({
-  head: () => ({ meta: [
-    { title: "Principal Portal — GP Kinnaur" },
-    { name: "description", content: "Institute-wide attendance, results, syllabus compliance, and circulars." },
-    { name: "robots", content: "noindex, nofollow" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Principal Portal — GP Kinnaur" },
+      { name: "description", content: "Institute-wide attendance, results, syllabus compliance, and circulars." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: PrincipalPortal,
 });
 
@@ -25,7 +38,7 @@ function defaultYear() {
   return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
 }
 
-type Tab = "dashboard" | "attendance" | "results" | "syllabus" | "circulars";
+type Tab = "dashboard" | "attendance" | "results" | "syllabus" | "circulars" | "disciplinary";
 
 function PrincipalPortal() {
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -36,9 +49,17 @@ function PrincipalPortal() {
       <header className="bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900 text-white shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-2xl shrink-0" aria-hidden>🏛️</div>
+            <div
+              className="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-2xl shrink-0"
+              aria-hidden
+            >
+              🏛️
+            </div>
             <div className="min-w-0">
-              <Link to="/staff-dashboard" className="text-[11px] text-white/70 flex items-center gap-1 hover:text-white">
+              <Link
+                to="/staff-dashboard"
+                className="text-[11px] text-white/70 flex items-center gap-1 hover:text-white"
+              >
                 <ArrowLeft className="w-3 h-3" /> Staff Dashboard
               </Link>
               <h1 className="text-2xl font-bold mt-0.5">Principal Portal</h1>
@@ -48,15 +69,28 @@ function PrincipalPortal() {
             <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-300/90 text-indigo-900 uppercase tracking-wider">
               <span aria-hidden>👤</span> PRINCIPAL
             </span>
-            <Link to="/messages" className="text-xs text-white/90 border border-white/30 hover:bg-white/10 rounded px-2 py-1">Messages</Link>
+            <Link
+              to="/messages"
+              className="text-xs text-white/90 border border-white/30 hover:bg-white/10 rounded px-2 py-1"
+            >
+              Messages
+            </Link>
             <label className="text-xs text-white/70">Academic Year</label>
-            <input value={year} onChange={(e) => setYear(e.target.value)} className="bg-white/10 border border-white/20 rounded px-2 py-1 text-sm w-24" placeholder="2025-26" />
+            <input
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              className="bg-white/10 border border-white/20 rounded px-2 py-1 text-sm w-24"
+              placeholder="2025-26"
+            />
           </div>
         </div>
         <nav className="max-w-7xl mx-auto px-6 flex gap-1 text-sm">
-          {(["dashboard","attendance","results","syllabus","circulars"] as Tab[]).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 capitalize ${tab === t ? "bg-amber-300 text-indigo-900 font-semibold" : "text-white/80 hover:text-white"}`}>
+          {(["dashboard", "attendance", "results", "syllabus", "circulars", "disciplinary"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2 capitalize ${tab === t ? "bg-amber-300 text-indigo-900 font-semibold" : "text-white/80 hover:text-white"}`}
+            >
               {t}
             </button>
           ))}
@@ -69,6 +103,7 @@ function PrincipalPortal() {
         {tab === "results" && <ResultsMonitor year={year} />}
         {tab === "syllabus" && <SyllabusMonitor year={year} />}
         {tab === "circulars" && <Circulars />}
+        {tab === "disciplinary" && <Disciplinary />}
       </main>
     </div>
   );
@@ -85,7 +120,10 @@ function Card({ label, value, tone }: { label: string; value: number | string; t
 
 function Dashboard({ year }: { year: string }) {
   const fn = useServerFn(principalDashboard);
-  const { data, isLoading } = useQuery({ queryKey: ["principal-dash", year], queryFn: () => fn({ data: { academic_year: year } }) });
+  const { data, isLoading } = useQuery({
+    queryKey: ["principal-dash", year],
+    queryFn: () => fn({ data: { academic_year: year } }),
+  });
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">Loading…</p>;
   const populationData = [
     { label: "Students", value: data.students },
@@ -102,9 +140,21 @@ function Dashboard({ year }: { year: string }) {
         <Card label="Active Students" value={data.students} />
         <Card label="Active Staff" value={data.staff} />
         <Card label="Circulars Published" value={data.circulars} />
-        <Card label="Pending Lesson Plans" value={data.pending_lessons} tone={data.pending_lessons ? "ring-1 ring-amber-300" : ""} />
-        <Card label="Marks Awaiting Approval" value={data.pending_marks} tone={data.pending_marks ? "ring-1 ring-amber-300" : ""} />
-        <Card label="Pending Leave Requests" value={data.pending_leaves} tone={data.pending_leaves ? "ring-1 ring-amber-300" : ""} />
+        <Card
+          label="Pending Lesson Plans"
+          value={data.pending_lessons}
+          tone={data.pending_lessons ? "ring-1 ring-amber-300" : ""}
+        />
+        <Card
+          label="Marks Awaiting Approval"
+          value={data.pending_marks}
+          tone={data.pending_marks ? "ring-1 ring-amber-300" : ""}
+        />
+        <Card
+          label="Pending Leave Requests"
+          value={data.pending_leaves}
+          tone={data.pending_leaves ? "ring-1 ring-amber-300" : ""}
+        />
       </div>
       <div className="grid md:grid-cols-2 gap-4">
         <div className="bg-white border rounded-lg p-4">
@@ -116,7 +166,9 @@ function Dashboard({ year }: { year: string }) {
           <BarStats data={pendingData} color="#0ea5e9" />
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">Use the tabs above to drill into institute-wide attendance, results, syllabus compliance, and circulars.</p>
+      <p className="text-xs text-muted-foreground">
+        Use the tabs above to drill into institute-wide attendance, results, syllabus compliance, and circulars.
+      </p>
     </div>
   );
 }
@@ -158,13 +210,31 @@ function AttendanceMonitor() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3 bg-white border rounded p-3">
-        <div><label className="block text-xs text-muted-foreground">From</label>
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="border rounded px-2 py-1 text-sm" /></div>
-        <div><label className="block text-xs text-muted-foreground">To</label>
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="border rounded px-2 py-1 text-sm" /></div>
+        <div>
+          <label className="block text-xs text-muted-foreground">From</label>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground">To</label>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          />
+        </div>
         <div className="ml-auto flex gap-2">
-          {(["pdf","xlsx","csv"] as const).map((f) => (
-            <button key={f} onClick={() => dl(f)} className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-secondary">
+          {(["pdf", "xlsx", "csv"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => dl(f)}
+              className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-secondary"
+            >
               <Download className="w-3 h-3" /> {f.toUpperCase()}
             </button>
           ))}
@@ -178,7 +248,14 @@ function AttendanceMonitor() {
       <div className="bg-white border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[color:var(--navy)] text-white">
-            <tr><th className="px-3 py-2 text-left">Branch</th><th className="px-3 py-2 text-left">Sem</th><th className="px-3 py-2 text-right">Students</th><th className="px-3 py-2 text-right">Records</th><th className="px-3 py-2 text-right">Present</th><th className="px-3 py-2 text-right">%</th></tr>
+            <tr>
+              <th className="px-3 py-2 text-left">Branch</th>
+              <th className="px-3 py-2 text-left">Sem</th>
+              <th className="px-3 py-2 text-right">Students</th>
+              <th className="px-3 py-2 text-right">Records</th>
+              <th className="px-3 py-2 text-right">Present</th>
+              <th className="px-3 py-2 text-right">%</th>
+            </tr>
           </thead>
           <tbody className="divide-y">
             {(data as any[]).map((r, i) => (
@@ -191,7 +268,13 @@ function AttendanceMonitor() {
                 <td className="px-3 py-2 text-right font-semibold">{r.pct}%</td>
               </tr>
             ))}
-            {!isFetching && data.length === 0 && <tr><td colSpan={6} className="text-center py-6 text-muted-foreground">No attendance data in this range.</td></tr>}
+            {!isFetching && data.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center py-6 text-muted-foreground">
+                  No attendance data in this range.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -212,23 +295,41 @@ function ResultsMonitor({ year }: { year: string }) {
       filename: `institute-results-${year}-${examType}`,
       title: `Institute Results ${year} (${examType})`,
       columns: [
-        { key: "branch", label: "Branch" }, { key: "semester", label: "Sem" },
-        { key: "entries", label: "Entries" }, { key: "pass_pct", label: "Pass %" }, { key: "avg_pct", label: "Avg %" },
+        { key: "branch", label: "Branch" },
+        { key: "semester", label: "Sem" },
+        { key: "entries", label: "Entries" },
+        { key: "pass_pct", label: "Pass %" },
+        { key: "avg_pct", label: "Avg %" },
       ],
-      rows: data as any[], format: fmt,
+      rows: data as any[],
+      format: fmt,
     });
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3 bg-white border rounded p-3">
-        <div><label className="block text-xs text-muted-foreground">Exam</label>
-          <select value={examType} onChange={(e) => setExamType(e.target.value)} className="border rounded px-2 py-1 text-sm bg-white">
-            {["internal_1","internal_2","mid_term","sessional","final"].map((e) => <option key={e} value={e}>{e}</option>)}
-          </select></div>
+        <div>
+          <label className="block text-xs text-muted-foreground">Exam</label>
+          <select
+            value={examType}
+            onChange={(e) => setExamType(e.target.value)}
+            className="border rounded px-2 py-1 text-sm bg-white"
+          >
+            {["internal_1", "internal_2", "mid_term", "sessional", "final"].map((e) => (
+              <option key={e} value={e}>
+                {e}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="ml-auto flex gap-2">
-          {(["pdf","xlsx","csv"] as const).map((f) => (
-            <button key={f} onClick={() => dl(f)} className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-secondary">
+          {(["pdf", "xlsx", "csv"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => dl(f)}
+              className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-secondary"
+            >
               <Download className="w-3 h-3" /> {f.toUpperCase()}
             </button>
           ))}
@@ -237,7 +338,13 @@ function ResultsMonitor({ year }: { year: string }) {
       <div className="bg-white border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[color:var(--navy)] text-white">
-            <tr><th className="px-3 py-2 text-left">Branch</th><th className="px-3 py-2 text-left">Sem</th><th className="px-3 py-2 text-right">Entries</th><th className="px-3 py-2 text-right">Pass %</th><th className="px-3 py-2 text-right">Avg %</th></tr>
+            <tr>
+              <th className="px-3 py-2 text-left">Branch</th>
+              <th className="px-3 py-2 text-left">Sem</th>
+              <th className="px-3 py-2 text-right">Entries</th>
+              <th className="px-3 py-2 text-right">Pass %</th>
+              <th className="px-3 py-2 text-right">Avg %</th>
+            </tr>
           </thead>
           <tbody className="divide-y">
             {(data as any[]).map((r, i) => (
@@ -249,7 +356,13 @@ function ResultsMonitor({ year }: { year: string }) {
                 <td className="px-3 py-2 text-right">{r.avg_pct}%</td>
               </tr>
             ))}
-            {data.length === 0 && <tr><td colSpan={5} className="text-center py-6 text-muted-foreground">No approved marks for this exam yet.</td></tr>}
+            {data.length === 0 && (
+              <tr>
+                <td colSpan={5} className="text-center py-6 text-muted-foreground">
+                  No approved marks for this exam yet.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -269,20 +382,28 @@ function SyllabusMonitor({ year }: { year: string }) {
       filename: `syllabus-compliance-${year}`,
       title: `Syllabus Compliance ${year}`,
       columns: [
-        { key: "code", label: "Code" }, { key: "name", label: "Subject" },
-        { key: "branch", label: "Branch" }, { key: "semester", label: "Sem" },
-        { key: "units", label: "Units" }, { key: "avg_coverage", label: "Avg %" },
+        { key: "code", label: "Code" },
+        { key: "name", label: "Subject" },
+        { key: "branch", label: "Branch" },
+        { key: "semester", label: "Sem" },
+        { key: "units", label: "Units" },
+        { key: "avg_coverage", label: "Avg %" },
         { key: "approved_pct", label: "Approved %" },
       ],
-      rows: data as any[], format: fmt,
+      rows: data as any[],
+      format: fmt,
     });
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end gap-2">
-        {(["pdf","xlsx","csv"] as const).map((f) => (
-          <button key={f} onClick={() => dl(f)} className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-secondary bg-white">
+        {(["pdf", "xlsx", "csv"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => dl(f)}
+            className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-secondary bg-white"
+          >
             <Download className="w-3 h-3" /> {f.toUpperCase()}
           </button>
         ))}
@@ -290,7 +411,15 @@ function SyllabusMonitor({ year }: { year: string }) {
       <div className="bg-white border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[color:var(--navy)] text-white">
-            <tr><th className="px-3 py-2 text-left">Code</th><th className="px-3 py-2 text-left">Subject</th><th className="px-3 py-2 text-left">Branch</th><th className="px-3 py-2 text-left">Sem</th><th className="px-3 py-2 text-right">Units</th><th className="px-3 py-2 text-right">Avg Coverage</th><th className="px-3 py-2 text-right">Approved</th></tr>
+            <tr>
+              <th className="px-3 py-2 text-left">Code</th>
+              <th className="px-3 py-2 text-left">Subject</th>
+              <th className="px-3 py-2 text-left">Branch</th>
+              <th className="px-3 py-2 text-left">Sem</th>
+              <th className="px-3 py-2 text-right">Units</th>
+              <th className="px-3 py-2 text-right">Avg Coverage</th>
+              <th className="px-3 py-2 text-right">Approved</th>
+            </tr>
           </thead>
           <tbody className="divide-y">
             {(data as any[]).map((r) => (
@@ -304,7 +433,13 @@ function SyllabusMonitor({ year }: { year: string }) {
                 <td className="px-3 py-2 text-right">{r.approved_pct}%</td>
               </tr>
             ))}
-            {data.length === 0 && <tr><td colSpan={7} className="text-center py-6 text-muted-foreground">No lesson plans recorded for this academic year.</td></tr>}
+            {data.length === 0 && (
+              <tr>
+                <td colSpan={7} className="text-center py-6 text-muted-foreground">
+                  No lesson plans recorded for this academic year.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -321,7 +456,10 @@ function Circulars() {
   const { data = [] } = useQuery({ queryKey: ["circulars"], queryFn: () => list() });
   const mCreate = useMutation({
     mutationFn: (d: any) => create({ data: d }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["circulars"] }); setOpen(false); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["circulars"] });
+      setOpen(false);
+    },
   });
   const mDel = useMutation({
     mutationFn: (id: number) => del({ data: { id } }),
@@ -332,7 +470,10 @@ function Circulars() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-[color:var(--navy)]">Circulars</h2>
-        <button onClick={() => setOpen(true)} className="bg-[color:var(--gold)] text-[color:var(--navy)] px-4 py-2 rounded font-semibold flex items-center gap-2">
+        <button
+          onClick={() => setOpen(true)}
+          className="bg-[color:var(--gold)] text-[color:var(--navy)] px-4 py-2 rounded font-semibold flex items-center gap-2"
+        >
           <Plus className="w-4 h-4" /> New Circular
         </button>
       </div>
@@ -341,43 +482,264 @@ function Circulars() {
           <div key={c.id} className="bg-white border rounded p-4 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-xs">
-                <span className="bg-[color:var(--navy)] text-white px-2 py-0.5 rounded">{new Date(c.published_at).toLocaleDateString()}</span>
+                <span className="bg-[color:var(--navy)] text-white px-2 py-0.5 rounded">
+                  {new Date(c.published_at).toLocaleDateString()}
+                </span>
                 <span className="bg-secondary px-2 py-0.5 rounded uppercase">{c.audience}</span>
                 {c.staff_users?.username && <span className="text-muted-foreground">by {c.staff_users.username}</span>}
               </div>
               <p className="font-semibold mt-2">{c.title}</p>
               <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{c.body}</p>
-              {c.attachment_url && <a href={c.attachment_url} target="_blank" rel="noreferrer" className="text-xs text-[color:var(--navy)] underline mt-1 inline-block">Attachment</a>}
+              {c.attachment_url && (
+                <a
+                  href={c.attachment_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-[color:var(--navy)] underline mt-1 inline-block"
+                >
+                  Attachment
+                </a>
+              )}
             </div>
-            <button onClick={() => confirm("Delete circular?") && mDel.mutate(c.id)} className="text-destructive p-2 hover:bg-destructive/10 rounded">
+            <button
+              onClick={() => confirm("Delete circular?") && mDel.mutate(c.id)}
+              className="text-destructive p-2 hover:bg-destructive/10 rounded"
+            >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         ))}
-        {data.length === 0 && <p className="text-sm text-muted-foreground bg-white border rounded p-6 text-center">No circulars yet.</p>}
+        {data.length === 0 && (
+          <p className="text-sm text-muted-foreground bg-white border rounded p-6 text-center">No circulars yet.</p>
+        )}
       </div>
 
       {open && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+          onClick={() => setOpen(false)}
+        >
           <div className="bg-white rounded-lg p-5 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-lg mb-3">New Circular</h3>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              mCreate.mutate({
-                title: fd.get("title"),
-                body: fd.get("body"),
-                audience: fd.get("audience") || "all",
-                attachment_url: fd.get("attachment_url") || undefined,
-              });
-            }} className="space-y-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                mCreate.mutate({
+                  title: fd.get("title"),
+                  body: fd.get("body"),
+                  audience: fd.get("audience") || "all",
+                  attachment_url: fd.get("attachment_url") || undefined,
+                });
+              }}
+              className="space-y-3"
+            >
               <input name="title" required placeholder="Title" className="w-full border rounded px-3 py-2 text-sm" />
-              <textarea name="body" required rows={5} placeholder="Body" className="w-full border rounded px-3 py-2 text-sm" />
+              <textarea
+                name="body"
+                required
+                rows={5}
+                placeholder="Body"
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
               <select name="audience" className="w-full border rounded px-3 py-2 text-sm bg-white">
-                {["all","staff","faculty","hod","students"].map((a) => <option key={a} value={a}>{a}</option>)}
+                {["all", "staff", "faculty", "hod", "students"].map((a) => (
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
+                ))}
               </select>
-              <input name="attachment_url" placeholder="Attachment URL (optional)" className="w-full border rounded px-3 py-2 text-sm" />
-              <button disabled={mCreate.isPending} className="w-full bg-[color:var(--navy)] text-white py-2 rounded font-semibold disabled:opacity-50">Publish</button>
+              <input
+                name="attachment_url"
+                placeholder="Attachment URL (optional)"
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+              <button
+                disabled={mCreate.isPending}
+                className="w-full bg-[color:var(--navy)] text-white py-2 rounded font-semibold disabled:opacity-50"
+              >
+                Publish
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Disciplinary() {
+  const qc = useQueryClient();
+  const studentsFn = useServerFn(principalListStudents);
+  const listFn = useServerFn(listDisciplinaryActions);
+  const createFn = useServerFn(createDisciplinaryAction);
+  const delFn = useServerFn(deleteDisciplinaryAction);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const { data: students = [] } = useQuery({ queryKey: ["principal-students"], queryFn: () => studentsFn() });
+  const { data = [] } = useQuery({ queryKey: ["disciplinary"], queryFn: () => listFn({ data: {} }) });
+
+  const mCreate = useMutation({
+    mutationFn: (d: any) => createFn({ data: d }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["disciplinary"] });
+      setOpen(false);
+    },
+  });
+  const mDel = useMutation({
+    mutationFn: (id: number) => delFn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["disciplinary"] }),
+  });
+
+  const filteredStudents = search
+    ? (students as any[]).filter(
+        (s) =>
+          s.name.toLowerCase().includes(search.toLowerCase()) ||
+          s.enrollment_no.toLowerCase().includes(search.toLowerCase()),
+      )
+    : (students as any[]);
+
+  const sevTone: Record<string, string> = {
+    notice: "bg-amber-100 text-amber-800",
+    warning: "bg-orange-100 text-orange-800",
+    suspension: "bg-rose-100 text-rose-800",
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold text-[color:var(--navy)]">Disciplinary Actions</h2>
+          <p className="text-xs text-muted-foreground">
+            Issue official disciplinary notices to students. Only the Principal can manage these.
+          </p>
+        </div>
+        <button
+          onClick={() => setOpen(true)}
+          className="bg-[color:var(--gold)] text-[color:var(--navy)] px-4 py-2 rounded font-semibold flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> Issue Action
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        {(data as any[]).map((d) => (
+          <div key={d.id} className="bg-white border rounded p-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-xs flex-wrap">
+                <span
+                  className={`px-2 py-0.5 rounded capitalize font-semibold ${sevTone[d.severity] ?? sevTone.notice}`}
+                >
+                  {d.severity}
+                </span>
+                <span className="bg-secondary px-2 py-0.5 rounded">Issued {d.action_date}</span>
+                {d.resolution_date && (
+                  <span className="bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded">
+                    Resolve by {d.resolution_date}
+                  </span>
+                )}
+                <span className="text-muted-foreground">
+                  {d.students?.name} · {d.students?.enrollment_no}
+                </span>
+              </div>
+              <p className="font-semibold mt-2">{d.title}</p>
+              {d.detail && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{d.detail}</p>}
+            </div>
+            <button
+              onClick={() => confirm("Delete this disciplinary action?") && mDel.mutate(d.id)}
+              className="text-destructive p-2 hover:bg-destructive/10 rounded shrink-0"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+        {data.length === 0 && (
+          <p className="text-sm text-muted-foreground bg-white border rounded p-6 text-center">
+            No disciplinary actions on record.
+          </p>
+        )}
+      </div>
+
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+          onClick={() => setOpen(false)}
+        >
+          <div className="bg-white rounded-lg p-5 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-3">Issue Disciplinary Action</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                const sid = fd.get("student_id");
+                if (!sid) return;
+                mCreate.mutate({
+                  student_id: Number(sid),
+                  title: fd.get("title"),
+                  detail: fd.get("detail") || null,
+                  action_date: fd.get("action_date") || null,
+                  resolution_date: fd.get("resolution_date") || null,
+                  severity: fd.get("severity") || "notice",
+                });
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Search student</label>
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Name or enrollment no…"
+                  className="w-full border rounded px-3 py-2 text-sm mb-2"
+                />
+                <select name="student_id" required className="w-full border rounded px-3 py-2 text-sm bg-white">
+                  <option value="">Select student</option>
+                  {filteredStudents.map((s: any) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} · {s.enrollment_no} ({s.branch}-Sem{s.semester})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <input
+                name="title"
+                required
+                placeholder="Title (e.g. Late submission, Misconduct)"
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+              <textarea
+                name="detail"
+                rows={4}
+                placeholder="Details of the action / notice…"
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Action Date</label>
+                  <input type="date" name="action_date" className="w-full border rounded px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Last Date of Resolution</label>
+                  <input type="date" name="resolution_date" className="w-full border rounded px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <select
+                name="severity"
+                defaultValue="notice"
+                className="w-full border rounded px-3 py-2 text-sm bg-white"
+              >
+                <option value="notice">Notice</option>
+                <option value="warning">Warning</option>
+                <option value="suspension">Suspension</option>
+              </select>
+              {mCreate.error && <p className="text-xs text-destructive">{(mCreate.error as Error).message}</p>}
+              <button
+                disabled={mCreate.isPending}
+                className="w-full bg-[color:var(--navy)] text-white py-2 rounded font-semibold disabled:opacity-50"
+              >
+                {mCreate.isPending ? "Issuing…" : "Issue Action"}
+              </button>
             </form>
           </div>
         </div>

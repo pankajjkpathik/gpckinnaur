@@ -4,11 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Download,
-  Calendar,
   FileText,
   BookOpen,
-  Clock,
-  ClipboardList,
   GraduationCap,
   Upload,
   BookMarked,
@@ -37,9 +34,15 @@ import {
   studentCirculars,
   studentGrading,
   studentFaculty,
-  studentAssignments,
   studentDocuments,
 } from "@/lib/student.functions";
+import {
+  studentListAssignments,
+  studentSubmitAssignment,
+  studentMySubmissions,
+  studentMyFees,
+  studentMyDisciplinary,
+} from "@/lib/assignments.functions";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/student-dashboard")({
@@ -615,9 +618,13 @@ function SemesterReportsView({ me, onBack }: { me: any; onBack: () => void }) {
 
 // ─── MY ASSIGNMENTS ───────────────────────────────────────────────────────────
 function AssignmentsView({ onBack }: { onBack: () => void }) {
-  const fn = useServerFn(studentAssignments);
+  const fn = useServerFn(studentListAssignments);
+  const subsFn = useServerFn(studentMySubmissions);
   const { data = [], isLoading } = useQuery({ queryKey: ["student-assignments"], queryFn: () => fn() });
+  const { data: subs = [] } = useQuery({ queryKey: ["student-my-subs"], queryFn: () => subsFn() });
   const today = new Date().toISOString().slice(0, 10);
+
+  const submittedIds = new Set((subs as any[]).map((s) => s.assignment_id));
 
   return (
     <div className="space-y-4">
@@ -638,33 +645,42 @@ function AssignmentsView({ onBack }: { onBack: () => void }) {
             </thead>
             <tbody>
               {(data as any[]).map((a: any) => {
-                const due = a.due_date ?? a.uploaded_at?.slice(0, 10);
+                const due = a.due_date;
                 const pastDue = due && due < today;
+                const submitted = submittedIds.has(a.id);
                 return (
                   <tr key={a.id} className="border-t">
-                    <td className="px-4 py-3">{a.subject ?? "—"}</td>
+                    <td className="px-4 py-3">{a.subject_name || a.subjects?.name || "—"}</td>
                     <td className="px-4 py-3">{a.title}</td>
                     <td className="px-4 py-3">{due ?? "—"}</td>
                     <td className="px-4 py-3">
-                      {pastDue ? (
+                      {submitted ? (
+                        <span className="text-xs px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
+                          Submitted
+                        </span>
+                      ) : pastDue ? (
                         <span className="text-xs px-2.5 py-1 bg-rose-500 text-white rounded-full font-semibold">
                           Past Due
                         </span>
                       ) : (
-                        <span className="text-xs px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
+                        <span className="text-xs px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full font-semibold">
                           Open
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <a
-                        href={a.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
-                      >
-                        <Download className="w-4 h-4" /> Download
-                      </a>
+                      {a.file_url ? (
+                        <a
+                          href={a.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
+                        >
+                          <Download className="w-4 h-4" /> Download
+                        </a>
+                      ) : (
+                        <span className="text-xs text-gray-400">No file</span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -686,14 +702,26 @@ function AssignmentsView({ onBack }: { onBack: () => void }) {
 
 // ─── UPLOAD ASSIGNMENT ────────────────────────────────────────────────────────
 function UploadAssignmentView({ onBack }: { onBack: () => void }) {
-  const fn = useServerFn(studentAssignments);
+  const qc = useQueryClient();
+  const fn = useServerFn(studentListAssignments);
+  const submitFn = useServerFn(studentSubmitAssignment);
   const { data = [] } = useQuery({ queryKey: ["student-assignments"], queryFn: () => fn() });
   const today = new Date().toISOString().slice(0, 10);
-  const pending = (data as any[]).filter((a: any) => {
-    const due = a.due_date ?? a.uploaded_at?.slice(0, 10);
-    return !due || due >= today;
-  });
+  const pending = (data as any[]).filter((a: any) => !a.due_date || a.due_date >= today);
   const [selected, setSelected] = useState("");
+  const [fileUrl, setFileUrl] = useState("");
+  const [comments, setComments] = useState("");
+
+  const submit = useMutation({
+    mutationFn: () =>
+      submitFn({ data: { assignment_id: Number(selected), file_url: fileUrl, comments: comments || null } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["student-my-subs"] });
+      setSelected("");
+      setFileUrl("");
+      setComments("");
+    },
+  });
 
   return (
     <div className="space-y-4">
@@ -713,7 +741,7 @@ function UploadAssignmentView({ onBack }: { onBack: () => void }) {
               <option value="">Select a pending assignment</option>
               {pending.map((a: any) => (
                 <option key={a.id} value={a.id}>
-                  {a.subject ? `${a.subject} — ` : ""}
+                  {a.subject_name ? `${a.subject_name} — ` : ""}
                   {a.title}
                 </option>
               ))}
@@ -721,20 +749,36 @@ function UploadAssignmentView({ onBack }: { onBack: () => void }) {
             <p className="text-xs text-gray-400 mt-1">Only assignments with future due dates are shown here.</p>
           </div>
           <div>
-            <label className="text-sm text-gray-700 mb-1 block">Assignment File (PDF Only)</label>
-            <input type="file" accept=".pdf" className="border rounded w-full px-3 py-2 text-sm" />
+            <label className="text-sm text-gray-700 mb-1 block">Assignment File URL (PDF)</label>
+            <input
+              value={fileUrl}
+              onChange={(e) => setFileUrl(e.target.value)}
+              placeholder="https://…/my-submission.pdf"
+              className="border rounded w-full px-3 py-2 text-sm"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Upload your PDF to Drive/storage and paste the shareable link here.
+            </p>
           </div>
           <div>
             <label className="text-sm text-gray-700 mb-1 block">Comments (Optional)</label>
             <textarea
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
               rows={4}
               placeholder="Add any comments for your teacher…"
               className="border rounded w-full px-3 py-2 text-sm resize-y"
             />
           </div>
-          <button className="bg-[#7b1f4c] text-white w-full py-2.5 rounded font-semibold flex items-center justify-center gap-2">
-            <Upload className="w-4 h-4" /> Submit Assignment
+          <button
+            onClick={() => submit.mutate()}
+            disabled={!selected || !fileUrl || submit.isPending}
+            className="bg-[#7b1f4c] text-white w-full py-2.5 rounded font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Upload className="w-4 h-4" /> {submit.isPending ? "Submitting…" : "Submit Assignment"}
           </button>
+          {submit.isSuccess && <p className="text-sm text-green-700 text-center">Submitted successfully!</p>}
+          {submit.error && <p className="text-sm text-rose-700 text-center">{(submit.error as Error).message}</p>}
         </div>
       </Card>
     </div>
@@ -822,58 +866,109 @@ function DocumentsView({ onBack }: { onBack: () => void }) {
 
 // ─── FEES PAYMENT ─────────────────────────────────────────────────────────────
 function FeesView({ onBack }: { onBack: () => void }) {
-  // Default fee structure — replace with backend fee records when available.
-  const components = [
-    { label: "Tuition Fee", amount: 12000 },
-    { label: "Exam Fee", amount: 2000 },
-    { label: "Development Fee", amount: 1500 },
-    { label: "Other Charges", amount: 500 },
-  ];
-  const total = components.reduce((s, c) => s + c.amount, 0);
-  const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+  const fn = useServerFn(studentMyFees);
+  const { data = [], isLoading } = useQuery({ queryKey: ["student-fees"], queryFn: () => fn() });
+  const inr = (n: number) => `₹${Number(n).toLocaleString("en-IN")}`;
+
+  // Use the latest fee record if present; otherwise show default structure.
+  const record = (data as any[])[0];
+  const components: { label: string; amount: number }[] = record
+    ? Array.isArray(record.components)
+      ? record.components
+      : []
+    : [
+        { label: "Tuition Fee", amount: 12000 },
+        { label: "Exam Fee", amount: 2000 },
+        { label: "Development Fee", amount: 1500 },
+        { label: "Other Charges", amount: 500 },
+      ];
+  const total = record ? Number(record.total_amount) : components.reduce((s, c) => s + c.amount, 0);
+  const paid = record ? Number(record.paid_amount) : 0;
+  const balance = total - paid;
+  const status = record?.status ?? "due";
+  const isPaid = status === "paid" || balance <= 0;
 
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Fees Payment</h1>
+        <div className="flex items-start justify-between mb-1">
+          <h1 className="text-xl font-bold text-gray-800">Fees Payment</h1>
+          {!isLoading &&
+            (isPaid ? (
+              <span className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full font-semibold">PAID</span>
+            ) : (
+              <span className="text-xs px-3 py-1 bg-rose-100 text-rose-700 rounded-full font-semibold">UNPAID</span>
+            ))}
+        </div>
         <p className="text-xs text-gray-400 mb-4">View your current fee status and details of any outstanding dues.</p>
 
-        <div className="border border-rose-200 bg-rose-50 rounded p-4 mb-4">
-          <p className="text-rose-700 font-semibold flex items-center gap-2 text-sm">
-            <DollarSign className="w-4 h-4" /> Fees Due
-          </p>
-          <p className="text-rose-600 text-sm mt-1">
-            Your fee payment is currently due. Please find the breakdown below and complete the payment.
-          </p>
-        </div>
+        {isLoading ? (
+          <p className="text-sm text-gray-400 text-center py-4">Loading…</p>
+        ) : (
+          <>
+            {isPaid ? (
+              <div className="border border-green-200 bg-green-50 rounded p-4 mb-4">
+                <p className="text-green-800 font-semibold flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="w-4 h-4" /> Fees Paid
+                </p>
+                <p className="text-green-700 text-sm mt-1">Your fees are fully paid. Thank you!</p>
+              </div>
+            ) : (
+              <div className="border border-rose-200 bg-rose-50 rounded p-4 mb-4">
+                <p className="text-rose-700 font-semibold flex items-center gap-2 text-sm">
+                  <DollarSign className="w-4 h-4" /> Fees Due
+                </p>
+                <p className="text-rose-600 text-sm mt-1">
+                  Your fee payment is currently due. Please find the breakdown below and complete the payment.
+                  {record?.due_date ? ` Due by ${record.due_date}.` : ""}
+                </p>
+              </div>
+            )}
 
-        <div className="border rounded overflow-hidden mb-4">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Fee Component</th>
-                <th className="text-right px-4 py-3 text-gray-400 font-medium">Amount (INR)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {components.map((c) => (
-                <tr key={c.label} className="border-t">
-                  <td className="px-4 py-3">{c.label}</td>
-                  <td className="px-4 py-3 text-right">{inr(c.amount)}</td>
-                </tr>
-              ))}
-              <tr className="border-t bg-gray-50 font-semibold">
-                <td className="px-4 py-3">Total Amount Due</td>
-                <td className="px-4 py-3 text-right">{inr(total)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            <div className="border rounded overflow-hidden mb-4">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-gray-400 font-medium">Fee Component</th>
+                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Amount (INR)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {components.map((c, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="px-4 py-3">{c.label}</td>
+                      <td className="px-4 py-3 text-right">{inr(c.amount)}</td>
+                    </tr>
+                  ))}
+                  {paid > 0 && (
+                    <tr className="border-t text-green-700">
+                      <td className="px-4 py-3">Paid</td>
+                      <td className="px-4 py-3 text-right">− {inr(paid)}</td>
+                    </tr>
+                  )}
+                  <tr className="border-t bg-gray-50 font-semibold">
+                    <td className="px-4 py-3">{paid > 0 ? "Balance Due" : "Total Amount Due"}</td>
+                    <td className="px-4 py-3 text-right">{inr(balance)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-        <div className="flex justify-end">
-          <button className="bg-[#7b1f4c] text-white px-6 py-2.5 rounded font-semibold">Pay Now ({inr(total)})</button>
-        </div>
+            {!isPaid && (
+              <div className="flex justify-end">
+                <a
+                  href="https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-[#7b1f4c] text-white px-6 py-2.5 rounded font-semibold inline-flex items-center gap-2"
+                >
+                  Pay Now ({inr(balance)})
+                </a>
+              </div>
+            )}
+          </>
+        )}
       </Card>
     </div>
   );
@@ -925,8 +1020,15 @@ function FacultyView({ onBack }: { onBack: () => void }) {
 
 // ─── DISCIPLINARY ACTIONS ─────────────────────────────────────────────────────
 function DisciplinaryView({ onBack }: { onBack: () => void }) {
-  // No disciplinary records backend yet — clean record state.
-  const records: any[] = [];
+  const fn = useServerFn(studentMyDisciplinary);
+  const { data = [], isLoading } = useQuery({ queryKey: ["student-disciplinary"], queryFn: () => fn() });
+  const records = data as any[];
+
+  const sevTone: Record<string, string> = {
+    notice: "bg-amber-100 text-amber-800",
+    warning: "bg-orange-100 text-orange-800",
+    suspension: "bg-rose-100 text-rose-800",
+  };
 
   return (
     <div className="space-y-4">
@@ -935,7 +1037,9 @@ function DisciplinaryView({ onBack }: { onBack: () => void }) {
         <h1 className="text-xl font-bold text-gray-800 mb-1">Disciplinary Actions</h1>
         <p className="text-xs text-gray-400 mb-4">A record of any official disciplinary actions or notices issued.</p>
 
-        {records.length === 0 ? (
+        {isLoading ? (
+          <p className="text-sm text-gray-400 text-center py-4">Loading…</p>
+        ) : records.length === 0 ? (
           <div className="border border-green-200 bg-green-50 rounded p-4">
             <p className="text-green-800 font-semibold flex items-center gap-2 text-sm">
               <CheckCircle2 className="w-4 h-4" /> No Actions on Record
@@ -944,10 +1048,21 @@ function DisciplinaryView({ onBack }: { onBack: () => void }) {
           </div>
         ) : (
           <div className="space-y-2">
-            {records.map((r: any, i: number) => (
-              <div key={i} className="border rounded p-4">
-                <p className="font-semibold">{r.title}</p>
-                <p className="text-sm text-gray-500">{r.detail}</p>
+            {records.map((r: any) => (
+              <div key={r.id} className="border rounded p-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">{r.title}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded capitalize ${sevTone[r.severity] ?? sevTone.notice}`}>
+                    {r.severity}
+                  </span>
+                </div>
+                {r.detail && <p className="text-sm text-gray-500 mt-1">{r.detail}</p>}
+                <div className="flex flex-wrap gap-3 mt-2 text-xs">
+                  <span className="text-gray-400">Issued: {r.action_date}</span>
+                  {r.resolution_date && (
+                    <span className="text-rose-600 font-medium">Last date of resolution: {r.resolution_date}</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
