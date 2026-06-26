@@ -18,22 +18,25 @@ export function portalMeta(title: string) {
 // Three subtle, professional color schemes — one per audience.
 export type PortalScheme = "principal" | "staff" | "student";
 
-const schemeStyles: Record<PortalScheme, { bg: string; chip: string; emoji: string; label: string }> = {
+const schemeStyles: Record<PortalScheme, { accent: string; chip: string; emoji: string; label: string; iconBg: string }> = {
   principal: {
-    bg: "bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900",
-    chip: "bg-amber-300/90 text-indigo-900",
+    accent: "border-t-4 border-indigo-700",
+    iconBg: "bg-indigo-100 text-indigo-700",
+    chip: "bg-indigo-100 text-indigo-800 border border-indigo-200",
     emoji: "🏛️",
     label: "Leadership",
   },
   staff: {
-    bg: "bg-gradient-to-r from-slate-800 via-teal-800 to-slate-800",
-    chip: "bg-teal-300/90 text-slate-900",
+    accent: "border-t-4 border-teal-600",
+    iconBg: "bg-teal-100 text-teal-700",
+    chip: "bg-teal-100 text-teal-800 border border-teal-200",
     emoji: "👔",
     label: "Staff",
   },
   student: {
-    bg: "bg-gradient-to-r from-emerald-800 via-green-700 to-emerald-800",
-    chip: "bg-lime-300/90 text-emerald-900",
+    accent: "border-t-4 border-emerald-600",
+    iconBg: "bg-emerald-100 text-emerald-700",
+    chip: "bg-emerald-100 text-emerald-800 border border-emerald-200",
     emoji: "🎓",
     label: "Student",
   },
