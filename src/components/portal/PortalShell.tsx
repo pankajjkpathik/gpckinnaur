@@ -113,7 +113,7 @@ function MessagesLink() {
   const { data } = useQuery({ queryKey: ["msg-unread"], queryFn: () => unreadCount(), refetchInterval: 30000, retry: false });
   const n = data?.count ?? 0;
   return (
-    <Link to="/messages" className="text-xs px-3 py-1.5 border border-white/30 hover:bg-white/10 rounded inline-flex items-center gap-1 relative">
+    <Link to="/messages" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1 relative">
       <MessageSquare className="w-3 h-3" /> Messages
       {n > 0 && <span className="bg-rose-500 text-white text-[10px] rounded-full px-1.5 ml-1">{n}</span>}
     </Link>
