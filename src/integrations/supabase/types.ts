@@ -1179,8 +1179,10 @@ export type Database = {
           created_at: string | null
           department: string | null
           id: number
+          image_url: string | null
           is_active: boolean | null
           last_login: string | null
+          name: string | null
           password_hash: string
           role: string
           staff_id: number | null
@@ -1190,8 +1192,10 @@ export type Database = {
           created_at?: string | null
           department?: string | null
           id?: never
+          image_url?: string | null
           is_active?: boolean | null
           last_login?: string | null
+          name?: string | null
           password_hash: string
           role: string
           staff_id?: number | null
@@ -1201,8 +1205,10 @@ export type Database = {
           created_at?: string | null
           department?: string | null
           id?: never
+          image_url?: string | null
           is_active?: boolean | null
           last_login?: string | null
+          name?: string | null
           password_hash?: string
           role?: string
           staff_id?: number | null
@@ -1223,6 +1229,7 @@ export type Database = {
           father_name: string | null
           guardian_phone: string | null
           id: number
+          image_url: string | null
           is_active: boolean | null
           name: string
           password_hash: string
@@ -1241,6 +1248,7 @@ export type Database = {
           father_name?: string | null
           guardian_phone?: string | null
           id?: never
+          image_url?: string | null
           is_active?: boolean | null
           name: string
           password_hash: string
@@ -1259,6 +1267,7 @@ export type Database = {
           father_name?: string | null
           guardian_phone?: string | null
           id?: never
+          image_url?: string | null
           is_active?: boolean | null
           name?: string
           password_hash?: string

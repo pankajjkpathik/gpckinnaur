@@ -18,22 +18,25 @@ export function portalMeta(title: string) {
 // Three subtle, professional color schemes — one per audience.
 export type PortalScheme = "principal" | "staff" | "student";
 
-const schemeStyles: Record<PortalScheme, { bg: string; chip: string; emoji: string; label: string }> = {
+const schemeStyles: Record<PortalScheme, { accent: string; chip: string; emoji: string; label: string; iconBg: string }> = {
   principal: {
-    bg: "bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900",
-    chip: "bg-amber-300/90 text-indigo-900",
+    accent: "border-t-4 border-indigo-700",
+    iconBg: "bg-indigo-100 text-indigo-700",
+    chip: "bg-indigo-100 text-indigo-800 border border-indigo-200",
     emoji: "🏛️",
     label: "Leadership",
   },
   staff: {
-    bg: "bg-gradient-to-r from-slate-800 via-teal-800 to-slate-800",
-    chip: "bg-teal-300/90 text-slate-900",
+    accent: "border-t-4 border-teal-600",
+    iconBg: "bg-teal-100 text-teal-700",
+    chip: "bg-teal-100 text-teal-800 border border-teal-200",
     emoji: "👔",
     label: "Staff",
   },
   student: {
-    bg: "bg-gradient-to-r from-emerald-800 via-green-700 to-emerald-800",
-    chip: "bg-lime-300/90 text-emerald-900",
+    accent: "border-t-4 border-emerald-600",
+    iconBg: "bg-emerald-100 text-emerald-700",
+    chip: "bg-emerald-100 text-emerald-800 border border-emerald-200",
     emoji: "🎓",
     label: "Student",
   },
@@ -71,16 +74,16 @@ export function PortalShell({
     window.location.href = "/";
   }
   return (
-    <div className="min-h-screen bg-secondary/30 flex flex-col">
-      <header className={`${s.bg} text-white shadow-sm`}>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <header className={`bg-white text-slate-800 shadow-sm ${s.accent}`}>
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-xl shrink-0" aria-hidden>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 ${s.iconBg}`} aria-hidden>
               {s.emoji}
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/70">{subtitle ?? `GP Kinnaur · ${s.label}`}</p>
-              <h1 className="text-lg font-bold truncate">{title}</h1>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{subtitle ?? `GP Kinnaur · ${s.label}`}</p>
+              <h1 className="text-lg font-bold truncate text-slate-800">{title}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -88,14 +91,14 @@ export function PortalShell({
               <span aria-hidden>👤</span>
               {me.username.toUpperCase()} · {me.role.replace(/_/g, " ").toUpperCase()}
             </span>
-            <Link to="/staff-reports" className="text-xs px-3 py-1.5 border border-white/30 hover:bg-white/10 rounded inline-flex items-center gap-1" title="Report Templates">
+            <Link to="/staff-reports" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1" title="Report Templates">
               <FileSpreadsheet className="w-3 h-3" /> <span className="hidden sm:inline">Reports</span>
             </Link>
             <MessagesLink />
-            <Link to="/staff-dashboard" className="text-xs px-3 py-1.5 border border-white/30 hover:bg-white/10 rounded inline-flex items-center gap-1">
+            <Link to="/staff-dashboard" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1">
               <ArrowLeft className="w-3 h-3" /> Dashboard
             </Link>
-            <button onClick={logout} className="text-xs px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded inline-flex items-center gap-1">
+            <button onClick={logout} className="text-xs px-3 py-1.5 bg-slate-800 text-white hover:bg-slate-700 rounded inline-flex items-center gap-1">
               <LogOut className="w-3 h-3" /> Logout
             </button>
           </div>
@@ -110,7 +113,7 @@ function MessagesLink() {
   const { data } = useQuery({ queryKey: ["msg-unread"], queryFn: () => unreadCount(), refetchInterval: 30000, retry: false });
   const n = data?.count ?? 0;
   return (
-    <Link to="/messages" className="text-xs px-3 py-1.5 border border-white/30 hover:bg-white/10 rounded inline-flex items-center gap-1 relative">
+    <Link to="/messages" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1 relative">
       <MessageSquare className="w-3 h-3" /> Messages
       {n > 0 && <span className="bg-rose-500 text-white text-[10px] rounded-full px-1.5 ml-1">{n}</span>}
     </Link>

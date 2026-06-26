@@ -26,19 +26,20 @@ export const adminListStaff = createServerFn({ method: "GET" }).handler(async ()
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("staff_users")
-    .select("id, username, role, department, is_active, last_login, created_at")
+    .select("id, username, name, image_url, role, department, is_active, last_login, created_at" as any)
     .order("id");
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data as any[]) ?? [];
 });
 
 export const adminCreateStaff = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
       .object({
-        username: z.string().min(3).max(40),
-        name: z.string().min(2).max(100).optional(),
-        role: z.enum(["super_admin", "principal", "hod", "faculty", "admin_staff", "clerk"]),
+        username: z.string().min(2).max(80),
+        name: z.string().min(2).max(100).optional().nullable(),
+        image_url: z.string().optional().nullable(),
+        role: z.enum(["super_admin", "principal", "hod", "faculty", "admin_staff", "clerk", "tpo"]),
         department: z.string().optional().nullable(),
         password: z.string().min(8).max(100),
       })
@@ -51,8 +52,10 @@ export const adminCreateStaff = createServerFn({ method: "POST" })
     const bcrypt = (await import("bcryptjs")).default;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const hash = await bcrypt.hash(data.password, 12);
-    const { error } = await supabaseAdmin.from("staff_users").insert({
-      username: data.username.toLowerCase(),
+    const { error } = await (supabaseAdmin.from("staff_users") as any).insert({
+      username: data.username.toLowerCase().trim().replace(/\s+/g, "."),
+      name: data.name || null,
+      image_url: data.image_url || null,
       role: data.role,
       department: data.department || null,
       password_hash: hash,
@@ -96,18 +99,46 @@ export const adminUpdateStaff = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z.object({
       id: z.number().int(),
-      username: z.string().min(3).max(40).optional(),
-      role: z.enum(["super_admin", "principal", "hod", "faculty", "admin_staff", "clerk"]).optional(),
+      username: z.string().min(2).max(80).optional(),
+      name: z.string().min(2).max(100).optional().nullable(),
+      image_url: z.string().optional().nullable(),
+      role: z.enum(["super_admin", "principal", "hod", "faculty", "admin_staff", "clerk", "tpo"]).optional(),
       department: z.string().optional().nullable(),
     }).parse(d),
   )
   .handler(async ({ data }) => {
     const me = await requireAdmin();
-    const { id, ...patch } = data;
+    const { id, ...patch } = data as any;
     if (patch.role === "super_admin" && me.role !== "super_admin")
       throw new Error("Only super admin can assign super admin");
+    if (patch.username) patch.username = String(patch.username).toLowerCase().trim().replace(/\s+/g, ".");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("staff_users").update(patch).eq("id", id);
+    const { error } = await (supabaseAdmin.from("staff_users") as any).update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminUpdateStudent = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({
+      id: z.number().int(),
+      name: z.string().min(2).max(100).optional(),
+      enrollment_no: z.string().min(2).max(40).optional(),
+      image_url: z.string().optional().nullable(),
+      email: z.string().email().optional().nullable().or(z.literal("")),
+      phone: z.string().optional().nullable(),
+      branch: z.string().optional(),
+      semester: z.number().int().min(1).max(8).optional(),
+      batch_year: z.number().int().min(2000).max(2100).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { id, ...patch } = data as any;
+    if (patch.enrollment_no) patch.enrollment_no = String(patch.enrollment_no).toUpperCase();
+    if (patch.email === "") patch.email = null;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin.from("students") as any).update(patch).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -140,7 +171,7 @@ export const adminListStudents = createServerFn({ method: "GET" }).handler(async
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("students")
-    .select("id, enrollment_no, name, branch, semester, batch_year, is_active, email, phone, created_at")
+    .select("id, enrollment_no, name, image_url, branch, semester, batch_year, is_active, email, phone, created_at" as any)
     .order("id");
   if (error) throw new Error(error.message);
   return data ?? [];
