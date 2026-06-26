@@ -32,6 +32,7 @@ import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
 import { Route as AicteApprovalRouteImport } from './routes/aicte-approval'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
 import { Route as AdminUsersRouteImport } from './routes/admin-users'
+import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -171,6 +172,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin-users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin-login',
+  path: '/admin-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin-login': typeof AdminLoginRoute
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/aicte-approval': typeof AicteApprovalRoute
@@ -338,6 +345,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-login': typeof AdminLoginRoute
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/aicte-approval': typeof AicteApprovalRoute
@@ -387,6 +395,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin-login': typeof AdminLoginRoute
   '/admin-users': typeof AdminUsersRoute
   '/admissions': typeof AdmissionsRoute
   '/aicte-approval': typeof AicteApprovalRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-login'
     | '/admin-users'
     | '/admissions'
     | '/aicte-approval'
@@ -484,6 +494,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admin-login'
     | '/admin-users'
     | '/admissions'
     | '/aicte-approval'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-login'
     | '/admin-users'
     | '/admissions'
     | '/aicte-approval'
@@ -581,6 +593,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AdminLoginRoute: typeof AdminLoginRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdmissionsRoute: typeof AdmissionsRoute
   AicteApprovalRoute: typeof AicteApprovalRoute
@@ -779,6 +792,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-login': {
+      id: '/admin-login'
+      path: '/admin-login'
+      fullPath: '/admin-login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -975,6 +995,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
+  AdminLoginRoute: AdminLoginRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdmissionsRoute: AdmissionsRoute,
   AicteApprovalRoute: AicteApprovalRoute,
