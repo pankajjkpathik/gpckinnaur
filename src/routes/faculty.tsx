@@ -39,6 +39,13 @@ import {
   marksReport,
 } from "@/lib/faculty.functions";
 import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
+import {
+  facultyListAssignmentsCreated,
+  createAssignment,
+  deleteAssignment as deleteAssignmentFn,
+  facultyReceivedSubmissions,
+  facultyGradeSubmission,
+} from "@/lib/assignments.functions";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
@@ -831,11 +838,46 @@ function SemesterMarksView({ ay, me, onBack }: { ay: string; me: any; onBack: ()
 
 // ─── ASSIGNMENTS ──────────────────────────────────────────────────────────────
 function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
+  const qc = useQueryClient();
   const asg = useQuery({
     queryKey: ["fac-asg", me.id, ay],
     queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
   });
-  const [form, setForm] = useState({ title: "", asgId: "" as number | "", dueDate: "", description: "", subject: "" });
+  const created = useQuery({
+    queryKey: ["fac-assignments-created", ay],
+    queryFn: () => facultyListAssignmentsCreated({ data: { academic_year: ay } }),
+  });
+  const [form, setForm] = useState({ title: "", asgId: "" as number | "", dueDate: "", description: "", fileUrl: "" });
+
+  const save = useMutation({
+    mutationFn: () => {
+      const a = (asg.data ?? []).find((x: any) => x.id === form.asgId);
+      return createAssignment({
+        data: {
+          title: form.title,
+          description: form.description || null,
+          branch: a?.branch ?? "",
+          semester: a?.semester ?? 1,
+          subject_id: a?.subject_id ?? null,
+          subject_name: a?.subjects?.name || a?.subjects?.code || null,
+          due_date: form.dueDate || null,
+          file_url: form.fileUrl || null,
+          academic_year: ay,
+        },
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fac-assignments-created"] });
+      setForm({ title: "", asgId: "", dueDate: "", description: "", fileUrl: "" });
+    },
+  });
+
+  const del = useMutation({
+    mutationFn: (id: number) => deleteAssignmentFn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fac-assignments-created"] }),
+  });
+
+  const rows = created.data ?? [];
 
   return (
     <div className="space-y-4">
@@ -844,7 +886,7 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
 
       <Card>
         <p className="font-semibold text-gray-800 mb-1">Create New Assignment</p>
-        <p className="text-xs text-gray-400 mb-4">Fill in details and upload an assignment for your students.</p>
+        <p className="text-xs text-gray-400 mb-4">Fill in details and share an assignment for your students.</p>
         <div className="grid sm:grid-cols-2 gap-4 text-sm">
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Assignment Title</label>
@@ -856,7 +898,7 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Class</label>
+            <label className="text-xs text-gray-500 mb-1 block">Class &amp; Subject</label>
             <select
               value={form.asgId}
               onChange={(e) => setForm({ ...form, asgId: e.target.value ? Number(e.target.value) : "" })}
@@ -865,18 +907,7 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
               <option value="">Select class</option>
               {(asg.data ?? []).map((x: any) => (
                 <option key={x.id} value={x.id}>
-                  {x.branch}-Sem{x.semester}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Subject</label>
-            <select className="border rounded w-full px-3 py-2">
-              <option value="">Select subject</option>
-              {(asg.data ?? []).map((x: any) => (
-                <option key={x.id} value={x.subject_id}>
-                  {x.subjects?.name || x.subjects?.code}
+                  {x.subjects?.code} · {x.branch}-Sem{x.semester}
                 </option>
               ))}
             </select>
@@ -890,18 +921,33 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
               className="border rounded w-full px-3 py-2"
             />
           </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Assignment File URL (optional)</label>
+            <input
+              value={form.fileUrl}
+              onChange={(e) => setForm({ ...form, fileUrl: e.target.value })}
+              placeholder="https://…/brief.pdf"
+              className="border rounded w-full px-3 py-2"
+            />
+          </div>
           <div className="col-span-2">
             <label className="text-xs text-gray-500 mb-1 block">Description (Optional)</label>
-            <textarea rows={3} className="border rounded w-full px-3 py-2 resize-y" />
-          </div>
-          <div className="col-span-2">
-            <label className="text-xs text-gray-500 mb-1 block">Assignment File</label>
-            <input type="file" className="border rounded w-full px-3 py-2 text-sm" />
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={3}
+              className="border rounded w-full px-3 py-2 resize-y"
+            />
           </div>
         </div>
-        <button className="mt-4 bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold text-sm">
-          Create Assignment
+        <button
+          onClick={() => save.mutate()}
+          disabled={!form.title || !form.asgId || save.isPending}
+          className="mt-4 bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold text-sm disabled:opacity-50"
+        >
+          {save.isPending ? "Creating…" : "Create Assignment"}
         </button>
+        {save.error && <p className="text-xs text-rose-700 mt-2">{(save.error as Error).message}</p>}
       </Card>
 
       <Card>
@@ -910,21 +956,41 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="w-8 px-3 py-3">
-                  <input type="checkbox" />
-                </th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Class</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
-                  No assignments found.
-                </td>
-              </tr>
+              {rows.map((a: any) => (
+                <tr key={a.id} className="border-t">
+                  <td className="px-4 py-3">{a.title}</td>
+                  <td className="px-4 py-3">
+                    {a.branch}-Sem{a.semester}
+                  </td>
+                  <td className="px-4 py-3">{a.subject_name || a.subjects?.code || "—"}</td>
+                  <td className="px-4 py-3">{a.due_date ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => {
+                        if (confirm("Delete assignment?")) del.mutate(a.id);
+                      }}
+                      className="text-rose-500 hover:text-rose-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
+                    No assignments found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -935,6 +1001,20 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
 
 // ─── SUBMISSIONS ──────────────────────────────────────────────────────────────
 function SubmissionsView({ onBack }: { onBack: () => void }) {
+  const qc = useQueryClient();
+  const subs = useQuery({ queryKey: ["fac-received-subs"], queryFn: () => facultyReceivedSubmissions({ data: {} }) });
+  const [grading, setGrading] = useState<{ id: number; grade: string; feedback: string } | null>(null);
+
+  const grade = useMutation({
+    mutationFn: (d: { id: number; grade: string; feedback: string }) => facultyGradeSubmission({ data: d }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["fac-received-subs"] });
+      setGrading(null);
+    },
+  });
+
+  const rows = subs.data ?? [];
+
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
@@ -955,15 +1035,105 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">
-                  No submissions found.
-                </td>
-              </tr>
+              {rows.map((s: any) => (
+                <tr key={s.id} className="border-t">
+                  <td className="px-4 py-3">{s.assignments?.title ?? "—"}</td>
+                  <td className="px-4 py-3">{s.assignments?.subject_name ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {s.students?.name ?? "—"}
+                    <span className="block text-xs text-gray-400">{s.students?.enrollment_no}</span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-500">
+                    {s.submitted_at ? new Date(s.submitted_at).toLocaleString() : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <a
+                      href={s.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[#7b1f4c] hover:underline text-sm"
+                    >
+                      <Download className="w-4 h-4" /> File
+                    </a>
+                  </td>
+                  <td className="px-4 py-3">
+                    {s.status === "graded" ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">
+                          {s.grade}
+                        </span>
+                        <button
+                          onClick={() => setGrading({ id: s.id, grade: s.grade ?? "", feedback: s.feedback ?? "" })}
+                          className="text-xs text-gray-500 hover:underline"
+                        >
+                          Edit
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setGrading({ id: s.id, grade: "", feedback: "" })}
+                        className="text-xs bg-[#7b1f4c] text-white px-3 py-1 rounded"
+                      >
+                        Grade
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">
+                    No submissions found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </Card>
+
+      {grading && (
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+          onClick={() => setGrading(null)}
+        >
+          <div className="bg-white rounded-lg p-5 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-3">Grade Submission</h3>
+            <div className="space-y-3 text-sm">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Grade</label>
+                <input
+                  value={grading.grade}
+                  onChange={(e) => setGrading({ ...grading, grade: e.target.value })}
+                  placeholder="e.g., A, 18/20, Pass"
+                  className="border rounded w-full px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Feedback (optional)</label>
+                <textarea
+                  value={grading.feedback}
+                  onChange={(e) => setGrading({ ...grading, feedback: e.target.value })}
+                  rows={3}
+                  className="border rounded w-full px-3 py-2 resize-y"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setGrading(null)} className="border px-3 py-1.5 rounded">
+                  Cancel
+                </button>
+                <button
+                  onClick={() => grade.mutate(grading)}
+                  disabled={!grading.grade || grade.isPending}
+                  className="bg-[#7b1f4c] text-white px-4 py-1.5 rounded disabled:opacity-50"
+                >
+                  {grade.isPending ? "Saving…" : "Save Grade"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
