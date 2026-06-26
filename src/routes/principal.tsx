@@ -17,9 +17,33 @@ import {
   createDisciplinaryAction,
   deleteDisciplinaryAction,
 } from "@/lib/assignments.functions";
+import { listPlacements } from "@/lib/tpo.functions";
+import {
+  listParentMessages,
+  markParentMessageRead,
+  deleteParentMessage,
+  getPTM,
+  upsertPTM,
+} from "@/lib/admin-extras.functions";
 import { exportRows } from "@/lib/report-export";
-import { Trash2, Plus, Download, ArrowLeft } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Download,
+  ArrowLeft,
+  ClipboardCheck,
+  FileSpreadsheet,
+  BookMarked,
+  Calendar,
+  Briefcase,
+  Mail,
+  CalendarCheck,
+  Shield,
+  FileText,
+  Video,
+} from "lucide-react";
 import { BarStats, PieStats } from "@/components/portal/Charts";
+import { staffMe, staffLogout } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/principal")({
   head: () => ({
@@ -38,73 +62,568 @@ function defaultYear() {
   return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
 }
 
-type Tab = "dashboard" | "attendance" | "results" | "syllabus" | "circulars" | "disciplinary";
+type View =
+  | "home"
+  | "attendance"
+  | "sessional"
+  | "syllabus"
+  | "timetable"
+  | "placements"
+  | "messages"
+  | "ptm"
+  | "circulars"
+  | "disciplinary";
+
+function BackBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 text-sm text-gray-600 border rounded px-3 py-1.5 mb-5 hover:bg-gray-50 bg-white"
+    >
+      <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+    </button>
+  );
+}
 
 function PrincipalPortal() {
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [view, setView] = useState<View>("home");
   const [year, setYear] = useState(defaultYear());
+  const { data: me } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
+
+  async function logout() {
+    await staffLogout({});
+    window.location.href = "/";
+  }
+  const initials = (me?.username || "P")[0].toUpperCase();
 
   return (
-    <div className="min-h-screen bg-secondary/30">
-      <header className="bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900 text-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+    <div className="min-h-screen bg-[#f7f7fb]">
+      <header className="bg-white border-b">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div
-              className="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-2xl shrink-0"
+              className="w-10 h-10 rounded-full bg-[#7b1f4c]/10 flex items-center justify-center text-xl shrink-0"
               aria-hidden
             >
               🏛️
             </div>
             <div className="min-w-0">
-              <Link
-                to="/staff-dashboard"
-                className="text-[11px] text-white/70 flex items-center gap-1 hover:text-white"
-              >
-                <ArrowLeft className="w-3 h-3" /> Staff Dashboard
-              </Link>
-              <h1 className="text-2xl font-bold mt-0.5">Principal Portal</h1>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">GP Kinnaur · Principal</p>
+              <p className="font-bold text-gray-800">Principal Portal</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-300/90 text-indigo-900 uppercase tracking-wider">
-              <span aria-hidden>👤</span> PRINCIPAL
-            </span>
-            <Link
-              to="/messages"
-              className="text-xs text-white/90 border border-white/30 hover:bg-white/10 rounded px-2 py-1"
-            >
-              Messages
-            </Link>
-            <label className="text-xs text-white/70">Academic Year</label>
+          <div className="flex items-center gap-2 text-sm">
+            <label className="text-xs text-gray-400 hidden sm:block">AY</label>
             <input
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="bg-white/10 border border-white/20 rounded px-2 py-1 text-sm w-24"
+              className="border rounded px-2 py-1 text-sm w-20"
               placeholder="2025-26"
             />
+            <Link to="/messages" className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
+              Messages
+            </Link>
+            <button onClick={logout} className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
+              Log out
+            </button>
+            <div className="w-9 h-9 rounded-full bg-[#7b1f4c] text-white flex items-center justify-center font-bold text-sm">
+              {initials}
+            </div>
           </div>
         </div>
-        <nav className="max-w-7xl mx-auto px-6 flex gap-1 text-sm">
-          {(["dashboard", "attendance", "results", "syllabus", "circulars", "disciplinary"] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2 capitalize ${tab === t ? "bg-amber-300 text-indigo-900 font-semibold" : "text-white/80 hover:text-white"}`}
-            >
-              {t}
-            </button>
-          ))}
-        </nav>
       </header>
 
-      <main className="max-w-7xl mx-auto p-6">
-        {tab === "dashboard" && <Dashboard year={year} />}
-        {tab === "attendance" && <AttendanceMonitor />}
-        {tab === "results" && <ResultsMonitor year={year} />}
-        {tab === "syllabus" && <SyllabusMonitor year={year} />}
-        {tab === "circulars" && <Circulars />}
-        {tab === "disciplinary" && <Disciplinary />}
+      <main className="container mx-auto px-4 py-6">
+        {view === "home" && <HomeView year={year} onNav={setView} />}
+        {view === "attendance" && (
+          <>
+            <BackBtn onClick={() => setView("home")} />
+            <AttendanceMonitor />
+          </>
+        )}
+        {view === "sessional" && (
+          <>
+            <BackBtn onClick={() => setView("home")} />
+            <ResultsMonitor year={year} />
+          </>
+        )}
+        {view === "syllabus" && (
+          <>
+            <BackBtn onClick={() => setView("home")} />
+            <SyllabusMonitor year={year} />
+          </>
+        )}
+        {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
+        {view === "placements" && <PlacementDataView onBack={() => setView("home")} />}
+        {view === "messages" && <MessagesView onBack={() => setView("home")} />}
+        {view === "ptm" && <PTMView onBack={() => setView("home")} />}
+        {view === "circulars" && (
+          <>
+            <BackBtn onClick={() => setView("home")} />
+            <Circulars />
+          </>
+        )}
+        {view === "disciplinary" && (
+          <>
+            <BackBtn onClick={() => setView("home")} />
+            <Disciplinary />
+          </>
+        )}
       </main>
+    </div>
+  );
+}
+
+// ─── HOME (card grid) ─────────────────────────────────────────────────────────
+function HomeView({ year, onNav }: { year: string; onNav: (v: View) => void }) {
+  const fn = useServerFn(principalDashboard);
+  const { data } = useQuery({
+    queryKey: ["principal-dash", year],
+    queryFn: () => fn({ data: { academic_year: year } }),
+  });
+
+  const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View; badge?: number }[] =
+    [
+      {
+        icon: ClipboardCheck,
+        label: "Attendance Reports",
+        desc: "View student attendance summaries",
+        color: "bg-[#7b1f4c]",
+        border: "border-[#7b1f4c]",
+        view: "attendance",
+      },
+      {
+        icon: FileSpreadsheet,
+        label: "Sessional Reports",
+        desc: "Generate final internal marks reports",
+        color: "bg-orange-500",
+        border: "border-orange-500",
+        view: "sessional",
+        badge: data?.pending_marks,
+      },
+      {
+        icon: BookMarked,
+        label: "Syllabus Status",
+        desc: "Monitor syllabus completion",
+        color: "bg-gray-500",
+        border: "border-gray-500",
+        view: "syllabus",
+      },
+      {
+        icon: Calendar,
+        label: "View Timetable",
+        desc: "Look up class schedules",
+        color: "bg-green-600",
+        border: "border-green-600",
+        view: "timetable",
+      },
+      {
+        icon: Briefcase,
+        label: "Placement Data",
+        desc: "Analyze student placement statistics",
+        color: "bg-rose-600",
+        border: "border-rose-600",
+        view: "placements",
+      },
+      {
+        icon: Mail,
+        label: "Parents Messages",
+        desc: "Review messages from parents",
+        color: "bg-purple-600",
+        border: "border-purple-600",
+        view: "messages",
+      },
+      {
+        icon: CalendarCheck,
+        label: "PTM Information",
+        desc: "Manage PTM details",
+        color: "bg-cyan-500",
+        border: "border-cyan-500",
+        view: "ptm",
+      },
+      {
+        icon: FileText,
+        label: "Circulars",
+        desc: "Publish institute circulars",
+        color: "bg-[#4a0e2e]",
+        border: "border-[#4a0e2e]",
+        view: "circulars",
+      },
+      {
+        icon: Shield,
+        label: "Disciplinary Actions",
+        desc: "Issue official student notices",
+        color: "bg-gray-600",
+        border: "border-gray-600",
+        view: "disciplinary",
+      },
+    ];
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">Welcome, Principal</h1>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((c) => (
+          <button
+            key={c.view}
+            onClick={() => onNav(c.view)}
+            className={`relative flex items-center gap-4 p-4 bg-white rounded border-t-4 ${c.border} shadow-sm hover:shadow-md transition-shadow text-left w-full`}
+          >
+            <span className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${c.color}`}>
+              <c.icon className="w-6 h-6 text-white" />
+            </span>
+            <span>
+              <p className="font-semibold text-gray-800 text-sm">{c.label}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{c.desc}</p>
+            </span>
+            {c.badge ? (
+              <span className="absolute top-2 right-2 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {c.badge}
+              </span>
+            ) : null}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── PLACEMENT DATA ───────────────────────────────────────────────────────────
+function PlacementDataView({ onBack }: { onBack: () => void }) {
+  const fn = useServerFn(listPlacements);
+  const { data = [] } = useQuery({ queryKey: ["principal-placements"], queryFn: () => fn({ data: {} }) });
+  const rows = data as any[];
+  const latestYear = rows.length ? Math.max(...rows.map((r) => r.year)) : new Date().getFullYear();
+  const byCompany = useMemo(() => {
+    const agg = new Map<string, number>();
+    rows.filter((r) => r.year === latestYear).forEach((r) => agg.set(r.company, (agg.get(r.company) ?? 0) + 1));
+    return Array.from(agg.entries()).map(([label, value]) => ({ label, value }));
+  }, [rows, latestYear]);
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-white border rounded-lg p-5">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Placement Data</h1>
+        <p className="text-xs text-gray-400 mb-4">View and analyze student placement records.</p>
+        {byCompany.length > 0 ? (
+          <>
+            <p className="font-semibold text-gray-800 mb-3">Placements by Company ({latestYear})</p>
+            <BarStats data={byCompany} color="#7b1f4c" />
+          </>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-6">No placement records yet.</p>
+        )}
+      </div>
+      <div className="bg-white border rounded-lg p-5">
+        <p className="font-semibold text-gray-800 mb-4">All Placement Records</p>
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Student Name</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Roll Number</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Company</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Year</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Package (LPA)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="px-4 py-3">{r.student_name}</td>
+                  <td className="px-4 py-3 font-mono text-xs">{r.roll_number ?? "—"}</td>
+                  <td className="px-4 py-3">{r.company}</td>
+                  <td className="px-4 py-3">{r.year}</td>
+                  <td className="px-4 py-3">{r.package_lpa ?? "—"}</td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                    No placement records.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PARENTS MESSAGES ─────────────────────────────────────────────────────────
+function MessagesView({ onBack }: { onBack: () => void }) {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listParentMessages);
+  const markFn = useServerFn(markParentMessageRead);
+  const delFn = useServerFn(deleteParentMessage);
+  const { data = [] } = useQuery({ queryKey: ["principal-messages"], queryFn: () => listFn() });
+  const markRead = useMutation({
+    mutationFn: (id: number) => markFn({ data: { id, status: "read" } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["principal-messages"] }),
+  });
+  const del = useMutation({
+    mutationFn: (id: number) => delFn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["principal-messages"] }),
+  });
+  const msgs = data as any[];
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-white border rounded-lg p-5">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Parents Messages</h1>
+        <p className="text-xs text-gray-400 mb-4">Inbox for all messages sent by parents.</p>
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">From</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {msgs.map((m) => (
+                <tr key={m.id} className="border-t">
+                  <td className="px-4 py-3">
+                    <p className="font-medium">{m.from_name}</p>
+                    {m.student_name && <p className="text-xs text-gray-400">{m.student_name}</p>}
+                  </td>
+                  <td className="px-4 py-3">{m.subject ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">
+                    {m.created_at ? new Date(m.created_at).toLocaleString() : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {m.status === "new" ? (
+                      <span className="text-xs px-2.5 py-1 bg-[#7b1f4c] text-white rounded-full font-semibold">
+                        New
+                      </span>
+                    ) : (
+                      <span className="text-xs px-2.5 py-1 border rounded-full text-gray-500">Read</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-3 items-center">
+                      {m.status === "new" && (
+                        <button
+                          onClick={() => markRead.mutate(m.id)}
+                          className="text-xs text-[#7b1f4c] hover:underline"
+                        >
+                          Mark read
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (confirm("Delete?")) del.mutate(m.id);
+                        }}
+                        className="text-rose-500 hover:text-rose-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {msgs.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                    No messages from parents yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PTM INFORMATION ──────────────────────────────────────────────────────────
+function PTMView({ onBack }: { onBack: () => void }) {
+  const qc = useQueryClient();
+  const getFn = useServerFn(getPTM);
+  const saveFn = useServerFn(upsertPTM);
+  const { data: ptm } = useQuery({ queryKey: ["principal-ptm"], queryFn: () => getFn() });
+  const [tab, setTab] = useState<"view" | "edit">("view");
+  const [form, setForm] = useState({ date: "", time: "", agenda: "", meetLink: "" });
+
+  const save = useMutation({
+    mutationFn: () =>
+      saveFn({
+        data: {
+          id: ptm?.id,
+          meeting_date: form.date || ptm?.meeting_date || null,
+          meeting_time: form.time || ptm?.meeting_time || null,
+          agenda: form.agenda
+            ? form.agenda.split("\n").filter(Boolean)
+            : Array.isArray(ptm?.agenda)
+              ? (ptm!.agenda as string[])
+              : [],
+          meet_link: form.meetLink || ptm?.meet_link || null,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["principal-ptm"] });
+      setTab("view");
+    },
+  });
+
+  const agenda = Array.isArray(ptm?.agenda) ? (ptm!.agenda as string[]) : [];
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-white border rounded-lg p-5">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Manage PTM</h1>
+        <p className="text-xs text-gray-400 mb-4">Set and view details for the next upcoming Parent-Teacher Meeting.</p>
+        <div className="flex border rounded overflow-hidden mb-5">
+          <button
+            onClick={() => setTab("view")}
+            className={`flex-1 py-2 text-sm font-medium ${tab === "view" ? "bg-white" : "bg-gray-50 text-gray-500"}`}
+          >
+            View Information
+          </button>
+          <button
+            onClick={() => {
+              setForm({
+                date: ptm?.meeting_date ?? "",
+                time: ptm?.meeting_time ?? "",
+                agenda: agenda.join("\n"),
+                meetLink: ptm?.meet_link ?? "",
+              });
+              setTab("edit");
+            }}
+            className={`flex-1 py-2 text-sm font-medium ${tab === "edit" ? "bg-white" : "bg-gray-50 text-gray-500"}`}
+          >
+            Edit Information
+          </button>
+        </div>
+        {tab === "view" ? (
+          <div className="space-y-5">
+            <div className="flex gap-8 bg-gray-50 border rounded p-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-[#7b1f4c]" />
+                <div>
+                  <p className="text-xs text-gray-500">Date</p>
+                  <p className="font-semibold">{ptm?.meeting_date ?? "—"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <CalendarCheck className="w-5 h-5 text-[#7b1f4c]" />
+                <div>
+                  <p className="text-xs text-gray-500">Time</p>
+                  <p className="font-semibold">{ptm?.meeting_time ?? "—"}</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#7b1f4c]" /> Agenda
+              </p>
+              {agenda.length > 0 ? (
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                  {agenda.map((a, i) => (
+                    <li key={i}>
+                      {i + 1}. {a}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-400">No agenda set.</p>
+              )}
+            </div>
+            <div className="text-center">
+              {ptm?.meet_link ? (
+                <a
+                  href={ptm.meet_link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#7b1f4c] text-white px-6 py-2 rounded font-semibold"
+                >
+                  <Video className="w-4 h-4" /> Join Virtual Meeting
+                </a>
+              ) : (
+                <button className="inline-flex items-center gap-2 bg-[#7b1f4c] text-white px-6 py-2 rounded font-semibold opacity-60 cursor-not-allowed">
+                  <Video className="w-4 h-4" /> Join Virtual Meeting
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3 text-sm">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Date</label>
+                <input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className="border rounded w-full px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Time</label>
+                <input
+                  value={form.time}
+                  onChange={(e) => setForm({ ...form, time: e.target.value })}
+                  placeholder="e.g. 10:00 AM"
+                  className="border rounded w-full px-3 py-2"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Meet Link (optional)</label>
+              <input
+                value={form.meetLink}
+                onChange={(e) => setForm({ ...form, meetLink: e.target.value })}
+                placeholder="https://meet.google.com/…"
+                className="border rounded w-full px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Agenda (one item per line)</label>
+              <textarea
+                rows={4}
+                value={form.agenda}
+                onChange={(e) => setForm({ ...form, agenda: e.target.value })}
+                className="border rounded w-full px-3 py-2 resize-y"
+              />
+            </div>
+            <button
+              onClick={() => save.mutate()}
+              disabled={save.isPending}
+              className="bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold disabled:opacity-50"
+            >
+              {save.isPending ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── VIEW TIMETABLE ───────────────────────────────────────────────────────────
+function TimetableView({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-white border rounded-lg p-5">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Timetable</h1>
+        <p className="text-xs text-gray-400 mb-4">View the weekly schedule for any class.</p>
+        <p className="text-sm text-gray-600">
+          View and print published class timetables in the Admin console at{" "}
+          <a href="/admin/timetable" className="text-[#7b1f4c] underline">
+            Timetable Builder →
+          </a>
+        </p>
+      </div>
     </div>
   );
 }
@@ -114,61 +633,6 @@ function Card({ label, value, tone }: { label: string; value: number | string; t
     <div className={`bg-white border rounded-lg p-4 ${tone || ""}`}>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-2xl font-bold text-[color:var(--navy)] mt-1">{value}</p>
-    </div>
-  );
-}
-
-function Dashboard({ year }: { year: string }) {
-  const fn = useServerFn(principalDashboard);
-  const { data, isLoading } = useQuery({
-    queryKey: ["principal-dash", year],
-    queryFn: () => fn({ data: { academic_year: year } }),
-  });
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  const populationData = [
-    { label: "Students", value: data.students },
-    { label: "Staff", value: data.staff },
-  ];
-  const pendingData = [
-    { label: "Lessons", value: data.pending_lessons },
-    { label: "Marks", value: data.pending_marks },
-    { label: "Leaves", value: data.pending_leaves },
-  ];
-  return (
-    <div className="space-y-4">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <Card label="Active Students" value={data.students} />
-        <Card label="Active Staff" value={data.staff} />
-        <Card label="Circulars Published" value={data.circulars} />
-        <Card
-          label="Pending Lesson Plans"
-          value={data.pending_lessons}
-          tone={data.pending_lessons ? "ring-1 ring-amber-300" : ""}
-        />
-        <Card
-          label="Marks Awaiting Approval"
-          value={data.pending_marks}
-          tone={data.pending_marks ? "ring-1 ring-amber-300" : ""}
-        />
-        <Card
-          label="Pending Leave Requests"
-          value={data.pending_leaves}
-          tone={data.pending_leaves ? "ring-1 ring-amber-300" : ""}
-        />
-      </div>
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm font-semibold text-[color:var(--navy)] mb-2">Institute Population</p>
-          <PieStats data={populationData} />
-        </div>
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm font-semibold text-[color:var(--navy)] mb-2">Pending Approvals</p>
-          <BarStats data={pendingData} color="#0ea5e9" />
-        </div>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Use the tabs above to drill into institute-wide attendance, results, syllabus compliance, and circulars.
-      </p>
     </div>
   );
 }
