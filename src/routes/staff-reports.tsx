@@ -25,7 +25,7 @@ function StaffReports() {
   useEffect(() => { if (!isLoading && !me) nav({ to: "/staff-login" }); }, [me, isLoading, nav]);
   const list = useQuery({ queryKey: ["staff-templates"], queryFn: () => templatesList(), enabled: !!me });
 
-  const [branch, setBranch] = useState("civil");
+  const [branch, setBranch] = useState("Civil Engineering");
   const [semester, setSemester] = useState(1);
   const [busy, setBusy] = useState<number | null>(null);
 
@@ -76,7 +76,7 @@ function StaffReports() {
         <div className="bg-white border rounded p-3 flex flex-wrap gap-3 items-end">
           <label className="text-xs">Branch
             <select value={branch} onChange={(e) => setBranch(e.target.value)} className="block border rounded px-2 py-1.5 text-sm bg-white">
-              <option value="civil">Civil</option><option value="mechanical">Mechanical</option><option value="applied_science">Applied Science</option>
+              <option value="Civil Engineering">Civil Engineering</option><option value="Mechanical Engineering">Mechanical Engineering</option><option value="Applied Sciences">Applied Sciences</option>
             </select>
           </label>
           <label className="text-xs">Semester

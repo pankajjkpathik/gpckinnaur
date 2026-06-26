@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin/students")({
 
 type Student = Awaited<ReturnType<typeof studentList>>[number];
 
-const BRANCHES = ["civil", "mechanical", "applied_science"];
+const BRANCHES = ["Civil Engineering", "Mechanical Engineering", "Applied Sciences"];
 
 function StudentManagement() {
   const nav = useNavigate();
@@ -192,7 +192,7 @@ function StudentForm({ initial, onClose, onSaved }: { initial: Student | null; o
             <Field label="Guardian's Name"><input name="guardian_name" defaultValue={v.guardian_name ?? ""} className="border rounded w-full px-3 py-2" /></Field>
             <Field label="Date of Birth"><input name="dob" type="date" defaultValue={v.dob ?? ""} className="border rounded w-full px-3 py-2" /></Field>
             <Field label="Department">
-              <select name="branch" defaultValue={v.branch ?? "civil"} required className="border rounded w-full px-3 py-2 bg-white">
+              <select name="branch" defaultValue={v.branch ?? "Civil Engineering"} required className="border rounded w-full px-3 py-2 bg-white">
                 {BRANCHES.map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
             </Field>
