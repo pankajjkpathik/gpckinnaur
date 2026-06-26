@@ -26,6 +26,19 @@ import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
 import { adminListStaff, adminListStudents } from "@/lib/admin.functions";
+import {
+  listClasses,
+  upsertClass,
+  deleteClass,
+  listAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
+  getPTM,
+  upsertPTM,
+  listParentMessages,
+  markParentMessageRead,
+  deleteParentMessage,
+} from "@/lib/admin-extras.functions";
 import { exportCSV } from "@/lib/report-export";
 
 export const Route = createFileRoute("/admin/")({
@@ -283,29 +296,47 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
 }
 
 // ─── CLASSES ──────────────────────────────────────────────────────────────────
-const MOCK_CLASSES = [
-  { id: 1, name: "Civil Engineering-1S", classId: "CE-1S", dept: "Civil Engineering", semester: 1 },
-  { id: 2, name: "Civil Engineering-2S", classId: "CE-2S", dept: "Civil Engineering", semester: 2 },
-  { id: 3, name: "Civil Engineering-3S", classId: "CE-3S", dept: "Civil Engineering", semester: 3 },
-  { id: 4, name: "Civil Engineering-4S", classId: "CE-4S", dept: "Civil Engineering", semester: 4 },
-  { id: 5, name: "Civil Engineering-5S", classId: "CE-5S", dept: "Civil Engineering", semester: 5 },
-  { id: 6, name: "Civil Engineering-6S", classId: "CE-6S", dept: "Civil Engineering", semester: 6 },
-  { id: 7, name: "Mechanical Engineering-1S", classId: "ME-1S", dept: "Mechanical Engineering", semester: 1 },
-];
-
 function ClassesView({ onBack }: { onBack: () => void }) {
-  const [classes, setClasses] = useState(MOCK_CLASSES);
+  const qc = useQueryClient();
+  const classesQ = useQuery({ queryKey: ["admin-classes"], queryFn: () => listClasses() });
   const [form, setForm] = useState({ name: "", classId: "", dept: "", semester: "" });
-  const [editing, setEditing] = useState<(typeof MOCK_CLASSES)[0] | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  const add = () => {
+  const save = useMutation({
+    mutationFn: (d: any) => upsertClass({ data: d }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-classes"] });
+      setForm({ name: "", classId: "", dept: "", semester: "" });
+      setEditingId(null);
+    },
+  });
+  const del = useMutation({
+    mutationFn: (id: number) => deleteClass({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-classes"] }),
+  });
+
+  const submit = () => {
     if (!form.name || !form.classId) return;
-    setClasses([
-      ...classes,
-      { id: Date.now(), name: form.name, classId: form.classId, dept: form.dept, semester: Number(form.semester) },
-    ]);
-    setForm({ name: "", classId: "", dept: "", semester: "" });
+    save.mutate({
+      id: editingId ?? undefined,
+      name: form.name,
+      class_id: form.classId,
+      department: form.dept || null,
+      semester: form.semester ? Number(form.semester) : null,
+    });
   };
+
+  const startEdit = (c: any) => {
+    setEditingId(c.id);
+    setForm({
+      name: c.name,
+      classId: c.class_id,
+      dept: c.department ?? "",
+      semester: c.semester != null ? String(c.semester) : "",
+    });
+  };
+
+  const rows = classesQ.data ?? [];
 
   return (
     <div className="space-y-4">
@@ -313,7 +344,7 @@ function ClassesView({ onBack }: { onBack: () => void }) {
       <h1 className="text-2xl font-bold text-gray-800">Manage Classes</h1>
       <div className="grid md:grid-cols-2 gap-5">
         <Card>
-          <p className="font-semibold text-gray-800 mb-4">Add New Class</p>
+          <p className="font-semibold text-gray-800 mb-4">{editingId ? "Edit Class" : "Add New Class"}</p>
           <div className="space-y-3 text-sm">
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Class Name</label>
@@ -347,13 +378,32 @@ function ClassesView({ onBack }: { onBack: () => void }) {
               <input
                 value={form.semester}
                 onChange={(e) => setForm({ ...form, semester: e.target.value })}
-                placeholder="e.g., 1st"
+                placeholder="e.g., 1"
+                type="number"
                 className="border rounded w-full px-3 py-2"
               />
             </div>
-            <button onClick={add} className="bg-[#7b1f4c] text-white w-full py-2 rounded font-semibold">
-              Add Class
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={submit}
+                disabled={save.isPending}
+                className="bg-[#7b1f4c] text-white flex-1 py-2 rounded font-semibold disabled:opacity-50"
+              >
+                {save.isPending ? "Saving…" : editingId ? "Update Class" : "Add Class"}
+              </button>
+              {editingId && (
+                <button
+                  onClick={() => {
+                    setEditingId(null);
+                    setForm({ name: "", classId: "", dept: "", semester: "" });
+                  }}
+                  className="border px-4 py-2 rounded text-gray-600"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+            {save.error && <p className="text-xs text-rose-700">{(save.error as Error).message}</p>}
           </div>
         </Card>
 
@@ -371,18 +421,20 @@ function ClassesView({ onBack }: { onBack: () => void }) {
                 </tr>
               </thead>
               <tbody>
-                {classes.map((c) => (
+                {rows.map((c: any) => (
                   <tr key={c.id} className="border-t">
                     <td className="px-4 py-3">{c.name}</td>
-                    <td className="px-4 py-3 font-mono text-xs">{c.classId}</td>
-                    <td className="px-4 py-3">{c.dept}</td>
-                    <td className="px-4 py-3">{c.semester}</td>
+                    <td className="px-4 py-3 font-mono text-xs">{c.class_id}</td>
+                    <td className="px-4 py-3">{c.department ?? "—"}</td>
+                    <td className="px-4 py-3">{c.semester ?? "—"}</td>
                     <td className="px-4 py-3 flex gap-2">
-                      <button onClick={() => setEditing(c)} className="text-gray-500 hover:text-gray-700">
+                      <button onClick={() => startEdit(c)} className="text-gray-500 hover:text-gray-700">
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => setClasses(classes.filter((x) => x.id !== c.id))}
+                        onClick={() => {
+                          if (confirm(`Delete ${c.name}?`)) del.mutate(c.id);
+                        }}
                         className="text-rose-500 hover:text-rose-700"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -390,13 +442,19 @@ function ClassesView({ onBack }: { onBack: () => void }) {
                     </td>
                   </tr>
                 ))}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                      No classes yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </Card>
       </div>
 
-      {/* Subjects link */}
       <div className="text-sm text-gray-500">
         To manage subjects, go to{" "}
         <Link to="/admin/subjects" className="text-[#7b1f4c] underline">
@@ -558,18 +616,25 @@ function StudentsView({ onBack }: { onBack: () => void }) {
 
 // ─── ANNOUNCEMENTS ────────────────────────────────────────────────────────────
 function AnnouncementsView({ onBack }: { onBack: () => void }) {
-  const [items, setItems] = useState([
-    { id: 1, content: "New batches to be started from 01.08.2025", date: "8/7/2025" },
-  ]);
+  const qc = useQueryClient();
+  const listQ = useQuery({ queryKey: ["admin-announcements"], queryFn: () => listAnnouncements() });
   const [adding, setAdding] = useState(false);
   const [text, setText] = useState("");
 
-  const add = () => {
-    if (!text.trim()) return;
-    setItems([...items, { id: Date.now(), content: text.trim(), date: new Date().toLocaleDateString() }]);
-    setText("");
-    setAdding(false);
-  };
+  const create = useMutation({
+    mutationFn: (content: string) => createAnnouncement({ data: { content } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-announcements"] });
+      setText("");
+      setAdding(false);
+    },
+  });
+  const del = useMutation({
+    mutationFn: (id: number) => deleteAnnouncement({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-announcements"] }),
+  });
+
+  const items = listQ.data ?? [];
 
   return (
     <div className="space-y-4">
@@ -596,10 +661,20 @@ function AnnouncementsView({ onBack }: { onBack: () => void }) {
               placeholder="Announcement text…"
               className="border rounded px-3 py-2 text-sm flex-1"
             />
-            <button onClick={add} className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm">
-              Add
+            <button
+              onClick={() => text.trim() && create.mutate(text.trim())}
+              disabled={create.isPending}
+              className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm disabled:opacity-50"
+            >
+              {create.isPending ? "Adding…" : "Add"}
             </button>
-            <button onClick={() => setAdding(false)} className="border px-3 py-2 rounded text-sm">
+            <button
+              onClick={() => {
+                setAdding(false);
+                setText("");
+              }}
+              className="border px-3 py-2 rounded text-sm"
+            >
               Cancel
             </button>
           </div>
@@ -618,15 +693,24 @@ function AnnouncementsView({ onBack }: { onBack: () => void }) {
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
+              {items.map((item: any) => (
                 <tr key={item.id} className="border-t">
                   <td className="px-4 py-3">
                     <input type="checkbox" />
                   </td>
                   <td className="px-4 py-3">{item.content}</td>
-                  <td className="px-4 py-3 text-gray-500">{item.date}</td>
-                  <td className="px-4 py-3 text-gray-400 text-lg">
-                    <button onClick={() => setItems(items.filter((x) => x.id !== item.id))}>…</button>
+                  <td className="px-4 py-3 text-gray-500">
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-400">
+                    <button
+                      onClick={() => {
+                        if (confirm("Delete announcement?")) del.mutate(item.id);
+                      }}
+                      className="text-rose-500 hover:text-rose-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -701,18 +785,42 @@ function FeesView({ onBack }: { onBack: () => void }) {
 
 // ─── PTM ────────────────────────────────────────────────────────────────────
 function PTMView({ onBack }: { onBack: () => void }) {
+  const qc = useQueryClient();
+  const ptmQ = useQuery({ queryKey: ["admin-ptm"], queryFn: () => getPTM() });
   const [activeTab, setActiveTab] = useState<"view" | "edit">("view");
-  const [ptm, setPtm] = useState({
-    date: "2023-11-15",
-    time: "10:00 AM",
-    agenda: [
-      "Mid-term exam performance review.",
-      "Discussion on student attendance.",
-      "Upcoming events and activities.",
-    ],
-    meetLink: "",
+  const [editForm, setEditForm] = useState({ date: "", time: "", agenda: [] as string[], meetLink: "" });
+
+  const ptm = ptmQ.data;
+
+  useEffect(() => {
+    if (ptm) {
+      setEditForm({
+        date: ptm.meeting_date ?? "",
+        time: ptm.meeting_time ?? "",
+        agenda: Array.isArray(ptm.agenda) ? (ptm.agenda as string[]) : [],
+        meetLink: ptm.meet_link ?? "",
+      });
+    }
+  }, [ptm]);
+
+  const save = useMutation({
+    mutationFn: () =>
+      upsertPTM({
+        data: {
+          id: ptm?.id,
+          meeting_date: editForm.date || null,
+          meeting_time: editForm.time || null,
+          agenda: editForm.agenda.filter((a) => a.trim()),
+          meet_link: editForm.meetLink || null,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-ptm"] });
+      setActiveTab("view");
+    },
   });
-  const [editForm, setEditForm] = useState({ ...ptm });
+
+  const agenda = Array.isArray(ptm?.agenda) ? (ptm!.agenda as string[]) : [];
 
   return (
     <div className="space-y-4">
@@ -743,14 +851,14 @@ function PTMView({ onBack }: { onBack: () => void }) {
                 <Calendar className="w-5 h-5 text-[#7b1f4c]" />
                 <div>
                   <p className="text-xs text-gray-500">Date</p>
-                  <p className="font-semibold">{ptm.date}</p>
+                  <p className="font-semibold">{ptm?.meeting_date ?? "—"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <CalendarCheck className="w-5 h-5 text-[#7b1f4c]" />
                 <div>
                   <p className="text-xs text-gray-500">Time</p>
-                  <p className="font-semibold">{ptm.time}</p>
+                  <p className="font-semibold">{ptm?.meeting_time ?? "—"}</p>
                 </div>
               </div>
             </div>
@@ -758,33 +866,34 @@ function PTMView({ onBack }: { onBack: () => void }) {
               <p className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#7b1f4c]" /> Agenda
               </p>
-              <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                {ptm.agenda.map((item, i) => (
-                  <li key={i}>
-                    {i + 1}. {item}
-                  </li>
-                ))}
-              </ul>
+              {agenda.length > 0 ? (
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                  {agenda.map((item, i) => (
+                    <li key={i}>
+                      {i + 1}. {item}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-400">No agenda set.</p>
+              )}
             </div>
-            {ptm.meetLink && (
-              <div className="text-center">
+            <div className="text-center">
+              {ptm?.meet_link ? (
                 <a
-                  href={ptm.meetLink}
+                  href={ptm.meet_link}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 bg-[#7b1f4c] text-white px-6 py-2 rounded font-semibold"
                 >
                   <Video className="w-4 h-4" /> Join Virtual Meeting
                 </a>
-              </div>
-            )}
-            {!ptm.meetLink && (
-              <div className="text-center">
-                <button className="inline-flex items-center gap-2 bg-[#7b1f4c] text-white px-6 py-2 rounded font-semibold">
+              ) : (
+                <button className="inline-flex items-center gap-2 bg-[#7b1f4c] text-white px-6 py-2 rounded font-semibold opacity-60 cursor-not-allowed">
                   <Video className="w-4 h-4" /> Join Virtual Meeting
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-3 text-sm">
@@ -827,14 +936,13 @@ function PTMView({ onBack }: { onBack: () => void }) {
               />
             </div>
             <button
-              onClick={() => {
-                setPtm(editForm);
-                setActiveTab("view");
-              }}
-              className="bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold"
+              onClick={() => save.mutate()}
+              disabled={save.isPending}
+              className="bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold disabled:opacity-50"
             >
-              Save Changes
+              {save.isPending ? "Saving…" : "Save Changes"}
             </button>
+            {save.error && <p className="text-xs text-rose-700">{(save.error as Error).message}</p>}
           </div>
         )}
       </Card>
@@ -843,27 +951,19 @@ function PTMView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── MESSAGES ────────────────────────────────────────────────────────────────
-const MOCK_MESSAGES = [
-  {
-    id: 1,
-    from: "Mr. Verma",
-    student: "Rohan Verma",
-    subject: "Concern about marks",
-    date: "2023-10-26 10:00 AM",
-    status: "new",
-  },
-  {
-    id: 2,
-    from: "Mrs. Khan",
-    student: "Aisha Khan",
-    subject: "Leave Application",
-    date: "2023-10-25 02:30 PM",
-    status: "read",
-  },
-];
-
 function MessagesView({ onBack }: { onBack: () => void }) {
-  const [msgs, setMsgs] = useState(MOCK_MESSAGES);
+  const qc = useQueryClient();
+  const msgsQ = useQuery({ queryKey: ["admin-parent-messages"], queryFn: () => listParentMessages() });
+  const markRead = useMutation({
+    mutationFn: (id: number) => markParentMessageRead({ data: { id, status: "read" } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-parent-messages"] }),
+  });
+  const del = useMutation({
+    mutationFn: (id: number) => deleteParentMessage({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-parent-messages"] }),
+  });
+
+  const msgs = msgsQ.data ?? [];
 
   return (
     <div className="space-y-4">
@@ -882,21 +982,23 @@ function MessagesView({ onBack }: { onBack: () => void }) {
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
-                <th className="w-8"></th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {msgs.map((m) => (
+              {msgs.map((m: any) => (
                 <tr key={m.id} className="border-t">
                   <td className="px-4 py-3">
                     <input type="checkbox" />
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium">{m.from}</p>
-                    <p className="text-xs text-gray-400">{m.student}</p>
+                    <p className="font-medium">{m.from_name}</p>
+                    {m.student_name && <p className="text-xs text-gray-400">{m.student_name}</p>}
                   </td>
-                  <td className="px-4 py-3">{m.subject}</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{m.date}</td>
+                  <td className="px-4 py-3">{m.subject ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">
+                    {m.created_at ? new Date(m.created_at).toLocaleString() : "—"}
+                  </td>
                   <td className="px-4 py-3">
                     {m.status === "new" ? (
                       <span className="text-xs px-2.5 py-1 bg-[#7b1f4c] text-white rounded-full font-semibold">
@@ -906,9 +1008,35 @@ function MessagesView({ onBack }: { onBack: () => void }) {
                       <span className="text-xs px-2.5 py-1 border rounded-full text-gray-500">Read</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-400">…</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-3 items-center">
+                      {m.status === "new" && (
+                        <button
+                          onClick={() => markRead.mutate(m.id)}
+                          className="text-xs text-[#7b1f4c] hover:underline"
+                        >
+                          Mark read
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (confirm("Delete message?")) del.mutate(m.id);
+                        }}
+                        className="text-rose-500 hover:text-rose-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
+              {msgs.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                    No messages from parents yet.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
