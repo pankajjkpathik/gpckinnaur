@@ -1,35 +1,107 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, Calendar, FileText, BookOpen, Clock, ClipboardList, Megaphone, GraduationCap } from "lucide-react";
-import { BarStats, AttendanceGauge } from "@/components/portal/Charts";
+import {
+  Download,
+  Calendar,
+  FileText,
+  BookOpen,
+  Clock,
+  ClipboardList,
+  GraduationCap,
+  Upload,
+  BookMarked,
+  DollarSign,
+  Users,
+  Shield,
+  ArrowLeft,
+  Printer,
+  CheckCircle2,
+  MessageCircle,
+  ClipboardCheck,
+  FileSpreadsheet,
+} from "lucide-react";
 import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { listMaterials } from "@/lib/materials.functions";
-import { listNotices } from "@/lib/notices.functions";
 import {
-  studentDashboard, studentAttendance, studentMarks, studentTimetable,
-  studentSyllabus, studentMyLeaves, studentApplyLeave, studentCancelLeave,
-  studentCalendar, studentCirculars,
+  studentDashboard,
+  studentAttendance,
+  studentMarks,
+  studentTimetable,
+  studentSyllabus,
+  studentMyLeaves,
+  studentApplyLeave,
+  studentCancelLeave,
+  studentCalendar,
+  studentCirculars,
+  studentGrading,
+  studentFaculty,
+  studentAssignments,
+  studentDocuments,
 } from "@/lib/student.functions";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/student-dashboard")({
-  head: () => ({ meta: [{ title: "Student Dashboard — GP Kinnaur" }, { name: "description", content: "Student Dashboard — GP Kinnaur at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
+  head: () => ({
+    meta: [
+      { title: "Student Dashboard — GP Kinnaur" },
+      {
+        name: "description",
+        content: "Student Dashboard — GP Kinnaur at Government Polytechnic, Kinnaur — internal portal page.",
+      },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: StudentDashboard,
 });
 
-type Tab =
-  | "home" | "attendance" | "marks" | "timetable" | "syllabus"
-  | "calendar" | "leave" | "circulars"
-  | "notes" | "syllabus_files" | "paper" | "form" | "notices";
+type View =
+  | "home"
+  | "attendance"
+  | "marks"
+  | "results"
+  | "semester-reports"
+  | "assignments"
+  | "upload"
+  | "documents"
+  | "fees"
+  | "faculty"
+  | "disciplinary";
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const EXAM_TABS = [
+  { key: "house_test", label: "House Test" },
+  { key: "first_class_test", label: "Class Test 1" },
+  { key: "second_class_test", label: "Class Test 2" },
+  { key: "assignment", label: "Assignment 1" },
+  { key: "assignment_2", label: "Assignment 2" },
+];
+
+// ─── Shared helpers ───────────────────────────────────────────────────────────
+function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`bg-white border rounded-lg shadow-sm p-5 ${className}`}>{children}</div>;
+}
+
+function BackBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 text-sm text-gray-600 border rounded px-3 py-1.5 mb-5 hover:bg-gray-50"
+    >
+      <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+    </button>
+  );
+}
+
+function gradeFor(pct: number, scheme: any[]): string {
+  const row = scheme.find((s) => pct >= Number(s.min_pct) && pct <= Number(s.max_pct));
+  return row?.grade ?? "—";
+}
 
 function StudentDashboard() {
   const navigate = useNavigate();
   const { data: me, isLoading } = useQuery({ queryKey: ["student-me"], queryFn: () => studentMe() });
-  const [tab, setTab] = useState<Tab>("home");
+  const [view, setView] = useState<View>("home");
 
   useEffect(() => {
     if (!isLoading && !me) navigate({ to: "/student-login" });
@@ -42,581 +114,845 @@ function StudentDashboard() {
     window.location.href = "/";
   }
 
-  const initials = me.name.split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase();
-
-  const tabs: [Tab, string][] = [
-    ["home", "🏠 Home"],
-    ["attendance", "📊 Attendance"],
-    ["marks", "🎯 Marks & Results"],
-    ["timetable", "⏰ Time Table"],
-    ["syllabus", "📋 Syllabus"],
-    ["calendar", "📅 Calendar"],
-    ["leave", "📝 Leave"],
-    ["circulars", "📣 Circulars"],
-    ["notes", "📚 Notes"],
-    ["paper", "📄 Papers"],
-    ["form", "🗂 Forms"],
-    ["notices", "📢 Notices"],
-  ];
+  const initials = me.name
+    .split(" ")
+    .map((s: string) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
-    <div className="min-h-screen bg-secondary/30">
-      <header className="bg-gradient-to-r from-emerald-800 via-green-700 to-emerald-800 text-white shadow-sm">
+    <div className="min-h-screen bg-[#f7f7fb]">
+      <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <img src={logoAsset.url} alt="GP Kinnaur logo" className="w-10 h-10 object-contain rounded-full bg-white p-0.5 shrink-0" />
+            <img
+              src={logoAsset.url}
+              alt="GP Kinnaur logo"
+              className="w-10 h-10 object-contain rounded-full bg-white p-0.5 shrink-0"
+            />
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/70">GP Kinnaur · Student</p>
-              <p className="font-bold flex items-center gap-1.5"><span aria-hidden>🎓</span> Student Portal</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">GP Kinnaur · Student</p>
+              <p className="font-bold text-gray-800">Student Portal</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-lime-300/90 text-emerald-900 uppercase tracking-wider">
-              <span aria-hidden>👤</span> {me.name.toUpperCase()} · {me.enrollment_no}
-            </span>
-            <Link to="/messages" className="px-3 py-1.5 rounded border border-white/30 hover:bg-white/10 text-xs">Messages</Link>
-            <a href="/student-change-password" className="px-3 py-1.5 rounded border border-white/30 hover:bg-white/10 text-xs">Change Password</a>
-            <button onClick={logout} className="px-3 py-1.5 rounded border border-white/30 hover:bg-white/10 text-xs">Logout</button>
+            <Link to="/messages" className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
+              Messages
+            </Link>
+            <a
+              href="/student-change-password"
+              className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600"
+            >
+              Change Password
+            </a>
+            <button onClick={logout} className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
+              Logout
+            </button>
+            <div className="w-9 h-9 rounded-full bg-[#7b1f4c] text-white flex items-center justify-center font-bold text-sm">
+              {initials}
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="bg-[color:var(--student-light)] border-b">
-        <div className="container mx-auto px-4 py-5 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-700 to-green-600 text-white flex items-center justify-center font-bold text-lg shadow-md">{initials}</div>
-          <div>
-            <p className="text-xl font-bold text-[color:var(--student)] uppercase tracking-wide">{me.name}</p>
-            <div className="flex flex-wrap gap-2 mt-1 text-xs">
-              <Badge>📚 Branch: <strong className="capitalize">{me.branch}</strong></Badge>
-              <Badge>📖 Semester: <strong>{me.semester}</strong></Badge>
-              <Badge>🎓 Batch: <strong>{me.batch_year}</strong></Badge>
-              <Badge>🆔 <strong>{me.enrollment_no}</strong></Badge>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      <div className="container mx-auto px-4 pt-4">
-        <div className="flex flex-wrap gap-1 border-b overflow-x-auto">
-          {tabs.map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)} className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap ${tab === k ? "border-[color:var(--student)] text-[color:var(--student)]" : "border-transparent text-muted-foreground"}`}>{label}</button>
-          ))}
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-6">
-        {tab === "home" && <HomeTab setTab={setTab} />}
-        {tab === "attendance" && <AttendanceTab />}
-        {tab === "marks" && <MarksTab />}
-        {tab === "timetable" && <TimetableTab />}
-        {tab === "syllabus" && <SyllabusOfficialTab />}
-        {tab === "calendar" && <CalendarTab />}
-        {tab === "leave" && <LeaveTab />}
-        {tab === "circulars" && <CircularsTab />}
-        {tab === "notes" && <NotesTab branch={me.branch} semester={me.semester} />}
-        {tab === "paper" && <PapersTab branch={me.branch} />}
-        {tab === "form" && <FormsTab />}
-        {tab === "notices" && <NoticesTab />}
+        {view === "home" && <HomeView me={me} onNav={setView} />}
+        {view === "attendance" && <AttendanceView onBack={() => setView("home")} />}
+        {view === "marks" && <MarksView onBack={() => setView("home")} />}
+        {view === "results" && <ResultsView me={me} onBack={() => setView("home")} />}
+        {view === "semester-reports" && <SemesterReportsView me={me} onBack={() => setView("home")} />}
+        {view === "assignments" && <AssignmentsView onBack={() => setView("home")} />}
+        {view === "upload" && <UploadAssignmentView onBack={() => setView("home")} />}
+        {view === "documents" && <DocumentsView onBack={() => setView("home")} />}
+        {view === "fees" && <FeesView onBack={() => setView("home")} />}
+        {view === "faculty" && <FacultyView onBack={() => setView("home")} />}
+        {view === "disciplinary" && <DisciplinaryView onBack={() => setView("home")} />}
       </div>
     </div>
   );
 }
 
-function Badge({ children }: any) {
-  return <span className="bg-white border border-emerald-200 rounded-full px-3 py-1 text-emerald-800">{children}</span>;
-}
+// ─── HOME ─────────────────────────────────────────────────────────────────────
+function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
+  const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View }[] = [
+    {
+      icon: ClipboardCheck,
+      label: "My Attendance",
+      desc: "View your attendance record",
+      color: "bg-[#7b1f4c]",
+      border: "border-[#7b1f4c]",
+      view: "attendance",
+    },
+    {
+      icon: FileSpreadsheet,
+      label: "My Marks",
+      desc: "Check your internal marks",
+      color: "bg-orange-500",
+      border: "border-orange-500",
+      view: "marks",
+    },
+    {
+      icon: GraduationCap,
+      label: "My Results",
+      desc: "View your board results",
+      color: "bg-gray-500",
+      border: "border-gray-500",
+      view: "results",
+    },
+    {
+      icon: FileText,
+      label: "Semester Reports",
+      desc: "Download progress reports",
+      color: "bg-green-600",
+      border: "border-green-600",
+      view: "semester-reports",
+    },
+    {
+      icon: BookMarked,
+      label: "My Assignments",
+      desc: "Download assignment questions",
+      color: "bg-rose-600",
+      border: "border-rose-600",
+      view: "assignments",
+    },
+    {
+      icon: Upload,
+      label: "Upload Assignment",
+      desc: "Submit your completed work",
+      color: "bg-purple-600",
+      border: "border-purple-600",
+      view: "upload",
+    },
+    {
+      icon: BookOpen,
+      label: "Documents",
+      desc: "Access shared documents",
+      color: "bg-cyan-500",
+      border: "border-cyan-500",
+      view: "documents",
+    },
+    {
+      icon: DollarSign,
+      label: "Fees Payment",
+      desc: "Check and pay your fees",
+      color: "bg-gray-400",
+      border: "border-gray-400",
+      view: "fees",
+    },
+    {
+      icon: Users,
+      label: "My Faculty",
+      desc: "Contact your teachers",
+      color: "bg-[#7b1f4c]",
+      border: "border-[#7b1f4c]",
+      view: "faculty",
+    },
+    {
+      icon: Shield,
+      label: "Disciplinary Actions",
+      desc: "View any official notices",
+      color: "bg-orange-500",
+      border: "border-orange-500",
+      view: "disciplinary",
+    },
+  ];
 
-function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
-    <div className={`bg-white border rounded-lg p-4 ${tone || ""}`}>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-2xl font-bold text-[color:var(--student)] mt-1">{value}</p>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">Welcome, {me.name?.split(" ")[0] ?? "Student"}</h1>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((c) => (
+          <button
+            key={c.view}
+            onClick={() => onNav(c.view)}
+            className={`flex items-center gap-4 p-4 bg-white rounded border-t-4 ${c.border} shadow-sm hover:shadow-md transition-shadow text-left w-full`}
+          >
+            <span className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${c.color}`}>
+              <c.icon className="w-6 h-6 text-white" />
+            </span>
+            <span>
+              <p className="font-semibold text-gray-800 text-sm">{c.label}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{c.desc}</p>
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-function HomeTab({ setTab }: { setTab: (t: Tab) => void }) {
-  const fn = useServerFn(studentDashboard);
-  const fnAtt = useServerFn(studentAttendance);
-  const { data, isLoading } = useQuery({ queryKey: ["student-dash"], queryFn: () => fn() });
-  const attQ = useQuery({ queryKey: ["student-att-summary"], queryFn: () => fnAtt() });
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  const lowAttendance = data.attendance_pct > 0 && data.attendance_pct < 75;
-  const subjAtt: any[] = (attQ.data?.by_subject ?? []).map((s: any) => ({ label: s.code, value: s.pct }));
-  return (
-    <div className="space-y-5">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Stat label="Overall Attendance" value={`${data.attendance_pct}%`} tone={lowAttendance ? "ring-1 ring-rose-300" : ""} />
-        <Stat label="Periods Attended" value={`${data.present_periods} / ${data.total_periods}`} />
-        <Stat label="Pending Leave Requests" value={data.pending_leaves} />
-        <Stat label="Today's Periods" value={data.today_periods.length} />
-      </div>
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm font-semibold text-[color:var(--student)] mb-2">Overall Attendance</p>
-          <AttendanceGauge percent={data.attendance_pct} />
-        </div>
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm font-semibold text-[color:var(--student)] mb-2">Attendance by Subject</p>
-          {subjAtt.length > 0 ? <BarStats data={subjAtt} color="#10b981" /> : <p className="text-xs text-muted-foreground text-center py-8">No attendance recorded yet.</p>}
-        </div>
-      </div>
-      {lowAttendance && (
-        <div className="bg-rose-50 border border-rose-200 rounded p-3 text-sm text-rose-800">
-          ⚠️ Your attendance is below 75%. Please consult your class teacher.
-        </div>
-      )}
-      <div className="bg-white border rounded-lg">
-        <div className="px-4 py-3 border-b font-semibold flex items-center gap-2"><Clock className="w-4 h-4" /> Today's Schedule</div>
-        {data.today_periods.length === 0 ? (
-          <p className="p-4 text-sm text-muted-foreground">No classes scheduled for today.</p>
-        ) : (
-          <ul className="divide-y">
-            {data.today_periods.map((p: any) => (
-              <li key={p.period_no} className="px-4 py-2 flex items-center gap-3 text-sm">
-                <span className="bg-[color:var(--student)] text-white text-xs px-2 py-1 rounded">P{p.period_no}</span>
-                <span className="font-medium">{p.subjects?.code} — {p.subjects?.name}</span>
-                <span className="text-muted-foreground text-xs ml-auto">{p.staff_users?.username || "—"} {p.room ? `· ${p.room}` : ""}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div className="grid sm:grid-cols-3 gap-3">
-        <QuickLink icon={<ClipboardList className="w-5 h-5" />} label="View Marks" onClick={() => setTab("marks")} />
-        <QuickLink icon={<Calendar className="w-5 h-5" />} label="Academic Calendar" onClick={() => setTab("calendar")} />
-        <QuickLink icon={<FileText className="w-5 h-5" />} label="Apply for Leave" onClick={() => setTab("leave")} />
-      </div>
-    </div>
-  );
-}
-
-function QuickLink({ icon, label, onClick }: any) {
-  return (
-    <button onClick={onClick} className="bg-white border rounded-lg p-4 flex items-center gap-3 hover:shadow-sm text-left">
-      <span className="w-10 h-10 rounded-full bg-[color:var(--student-light)] text-[color:var(--student)] flex items-center justify-center">{icon}</span>
-      <span className="font-semibold">{label}</span>
-    </button>
-  );
-}
-
-function AttendanceTab() {
+// ─── MY ATTENDANCE ────────────────────────────────────────────────────────────
+function AttendanceView({ onBack }: { onBack: () => void }) {
   const fn = useServerFn(studentAttendance);
   const { data, isLoading } = useQuery({ queryKey: ["student-att"], queryFn: () => fn() });
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  const overall = useMemo(() => {
+    if (!data) return 0;
+    const t = data.by_subject.reduce((s: number, x: any) => s + x.total, 0);
+    const p = data.by_subject.reduce((s: number, x: any) => s + x.present, 0);
+    return t ? Math.round((p / t) * 100) : 0;
+  }, [data]);
+
   return (
-    <div className="space-y-5">
-      <div className="bg-white border rounded-lg">
-        <div className="px-4 py-3 border-b font-semibold flex items-center gap-2"><BookOpen className="w-4 h-4" /> Subject-wise Attendance</div>
-        {data.by_subject.length === 0 ? (
-          <p className="p-4 text-sm text-muted-foreground">No attendance recorded yet.</p>
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">My Attendance</h1>
+        <p className="text-xs text-gray-400 mb-6">
+          A detailed breakdown of your attendance record for the current semester.
+        </p>
+
+        <div className="text-center mb-6">
+          <p className="text-gray-400 text-sm">Overall Attendance</p>
+          <p className="text-4xl font-bold text-[#7b1f4c] my-1">{overall}%</p>
+          <div className="max-w-md mx-auto h-3 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full bg-[#7b1f4c] rounded-full transition-all" style={{ width: `${overall}%` }} />
+          </div>
+        </div>
+
+        {isLoading ? (
+          <p className="text-sm text-gray-400 text-center py-4">Loading…</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-secondary text-left">
-              <tr><th className="px-3 py-2">Code</th><th className="px-3 py-2">Subject</th><th className="px-3 py-2 text-right">Present</th><th className="px-3 py-2 text-right">Total</th><th className="px-3 py-2 text-right">%</th></tr>
-            </thead>
-            <tbody className="divide-y">
-              {data.by_subject.map((s: any) => (
-                <tr key={s.code} className={s.pct < 75 ? "bg-rose-50" : ""}>
-                  <td className="px-3 py-2 font-medium">{s.code}</td>
-                  <td className="px-3 py-2">{s.name}</td>
-                  <td className="px-3 py-2 text-right">{s.present}</td>
-                  <td className="px-3 py-2 text-right">{s.total}</td>
-                  <td className="px-3 py-2 text-right font-semibold">{s.pct}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      <div className="bg-white border rounded-lg">
-        <div className="px-4 py-3 border-b font-semibold">Recent Records</div>
-        <ul className="divide-y max-h-96 overflow-y-auto">
-          {data.records.slice(0, 100).map((r: any, i: number) => (
-            <li key={i} className="px-4 py-2 flex items-center gap-3 text-sm">
-              <span className="text-xs text-muted-foreground w-24">{r.date}</span>
-              <span className="text-xs">P{r.period_no}</span>
-              <span className="flex-1">{r.subjects?.code} — {r.subjects?.name}</span>
-              <span className={`text-xs px-2 py-0.5 rounded ${
-                r.status === "present" ? "bg-emerald-100 text-emerald-700" :
-                r.status === "late" ? "bg-amber-100 text-amber-700" :
-                "bg-rose-100 text-rose-700"
-              }`}>{r.status}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function MarksTab() {
-  const fn = useServerFn(studentMarks);
-  const { data = [], isLoading } = useQuery({ queryKey: ["student-marks"], queryFn: () => fn({ data: {} }) });
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (data.length === 0) return <p className="text-sm text-muted-foreground bg-white border rounded p-6 text-center">No approved marks yet. Check back after your faculty submits and HOD approves.</p>;
-
-  // Group by exam_type
-  const groups = new Map<string, any[]>();
-  (data as any[]).forEach((r) => {
-    if (!groups.has(r.exam_type)) groups.set(r.exam_type, []);
-    groups.get(r.exam_type)!.push(r);
-  });
-
-  return (
-    <div className="space-y-5">
-      {Array.from(groups.entries()).map(([exam, rows]) => {
-        const total = rows.reduce((s, r) => s + Number(r.max_marks || 0), 0);
-        const got = rows.reduce((s, r) => s + Number(r.obtained || 0), 0);
-        const pct = total ? Math.round((got / total) * 1000) / 10 : 0;
-        return (
-          <div key={exam} className="bg-white border rounded-lg overflow-hidden">
-            <div className="px-4 py-3 border-b flex items-center justify-between">
-              <div>
-                <p className="font-semibold capitalize">{exam.replace(/_/g, " ")}</p>
-                <p className="text-xs text-muted-foreground">{rows[0].academic_year}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-[color:var(--student)]">{pct}%</p>
-                <p className="text-xs text-muted-foreground">{got} / {total}</p>
-              </div>
-            </div>
+          <div className="border rounded overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-secondary text-left">
-                <tr><th className="px-3 py-2">Code</th><th className="px-3 py-2">Subject</th><th className="px-3 py-2 text-right">Obtained</th><th className="px-3 py-2 text-right">Max</th><th className="px-3 py-2 text-right">%</th></tr>
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
+                  <th className="text-center px-4 py-3 text-gray-400 font-medium">Total Classes</th>
+                  <th className="text-center px-4 py-3 text-gray-400 font-medium">Attended Classes</th>
+                  <th className="text-right px-4 py-3 text-gray-400 font-medium">Attendance %</th>
+                </tr>
               </thead>
-              <tbody className="divide-y">
-                {rows.map((r, i) => {
-                  const p = Number(r.max_marks) ? Math.round((Number(r.obtained) / Number(r.max_marks)) * 1000) / 10 : 0;
-                  return (
-                    <tr key={i} className={p < 35 ? "bg-rose-50" : ""}>
-                      <td className="px-3 py-2 font-medium">{r.subjects?.code}</td>
-                      <td className="px-3 py-2">{r.subjects?.name}</td>
-                      <td className="px-3 py-2 text-right">{r.obtained}</td>
-                      <td className="px-3 py-2 text-right">{r.max_marks}</td>
-                      <td className="px-3 py-2 text-right font-semibold">{p}%</td>
-                    </tr>
-                  );
-                })}
+              <tbody>
+                {(data?.by_subject ?? []).map((s: any) => (
+                  <tr key={s.code} className="border-t">
+                    <td className="px-4 py-3">{s.name || s.code}</td>
+                    <td className="px-4 py-3 text-center">{s.total}</td>
+                    <td className="px-4 py-3 text-center">{s.present}</td>
+                    <td
+                      className={`px-4 py-3 text-right font-semibold ${s.pct < 75 ? "text-rose-600" : "text-green-600"}`}
+                    >
+                      {s.pct}%
+                    </td>
+                  </tr>
+                ))}
+                {(data?.by_subject ?? []).length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                      No attendance recorded yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-        );
-      })}
+        )}
+      </Card>
     </div>
   );
 }
 
-function TimetableTab() {
-  const fn = useServerFn(studentTimetable);
-  const { data, isLoading } = useQuery({ queryKey: ["student-tt"], queryFn: () => fn() });
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  const periods = (data.periods || []).map((p: any) => p.period_no).sort((a: number, b: number) => a - b);
-  const periodNos = periods.length > 0 ? periods : [1, 2, 3, 4, 5, 6, 7, 8];
-  const grid: Record<number, Record<number, any>> = {};
-  (data.entries as any[]).forEach((e) => {
-    if (!grid[e.day_of_week]) grid[e.day_of_week] = {};
-    grid[e.day_of_week][e.period_no] = e;
-  });
-  return (
-    <div className="bg-white border rounded-lg overflow-auto">
-      <table className="w-full text-xs">
-        <thead className="bg-[color:var(--student)] text-white">
-          <tr>
-            <th className="px-2 py-2 text-left">Day</th>
-            {periodNos.map((p: number) => <th key={p} className="px-2 py-2">P{p}</th>)}
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {[1, 2, 3, 4, 5, 6].map((d) => (
-            <tr key={d}>
-              <td className="px-2 py-2 font-semibold">{DAYS[d]}</td>
-              {periodNos.map((p: number) => {
-                const e = grid[d]?.[p];
-                return (
-                  <td key={p} className="px-2 py-2 border-l align-top min-w-[110px]">
-                    {e ? (
-                      <div>
-                        <p className="font-semibold">{e.subjects?.code}</p>
-                        <p className="text-[10px] text-muted-foreground">{e.staff_users?.username}{e.room ? ` · ${e.room}` : ""}</p>
-                      </div>
-                    ) : <span className="text-muted-foreground">—</span>}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+// ─── MY MARKS ─────────────────────────────────────────────────────────────────
+function MarksView({ onBack }: { onBack: () => void }) {
+  const fn = useServerFn(studentMarks);
+  const gradingFn = useServerFn(studentGrading);
+  const { data = [], isLoading } = useQuery({ queryKey: ["student-marks"], queryFn: () => fn({ data: {} }) });
+  const { data: scheme = [] } = useQuery({ queryKey: ["student-grading"], queryFn: () => gradingFn() });
+  const [activeExam, setActiveExam] = useState(EXAM_TABS[0].key);
 
-function SyllabusOfficialTab() {
-  const fn = useServerFn(studentSyllabus);
-  const { data = [], isLoading } = useQuery({ queryKey: ["student-syllabus"], queryFn: () => fn() });
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (data.length === 0) return <p className="text-sm text-muted-foreground bg-white border rounded p-6 text-center">Syllabus has not been configured for your current semester.</p>;
+  const rows = (data as any[]).filter((r) => r.exam_type === activeExam);
+
   return (
     <div className="space-y-4">
-      {(data as any[]).map((s) => (
-        <div key={s.id} className="bg-white border rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b bg-secondary/40">
-            <p className="font-semibold"><GraduationCap className="w-4 h-4 inline mr-1" /> {s.code} — {s.name}</p>
-          </div>
-          {s.units.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">No units configured.</p>
-          ) : (
-            <ul className="divide-y">
-              {s.units.map((u: any) => (
-                <li key={u.unit_no} className="px-4 py-3">
-                  <p className="font-medium text-sm">Unit {u.unit_no}: {u.title}</p>
-                  {u.topics && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{u.topics}</p>}
-                </li>
-              ))}
-            </ul>
-          )}
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">My Marks</h1>
+        <p className="text-xs text-gray-400 mb-4">
+          Your performance in various internal assessments throughout the semester.
+        </p>
+
+        <div className="flex border rounded overflow-hidden mb-5 text-sm">
+          {EXAM_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveExam(t.key)}
+              className={`flex-1 py-2.5 font-medium ${activeExam === t.key ? "bg-white text-gray-800" : "bg-gray-50 text-gray-400"}`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-      ))}
+
+        {isLoading ? (
+          <p className="text-sm text-gray-400 text-center py-4">Loading…</p>
+        ) : (
+          <div className="border rounded overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
+                  <th className="text-center px-4 py-3 text-gray-400 font-medium">Max Marks</th>
+                  <th className="text-center px-4 py-3 text-gray-400 font-medium">Marks Obtained</th>
+                  <th className="text-right px-4 py-3 text-gray-400 font-medium">Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r: any, i: number) => {
+                  const pct = Number(r.max_marks) ? (Number(r.obtained) / Number(r.max_marks)) * 100 : 0;
+                  return (
+                    <tr key={i} className="border-t">
+                      <td className="px-4 py-3">{r.subjects?.name || r.subjects?.code}</td>
+                      <td className="px-4 py-3 text-center">{r.max_marks}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-[#7b1f4c]">{r.obtained}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="inline-block px-2.5 py-1 bg-gray-100 rounded-full text-xs font-medium">
+                          {gradeFor(pct, scheme as any[])}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                      No marks for this assessment yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
 
-function CalendarTab() {
-  const fn = useServerFn(studentCalendar);
-  const { data = [] } = useQuery({ queryKey: ["student-cal"], queryFn: () => fn() });
-  if (data.length === 0) return <p className="text-sm text-muted-foreground bg-white border rounded p-6 text-center">No upcoming events in the academic calendar.</p>;
+// ─── MY RESULTS (Semester-wise SGPA/CGPA) ─────────────────────────────────────
+function ResultsView({ me, onBack }: { me: any; onBack: () => void }) {
+  const fn = useServerFn(studentMarks);
+  const gradingFn = useServerFn(studentGrading);
+  const { data = [] } = useQuery({ queryKey: ["student-marks-all"], queryFn: () => fn({ data: {} }) });
+  const { data: scheme = [] } = useQuery({ queryKey: ["student-grading"], queryFn: () => gradingFn() });
+
+  // Build a semester summary from final_sessional marks where available.
+  const semesters = useMemo(() => {
+    const finals = (data as any[]).filter((r) => r.exam_type === "final_sessional");
+    const byYear = new Map<string, any[]>();
+    finals.forEach((r) => {
+      const k = r.academic_year || "—";
+      if (!byYear.has(k)) byYear.set(k, []);
+      byYear.get(k)!.push(r);
+    });
+    let cumCredit = 0,
+      cumPoints = 0;
+    return Array.from(byYear.entries()).map(([year, rows], idx) => {
+      let credits = 0,
+        points = 0;
+      rows.forEach((r) => {
+        const cr = Number(r.subjects?.credits ?? 4);
+        const pct = Number(r.max_marks) ? (Number(r.obtained) / Number(r.max_marks)) * 100 : 0;
+        const gp = Number(
+          (scheme as any[]).find((s) => pct >= Number(s.min_pct) && pct <= Number(s.max_pct))?.grade_point ?? 0,
+        );
+        credits += cr;
+        points += cr * gp;
+      });
+      cumCredit += credits;
+      cumPoints += points;
+      return {
+        semester: idx + 1,
+        year,
+        gradePoints: Math.round(points),
+        courseCredits: credits,
+        earnedCredits: credits,
+        sgpaPoints: Math.round(points * 10) / 10,
+        cgpaPoints: Math.round(cumPoints * 10) / 10,
+        sgpa: credits ? (Math.round((points / credits) * 100) / 100).toFixed(2) : "—",
+        cgpa: cumCredit ? (Math.round((cumPoints / cumCredit) * 100) / 100).toFixed(2) : "—",
+      };
+    });
+  }, [data, scheme]);
+
   return (
-    <ul className="space-y-2">
-      {(data as any[]).map((e) => (
-        <li key={e.id} className="bg-white border rounded-lg p-4 flex items-start gap-3">
-          <div className="text-xs bg-[color:var(--student)] text-white rounded px-2 py-1 text-center font-bold shrink-0 min-w-[64px]">
-            {new Date(e.start_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-[#7b1f4c] text-white rounded-lg px-5 py-4 flex items-center gap-2">
+        <GraduationCap className="w-5 h-5" />
+        <h1 className="text-lg font-bold">Student's Result</h1>
+      </div>
+
+      <Card>
+        <div className="grid sm:grid-cols-3 gap-4 mb-6">
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Enrollment No.*</label>
+            <input readOnly value={me.enrollment_no} className="border rounded w-full px-3 py-2 bg-gray-50 text-sm" />
           </div>
           <div>
-            <p className="font-semibold">{e.title}</p>
-            <p className="text-xs text-muted-foreground">{e.start_date}{e.end_date && e.end_date !== e.start_date ? ` → ${e.end_date}` : ""} · {e.event_type}</p>
-            {e.description && <p className="text-sm text-muted-foreground mt-1">{e.description}</p>}
+            <label className="text-xs text-gray-500 mb-1 block">Student Name*</label>
+            <input
+              readOnly
+              value={me.name?.toUpperCase()}
+              className="border rounded w-full px-3 py-2 bg-gray-50 text-sm"
+            />
           </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function LeaveTab() {
-  const qc = useQueryClient();
-  const list = useServerFn(studentMyLeaves);
-  const apply = useServerFn(studentApplyLeave);
-  const cancel = useServerFn(studentCancelLeave);
-  const [open, setOpen] = useState(false);
-  const { data = [] } = useQuery({ queryKey: ["student-leaves"], queryFn: () => list() });
-  const mApply = useMutation({
-    mutationFn: (d: any) => apply({ data: d }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["student-leaves"] }); setOpen(false); },
-  });
-  const mCancel = useMutation({
-    mutationFn: (id: number) => cancel({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["student-leaves"] }),
-  });
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-bold text-[color:var(--student)]">My Leave Applications</h2>
-        <button onClick={() => setOpen(true)} className="bg-[color:var(--student)] text-white px-4 py-2 rounded font-semibold">Apply for Leave</button>
-      </div>
-      <div className="bg-white border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-secondary text-left">
-            <tr><th className="px-3 py-2">Type</th><th className="px-3 py-2">From</th><th className="px-3 py-2">To</th><th className="px-3 py-2">Reason</th><th className="px-3 py-2">Status</th><th className="px-3 py-2"></th></tr>
-          </thead>
-          <tbody className="divide-y">
-            {(data as any[]).map((l) => (
-              <tr key={l.id}>
-                <td className="px-3 py-2 capitalize">{l.leave_type}</td>
-                <td className="px-3 py-2">{l.from_date}</td>
-                <td className="px-3 py-2">{l.to_date}</td>
-                <td className="px-3 py-2 max-w-xs truncate">{l.reason}</td>
-                <td className="px-3 py-2"><span className={`text-xs px-2 py-0.5 rounded ${
-                  l.status === "approved" ? "bg-emerald-100 text-emerald-700" :
-                  l.status === "rejected" ? "bg-rose-100 text-rose-700" :
-                  "bg-amber-100 text-amber-700"
-                }`}>{l.status}</span></td>
-                <td className="px-3 py-2 text-right">
-                  {l.status === "pending" && (
-                    <button onClick={() => confirm("Cancel this request?") && mCancel.mutate(l.id)} className="text-xs text-rose-600 hover:underline">Cancel</button>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {data.length === 0 && <tr><td colSpan={6} className="text-center py-6 text-muted-foreground">No leave applications yet.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-
-      {open && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
-          <div className="bg-white rounded-lg p-5 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold text-lg mb-3">Apply for Leave</h3>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              mApply.mutate({
-                leave_type: fd.get("leave_type"),
-                from_date: fd.get("from_date"),
-                to_date: fd.get("to_date"),
-                reason: fd.get("reason"),
-              });
-            }} className="space-y-3">
-              <select name="leave_type" required className="w-full border rounded px-3 py-2 text-sm bg-white">
-                {["medical", "casual", "earned", "duty"].map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <div className="grid grid-cols-2 gap-3">
-                <input type="date" name="from_date" required className="border rounded px-3 py-2 text-sm" />
-                <input type="date" name="to_date" required className="border rounded px-3 py-2 text-sm" />
-              </div>
-              <textarea name="reason" required rows={4} placeholder="Reason" className="w-full border rounded px-3 py-2 text-sm" />
-              <button disabled={mApply.isPending} className="w-full bg-[color:var(--student)] text-white py-2 rounded font-semibold disabled:opacity-50">Submit</button>
-            </form>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Current Semester*</label>
+            <input readOnly value={me.semester} className="border rounded w-full px-3 py-2 bg-gray-50 text-sm" />
           </div>
         </div>
-      )}
-    </div>
-  );
-}
 
-function CircularsTab() {
-  const fn = useServerFn(studentCirculars);
-  const { data = [] } = useQuery({ queryKey: ["student-circulars"], queryFn: () => fn() });
-  if (data.length === 0) return <p className="text-sm text-muted-foreground bg-white border rounded p-6 text-center">No circulars at the moment.</p>;
-  return (
-    <ul className="space-y-3">
-      {(data as any[]).map((c) => (
-        <li key={c.id} className="bg-white border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="bg-[color:var(--student)] text-white px-2 py-0.5 rounded"><Megaphone className="w-3 h-3 inline mr-1" />{new Date(c.published_at).toLocaleDateString()}</span>
-            <span className="bg-secondary px-2 py-0.5 rounded uppercase">{c.audience}</span>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="font-bold text-gray-800">Result Summary</p>
+            <p className="text-xs text-gray-400">Semester-wise performance overview.</p>
           </div>
-          <p className="font-semibold mt-2">{c.title}</p>
-          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{c.body}</p>
-          {c.attachment_url && <a href={c.attachment_url} target="_blank" rel="noreferrer" className="text-xs text-[color:var(--student)] underline mt-2 inline-block">Attachment</a>}
-        </li>
-      ))}
-    </ul>
-  );
-}
+          <button onClick={() => window.print()} className="text-gray-500 hover:text-gray-700">
+            <Printer className="w-5 h-5" />
+          </button>
+        </div>
 
-// ===== Existing material/notice tabs (kept) =====
-
-function MatCard({ m }: any) {
-  return (
-    <div className="bg-white border rounded-lg p-4">
-      <p className="font-semibold">{m.title}</p>
-      <div className="flex gap-2 mt-2 text-xs">
-        {m.subject && <span className="bg-secondary px-2 py-0.5 rounded">{m.subject}</span>}
-        <span className="text-muted-foreground">{new Date(m.uploaded_at).toLocaleDateString()}</span>
-      </div>
-      <a href={m.file_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded bg-[color:var(--student)] text-white text-sm">
-        <Download className="w-3 h-3" /> Download
-      </a>
+        <div className="border rounded overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Semester</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Grade Point</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Course Credits</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Earned Credits</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Point Secured SGPA</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Point Secured CGPA</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">SGPA</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">CGPA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {semesters.map((s) => (
+                <tr key={s.semester} className="border-t">
+                  <td className="px-4 py-3 text-[#7b1f4c] font-medium">{s.semester}</td>
+                  <td className="px-4 py-3">{s.gradePoints}</td>
+                  <td className="px-4 py-3">{s.courseCredits}</td>
+                  <td className="px-4 py-3">{s.earnedCredits}</td>
+                  <td className="px-4 py-3">{s.sgpaPoints}</td>
+                  <td className="px-4 py-3">{s.cgpaPoints}</td>
+                  <td className="px-4 py-3 font-semibold">{s.sgpa}</td>
+                  <td className="px-4 py-3 font-semibold">{s.cgpa}</td>
+                </tr>
+              ))}
+              {semesters.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                    No semester results published yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-gray-400 mt-3">
+          Note: Results are compiled from final sessional marks approved by the HOD.
+        </p>
+      </Card>
     </div>
   );
 }
 
-function NotesTab({ branch, semester }: any) {
-  const [subject, setSubject] = useState("");
-  const [sem, setSem] = useState(semester);
-  const { data = [] } = useQuery({
-    queryKey: ["mat", "notes", branch, sem],
-    queryFn: () => listMaterials({ data: { type: "notes", department: branch, semester: sem } as any }),
-  });
-  const filtered = subject ? data.filter((m: any) => (m.subject ?? "").toLowerCase().includes(subject.toLowerCase())) : data;
-  return (
-    <div>
-      <div className="flex flex-wrap gap-2 mb-4">
-        <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Search by subject" className="border rounded px-3 py-2 text-sm" />
-        <select value={sem} onChange={(e) => setSem(Number(e.target.value))} className="border rounded px-3 py-2 text-sm bg-white">
-          {[1, 2, 3, 4, 5, 6].map((s) => (<option key={s} value={s}>Sem {s}</option>))}
-        </select>
-      </div>
-      {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground p-8 text-center bg-white rounded border">No study materials uploaded yet. Check back soon.</p>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{filtered.map((m: any) => <MatCard key={m.id} m={m} />)}</div>
-      )}
-    </div>
-  );
-}
+// ─── SEMESTER REPORTS ─────────────────────────────────────────────────────────
+function SemesterReportsView({ me, onBack }: { me: any; onBack: () => void }) {
+  const fn = useServerFn(studentMarks);
+  const { data = [] } = useQuery({ queryKey: ["student-marks-all"], queryFn: () => fn({ data: {} }) });
 
-function PapersTab({ branch }: any) {
-  const [sem, setSem] = useState<number | "">("");
-  const [subject, setSubject] = useState("");
-  const { data = [] } = useQuery({
-    queryKey: ["mat", "paper", branch, sem],
-    queryFn: () => listMaterials({ data: { type: "paper", department: branch, semester: sem || undefined } as any }),
-  });
-  const filtered = subject ? data.filter((m: any) => (m.subject ?? "").toLowerCase().includes(subject.toLowerCase())) : data;
-  return (
-    <div>
-      <div className="flex flex-wrap gap-2 mb-4">
-        <select value={sem} onChange={(e) => setSem(e.target.value ? Number(e.target.value) : "")} className="border rounded px-3 py-2 text-sm bg-white">
-          <option value="">All semesters</option>
-          {[1, 2, 3, 4, 5, 6].map((s) => (<option key={s} value={s}>Sem {s}</option>))}
-        </select>
-        <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" className="border rounded px-3 py-2 text-sm" />
-      </div>
-      {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground p-8 text-center bg-white rounded border">Previous papers will be uploaded soon.</p>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{filtered.map((m: any) => <MatCard key={m.id} m={m} />)}</div>
-      )}
-    </div>
-  );
-}
+  const groups = useMemo(() => {
+    const g = new Map<string, any[]>();
+    (data as any[]).forEach((r) => {
+      const k = `${r.academic_year || "—"} · ${r.exam_type}`;
+      if (!g.has(k)) g.set(k, []);
+      g.get(k)!.push(r);
+    });
+    return Array.from(g.entries());
+  }, [data]);
 
-function FormsTab() {
-  const { data = [] } = useQuery({
-    queryKey: ["mat", "form"],
-    queryFn: () => listMaterials({ data: { type: "form", department: "all" } as any }),
-  });
   return (
     <div className="space-y-4">
-      {data.length === 0 ? (
-        <p className="text-sm text-muted-foreground p-4 text-center bg-white rounded border">No forms uploaded.</p>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{data.map((m: any) => <MatCard key={m.id} m={m} />)}</div>
-      )}
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Semester Reports</h1>
+        <p className="text-xs text-gray-400 mb-4">Download your consolidated progress reports.</p>
+
+        {groups.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">No reports available yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {groups.map(([label, rows]) => {
+              const total = rows.reduce((s, r) => s + Number(r.max_marks || 0), 0);
+              const got = rows.reduce((s, r) => s + Number(r.obtained || 0), 0);
+              const pct = total ? Math.round((got / total) * 1000) / 10 : 0;
+              return (
+                <div key={label} className="border rounded p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold capitalize">{label.replace(/_/g, " ")}</p>
+                    <p className="text-xs text-gray-400">
+                      {rows.length} subjects · {got}/{total} ({pct}%)
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-2 border rounded px-4 py-2 text-sm hover:bg-gray-50"
+                  >
+                    <Download className="w-4 h-4" /> Download
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
 
-const cat: Record<string, string> = {
-  admission: "bg-emerald-100 text-emerald-800",
-  exam: "bg-sky-100 text-sky-800",
-  scholarship: "bg-amber-100 text-amber-800",
-  event: "bg-purple-100 text-purple-800",
-  placement: "bg-rose-100 text-rose-800",
-  general: "bg-slate-100 text-slate-700",
-};
+// ─── MY ASSIGNMENTS ───────────────────────────────────────────────────────────
+function AssignmentsView({ onBack }: { onBack: () => void }) {
+  const fn = useServerFn(studentAssignments);
+  const { data = [], isLoading } = useQuery({ queryKey: ["student-assignments"], queryFn: () => fn() });
+  const today = new Date().toISOString().slice(0, 10);
 
-function NoticesTab() {
-  const { data = [] } = useQuery({ queryKey: ["notices"], queryFn: () => listNotices() });
   return (
-    <ul className="space-y-3">
-      {data.map((n: any) => (
-        <li key={n.id} className="bg-white border rounded-lg p-4 flex items-start gap-3">
-          <div className="text-xs bg-[color:var(--gold)] text-[color:var(--navy)] rounded px-2 py-1 text-center font-bold shrink-0 min-w-[56px]">
-            {new Date(n.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">My Assignments</h1>
+        <p className="text-xs text-gray-400 mb-4">View and download all assignments posted by your faculty.</p>
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data as any[]).map((a: any) => {
+                const due = a.due_date ?? a.uploaded_at?.slice(0, 10);
+                const pastDue = due && due < today;
+                return (
+                  <tr key={a.id} className="border-t">
+                    <td className="px-4 py-3">{a.subject ?? "—"}</td>
+                    <td className="px-4 py-3">{a.title}</td>
+                    <td className="px-4 py-3">{due ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {pastDue ? (
+                        <span className="text-xs px-2.5 py-1 bg-rose-500 text-white rounded-full font-semibold">
+                          Past Due
+                        </span>
+                      ) : (
+                        <span className="text-xs px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
+                          Open
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <a
+                        href={a.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
+                      >
+                        <Download className="w-4 h-4" /> Download
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!isLoading && (data as any[]).length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                    No assignments posted yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─── UPLOAD ASSIGNMENT ────────────────────────────────────────────────────────
+function UploadAssignmentView({ onBack }: { onBack: () => void }) {
+  const fn = useServerFn(studentAssignments);
+  const { data = [] } = useQuery({ queryKey: ["student-assignments"], queryFn: () => fn() });
+  const today = new Date().toISOString().slice(0, 10);
+  const pending = (data as any[]).filter((a: any) => {
+    const due = a.due_date ?? a.uploaded_at?.slice(0, 10);
+    return !due || due >= today;
+  });
+  const [selected, setSelected] = useState("");
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Upload Assignment</h1>
+        <p className="text-xs text-gray-400 mb-6">Submit your completed assignment files directly to your faculty.</p>
+
+        <div className="max-w-lg mx-auto space-y-4">
+          <div>
+            <label className="text-sm text-gray-700 mb-1 block">Select Assignment</label>
+            <select
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
+              className="border rounded w-full px-3 py-2 text-sm"
+            >
+              <option value="">Select a pending assignment</option>
+              {pending.map((a: any) => (
+                <option key={a.id} value={a.id}>
+                  {a.subject ? `${a.subject} — ` : ""}
+                  {a.title}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Only assignments with future due dates are shown here.</p>
           </div>
-          <div className="flex-1">
-            <span className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded ${cat[n.category] ?? cat.general}`}>{n.category}</span>
-            <p className="font-semibold mt-1">{n.title}</p>
-            {n.content && <p className="text-sm text-muted-foreground mt-1">{n.content}</p>}
-            {n.link && <a href={n.link} target="_blank" rel="noreferrer" className="text-sm text-sky-700 underline mt-2 inline-block">View Details →</a>}
+          <div>
+            <label className="text-sm text-gray-700 mb-1 block">Assignment File (PDF Only)</label>
+            <input type="file" accept=".pdf" className="border rounded w-full px-3 py-2 text-sm" />
           </div>
-        </li>
-      ))}
-    </ul>
+          <div>
+            <label className="text-sm text-gray-700 mb-1 block">Comments (Optional)</label>
+            <textarea
+              rows={4}
+              placeholder="Add any comments for your teacher…"
+              className="border rounded w-full px-3 py-2 text-sm resize-y"
+            />
+          </div>
+          <button className="bg-[#7b1f4c] text-white w-full py-2.5 rounded font-semibold flex items-center justify-center gap-2">
+            <Upload className="w-4 h-4" /> Submit Assignment
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─── DOCUMENTS ────────────────────────────────────────────────────────────────
+function DocumentsView({ onBack }: { onBack: () => void }) {
+  const fn = useServerFn(studentDocuments);
+  const [tab, setTab] = useState<"assignment" | "lesson_plan" | "exam_schedule">("assignment");
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["student-docs", tab],
+    queryFn: () => fn({ data: { type: tab } }),
+  });
+
+  const tabs = [
+    { key: "assignment" as const, label: "Assignments" },
+    { key: "lesson_plan" as const, label: "Lesson Plans" },
+    { key: "exam_schedule" as const, label: "Exam Schedules" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Documents</h1>
+        <p className="text-xs text-gray-400 mb-4">
+          A central repository for all important documents shared by your faculty.
+        </p>
+
+        <div className="flex gap-1 border-b mb-4">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${tab === t.key ? "border-[#7b1f4c] text-[#7b1f4c]" : "border-transparent text-gray-400"}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data as any[]).map((d: any) => (
+                <tr key={d.id} className="border-t">
+                  <td className="px-4 py-3">{d.subject ?? "—"}</td>
+                  <td className="px-4 py-3">{d.title}</td>
+                  <td className="px-4 py-3">{d.uploaded_at?.slice(0, 10) ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <a
+                      href={d.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
+                    >
+                      <Download className="w-4 h-4" /> Download
+                    </a>
+                  </td>
+                </tr>
+              ))}
+              {!isLoading && (data as any[]).length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                    No documents in this category yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─── FEES PAYMENT ─────────────────────────────────────────────────────────────
+function FeesView({ onBack }: { onBack: () => void }) {
+  // Default fee structure — replace with backend fee records when available.
+  const components = [
+    { label: "Tuition Fee", amount: 12000 },
+    { label: "Exam Fee", amount: 2000 },
+    { label: "Development Fee", amount: 1500 },
+    { label: "Other Charges", amount: 500 },
+  ];
+  const total = components.reduce((s, c) => s + c.amount, 0);
+  const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Fees Payment</h1>
+        <p className="text-xs text-gray-400 mb-4">View your current fee status and details of any outstanding dues.</p>
+
+        <div className="border border-rose-200 bg-rose-50 rounded p-4 mb-4">
+          <p className="text-rose-700 font-semibold flex items-center gap-2 text-sm">
+            <DollarSign className="w-4 h-4" /> Fees Due
+          </p>
+          <p className="text-rose-600 text-sm mt-1">
+            Your fee payment is currently due. Please find the breakdown below and complete the payment.
+          </p>
+        </div>
+
+        <div className="border rounded overflow-hidden mb-4">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Fee Component</th>
+                <th className="text-right px-4 py-3 text-gray-400 font-medium">Amount (INR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {components.map((c) => (
+                <tr key={c.label} className="border-t">
+                  <td className="px-4 py-3">{c.label}</td>
+                  <td className="px-4 py-3 text-right">{inr(c.amount)}</td>
+                </tr>
+              ))}
+              <tr className="border-t bg-gray-50 font-semibold">
+                <td className="px-4 py-3">Total Amount Due</td>
+                <td className="px-4 py-3 text-right">{inr(total)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex justify-end">
+          <button className="bg-[#7b1f4c] text-white px-6 py-2.5 rounded font-semibold">Pay Now ({inr(total)})</button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─── MY FACULTY ───────────────────────────────────────────────────────────────
+function FacultyView({ onBack }: { onBack: () => void }) {
+  const fn = useServerFn(studentFaculty);
+  const { data = [], isLoading } = useQuery({ queryKey: ["student-faculty"], queryFn: () => fn() });
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">My Faculty</h1>
+        <p className="text-xs text-gray-400 mb-5">A quick way to contact the faculty members who teach you.</p>
+
+        {isLoading ? (
+          <p className="text-sm text-gray-400 text-center py-4">Loading…</p>
+        ) : (data as any[]).length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">No faculty assigned to your class yet.</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {(data as any[]).map((f: any) => (
+              <div key={f.id} className="border rounded-lg p-5 flex flex-col items-center text-center gap-3">
+                <div className="w-20 h-20 rounded-full bg-gray-200 border-2 border-[#7b1f4c]/30 flex items-center justify-center text-xl font-bold text-gray-500">
+                  {(f.username || "?")[0].toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-800">{f.username}</p>
+                  <p className="text-xs text-gray-500">{f.department ?? (f.subjects || []).join(", ")}</p>
+                </div>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`Hello ${f.username}, I have a query regarding ${(f.subjects || []).join(", ")}.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-green-500 hover:bg-green-600 text-white w-full py-2 rounded text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" /> Chat on WhatsApp
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+// ─── DISCIPLINARY ACTIONS ─────────────────────────────────────────────────────
+function DisciplinaryView({ onBack }: { onBack: () => void }) {
+  // No disciplinary records backend yet — clean record state.
+  const records: any[] = [];
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Disciplinary Actions</h1>
+        <p className="text-xs text-gray-400 mb-4">A record of any official disciplinary actions or notices issued.</p>
+
+        {records.length === 0 ? (
+          <div className="border border-green-200 bg-green-50 rounded p-4">
+            <p className="text-green-800 font-semibold flex items-center gap-2 text-sm">
+              <CheckCircle2 className="w-4 h-4" /> No Actions on Record
+            </p>
+            <p className="text-green-700 text-sm mt-1">Your disciplinary record is clear. Keep up the good work!</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {records.map((r: any, i: number) => (
+              <div key={i} className="border rounded p-4">
+                <p className="font-semibold">{r.title}</p>
+                <p className="text-sm text-gray-500">{r.detail}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }
