@@ -218,7 +218,7 @@ function ImportTab() {
       enrollment_no: String(r.enrollment_no ?? "").trim(),
       name: String(r.name ?? "").trim(),
       father_name: String(r.father_name ?? "").trim() || undefined,
-      branch: normalizeBranch(String(r.branch ?? "").trim()),
+      branch: (() => { const v = String(r.branch ?? "").trim().toLowerCase(); if (v === "civil" || v.startsWith("civil")) return "Civil Engineering"; if (v === "mechanical" || v.startsWith("mech")) return "Mechanical Engineering"; if (v.startsWith("applied")) return "Applied Sciences"; return String(r.branch ?? "").trim(); })(),
       semester: Number(r.semester),
       batch_year: Number(r.batch_year),
       email: String(r.email ?? "").trim() || undefined,
