@@ -114,7 +114,7 @@ function AdminHub() {
   const { data: me, isLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
   useEffect(() => {
     if (isLoading) return;
-    if (!me) nav({ to: "/admin-login" });
+    if (!me) nav({ to: "/staff-login" });
     else if (!adminRoles.includes(me.role as any)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
@@ -166,7 +166,7 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       desc: "View and edit faculty members",
       color: "bg-gray-500",
       border: "border-gray-500",
-      action: "faculty",
+      action: "/admin/faculty",
     },
     {
       icon: GraduationCap,
@@ -174,7 +174,7 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       desc: "View and edit student records",
       color: "bg-green-600",
       border: "border-green-600",
-      action: "students",
+      action: "/admin/students",
     },
     {
       icon: Calendar,
