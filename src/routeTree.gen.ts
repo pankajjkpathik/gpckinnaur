@@ -8,992 +8,972 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as TrainingPlacementRouteImport } from './routes/training-placement'
-import { Route as TpoRouteImport } from './routes/tpo'
-import { Route as StudentPortalRouteImport } from './routes/student-portal'
-import { Route as StudentLoginRouteImport } from './routes/student-login'
-import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
-import { Route as StudentChangePasswordRouteImport } from './routes/student-change-password'
-import { Route as StaffReportsRouteImport } from './routes/staff-reports'
-import { Route as StaffLoginRouteImport } from './routes/staff-login'
-import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
-import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as PrincipalRouteImport } from './routes/principal'
-import { Route as MessagesRouteImport } from './routes/messages'
-import { Route as MandatoryDisclosureRouteImport } from './routes/mandatory-disclosure'
-import { Route as HptsbAffiliationRouteImport } from './routes/hptsb-affiliation'
-import { Route as HodRouteImport } from './routes/hod'
-import { Route as GrievanceRouteImport } from './routes/grievance'
-import { Route as FacultyRouteImport } from './routes/faculty'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as ClerkRouteImport } from './routes/clerk'
-import { Route as AntiRaggingRouteImport } from './routes/anti-ragging'
-import { Route as AicteApprovalRouteImport } from './routes/aicte-approval'
-import { Route as AdmissionsRouteImport } from './routes/admissions'
-import { Route as AdminUsersRouteImport } from './routes/admin-users'
-import { Route as AdminLoginRouteImport } from './routes/admin-login'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as RtiIndexRouteImport } from './routes/rti.index'
-import { Route as AlumniIndexRouteImport } from './routes/alumni.index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as StaffNonTeachingRouteImport } from './routes/staff.non-teaching'
-import { Route as StaffFacultyRouteImport } from './routes/staff.faculty'
-import { Route as StaffCommitteesRouteImport } from './routes/staff.committees'
-import { Route as StaffAdminRouteImport } from './routes/staff.admin'
-import { Route as RtiSuoMotuRouteImport } from './routes/rti.suo-motu'
-import { Route as RtiDisclosureSection41bRouteImport } from './routes/rti.disclosure-section-4-1b'
-import { Route as DepartmentsIdRouteImport } from './routes/departments.$id'
-import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
-import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
-import { Route as AdminSyllabusRouteImport } from './routes/admin.syllabus'
-import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
-import { Route as AdminReportTemplatesRouteImport } from './routes/admin.report-templates'
-import { Route as AdminPeriodsRouteImport } from './routes/admin.periods'
-import { Route as AdminGradingRouteImport } from './routes/admin.grading'
-import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
-import { Route as AdminAuditRouteImport } from './routes/admin.audit'
-import { Route as AdminAssignmentsRouteImport } from './routes/admin.assignments'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as TrainingPlacementRouteImport } from "./routes/training-placement";
+import { Route as TpoRouteImport } from "./routes/tpo";
+import { Route as StudentPortalRouteImport } from "./routes/student-portal";
+import { Route as StudentLoginRouteImport } from "./routes/student-login";
+import { Route as StudentDashboardRouteImport } from "./routes/student-dashboard";
+import { Route as StudentChangePasswordRouteImport } from "./routes/student-change-password";
+import { Route as StaffReportsRouteImport } from "./routes/staff-reports";
+import { Route as StaffLoginRouteImport } from "./routes/staff-login";
+import { Route as StaffDashboardRouteImport } from "./routes/staff-dashboard";
+import { Route as StaffChangePasswordRouteImport } from "./routes/staff-change-password";
+import { Route as SitemapDotxmlRouteImport } from "./routes/sitemap[.]xml";
+import { Route as PrincipalRouteImport } from "./routes/principal";
+import { Route as MessagesRouteImport } from "./routes/messages";
+import { Route as MandatoryDisclosureRouteImport } from "./routes/mandatory-disclosure";
+import { Route as HptsbAffiliationRouteImport } from "./routes/hptsb-affiliation";
+import { Route as HodRouteImport } from "./routes/hod";
+import { Route as GrievanceRouteImport } from "./routes/grievance";
+import { Route as FacultyRouteImport } from "./routes/faculty";
+import { Route as ContactRouteImport } from "./routes/contact";
+import { Route as ClerkRouteImport } from "./routes/clerk";
+import { Route as AntiRaggingRouteImport } from "./routes/anti-ragging";
+import { Route as AicteApprovalRouteImport } from "./routes/aicte-approval";
+import { Route as AdmissionsRouteImport } from "./routes/admissions";
+import { Route as AdminUsersRouteImport } from "./routes/admin-users";
+import { Route as AdminRouteImport } from "./routes/admin";
+import { Route as AboutRouteImport } from "./routes/about";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as RtiIndexRouteImport } from "./routes/rti.index";
+import { Route as AlumniIndexRouteImport } from "./routes/alumni.index";
+import { Route as AdminIndexRouteImport } from "./routes/admin.index";
+import { Route as StaffNonTeachingRouteImport } from "./routes/staff.non-teaching";
+import { Route as StaffFacultyRouteImport } from "./routes/staff.faculty";
+import { Route as StaffCommitteesRouteImport } from "./routes/staff.committees";
+import { Route as StaffAdminRouteImport } from "./routes/staff.admin";
+import { Route as RtiSuoMotuRouteImport } from "./routes/rti.suo-motu";
+import { Route as RtiDisclosureSection41bRouteImport } from "./routes/rti.disclosure-section-4-1b";
+import { Route as DepartmentsIdRouteImport } from "./routes/departments.$id";
+import { Route as AlumniRegisterRouteImport } from "./routes/alumni.register";
+import { Route as AdminTimetableRouteImport } from "./routes/admin.timetable";
+import { Route as AdminSyllabusRouteImport } from "./routes/admin.syllabus";
+import { Route as AdminSubjectsRouteImport } from "./routes/admin.subjects";
+import { Route as AdminReportTemplatesRouteImport } from "./routes/admin.report-templates";
+import { Route as AdminPeriodsRouteImport } from "./routes/admin.periods";
+import { Route as AdminGradingRouteImport } from "./routes/admin.grading";
+import { Route as AdminCalendarRouteImport } from "./routes/admin.calendar";
+import { Route as AdminAuditRouteImport } from "./routes/admin.audit";
+import { Route as AdminAssignmentsRouteImport } from "./routes/admin.assignments";
 
 const TrainingPlacementRoute = TrainingPlacementRouteImport.update({
-  id: '/training-placement',
-  path: '/training-placement',
+  id: "/training-placement",
+  path: "/training-placement",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const TpoRoute = TpoRouteImport.update({
-  id: '/tpo',
-  path: '/tpo',
+  id: "/tpo",
+  path: "/tpo",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StudentPortalRoute = StudentPortalRouteImport.update({
-  id: '/student-portal',
-  path: '/student-portal',
+  id: "/student-portal",
+  path: "/student-portal",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StudentLoginRoute = StudentLoginRouteImport.update({
-  id: '/student-login',
-  path: '/student-login',
+  id: "/student-login",
+  path: "/student-login",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StudentDashboardRoute = StudentDashboardRouteImport.update({
-  id: '/student-dashboard',
-  path: '/student-dashboard',
+  id: "/student-dashboard",
+  path: "/student-dashboard",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StudentChangePasswordRoute = StudentChangePasswordRouteImport.update({
-  id: '/student-change-password',
-  path: '/student-change-password',
+  id: "/student-change-password",
+  path: "/student-change-password",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StaffReportsRoute = StaffReportsRouteImport.update({
-  id: '/staff-reports',
-  path: '/staff-reports',
+  id: "/staff-reports",
+  path: "/staff-reports",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StaffLoginRoute = StaffLoginRouteImport.update({
-  id: '/staff-login',
-  path: '/staff-login',
+  id: "/staff-login",
+  path: "/staff-login",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StaffDashboardRoute = StaffDashboardRouteImport.update({
-  id: '/staff-dashboard',
-  path: '/staff-dashboard',
+  id: "/staff-dashboard",
+  path: "/staff-dashboard",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StaffChangePasswordRoute = StaffChangePasswordRouteImport.update({
-  id: '/staff-change-password',
-  path: '/staff-change-password',
+  id: "/staff-change-password",
+  path: "/staff-change-password",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+  id: "/sitemap.xml",
+  path: "/sitemap.xml",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const PrincipalRoute = PrincipalRouteImport.update({
-  id: '/principal',
-  path: '/principal',
+  id: "/principal",
+  path: "/principal",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const MessagesRoute = MessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
+  id: "/messages",
+  path: "/messages",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const MandatoryDisclosureRoute = MandatoryDisclosureRouteImport.update({
-  id: '/mandatory-disclosure',
-  path: '/mandatory-disclosure',
+  id: "/mandatory-disclosure",
+  path: "/mandatory-disclosure",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const HptsbAffiliationRoute = HptsbAffiliationRouteImport.update({
-  id: '/hptsb-affiliation',
-  path: '/hptsb-affiliation',
+  id: "/hptsb-affiliation",
+  path: "/hptsb-affiliation",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const HodRoute = HodRouteImport.update({
-  id: '/hod',
-  path: '/hod',
+  id: "/hod",
+  path: "/hod",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const GrievanceRoute = GrievanceRouteImport.update({
-  id: '/grievance',
-  path: '/grievance',
+  id: "/grievance",
+  path: "/grievance",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const FacultyRoute = FacultyRouteImport.update({
-  id: '/faculty',
-  path: '/faculty',
+  id: "/faculty",
+  path: "/faculty",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
+  id: "/contact",
+  path: "/contact",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ClerkRoute = ClerkRouteImport.update({
-  id: '/clerk',
-  path: '/clerk',
+  id: "/clerk",
+  path: "/clerk",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AntiRaggingRoute = AntiRaggingRouteImport.update({
-  id: '/anti-ragging',
-  path: '/anti-ragging',
+  id: "/anti-ragging",
+  path: "/anti-ragging",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AicteApprovalRoute = AicteApprovalRouteImport.update({
-  id: '/aicte-approval',
-  path: '/aicte-approval',
+  id: "/aicte-approval",
+  path: "/aicte-approval",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdmissionsRoute = AdmissionsRouteImport.update({
-  id: '/admissions',
-  path: '/admissions',
+  id: "/admissions",
+  path: "/admissions",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/admin-users',
-  path: '/admin-users',
+  id: "/admin-users",
+  path: "/admin-users",
   getParentRoute: () => rootRouteImport,
-} as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/admin-login',
-  path: '/admin-login',
-  getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+  id: "/admin",
+  path: "/admin",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+  id: "/about",
+  path: "/about",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RtiIndexRoute = RtiIndexRouteImport.update({
-  id: '/rti/',
-  path: '/rti/',
+  id: "/rti/",
+  path: "/rti/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AlumniIndexRoute = AlumniIndexRouteImport.update({
-  id: '/alumni/',
-  path: '/alumni/',
+  id: "/alumni/",
+  path: "/alumni/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const StaffNonTeachingRoute = StaffNonTeachingRouteImport.update({
-  id: '/staff/non-teaching',
-  path: '/staff/non-teaching',
+  id: "/staff/non-teaching",
+  path: "/staff/non-teaching",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StaffFacultyRoute = StaffFacultyRouteImport.update({
-  id: '/staff/faculty',
-  path: '/staff/faculty',
+  id: "/staff/faculty",
+  path: "/staff/faculty",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StaffCommitteesRoute = StaffCommitteesRouteImport.update({
-  id: '/staff/committees',
-  path: '/staff/committees',
+  id: "/staff/committees",
+  path: "/staff/committees",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const StaffAdminRoute = StaffAdminRouteImport.update({
-  id: '/staff/admin',
-  path: '/staff/admin',
+  id: "/staff/admin",
+  path: "/staff/admin",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RtiSuoMotuRoute = RtiSuoMotuRouteImport.update({
-  id: '/rti/suo-motu',
-  path: '/rti/suo-motu',
+  id: "/rti/suo-motu",
+  path: "/rti/suo-motu",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RtiDisclosureSection41bRoute = RtiDisclosureSection41bRouteImport.update({
-  id: '/rti/disclosure-section-4-1b',
-  path: '/rti/disclosure-section-4-1b',
+  id: "/rti/disclosure-section-4-1b",
+  path: "/rti/disclosure-section-4-1b",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const DepartmentsIdRoute = DepartmentsIdRouteImport.update({
-  id: '/departments/$id',
-  path: '/departments/$id',
+  id: "/departments/$id",
+  path: "/departments/$id",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AlumniRegisterRoute = AlumniRegisterRouteImport.update({
-  id: '/alumni/register',
-  path: '/alumni/register',
+  id: "/alumni/register",
+  path: "/alumni/register",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminTimetableRoute = AdminTimetableRouteImport.update({
-  id: '/timetable',
-  path: '/timetable',
+  id: "/timetable",
+  path: "/timetable",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminSyllabusRoute = AdminSyllabusRouteImport.update({
-  id: '/syllabus',
-  path: '/syllabus',
+  id: "/syllabus",
+  path: "/syllabus",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
-  id: '/subjects',
-  path: '/subjects',
+  id: "/subjects",
+  path: "/subjects",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminReportTemplatesRoute = AdminReportTemplatesRouteImport.update({
-  id: '/report-templates',
-  path: '/report-templates',
+  id: "/report-templates",
+  path: "/report-templates",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminPeriodsRoute = AdminPeriodsRouteImport.update({
-  id: '/periods',
-  path: '/periods',
+  id: "/periods",
+  path: "/periods",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminGradingRoute = AdminGradingRouteImport.update({
-  id: '/grading',
-  path: '/grading',
+  id: "/grading",
+  path: "/grading",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminCalendarRoute = AdminCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
+  id: "/calendar",
+  path: "/calendar",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminAuditRoute = AdminAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
+  id: "/audit",
+  path: "/audit",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 const AdminAssignmentsRoute = AdminAssignmentsRouteImport.update({
-  id: '/assignments',
-  path: '/assignments',
+  id: "/assignments",
+  path: "/assignments",
   getParentRoute: () => AdminRoute,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/admin-login': typeof AdminLoginRoute
-  '/admin-users': typeof AdminUsersRoute
-  '/admissions': typeof AdmissionsRoute
-  '/aicte-approval': typeof AicteApprovalRoute
-  '/anti-ragging': typeof AntiRaggingRoute
-  '/clerk': typeof ClerkRoute
-  '/contact': typeof ContactRoute
-  '/faculty': typeof FacultyRoute
-  '/grievance': typeof GrievanceRoute
-  '/hod': typeof HodRoute
-  '/hptsb-affiliation': typeof HptsbAffiliationRoute
-  '/mandatory-disclosure': typeof MandatoryDisclosureRoute
-  '/messages': typeof MessagesRoute
-  '/principal': typeof PrincipalRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/staff-change-password': typeof StaffChangePasswordRoute
-  '/staff-dashboard': typeof StaffDashboardRoute
-  '/staff-login': typeof StaffLoginRoute
-  '/staff-reports': typeof StaffReportsRoute
-  '/student-change-password': typeof StudentChangePasswordRoute
-  '/student-dashboard': typeof StudentDashboardRoute
-  '/student-login': typeof StudentLoginRoute
-  '/student-portal': typeof StudentPortalRoute
-  '/tpo': typeof TpoRoute
-  '/training-placement': typeof TrainingPlacementRoute
-  '/admin/assignments': typeof AdminAssignmentsRoute
-  '/admin/audit': typeof AdminAuditRoute
-  '/admin/calendar': typeof AdminCalendarRoute
-  '/admin/grading': typeof AdminGradingRoute
-  '/admin/periods': typeof AdminPeriodsRoute
-  '/admin/report-templates': typeof AdminReportTemplatesRoute
-  '/admin/subjects': typeof AdminSubjectsRoute
-  '/admin/syllabus': typeof AdminSyllabusRoute
-  '/admin/timetable': typeof AdminTimetableRoute
-  '/alumni/register': typeof AlumniRegisterRoute
-  '/departments/$id': typeof DepartmentsIdRoute
-  '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
-  '/rti/suo-motu': typeof RtiSuoMotuRoute
-  '/staff/admin': typeof StaffAdminRoute
-  '/staff/committees': typeof StaffCommitteesRoute
-  '/staff/faculty': typeof StaffFacultyRoute
-  '/staff/non-teaching': typeof StaffNonTeachingRoute
-  '/admin/': typeof AdminIndexRoute
-  '/alumni/': typeof AlumniIndexRoute
-  '/rti/': typeof RtiIndexRoute
+  "/": typeof IndexRoute;
+  "/about": typeof AboutRoute;
+  "/admin": typeof AdminRouteWithChildren;
+  "/admin-users": typeof AdminUsersRoute;
+  "/admissions": typeof AdmissionsRoute;
+  "/aicte-approval": typeof AicteApprovalRoute;
+  "/anti-ragging": typeof AntiRaggingRoute;
+  "/clerk": typeof ClerkRoute;
+  "/contact": typeof ContactRoute;
+  "/faculty": typeof FacultyRoute;
+  "/grievance": typeof GrievanceRoute;
+  "/hod": typeof HodRoute;
+  "/hptsb-affiliation": typeof HptsbAffiliationRoute;
+  "/mandatory-disclosure": typeof MandatoryDisclosureRoute;
+  "/messages": typeof MessagesRoute;
+  "/principal": typeof PrincipalRoute;
+  "/sitemap.xml": typeof SitemapDotxmlRoute;
+  "/staff-change-password": typeof StaffChangePasswordRoute;
+  "/staff-dashboard": typeof StaffDashboardRoute;
+  "/staff-login": typeof StaffLoginRoute;
+  "/staff-reports": typeof StaffReportsRoute;
+  "/student-change-password": typeof StudentChangePasswordRoute;
+  "/student-dashboard": typeof StudentDashboardRoute;
+  "/student-login": typeof StudentLoginRoute;
+  "/student-portal": typeof StudentPortalRoute;
+  "/training-placement": typeof TrainingPlacementRoute;
+  "/tpo": typeof TpoRoute;
+  "/admin/assignments": typeof AdminAssignmentsRoute;
+  "/admin/audit": typeof AdminAuditRoute;
+  "/admin/calendar": typeof AdminCalendarRoute;
+  "/admin/grading": typeof AdminGradingRoute;
+  "/admin/periods": typeof AdminPeriodsRoute;
+  "/admin/report-templates": typeof AdminReportTemplatesRoute;
+  "/admin/subjects": typeof AdminSubjectsRoute;
+  "/admin/syllabus": typeof AdminSyllabusRoute;
+  "/admin/timetable": typeof AdminTimetableRoute;
+  "/alumni/register": typeof AlumniRegisterRoute;
+  "/departments/$id": typeof DepartmentsIdRoute;
+  "/rti/disclosure-section-4-1b": typeof RtiDisclosureSection41bRoute;
+  "/rti/suo-motu": typeof RtiSuoMotuRoute;
+  "/staff/admin": typeof StaffAdminRoute;
+  "/staff/committees": typeof StaffCommitteesRoute;
+  "/staff/faculty": typeof StaffFacultyRoute;
+  "/staff/non-teaching": typeof StaffNonTeachingRoute;
+  "/admin/": typeof AdminIndexRoute;
+  "/alumni/": typeof AlumniIndexRoute;
+  "/rti/": typeof RtiIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/admin-login': typeof AdminLoginRoute
-  '/admin-users': typeof AdminUsersRoute
-  '/admissions': typeof AdmissionsRoute
-  '/aicte-approval': typeof AicteApprovalRoute
-  '/anti-ragging': typeof AntiRaggingRoute
-  '/clerk': typeof ClerkRoute
-  '/contact': typeof ContactRoute
-  '/faculty': typeof FacultyRoute
-  '/grievance': typeof GrievanceRoute
-  '/hod': typeof HodRoute
-  '/hptsb-affiliation': typeof HptsbAffiliationRoute
-  '/mandatory-disclosure': typeof MandatoryDisclosureRoute
-  '/messages': typeof MessagesRoute
-  '/principal': typeof PrincipalRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/staff-change-password': typeof StaffChangePasswordRoute
-  '/staff-dashboard': typeof StaffDashboardRoute
-  '/staff-login': typeof StaffLoginRoute
-  '/staff-reports': typeof StaffReportsRoute
-  '/student-change-password': typeof StudentChangePasswordRoute
-  '/student-dashboard': typeof StudentDashboardRoute
-  '/student-login': typeof StudentLoginRoute
-  '/student-portal': typeof StudentPortalRoute
-  '/tpo': typeof TpoRoute
-  '/training-placement': typeof TrainingPlacementRoute
-  '/admin/assignments': typeof AdminAssignmentsRoute
-  '/admin/audit': typeof AdminAuditRoute
-  '/admin/calendar': typeof AdminCalendarRoute
-  '/admin/grading': typeof AdminGradingRoute
-  '/admin/periods': typeof AdminPeriodsRoute
-  '/admin/report-templates': typeof AdminReportTemplatesRoute
-  '/admin/subjects': typeof AdminSubjectsRoute
-  '/admin/syllabus': typeof AdminSyllabusRoute
-  '/admin/timetable': typeof AdminTimetableRoute
-  '/alumni/register': typeof AlumniRegisterRoute
-  '/departments/$id': typeof DepartmentsIdRoute
-  '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
-  '/rti/suo-motu': typeof RtiSuoMotuRoute
-  '/staff/admin': typeof StaffAdminRoute
-  '/staff/committees': typeof StaffCommitteesRoute
-  '/staff/faculty': typeof StaffFacultyRoute
-  '/staff/non-teaching': typeof StaffNonTeachingRoute
-  '/admin': typeof AdminIndexRoute
-  '/alumni': typeof AlumniIndexRoute
-  '/rti': typeof RtiIndexRoute
+  "/": typeof IndexRoute;
+  "/about": typeof AboutRoute;
+  "/admin-users": typeof AdminUsersRoute;
+  "/admissions": typeof AdmissionsRoute;
+  "/aicte-approval": typeof AicteApprovalRoute;
+  "/anti-ragging": typeof AntiRaggingRoute;
+  "/clerk": typeof ClerkRoute;
+  "/contact": typeof ContactRoute;
+  "/faculty": typeof FacultyRoute;
+  "/grievance": typeof GrievanceRoute;
+  "/hod": typeof HodRoute;
+  "/hptsb-affiliation": typeof HptsbAffiliationRoute;
+  "/mandatory-disclosure": typeof MandatoryDisclosureRoute;
+  "/messages": typeof MessagesRoute;
+  "/principal": typeof PrincipalRoute;
+  "/sitemap.xml": typeof SitemapDotxmlRoute;
+  "/staff-change-password": typeof StaffChangePasswordRoute;
+  "/staff-dashboard": typeof StaffDashboardRoute;
+  "/staff-login": typeof StaffLoginRoute;
+  "/staff-reports": typeof StaffReportsRoute;
+  "/student-change-password": typeof StudentChangePasswordRoute;
+  "/student-dashboard": typeof StudentDashboardRoute;
+  "/student-login": typeof StudentLoginRoute;
+  "/student-portal": typeof StudentPortalRoute;
+  "/training-placement": typeof TrainingPlacementRoute;
+  "/tpo": typeof TpoRoute;
+  "/admin/assignments": typeof AdminAssignmentsRoute;
+  "/admin/audit": typeof AdminAuditRoute;
+  "/admin/calendar": typeof AdminCalendarRoute;
+  "/admin/grading": typeof AdminGradingRoute;
+  "/admin/periods": typeof AdminPeriodsRoute;
+  "/admin/report-templates": typeof AdminReportTemplatesRoute;
+  "/admin/subjects": typeof AdminSubjectsRoute;
+  "/admin/syllabus": typeof AdminSyllabusRoute;
+  "/admin/timetable": typeof AdminTimetableRoute;
+  "/alumni/register": typeof AlumniRegisterRoute;
+  "/departments/$id": typeof DepartmentsIdRoute;
+  "/rti/disclosure-section-4-1b": typeof RtiDisclosureSection41bRoute;
+  "/rti/suo-motu": typeof RtiSuoMotuRoute;
+  "/staff/admin": typeof StaffAdminRoute;
+  "/staff/committees": typeof StaffCommitteesRoute;
+  "/staff/faculty": typeof StaffFacultyRoute;
+  "/staff/non-teaching": typeof StaffNonTeachingRoute;
+  "/admin": typeof AdminIndexRoute;
+  "/alumni": typeof AlumniIndexRoute;
+  "/rti": typeof RtiIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/admin-login': typeof AdminLoginRoute
-  '/admin-users': typeof AdminUsersRoute
-  '/admissions': typeof AdmissionsRoute
-  '/aicte-approval': typeof AicteApprovalRoute
-  '/anti-ragging': typeof AntiRaggingRoute
-  '/clerk': typeof ClerkRoute
-  '/contact': typeof ContactRoute
-  '/faculty': typeof FacultyRoute
-  '/grievance': typeof GrievanceRoute
-  '/hod': typeof HodRoute
-  '/hptsb-affiliation': typeof HptsbAffiliationRoute
-  '/mandatory-disclosure': typeof MandatoryDisclosureRoute
-  '/messages': typeof MessagesRoute
-  '/principal': typeof PrincipalRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/staff-change-password': typeof StaffChangePasswordRoute
-  '/staff-dashboard': typeof StaffDashboardRoute
-  '/staff-login': typeof StaffLoginRoute
-  '/staff-reports': typeof StaffReportsRoute
-  '/student-change-password': typeof StudentChangePasswordRoute
-  '/student-dashboard': typeof StudentDashboardRoute
-  '/student-login': typeof StudentLoginRoute
-  '/student-portal': typeof StudentPortalRoute
-  '/tpo': typeof TpoRoute
-  '/training-placement': typeof TrainingPlacementRoute
-  '/admin/assignments': typeof AdminAssignmentsRoute
-  '/admin/audit': typeof AdminAuditRoute
-  '/admin/calendar': typeof AdminCalendarRoute
-  '/admin/grading': typeof AdminGradingRoute
-  '/admin/periods': typeof AdminPeriodsRoute
-  '/admin/report-templates': typeof AdminReportTemplatesRoute
-  '/admin/subjects': typeof AdminSubjectsRoute
-  '/admin/syllabus': typeof AdminSyllabusRoute
-  '/admin/timetable': typeof AdminTimetableRoute
-  '/alumni/register': typeof AlumniRegisterRoute
-  '/departments/$id': typeof DepartmentsIdRoute
-  '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
-  '/rti/suo-motu': typeof RtiSuoMotuRoute
-  '/staff/admin': typeof StaffAdminRoute
-  '/staff/committees': typeof StaffCommitteesRoute
-  '/staff/faculty': typeof StaffFacultyRoute
-  '/staff/non-teaching': typeof StaffNonTeachingRoute
-  '/admin/': typeof AdminIndexRoute
-  '/alumni/': typeof AlumniIndexRoute
-  '/rti/': typeof RtiIndexRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/about": typeof AboutRoute;
+  "/admin": typeof AdminRouteWithChildren;
+  "/admin-users": typeof AdminUsersRoute;
+  "/admissions": typeof AdmissionsRoute;
+  "/aicte-approval": typeof AicteApprovalRoute;
+  "/anti-ragging": typeof AntiRaggingRoute;
+  "/clerk": typeof ClerkRoute;
+  "/contact": typeof ContactRoute;
+  "/faculty": typeof FacultyRoute;
+  "/grievance": typeof GrievanceRoute;
+  "/hod": typeof HodRoute;
+  "/hptsb-affiliation": typeof HptsbAffiliationRoute;
+  "/mandatory-disclosure": typeof MandatoryDisclosureRoute;
+  "/messages": typeof MessagesRoute;
+  "/principal": typeof PrincipalRoute;
+  "/sitemap.xml": typeof SitemapDotxmlRoute;
+  "/staff-change-password": typeof StaffChangePasswordRoute;
+  "/staff-dashboard": typeof StaffDashboardRoute;
+  "/staff-login": typeof StaffLoginRoute;
+  "/staff-reports": typeof StaffReportsRoute;
+  "/student-change-password": typeof StudentChangePasswordRoute;
+  "/student-dashboard": typeof StudentDashboardRoute;
+  "/student-login": typeof StudentLoginRoute;
+  "/student-portal": typeof StudentPortalRoute;
+  "/training-placement": typeof TrainingPlacementRoute;
+  "/tpo": typeof TpoRoute;
+  "/admin/assignments": typeof AdminAssignmentsRoute;
+  "/admin/audit": typeof AdminAuditRoute;
+  "/admin/calendar": typeof AdminCalendarRoute;
+  "/admin/grading": typeof AdminGradingRoute;
+  "/admin/periods": typeof AdminPeriodsRoute;
+  "/admin/report-templates": typeof AdminReportTemplatesRoute;
+  "/admin/subjects": typeof AdminSubjectsRoute;
+  "/admin/syllabus": typeof AdminSyllabusRoute;
+  "/admin/timetable": typeof AdminTimetableRoute;
+  "/alumni/register": typeof AlumniRegisterRoute;
+  "/departments/$id": typeof DepartmentsIdRoute;
+  "/rti/disclosure-section-4-1b": typeof RtiDisclosureSection41bRoute;
+  "/rti/suo-motu": typeof RtiSuoMotuRoute;
+  "/staff/admin": typeof StaffAdminRoute;
+  "/staff/committees": typeof StaffCommitteesRoute;
+  "/staff/faculty": typeof StaffFacultyRoute;
+  "/staff/non-teaching": typeof StaffNonTeachingRoute;
+  "/admin/": typeof AdminIndexRoute;
+  "/alumni/": typeof AlumniIndexRoute;
+  "/rti/": typeof RtiIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/about'
-    | '/admin'
-    | '/admin-login'
-    | '/admin-users'
-    | '/admissions'
-    | '/aicte-approval'
-    | '/anti-ragging'
-    | '/clerk'
-    | '/contact'
-    | '/faculty'
-    | '/grievance'
-    | '/hod'
-    | '/hptsb-affiliation'
-    | '/mandatory-disclosure'
-    | '/messages'
-    | '/principal'
-    | '/sitemap.xml'
-    | '/staff-change-password'
-    | '/staff-dashboard'
-    | '/staff-login'
-    | '/staff-reports'
-    | '/student-change-password'
-    | '/student-dashboard'
-    | '/student-login'
-    | '/student-portal'
-    | '/tpo'
-    | '/training-placement'
-    | '/admin/assignments'
-    | '/admin/audit'
-    | '/admin/calendar'
-    | '/admin/grading'
-    | '/admin/periods'
-    | '/admin/report-templates'
-    | '/admin/subjects'
-    | '/admin/syllabus'
-    | '/admin/timetable'
-    | '/alumni/register'
-    | '/departments/$id'
-    | '/rti/disclosure-section-4-1b'
-    | '/rti/suo-motu'
-    | '/staff/admin'
-    | '/staff/committees'
-    | '/staff/faculty'
-    | '/staff/non-teaching'
-    | '/admin/'
-    | '/alumni/'
-    | '/rti/'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/about"
+    | "/admin"
+    | "/admin-users"
+    | "/admissions"
+    | "/aicte-approval"
+    | "/anti-ragging"
+    | "/clerk"
+    | "/contact"
+    | "/faculty"
+    | "/grievance"
+    | "/hod"
+    | "/hptsb-affiliation"
+    | "/mandatory-disclosure"
+    | "/messages"
+    | "/principal"
+    | "/sitemap.xml"
+    | "/staff-change-password"
+    | "/staff-dashboard"
+    | "/staff-login"
+    | "/staff-reports"
+    | "/student-change-password"
+    | "/student-dashboard"
+    | "/student-login"
+    | "/student-portal"
+    | "/training-placement"
+    | "/tpo"
+    | "/admin/assignments"
+    | "/admin/audit"
+    | "/admin/calendar"
+    | "/admin/grading"
+    | "/admin/periods"
+    | "/admin/report-templates"
+    | "/admin/subjects"
+    | "/admin/syllabus"
+    | "/admin/timetable"
+    | "/alumni/register"
+    | "/departments/$id"
+    | "/rti/disclosure-section-4-1b"
+    | "/rti/suo-motu"
+    | "/staff/admin"
+    | "/staff/committees"
+    | "/staff/faculty"
+    | "/staff/non-teaching"
+    | "/admin/"
+    | "/alumni/"
+    | "/rti/";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/about'
-    | '/admin-login'
-    | '/admin-users'
-    | '/admissions'
-    | '/aicte-approval'
-    | '/anti-ragging'
-    | '/clerk'
-    | '/contact'
-    | '/faculty'
-    | '/grievance'
-    | '/hod'
-    | '/hptsb-affiliation'
-    | '/mandatory-disclosure'
-    | '/messages'
-    | '/principal'
-    | '/sitemap.xml'
-    | '/staff-change-password'
-    | '/staff-dashboard'
-    | '/staff-login'
-    | '/staff-reports'
-    | '/student-change-password'
-    | '/student-dashboard'
-    | '/student-login'
-    | '/student-portal'
-    | '/tpo'
-    | '/training-placement'
-    | '/admin/assignments'
-    | '/admin/audit'
-    | '/admin/calendar'
-    | '/admin/grading'
-    | '/admin/periods'
-    | '/admin/report-templates'
-    | '/admin/subjects'
-    | '/admin/syllabus'
-    | '/admin/timetable'
-    | '/alumni/register'
-    | '/departments/$id'
-    | '/rti/disclosure-section-4-1b'
-    | '/rti/suo-motu'
-    | '/staff/admin'
-    | '/staff/committees'
-    | '/staff/faculty'
-    | '/staff/non-teaching'
-    | '/admin'
-    | '/alumni'
-    | '/rti'
+    | "/"
+    | "/about"
+    | "/admin-users"
+    | "/admissions"
+    | "/aicte-approval"
+    | "/anti-ragging"
+    | "/clerk"
+    | "/contact"
+    | "/faculty"
+    | "/grievance"
+    | "/hod"
+    | "/hptsb-affiliation"
+    | "/mandatory-disclosure"
+    | "/messages"
+    | "/principal"
+    | "/sitemap.xml"
+    | "/staff-change-password"
+    | "/staff-dashboard"
+    | "/staff-login"
+    | "/staff-reports"
+    | "/student-change-password"
+    | "/student-dashboard"
+    | "/student-login"
+    | "/student-portal"
+    | "/training-placement"
+    | "/tpo"
+    | "/admin/assignments"
+    | "/admin/audit"
+    | "/admin/calendar"
+    | "/admin/grading"
+    | "/admin/periods"
+    | "/admin/report-templates"
+    | "/admin/subjects"
+    | "/admin/syllabus"
+    | "/admin/timetable"
+    | "/alumni/register"
+    | "/departments/$id"
+    | "/rti/disclosure-section-4-1b"
+    | "/rti/suo-motu"
+    | "/staff/admin"
+    | "/staff/committees"
+    | "/staff/faculty"
+    | "/staff/non-teaching"
+    | "/admin"
+    | "/alumni"
+    | "/rti";
   id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/admin'
-    | '/admin-login'
-    | '/admin-users'
-    | '/admissions'
-    | '/aicte-approval'
-    | '/anti-ragging'
-    | '/clerk'
-    | '/contact'
-    | '/faculty'
-    | '/grievance'
-    | '/hod'
-    | '/hptsb-affiliation'
-    | '/mandatory-disclosure'
-    | '/messages'
-    | '/principal'
-    | '/sitemap.xml'
-    | '/staff-change-password'
-    | '/staff-dashboard'
-    | '/staff-login'
-    | '/staff-reports'
-    | '/student-change-password'
-    | '/student-dashboard'
-    | '/student-login'
-    | '/student-portal'
-    | '/tpo'
-    | '/training-placement'
-    | '/admin/assignments'
-    | '/admin/audit'
-    | '/admin/calendar'
-    | '/admin/grading'
-    | '/admin/periods'
-    | '/admin/report-templates'
-    | '/admin/subjects'
-    | '/admin/syllabus'
-    | '/admin/timetable'
-    | '/alumni/register'
-    | '/departments/$id'
-    | '/rti/disclosure-section-4-1b'
-    | '/rti/suo-motu'
-    | '/staff/admin'
-    | '/staff/committees'
-    | '/staff/faculty'
-    | '/staff/non-teaching'
-    | '/admin/'
-    | '/alumni/'
-    | '/rti/'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/about"
+    | "/admin"
+    | "/admin-users"
+    | "/admissions"
+    | "/aicte-approval"
+    | "/anti-ragging"
+    | "/clerk"
+    | "/contact"
+    | "/faculty"
+    | "/grievance"
+    | "/hod"
+    | "/hptsb-affiliation"
+    | "/mandatory-disclosure"
+    | "/messages"
+    | "/principal"
+    | "/sitemap.xml"
+    | "/staff-change-password"
+    | "/staff-dashboard"
+    | "/staff-login"
+    | "/staff-reports"
+    | "/student-change-password"
+    | "/student-dashboard"
+    | "/student-login"
+    | "/student-portal"
+    | "/training-placement"
+    | "/tpo"
+    | "/admin/assignments"
+    | "/admin/audit"
+    | "/admin/calendar"
+    | "/admin/grading"
+    | "/admin/periods"
+    | "/admin/report-templates"
+    | "/admin/subjects"
+    | "/admin/syllabus"
+    | "/admin/timetable"
+    | "/alumni/register"
+    | "/departments/$id"
+    | "/rti/disclosure-section-4-1b"
+    | "/rti/suo-motu"
+    | "/staff/admin"
+    | "/staff/committees"
+    | "/staff/faculty"
+    | "/staff/non-teaching"
+    | "/admin/"
+    | "/alumni/"
+    | "/rti/";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  AdminRoute: typeof AdminRouteWithChildren
-  AdminLoginRoute: typeof AdminLoginRoute
-  AdminUsersRoute: typeof AdminUsersRoute
-  AdmissionsRoute: typeof AdmissionsRoute
-  AicteApprovalRoute: typeof AicteApprovalRoute
-  AntiRaggingRoute: typeof AntiRaggingRoute
-  ClerkRoute: typeof ClerkRoute
-  ContactRoute: typeof ContactRoute
-  FacultyRoute: typeof FacultyRoute
-  GrievanceRoute: typeof GrievanceRoute
-  HodRoute: typeof HodRoute
-  HptsbAffiliationRoute: typeof HptsbAffiliationRoute
-  MandatoryDisclosureRoute: typeof MandatoryDisclosureRoute
-  MessagesRoute: typeof MessagesRoute
-  PrincipalRoute: typeof PrincipalRoute
-  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  StaffChangePasswordRoute: typeof StaffChangePasswordRoute
-  StaffDashboardRoute: typeof StaffDashboardRoute
-  StaffLoginRoute: typeof StaffLoginRoute
-  StaffReportsRoute: typeof StaffReportsRoute
-  StudentChangePasswordRoute: typeof StudentChangePasswordRoute
-  StudentDashboardRoute: typeof StudentDashboardRoute
-  StudentLoginRoute: typeof StudentLoginRoute
-  StudentPortalRoute: typeof StudentPortalRoute
-  TpoRoute: typeof TpoRoute
-  TrainingPlacementRoute: typeof TrainingPlacementRoute
-  AlumniRegisterRoute: typeof AlumniRegisterRoute
-  DepartmentsIdRoute: typeof DepartmentsIdRoute
-  RtiDisclosureSection41bRoute: typeof RtiDisclosureSection41bRoute
-  RtiSuoMotuRoute: typeof RtiSuoMotuRoute
-  StaffAdminRoute: typeof StaffAdminRoute
-  StaffCommitteesRoute: typeof StaffCommitteesRoute
-  StaffFacultyRoute: typeof StaffFacultyRoute
-  StaffNonTeachingRoute: typeof StaffNonTeachingRoute
-  AlumniIndexRoute: typeof AlumniIndexRoute
-  RtiIndexRoute: typeof RtiIndexRoute
+  IndexRoute: typeof IndexRoute;
+  AboutRoute: typeof AboutRoute;
+  AdminRoute: typeof AdminRouteWithChildren;
+  AdminUsersRoute: typeof AdminUsersRoute;
+  AdmissionsRoute: typeof AdmissionsRoute;
+  AicteApprovalRoute: typeof AicteApprovalRoute;
+  AntiRaggingRoute: typeof AntiRaggingRoute;
+  ClerkRoute: typeof ClerkRoute;
+  ContactRoute: typeof ContactRoute;
+  FacultyRoute: typeof FacultyRoute;
+  GrievanceRoute: typeof GrievanceRoute;
+  HodRoute: typeof HodRoute;
+  HptsbAffiliationRoute: typeof HptsbAffiliationRoute;
+  MandatoryDisclosureRoute: typeof MandatoryDisclosureRoute;
+  MessagesRoute: typeof MessagesRoute;
+  PrincipalRoute: typeof PrincipalRoute;
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute;
+  StaffChangePasswordRoute: typeof StaffChangePasswordRoute;
+  StaffDashboardRoute: typeof StaffDashboardRoute;
+  StaffLoginRoute: typeof StaffLoginRoute;
+  StaffReportsRoute: typeof StaffReportsRoute;
+  StudentChangePasswordRoute: typeof StudentChangePasswordRoute;
+  StudentDashboardRoute: typeof StudentDashboardRoute;
+  StudentLoginRoute: typeof StudentLoginRoute;
+  StudentPortalRoute: typeof StudentPortalRoute;
+  TrainingPlacementRoute: typeof TrainingPlacementRoute;
+  TpoRoute: typeof TpoRoute;
+  AlumniRegisterRoute: typeof AlumniRegisterRoute;
+  DepartmentsIdRoute: typeof DepartmentsIdRoute;
+  RtiDisclosureSection41bRoute: typeof RtiDisclosureSection41bRoute;
+  RtiSuoMotuRoute: typeof RtiSuoMotuRoute;
+  StaffAdminRoute: typeof StaffAdminRoute;
+  StaffCommitteesRoute: typeof StaffCommitteesRoute;
+  StaffFacultyRoute: typeof StaffFacultyRoute;
+  StaffNonTeachingRoute: typeof StaffNonTeachingRoute;
+  AlumniIndexRoute: typeof AlumniIndexRoute;
+  RtiIndexRoute: typeof RtiIndexRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/training-placement': {
-      id: '/training-placement'
-      path: '/training-placement'
-      fullPath: '/training-placement'
-      preLoaderRoute: typeof TrainingPlacementRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tpo': {
-      id: '/tpo'
-      path: '/tpo'
-      fullPath: '/tpo'
-      preLoaderRoute: typeof TpoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/student-portal': {
-      id: '/student-portal'
-      path: '/student-portal'
-      fullPath: '/student-portal'
-      preLoaderRoute: typeof StudentPortalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/student-login': {
-      id: '/student-login'
-      path: '/student-login'
-      fullPath: '/student-login'
-      preLoaderRoute: typeof StudentLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/student-dashboard': {
-      id: '/student-dashboard'
-      path: '/student-dashboard'
-      fullPath: '/student-dashboard'
-      preLoaderRoute: typeof StudentDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/student-change-password': {
-      id: '/student-change-password'
-      path: '/student-change-password'
-      fullPath: '/student-change-password'
-      preLoaderRoute: typeof StudentChangePasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff-reports': {
-      id: '/staff-reports'
-      path: '/staff-reports'
-      fullPath: '/staff-reports'
-      preLoaderRoute: typeof StaffReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff-login': {
-      id: '/staff-login'
-      path: '/staff-login'
-      fullPath: '/staff-login'
-      preLoaderRoute: typeof StaffLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff-dashboard': {
-      id: '/staff-dashboard'
-      path: '/staff-dashboard'
-      fullPath: '/staff-dashboard'
-      preLoaderRoute: typeof StaffDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff-change-password': {
-      id: '/staff-change-password'
-      path: '/staff-change-password'
-      fullPath: '/staff-change-password'
-      preLoaderRoute: typeof StaffChangePasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/principal': {
-      id: '/principal'
-      path: '/principal'
-      fullPath: '/principal'
-      preLoaderRoute: typeof PrincipalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/messages': {
-      id: '/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof MessagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mandatory-disclosure': {
-      id: '/mandatory-disclosure'
-      path: '/mandatory-disclosure'
-      fullPath: '/mandatory-disclosure'
-      preLoaderRoute: typeof MandatoryDisclosureRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hptsb-affiliation': {
-      id: '/hptsb-affiliation'
-      path: '/hptsb-affiliation'
-      fullPath: '/hptsb-affiliation'
-      preLoaderRoute: typeof HptsbAffiliationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hod': {
-      id: '/hod'
-      path: '/hod'
-      fullPath: '/hod'
-      preLoaderRoute: typeof HodRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/grievance': {
-      id: '/grievance'
-      path: '/grievance'
-      fullPath: '/grievance'
-      preLoaderRoute: typeof GrievanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faculty': {
-      id: '/faculty'
-      path: '/faculty'
-      fullPath: '/faculty'
-      preLoaderRoute: typeof FacultyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clerk': {
-      id: '/clerk'
-      path: '/clerk'
-      fullPath: '/clerk'
-      preLoaderRoute: typeof ClerkRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/anti-ragging': {
-      id: '/anti-ragging'
-      path: '/anti-ragging'
-      fullPath: '/anti-ragging'
-      preLoaderRoute: typeof AntiRaggingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/aicte-approval': {
-      id: '/aicte-approval'
-      path: '/aicte-approval'
-      fullPath: '/aicte-approval'
-      preLoaderRoute: typeof AicteApprovalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admissions': {
-      id: '/admissions'
-      path: '/admissions'
-      fullPath: '/admissions'
-      preLoaderRoute: typeof AdmissionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin-users': {
-      id: '/admin-users'
-      path: '/admin-users'
-      fullPath: '/admin-users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin-login': {
-      id: '/admin-login'
-      path: '/admin-login'
-      fullPath: '/admin-login'
-      preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rti/': {
-      id: '/rti/'
-      path: '/rti'
-      fullPath: '/rti/'
-      preLoaderRoute: typeof RtiIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/alumni/': {
-      id: '/alumni/'
-      path: '/alumni'
-      fullPath: '/alumni/'
-      preLoaderRoute: typeof AlumniIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/staff/non-teaching': {
-      id: '/staff/non-teaching'
-      path: '/staff/non-teaching'
-      fullPath: '/staff/non-teaching'
-      preLoaderRoute: typeof StaffNonTeachingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/faculty': {
-      id: '/staff/faculty'
-      path: '/staff/faculty'
-      fullPath: '/staff/faculty'
-      preLoaderRoute: typeof StaffFacultyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/committees': {
-      id: '/staff/committees'
-      path: '/staff/committees'
-      fullPath: '/staff/committees'
-      preLoaderRoute: typeof StaffCommitteesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff/admin': {
-      id: '/staff/admin'
-      path: '/staff/admin'
-      fullPath: '/staff/admin'
-      preLoaderRoute: typeof StaffAdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rti/suo-motu': {
-      id: '/rti/suo-motu'
-      path: '/rti/suo-motu'
-      fullPath: '/rti/suo-motu'
-      preLoaderRoute: typeof RtiSuoMotuRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rti/disclosure-section-4-1b': {
-      id: '/rti/disclosure-section-4-1b'
-      path: '/rti/disclosure-section-4-1b'
-      fullPath: '/rti/disclosure-section-4-1b'
-      preLoaderRoute: typeof RtiDisclosureSection41bRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/departments/$id': {
-      id: '/departments/$id'
-      path: '/departments/$id'
-      fullPath: '/departments/$id'
-      preLoaderRoute: typeof DepartmentsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/alumni/register': {
-      id: '/alumni/register'
-      path: '/alumni/register'
-      fullPath: '/alumni/register'
-      preLoaderRoute: typeof AlumniRegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/timetable': {
-      id: '/admin/timetable'
-      path: '/timetable'
-      fullPath: '/admin/timetable'
-      preLoaderRoute: typeof AdminTimetableRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/syllabus': {
-      id: '/admin/syllabus'
-      path: '/syllabus'
-      fullPath: '/admin/syllabus'
-      preLoaderRoute: typeof AdminSyllabusRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/subjects': {
-      id: '/admin/subjects'
-      path: '/subjects'
-      fullPath: '/admin/subjects'
-      preLoaderRoute: typeof AdminSubjectsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/report-templates': {
-      id: '/admin/report-templates'
-      path: '/report-templates'
-      fullPath: '/admin/report-templates'
-      preLoaderRoute: typeof AdminReportTemplatesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/periods': {
-      id: '/admin/periods'
-      path: '/periods'
-      fullPath: '/admin/periods'
-      preLoaderRoute: typeof AdminPeriodsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/grading': {
-      id: '/admin/grading'
-      path: '/grading'
-      fullPath: '/admin/grading'
-      preLoaderRoute: typeof AdminGradingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/calendar': {
-      id: '/admin/calendar'
-      path: '/calendar'
-      fullPath: '/admin/calendar'
-      preLoaderRoute: typeof AdminCalendarRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/audit': {
-      id: '/admin/audit'
-      path: '/audit'
-      fullPath: '/admin/audit'
-      preLoaderRoute: typeof AdminAuditRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/assignments': {
-      id: '/admin/assignments'
-      path: '/assignments'
-      fullPath: '/admin/assignments'
-      preLoaderRoute: typeof AdminAssignmentsRouteImport
-      parentRoute: typeof AdminRoute
-    }
+    "/training-placement": {
+      id: "/training-placement";
+      path: "/training-placement";
+      fullPath: "/training-placement";
+      preLoaderRoute: typeof TrainingPlacementRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/tpo": {
+      id: "/tpo";
+      path: "/tpo";
+      fullPath: "/training-placement";
+      preLoaderRoute: typeof TpoRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/student-portal": {
+      id: "/student-portal";
+      path: "/student-portal";
+      fullPath: "/student-portal";
+      preLoaderRoute: typeof StudentPortalRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/student-login": {
+      id: "/student-login";
+      path: "/student-login";
+      fullPath: "/student-login";
+      preLoaderRoute: typeof StudentLoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/student-dashboard": {
+      id: "/student-dashboard";
+      path: "/student-dashboard";
+      fullPath: "/student-dashboard";
+      preLoaderRoute: typeof StudentDashboardRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/student-change-password": {
+      id: "/student-change-password";
+      path: "/student-change-password";
+      fullPath: "/student-change-password";
+      preLoaderRoute: typeof StudentChangePasswordRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/staff-reports": {
+      id: "/staff-reports";
+      path: "/staff-reports";
+      fullPath: "/staff-reports";
+      preLoaderRoute: typeof StaffReportsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/staff-login": {
+      id: "/staff-login";
+      path: "/staff-login";
+      fullPath: "/staff-login";
+      preLoaderRoute: typeof StaffLoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/staff-dashboard": {
+      id: "/staff-dashboard";
+      path: "/staff-dashboard";
+      fullPath: "/staff-dashboard";
+      preLoaderRoute: typeof StaffDashboardRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/staff-change-password": {
+      id: "/staff-change-password";
+      path: "/staff-change-password";
+      fullPath: "/staff-change-password";
+      preLoaderRoute: typeof StaffChangePasswordRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/sitemap.xml": {
+      id: "/sitemap.xml";
+      path: "/sitemap.xml";
+      fullPath: "/sitemap.xml";
+      preLoaderRoute: typeof SitemapDotxmlRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/principal": {
+      id: "/principal";
+      path: "/principal";
+      fullPath: "/principal";
+      preLoaderRoute: typeof PrincipalRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/messages": {
+      id: "/messages";
+      path: "/messages";
+      fullPath: "/messages";
+      preLoaderRoute: typeof MessagesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/mandatory-disclosure": {
+      id: "/mandatory-disclosure";
+      path: "/mandatory-disclosure";
+      fullPath: "/mandatory-disclosure";
+      preLoaderRoute: typeof MandatoryDisclosureRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/hptsb-affiliation": {
+      id: "/hptsb-affiliation";
+      path: "/hptsb-affiliation";
+      fullPath: "/hptsb-affiliation";
+      preLoaderRoute: typeof HptsbAffiliationRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/hod": {
+      id: "/hod";
+      path: "/hod";
+      fullPath: "/hod";
+      preLoaderRoute: typeof HodRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/grievance": {
+      id: "/grievance";
+      path: "/grievance";
+      fullPath: "/grievance";
+      preLoaderRoute: typeof GrievanceRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/faculty": {
+      id: "/faculty";
+      path: "/faculty";
+      fullPath: "/faculty";
+      preLoaderRoute: typeof FacultyRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/contact": {
+      id: "/contact";
+      path: "/contact";
+      fullPath: "/contact";
+      preLoaderRoute: typeof ContactRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/clerk": {
+      id: "/clerk";
+      path: "/clerk";
+      fullPath: "/clerk";
+      preLoaderRoute: typeof ClerkRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/anti-ragging": {
+      id: "/anti-ragging";
+      path: "/anti-ragging";
+      fullPath: "/anti-ragging";
+      preLoaderRoute: typeof AntiRaggingRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/aicte-approval": {
+      id: "/aicte-approval";
+      path: "/aicte-approval";
+      fullPath: "/aicte-approval";
+      preLoaderRoute: typeof AicteApprovalRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admissions": {
+      id: "/admissions";
+      path: "/admissions";
+      fullPath: "/admissions";
+      preLoaderRoute: typeof AdmissionsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin-users": {
+      id: "/admin-users";
+      path: "/admin-users";
+      fullPath: "/admin-users";
+      preLoaderRoute: typeof AdminUsersRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin": {
+      id: "/admin";
+      path: "/admin";
+      fullPath: "/admin";
+      preLoaderRoute: typeof AdminRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/about": {
+      id: "/about";
+      path: "/about";
+      fullPath: "/about";
+      preLoaderRoute: typeof AboutRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/rti/": {
+      id: "/rti/";
+      path: "/rti";
+      fullPath: "/rti/";
+      preLoaderRoute: typeof RtiIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/alumni/": {
+      id: "/alumni/";
+      path: "/alumni";
+      fullPath: "/alumni/";
+      preLoaderRoute: typeof AlumniIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/": {
+      id: "/admin/";
+      path: "/";
+      fullPath: "/admin/";
+      preLoaderRoute: typeof AdminIndexRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/staff/non-teaching": {
+      id: "/staff/non-teaching";
+      path: "/staff/non-teaching";
+      fullPath: "/staff/non-teaching";
+      preLoaderRoute: typeof StaffNonTeachingRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/staff/faculty": {
+      id: "/staff/faculty";
+      path: "/staff/faculty";
+      fullPath: "/staff/faculty";
+      preLoaderRoute: typeof StaffFacultyRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/staff/committees": {
+      id: "/staff/committees";
+      path: "/staff/committees";
+      fullPath: "/staff/committees";
+      preLoaderRoute: typeof StaffCommitteesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/staff/admin": {
+      id: "/staff/admin";
+      path: "/staff/admin";
+      fullPath: "/staff/admin";
+      preLoaderRoute: typeof StaffAdminRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/rti/suo-motu": {
+      id: "/rti/suo-motu";
+      path: "/rti/suo-motu";
+      fullPath: "/rti/suo-motu";
+      preLoaderRoute: typeof RtiSuoMotuRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/rti/disclosure-section-4-1b": {
+      id: "/rti/disclosure-section-4-1b";
+      path: "/rti/disclosure-section-4-1b";
+      fullPath: "/rti/disclosure-section-4-1b";
+      preLoaderRoute: typeof RtiDisclosureSection41bRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/departments/$id": {
+      id: "/departments/$id";
+      path: "/departments/$id";
+      fullPath: "/departments/$id";
+      preLoaderRoute: typeof DepartmentsIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/alumni/register": {
+      id: "/alumni/register";
+      path: "/alumni/register";
+      fullPath: "/alumni/register";
+      preLoaderRoute: typeof AlumniRegisterRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/timetable": {
+      id: "/admin/timetable";
+      path: "/timetable";
+      fullPath: "/admin/timetable";
+      preLoaderRoute: typeof AdminTimetableRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/syllabus": {
+      id: "/admin/syllabus";
+      path: "/syllabus";
+      fullPath: "/admin/syllabus";
+      preLoaderRoute: typeof AdminSyllabusRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/subjects": {
+      id: "/admin/subjects";
+      path: "/subjects";
+      fullPath: "/admin/subjects";
+      preLoaderRoute: typeof AdminSubjectsRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/report-templates": {
+      id: "/admin/report-templates";
+      path: "/report-templates";
+      fullPath: "/admin/report-templates";
+      preLoaderRoute: typeof AdminReportTemplatesRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/periods": {
+      id: "/admin/periods";
+      path: "/periods";
+      fullPath: "/admin/periods";
+      preLoaderRoute: typeof AdminPeriodsRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/grading": {
+      id: "/admin/grading";
+      path: "/grading";
+      fullPath: "/admin/grading";
+      preLoaderRoute: typeof AdminGradingRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/calendar": {
+      id: "/admin/calendar";
+      path: "/calendar";
+      fullPath: "/admin/calendar";
+      preLoaderRoute: typeof AdminCalendarRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/audit": {
+      id: "/admin/audit";
+      path: "/audit";
+      fullPath: "/admin/audit";
+      preLoaderRoute: typeof AdminAuditRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/assignments": {
+      id: "/admin/assignments";
+      path: "/assignments";
+      fullPath: "/admin/assignments";
+      preLoaderRoute: typeof AdminAssignmentsRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
   }
 }
 
 interface AdminRouteChildren {
-  AdminAssignmentsRoute: typeof AdminAssignmentsRoute
-  AdminAuditRoute: typeof AdminAuditRoute
-  AdminCalendarRoute: typeof AdminCalendarRoute
-  AdminGradingRoute: typeof AdminGradingRoute
-  AdminPeriodsRoute: typeof AdminPeriodsRoute
-  AdminReportTemplatesRoute: typeof AdminReportTemplatesRoute
-  AdminSubjectsRoute: typeof AdminSubjectsRoute
-  AdminSyllabusRoute: typeof AdminSyllabusRoute
-  AdminTimetableRoute: typeof AdminTimetableRoute
-  AdminIndexRoute: typeof AdminIndexRoute
+  AdminAssignmentsRoute: typeof AdminAssignmentsRoute;
+  AdminAuditRoute: typeof AdminAuditRoute;
+  AdminCalendarRoute: typeof AdminCalendarRoute;
+  AdminGradingRoute: typeof AdminGradingRoute;
+  AdminPeriodsRoute: typeof AdminPeriodsRoute;
+  AdminReportTemplatesRoute: typeof AdminReportTemplatesRoute;
+  AdminSubjectsRoute: typeof AdminSubjectsRoute;
+  AdminSyllabusRoute: typeof AdminSyllabusRoute;
+  AdminTimetableRoute: typeof AdminTimetableRoute;
+  AdminIndexRoute: typeof AdminIndexRoute;
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -1007,15 +987,14 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSyllabusRoute: AdminSyllabusRoute,
   AdminTimetableRoute: AdminTimetableRoute,
   AdminIndexRoute: AdminIndexRoute,
-}
+};
 
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
-  AdminLoginRoute: AdminLoginRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdmissionsRoute: AdmissionsRoute,
   AicteApprovalRoute: AicteApprovalRoute,
@@ -1038,8 +1017,8 @@ const rootRouteChildren: RootRouteChildren = {
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,
   StudentPortalRoute: StudentPortalRoute,
-  TpoRoute: TpoRoute,
   TrainingPlacementRoute: TrainingPlacementRoute,
+  TpoRoute: TpoRoute,
   AlumniRegisterRoute: AlumniRegisterRoute,
   DepartmentsIdRoute: DepartmentsIdRoute,
   RtiDisclosureSection41bRoute: RtiDisclosureSection41bRoute,
@@ -1050,7 +1029,5 @@ const rootRouteChildren: RootRouteChildren = {
   StaffNonTeachingRoute: StaffNonTeachingRoute,
   AlumniIndexRoute: AlumniIndexRoute,
   RtiIndexRoute: RtiIndexRoute,
-}
-export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+};
+export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>();
