@@ -39,6 +39,7 @@ import {
   markParentMessageRead,
   deleteParentMessage,
 } from "@/lib/admin-extras.functions";
+import { adminListFees } from "@/lib/assignments.functions";
 import { exportCSV } from "@/lib/report-export";
 
 export const Route = createFileRoute("/admin/")({
@@ -731,8 +732,9 @@ function AnnouncementsView({ onBack }: { onBack: () => void }) {
 
 // ─── FEES ────────────────────────────────────────────────────────────────────
 function FeesView({ onBack }: { onBack: () => void }) {
-  const studentQ = useQuery({ queryKey: ["admin-students"], queryFn: () => adminListStudents() });
-  const rows = studentQ.data ?? [];
+  const feesQ = useQuery({ queryKey: ["admin-fees"], queryFn: () => adminListFees() });
+  const rows = feesQ.data ?? [];
+  const inr = (n: number) => `₹${Number(n).toLocaleString("en-IN")}`;
 
   return (
     <div className="space-y-4">
@@ -760,24 +762,36 @@ function FeesView({ onBack }: { onBack: () => void }) {
                   </td>
                 </tr>
               )}
-              {rows.map((r: any) => (
-                <tr key={r.id} className="border-t">
-                  <td className="px-4 py-3 font-mono text-xs">{r.enrollment_no}</td>
-                  <td className="px-4 py-3">{r.name}</td>
-                  <td className="px-4 py-3 text-xs">
-                    {r.branch?.toUpperCase()}
-                    {r.semester}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Pending</span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-gray-400">—</td>
-                  <td className="px-4 py-3 text-xs text-gray-400">—</td>
-                </tr>
-              ))}
+              {rows.map((r: any) => {
+                const tone =
+                  r.status === "paid"
+                    ? "bg-green-100 text-green-700"
+                    : r.status === "partial"
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-rose-100 text-rose-700";
+                return (
+                  <tr key={r.id} className="border-t">
+                    <td className="px-4 py-3 font-mono text-xs">{r.students?.enrollment_no ?? r.student_id}</td>
+                    <td className="px-4 py-3">{r.students?.name ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {r.students?.branch?.toUpperCase()}
+                      {r.students?.semester}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded capitalize ${tone}`}>{r.status}</span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{r.due_date ?? "—"}</td>
+                    <td className="px-4 py-3">{inr(r.total_amount)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+        <p className="text-xs text-gray-400 mt-3">
+          Fee records are created via bulk import or the student fee API. Detailed per-student editing can be added on
+          request.
+        </p>
       </Card>
     </div>
   );
