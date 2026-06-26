@@ -74,16 +74,16 @@ export function PortalShell({
     window.location.href = "/";
   }
   return (
-    <div className="min-h-screen bg-secondary/30 flex flex-col">
-      <header className={`${s.bg} text-white shadow-sm`}>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <header className={`bg-white text-slate-800 shadow-sm ${s.accent}`}>
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-xl shrink-0" aria-hidden>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 ${s.iconBg}`} aria-hidden>
               {s.emoji}
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/70">{subtitle ?? `GP Kinnaur · ${s.label}`}</p>
-              <h1 className="text-lg font-bold truncate">{title}</h1>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{subtitle ?? `GP Kinnaur · ${s.label}`}</p>
+              <h1 className="text-lg font-bold truncate text-slate-800">{title}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -91,14 +91,14 @@ export function PortalShell({
               <span aria-hidden>👤</span>
               {me.username.toUpperCase()} · {me.role.replace(/_/g, " ").toUpperCase()}
             </span>
-            <Link to="/staff-reports" className="text-xs px-3 py-1.5 border border-white/30 hover:bg-white/10 rounded inline-flex items-center gap-1" title="Report Templates">
+            <Link to="/staff-reports" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1" title="Report Templates">
               <FileSpreadsheet className="w-3 h-3" /> <span className="hidden sm:inline">Reports</span>
             </Link>
             <MessagesLink />
-            <Link to="/staff-dashboard" className="text-xs px-3 py-1.5 border border-white/30 hover:bg-white/10 rounded inline-flex items-center gap-1">
+            <Link to="/staff-dashboard" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1">
               <ArrowLeft className="w-3 h-3" /> Dashboard
             </Link>
-            <button onClick={logout} className="text-xs px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded inline-flex items-center gap-1">
+            <button onClick={logout} className="text-xs px-3 py-1.5 bg-slate-800 text-white hover:bg-slate-700 rounded inline-flex items-center gap-1">
               <LogOut className="w-3 h-3" /> Logout
             </button>
           </div>
