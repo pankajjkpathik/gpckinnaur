@@ -709,6 +709,97 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_lectures: {
+        Row: {
+          created_at: string | null
+          created_by: number | null
+          department: string | null
+          detail: string | null
+          id: number
+          lecture_date: string | null
+          speaker: string
+          topic: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: number | null
+          department?: string | null
+          detail?: string | null
+          id?: never
+          lecture_date?: string | null
+          speaker: string
+          topic: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: number | null
+          department?: string | null
+          detail?: string | null
+          id?: never
+          lecture_date?: string | null
+          speaker?: string
+          topic?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_lectures_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      industrial_training: {
+        Row: {
+          branch: string | null
+          company: string | null
+          created_at: string | null
+          created_by: number | null
+          end_date: string | null
+          id: number
+          semester: number | null
+          start_date: string | null
+          student_ids: Json
+          student_names: Json
+          training_type: string
+        }
+        Insert: {
+          branch?: string | null
+          company?: string | null
+          created_at?: string | null
+          created_by?: number | null
+          end_date?: string | null
+          id?: never
+          semester?: number | null
+          start_date?: string | null
+          student_ids?: Json
+          student_names?: Json
+          training_type: string
+        }
+        Update: {
+          branch?: string | null
+          company?: string | null
+          created_at?: string | null
+          created_by?: number | null
+          end_date?: string | null
+          id?: never
+          semester?: number | null
+          start_date?: string | null
+          student_ids?: Json
+          student_names?: Json
+          training_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "industrial_training_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_applications: {
         Row: {
           applicant_id: number
@@ -1051,6 +1142,60 @@ export type Database = {
           start_time?: string
         }
         Relationships: []
+      }
+      placements: {
+        Row: {
+          branch: string | null
+          company: string
+          created_at: string | null
+          created_by: number | null
+          id: number
+          package_lpa: number | null
+          roll_number: string | null
+          student_id: number | null
+          student_name: string
+          year: number
+        }
+        Insert: {
+          branch?: string | null
+          company: string
+          created_at?: string | null
+          created_by?: number | null
+          id?: never
+          package_lpa?: number | null
+          roll_number?: string | null
+          student_id?: number | null
+          student_name: string
+          year: number
+        }
+        Update: {
+          branch?: string | null
+          company?: string
+          created_at?: string | null
+          created_by?: number | null
+          id?: never
+          package_lpa?: number | null
+          roll_number?: string | null
+          student_id?: number | null
+          student_name?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placements_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ptm_meetings: {
         Row: {
