@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin/faculty")({
 
 type Faculty = Awaited<ReturnType<typeof facultyList>>[number];
 
-const BRANCHES = ["civil", "mechanical", "applied_science"];
+const BRANCHES = ["Civil Engineering", "Mechanical Engineering", "Applied Sciences", "Administration"];
 
 function FacultyManagement() {
   const nav = useNavigate();

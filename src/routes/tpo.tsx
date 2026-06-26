@@ -184,7 +184,7 @@ function PlacementsView({ onBack }: { onBack: () => void }) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input name="company" required placeholder="Company" className="border rounded px-3 py-2" />
-                <input name="branch" placeholder="Branch (e.g. civil)" className="border rounded px-3 py-2" />
+                <input name="branch" placeholder="Branch (e.g. Civil Engineering)" className="border rounded px-3 py-2" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input name="year" type="number" required defaultValue={new Date().getFullYear()} placeholder="Year" className="border rounded px-3 py-2" />

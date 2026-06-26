@@ -75,7 +75,7 @@ function StudentsTab() {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name / enrollment" className="border rounded px-3 py-2 text-sm flex-1 min-w-[200px]" />
         <select value={branch} onChange={(e) => setBranch(e.target.value)} className="border rounded px-2 py-2 text-sm bg-white">
           <option value="">All branches</option>
-          {["civil","mechanical","applied_science"].map((b) => <option key={b} value={b}>{b}</option>)}
+          {["Civil Engineering","Mechanical Engineering","Applied Sciences"].map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
         <select value={sem} onChange={(e) => setSem(e.target.value ? Number(e.target.value) : "")} className="border rounded px-2 py-2 text-sm bg-white">
           <option value="">All sems</option>
@@ -143,8 +143,8 @@ function StudentFormModal({ title, initial = {}, requirePassword = false, onClos
           {requirePassword && <input name="enrollment_no" required placeholder="Enrollment No" defaultValue={initial.enrollment_no} className="border rounded px-3 py-2 col-span-2" />}
           <input name="name" required placeholder="Full Name" defaultValue={initial.name} className="border rounded px-3 py-2 col-span-2" />
           <input name="father_name" placeholder="Father's Name" defaultValue={initial.father_name ?? ""} className="border rounded px-3 py-2 col-span-2" />
-          <select name="branch" required defaultValue={initial.branch ?? "civil"} className="border rounded px-3 py-2 bg-white">
-            <option value="civil">Civil</option><option value="mechanical">Mechanical</option><option value="applied_science">Applied Science</option>
+          <select name="branch" required defaultValue={initial.branch ?? "Civil Engineering"} className="border rounded px-3 py-2 bg-white">
+            <option value="Civil Engineering">Civil Engineering</option><option value="Mechanical Engineering">Mechanical Engineering</option><option value="Applied Sciences">Applied Sciences</option>
           </select>
           <input name="semester" type="number" min={1} max={8} required defaultValue={initial.semester ?? 1} className="border rounded px-3 py-2" />
           <input name="batch_year" type="number" min={2000} max={2100} required defaultValue={initial.batch_year ?? new Date().getFullYear()} className="border rounded px-3 py-2" />
@@ -172,8 +172,8 @@ function downloadSampleXlsx() {
   const wb = XLSX.utils.book_new();
   const data: any[][] = [
     [...STUDENT_COLS],
-    ["CE2301","Ram Kumar","Sham Lal","civil",1,2025,"ram@example.com","9999999999"],
-    ["ME2302","Sita Devi","Mohan Lal","mechanical",1,2025,"sita@example.com","9888888888"],
+    ["CE2301","Ram Kumar","Sham Lal","Civil Engineering",1,2025,"ram@example.com","9999999999"],
+    ["ME2302","Sita Devi","Mohan Lal","Mechanical Engineering",1,2025,"sita@example.com","9888888888"],
   ];
   const ws = XLSX.utils.aoa_to_sheet(data);
   XLSX.utils.book_append_sheet(wb, ws, "Students");
@@ -218,7 +218,7 @@ function ImportTab() {
       enrollment_no: String(r.enrollment_no ?? "").trim(),
       name: String(r.name ?? "").trim(),
       father_name: String(r.father_name ?? "").trim() || undefined,
-      branch: String(r.branch ?? "").trim().toLowerCase(),
+      branch: normalizeBranch(String(r.branch ?? "").trim()),
       semester: Number(r.semester),
       batch_year: Number(r.batch_year),
       email: String(r.email ?? "").trim() || undefined,
@@ -250,7 +250,7 @@ function ImportTab() {
 
       <div className="bg-white border rounded p-3 space-y-2">
         <label className="block text-sm font-semibold">Option B — Paste CSV</label>
-        <textarea value={csv} onChange={(e) => setCsv(e.target.value)} rows={6} placeholder="enrollment_no,name,branch,semester,batch_year,email,phone&#10;CE2301,Ram Kumar,civil,1,2025,ram@x.com,9999999999" className="w-full border rounded px-3 py-2 text-sm font-mono" />
+        <textarea value={csv} onChange={(e) => setCsv(e.target.value)} rows={6} placeholder="enrollment_no,name,branch,semester,batch_year,email,phone&#10;CE2301,Ram Kumar,Civil Engineering,1,2025,ram@x.com,9999999999" className="w-full border rounded px-3 py-2 text-sm font-mono" />
         <button onClick={applyCsv} disabled={!csv} className="text-sm border px-3 py-1.5 rounded disabled:opacity-50">Parse CSV</button>
       </div>
 
@@ -276,7 +276,7 @@ function ImportTab() {
 }
 
 function PromoteTab() {
-  const [branch, setBranch] = useState("civil");
+  const [branch, setBranch] = useState("Civil Engineering");
   const [from, setFrom] = useState(1);
   const m = useMutation({ mutationFn: (d: any) => clerkPromoteStudents({ data: d }) });
   return (
@@ -284,7 +284,7 @@ function PromoteTab() {
       <p className="text-sm text-muted-foreground">Move every active student in (branch + semester) to the next semester. Use once per semester rollover.</p>
       <div className="bg-white border rounded p-4 space-y-3">
         <select value={branch} onChange={(e) => setBranch(e.target.value)} className="w-full border rounded px-3 py-2 text-sm bg-white">
-          {["civil","mechanical","applied_science"].map((b) => <option key={b} value={b}>{b}</option>)}
+          {["Civil Engineering","Mechanical Engineering","Applied Sciences"].map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
         <select value={from} onChange={(e) => setFrom(Number(e.target.value))} className="w-full border rounded px-3 py-2 text-sm bg-white">
           {[1,2,3,4,5].map((s) => <option key={s} value={s}>Sem {s} → Sem {s + 1}</option>)}
