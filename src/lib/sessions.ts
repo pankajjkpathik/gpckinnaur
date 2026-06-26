@@ -67,7 +67,7 @@ export const studentSessionConfig = {
 export type StaffSession = {
   id: number;
   username: string;
-  role: "super_admin" | "principal" | "hod" | "faculty" | "admin_staff" | "clerk";
+  role: "super_admin" | "principal" | "hod" | "faculty" | "admin_staff" | "clerk" | "tpo";
   department: string | null;
 };
 

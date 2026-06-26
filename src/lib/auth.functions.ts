@@ -14,7 +14,11 @@ import {
 
 export const staffLogin = createServerFn({ method: "POST" })
   .inputValidator((d) =>
-    z.object({ username: z.string().min(1), password: z.string().min(1) }).parse(d),
+    z.object({
+      username: z.string().min(1),
+      password: z.string().min(1),
+      allowedRoles: z.array(z.string()).optional(),
+    }).parse(d),
   )
   .handler(async ({ data }) => {
     const secretIssue = getStaffSessionSecretIssue();
@@ -30,6 +34,9 @@ export const staffLogin = createServerFn({ method: "POST" })
     if (!row) throw new Error("Invalid credentials");
     const ok = await bcrypt.compare(data.password, row.password_hash);
     if (!ok) throw new Error("Invalid credentials");
+    if (data.allowedRoles && data.allowedRoles.length > 0 && !data.allowedRoles.includes(row.role)) {
+      throw new Error("This login is not permitted for your role.");
+    }
     await supabaseAdmin
       .from("staff_users")
       .update({ last_login: new Date().toISOString() })
