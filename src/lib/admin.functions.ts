@@ -171,7 +171,7 @@ export const adminListStudents = createServerFn({ method: "GET" }).handler(async
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("students")
-    .select("id, enrollment_no, name, branch, semester, batch_year, is_active, email, phone, created_at")
+    .select("id, enrollment_no, name, image_url, branch, semester, batch_year, is_active, email, phone, created_at" as any)
     .order("id");
   if (error) throw new Error(error.message);
   return data ?? [];
