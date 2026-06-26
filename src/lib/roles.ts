@@ -11,4 +11,9 @@ export const hodRoles: StaffRole[] = ["super_admin", "principal", "hod"];
 export const facultyRoles: StaffRole[] = ["super_admin", "principal", "hod", "faculty"];
 export const principalRoles: StaffRole[] = ["super_admin", "principal"];
 // Training & Placement Officer duties — handled by principal/admin (no dedicated role in auth enum).
-export const tpoRoles: StaffRole[] = ["super_admin", "principal", "admin_staff"];
+export const tpoRoles: StaffRole[] = ["super_admin", "principal", "admin_staff", "tpo" as StaffRole];
+
+// Roles allowed into the restricted /admin console (admin, super-admin, clerk).
+export const adminPortalRoles: StaffRole[] = ["super_admin", "admin_staff", "clerk"];
+// Roles allowed via the public /staff-login page.
+export const publicStaffRoles: StaffRole[] = ["principal", "hod", "faculty", "tpo" as StaffRole];
