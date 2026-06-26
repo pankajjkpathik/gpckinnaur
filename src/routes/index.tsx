@@ -418,14 +418,16 @@ function Home() {
         </div>
       </section>
 
-      {/* Important Links Strip */}
-      <section className="w-full bg-gradient-to-r from-[color:var(--navy-dark)] via-[color:var(--navy)] to-[color:var(--navy-dark)] py-3 border-y border-white/10">
+      {/* Important Links Strip — responsive blocks */}
+      <section className="w-full bg-slate-50 border-y py-6">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
+          <p className="text-center text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold mb-3">Quick Links</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
             {[
               { label: "Directorate of Technical Education", href: "https://techedu.hp.gov.in/", icon: "🏛️" },
               { label: "HP Takniki Shiksha Board", href: "https://www.hptechboard.com/", icon: "📜" },
               { label: "AICTE", href: "https://www.aicte.gov.in/", icon: "🎓" },
+              { label: "Swayam Portal", href: "https://swayam.gov.in/", icon: "📚" },
               { label: "Digilocker NAD", href: "https://nad.digilocker.gov.in/", icon: "🗂️" },
               { label: "Himachal Government", href: "https://himachal.nic.in/", icon: "🏔️" },
               { label: "SHEBOX Portal", href: "https://shebox.wcd.gov.in/", icon: "🛡️" },
@@ -435,11 +437,10 @@ function Home() {
                 href={l.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-1.5 text-[11px] font-medium text-white/80 hover:text-[color:var(--gold)] transition py-1"
+                className="group flex flex-col items-center justify-center text-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-3 hover:border-[color:var(--gold)] hover:shadow transition"
               >
-                <span aria-hidden>{l.icon}</span>
-                <span>{l.label}</span>
-                <span className="opacity-0 group-hover:opacity-100 transition text-[10px]">→</span>
+                <span className="text-xl" aria-hidden>{l.icon}</span>
+                <span className="text-[11px] font-medium text-slate-700 group-hover:text-[color:var(--navy)] leading-tight">{l.label}</span>
               </a>
             ))}
           </div>
