@@ -26,8 +26,9 @@ export const upsertClass = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const s = await db();
-    if (data.id) {
-      const { error } = await s.from("classes").update(data).eq("id", data.id);
+    const { id, ...rest } = data;
+    if (id) {
+      const { error } = await s.from("classes").update(rest).eq("id", id);
       if (error) throw new Error(error.message);
     } else {
       const { id: _ignore, ...ins } = data;
