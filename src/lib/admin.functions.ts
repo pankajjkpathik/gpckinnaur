@@ -26,19 +26,20 @@ export const adminListStaff = createServerFn({ method: "GET" }).handler(async ()
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("staff_users")
-    .select("id, username, role, department, is_active, last_login, created_at")
+    .select("id, username, name, image_url, role, department, is_active, last_login, created_at" as any)
     .order("id");
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data as any[]) ?? [];
 });
 
 export const adminCreateStaff = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
       .object({
-        username: z.string().min(3).max(40),
-        name: z.string().min(2).max(100).optional(),
-        role: z.enum(["super_admin", "principal", "hod", "faculty", "admin_staff", "clerk"]),
+        username: z.string().min(2).max(80),
+        name: z.string().min(2).max(100).optional().nullable(),
+        image_url: z.string().optional().nullable(),
+        role: z.enum(["super_admin", "principal", "hod", "faculty", "admin_staff", "clerk", "tpo"]),
         department: z.string().optional().nullable(),
         password: z.string().min(8).max(100),
       })
@@ -51,8 +52,10 @@ export const adminCreateStaff = createServerFn({ method: "POST" })
     const bcrypt = (await import("bcryptjs")).default;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const hash = await bcrypt.hash(data.password, 12);
-    const { error } = await supabaseAdmin.from("staff_users").insert({
-      username: data.username.toLowerCase(),
+    const { error } = await (supabaseAdmin.from("staff_users") as any).insert({
+      username: data.username.toLowerCase().trim().replace(/\s+/g, "."),
+      name: data.name || null,
+      image_url: data.image_url || null,
       role: data.role,
       department: data.department || null,
       password_hash: hash,
