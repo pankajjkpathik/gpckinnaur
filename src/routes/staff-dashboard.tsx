@@ -23,7 +23,9 @@ const roleBadge: Record<string, string> = {
   principal: "bg-indigo-100 text-indigo-700",
   hod: "bg-sky-100 text-sky-700",
   faculty: "bg-teal-100 text-teal-700",
+  tpo: "bg-amber-100 text-amber-700",
   admin_staff: "bg-slate-200 text-slate-700",
+  clerk: "bg-amber-100 text-amber-800",
 };
 
 function StaffDashboard() {
@@ -33,7 +35,12 @@ function StaffDashboard() {
   const { data: counts } = useQuery({ queryKey: ["counts"], queryFn: () => submissionCounts(), enabled: !!me });
 
   useEffect(() => {
-    if (!isLoading && !me) navigate({ to: "/staff-login" });
+    if (isLoading) return;
+    if (!me) { navigate({ to: "/staff-login" }); return; }
+    // Admin/Super-Admin/Clerk live in the combined /admin console — they never see this dashboard.
+    if (["super_admin", "admin_staff", "clerk"].includes(me.role as string)) {
+      window.location.href = "/admin";
+    }
   }, [me, isLoading, navigate]);
 
   if (isLoading || !me || !me.role) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;

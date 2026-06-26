@@ -114,7 +114,7 @@ function AdminHub() {
   const { data: me, isLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
   useEffect(() => {
     if (isLoading) return;
-    if (!me) nav({ to: "/staff-login" });
+    if (!me) nav({ to: "/admin-login" });
     else if (!adminRoles.includes(me.role as any)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
