@@ -51,9 +51,11 @@ import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
 import { Route as AdminSyllabusRouteImport } from './routes/admin.syllabus'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
+import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminReportTemplatesRouteImport } from './routes/admin.report-templates'
 import { Route as AdminPeriodsRouteImport } from './routes/admin.periods'
 import { Route as AdminGradingRouteImport } from './routes/admin.grading'
+import { Route as AdminFacultyRouteImport } from './routes/admin.faculty'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAssignmentsRouteImport } from './routes/admin.assignments'
@@ -268,6 +270,11 @@ const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
   path: '/subjects',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStudentsRoute = AdminStudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminReportTemplatesRoute = AdminReportTemplatesRouteImport.update({
   id: '/report-templates',
   path: '/report-templates',
@@ -281,6 +288,11 @@ const AdminPeriodsRoute = AdminPeriodsRouteImport.update({
 const AdminGradingRoute = AdminGradingRouteImport.update({
   id: '/grading',
   path: '/grading',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFacultyRoute = AdminFacultyRouteImport.update({
+  id: '/faculty',
+  path: '/faculty',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCalendarRoute = AdminCalendarRouteImport.update({
@@ -331,9 +343,11 @@ export interface FileRoutesByFullPath {
   '/admin/assignments': typeof AdminAssignmentsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/faculty': typeof AdminFacultyRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
+  '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -380,9 +394,11 @@ export interface FileRoutesByTo {
   '/admin/assignments': typeof AdminAssignmentsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/faculty': typeof AdminFacultyRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
+  '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -431,9 +447,11 @@ export interface FileRoutesById {
   '/admin/assignments': typeof AdminAssignmentsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/faculty': typeof AdminFacultyRoute
   '/admin/grading': typeof AdminGradingRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
+  '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
   '/admin/timetable': typeof AdminTimetableRoute
@@ -483,9 +501,11 @@ export interface FileRouteTypes {
     | '/admin/assignments'
     | '/admin/audit'
     | '/admin/calendar'
+    | '/admin/faculty'
     | '/admin/grading'
     | '/admin/periods'
     | '/admin/report-templates'
+    | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -532,9 +552,11 @@ export interface FileRouteTypes {
     | '/admin/assignments'
     | '/admin/audit'
     | '/admin/calendar'
+    | '/admin/faculty'
     | '/admin/grading'
     | '/admin/periods'
     | '/admin/report-templates'
+    | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -582,9 +604,11 @@ export interface FileRouteTypes {
     | '/admin/assignments'
     | '/admin/audit'
     | '/admin/calendar'
+    | '/admin/faculty'
     | '/admin/grading'
     | '/admin/periods'
     | '/admin/report-templates'
+    | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
     | '/admin/timetable'
@@ -938,6 +962,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubjectsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/students': {
+      id: '/admin/students'
+      path: '/students'
+      fullPath: '/admin/students'
+      preLoaderRoute: typeof AdminStudentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/report-templates': {
       id: '/admin/report-templates'
       path: '/report-templates'
@@ -957,6 +988,13 @@ declare module '@tanstack/react-router' {
       path: '/grading'
       fullPath: '/admin/grading'
       preLoaderRoute: typeof AdminGradingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/faculty': {
+      id: '/admin/faculty'
+      path: '/faculty'
+      fullPath: '/admin/faculty'
+      preLoaderRoute: typeof AdminFacultyRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/calendar': {
@@ -987,9 +1025,11 @@ interface AdminRouteChildren {
   AdminAssignmentsRoute: typeof AdminAssignmentsRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminFacultyRoute: typeof AdminFacultyRoute
   AdminGradingRoute: typeof AdminGradingRoute
   AdminPeriodsRoute: typeof AdminPeriodsRoute
   AdminReportTemplatesRoute: typeof AdminReportTemplatesRoute
+  AdminStudentsRoute: typeof AdminStudentsRoute
   AdminSubjectsRoute: typeof AdminSubjectsRoute
   AdminSyllabusRoute: typeof AdminSyllabusRoute
   AdminTimetableRoute: typeof AdminTimetableRoute
@@ -1000,9 +1040,11 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAssignmentsRoute: AdminAssignmentsRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminCalendarRoute: AdminCalendarRoute,
+  AdminFacultyRoute: AdminFacultyRoute,
   AdminGradingRoute: AdminGradingRoute,
   AdminPeriodsRoute: AdminPeriodsRoute,
   AdminReportTemplatesRoute: AdminReportTemplatesRoute,
+  AdminStudentsRoute: AdminStudentsRoute,
   AdminSubjectsRoute: AdminSubjectsRoute,
   AdminSyllabusRoute: AdminSyllabusRoute,
   AdminTimetableRoute: AdminTimetableRoute,
