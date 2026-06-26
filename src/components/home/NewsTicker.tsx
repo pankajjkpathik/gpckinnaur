@@ -1,6 +1,19 @@
+import { useQuery } from "@tanstack/react-query";
+import { listAnnouncements } from "@/lib/admin-extras.functions";
+
+const DEFAULT_TEXT =
+  "📢 Admissions Open 2026-27  •  New Session will start from August,2026  •  Anti-Ragging Helpline: 1800-180-5522";
+
 export function NewsTicker() {
-  const text =
-    "📢 Admissions Open 2026-27  •  New Session will start from August,2026  •  Anti-Ragging Helpline: 1800-180-5522";
+  const { data } = useQuery({
+    queryKey: ["announcements-public"],
+    queryFn: () => listAnnouncements(),
+    staleTime: 60_000,
+  });
+
+  const items = (data ?? []).map((a: any) => a.content).filter(Boolean);
+  const text = items.length > 0 ? items.join("  •  ") : DEFAULT_TEXT;
+
   return (
     <div className="bg-[color:var(--gold)] text-[color:var(--navy)] font-medium overflow-hidden">
       <div className="flex items-center">
