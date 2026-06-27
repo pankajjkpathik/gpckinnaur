@@ -1116,6 +1116,50 @@ export type Database = {
           },
         ]
       }
+      pdf_documents: {
+        Row: {
+          branch: string | null
+          created_at: string | null
+          doc_type: string
+          file_b64: string
+          file_name: string
+          id: number
+          semester: number | null
+          title: string
+          uploaded_by: number | null
+        }
+        Insert: {
+          branch?: string | null
+          created_at?: string | null
+          doc_type: string
+          file_b64: string
+          file_name: string
+          id?: never
+          semester?: number | null
+          title: string
+          uploaded_by?: number | null
+        }
+        Update: {
+          branch?: string | null
+          created_at?: string | null
+          doc_type?: string
+          file_b64?: string
+          file_name?: string
+          id?: never
+          semester?: number | null
+          title?: string
+          uploaded_by?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdf_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       periods_master: {
         Row: {
           end_time: string
