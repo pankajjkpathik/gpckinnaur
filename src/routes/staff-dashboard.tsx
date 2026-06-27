@@ -62,7 +62,9 @@ function StaffDashboard() {
     return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
   const role = me.role as string;
-  const can = (rs: string[]) => rs.includes(role);
+  const held = [me.role, ...((me as any).extraRoles ?? [])] as string[];
+  const has = (r: string) => held.includes(r);
+  const can = (rs: string[]) => rs.some((r) => held.includes(r));
   // Admin/Super-Admin are admin-only — they do not curate notices/materials/inbox.
   const showNotices = can(["principal", "hod"]);
   const showMats = can(["hod", "faculty"]); // Principal & Admin no longer manage study material here
@@ -150,8 +152,8 @@ function StaffDashboard() {
             onClick={() => setView("profile")}
             label="My Profile"
           />
-          {/* Role-scoped portal links — each role sees only what it owns, plus read-only Views for higher roles. */}
-          {(role === "super_admin" || role === "admin_staff") && (
+          {/* Role-scoped portal links — shown for every role the user holds (primary or extra). */}
+          {(has("super_admin") || has("admin_staff")) && (
             <>
               <a href="/admin" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
                 <User className="w-4 h-4" /> Admin Console
@@ -164,38 +166,31 @@ function StaffDashboard() {
               </a>
             </>
           )}
-          {role === "clerk" && (
+          {has("clerk") && (
             <a href="/clerk" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
               <User className="w-4 h-4" /> Clerk Portal
             </a>
           )}
-          {role === "faculty" && (
+          {has("principal") && (
+            <a href="/principal" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
+              <GraduationCap className="w-4 h-4" /> Principal Portal
+            </a>
+          )}
+          {has("hod") && (
+            <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
+              <GraduationCap className="w-4 h-4" /> HOD Portal
+            </a>
+          )}
+          {/* HOD and faculty both get the Faculty Portal (HOD is also a faculty). */}
+          {(has("faculty") || has("hod")) && (
             <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
               <GraduationCap className="w-4 h-4" /> Faculty Portal
             </a>
           )}
-          {role === "hod" && (
-            <>
-              <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
-                <GraduationCap className="w-4 h-4" /> HOD Portal
-              </a>
-              <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
-                <GraduationCap className="w-4 h-4" /> Faculty View
-              </a>
-            </>
-          )}
-          {role === "principal" && (
-            <>
-              <a
-                href="/principal"
-                className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90"
-              >
-                <GraduationCap className="w-4 h-4" /> Principal Portal
-              </a>
-              <a href="/tpo" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
-                <GraduationCap className="w-4 h-4" /> Training & Placement
-              </a>
-            </>
+          {has("tpo") && (
+            <a href="/tpo" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
+              <GraduationCap className="w-4 h-4" /> Training & Placement
+            </a>
           )}
           <a
             href="/staff-change-password"
@@ -327,17 +322,38 @@ const portalForRole: Record<string, { href: string; title: string; desc: string;
       accent: "bg-amber-50 text-amber-700 ring-amber-200",
     },
   ],
+  tpo: [
+    {
+      href: "/tpo",
+      title: "Training & Placement",
+      desc: "Placements, internships, guest lectures",
+      accent: "bg-orange-50 text-orange-700 ring-orange-200",
+    },
+  ],
 };
 
 function DashboardHome({ me, counts }: any) {
   const { data: notices = [] } = useQuery({ queryKey: ["notices"], queryFn: () => listNotices() });
-  const portals = portalForRole[me.role] ?? [];
+  const heldList = [me.role, ...((me as any).extraRoles ?? [])] as string[];
+  // HOD implies faculty workspace too.
+  if (heldList.includes("hod") && !heldList.includes("faculty")) heldList.push("faculty");
+  const seen = new Set<string>();
+  const portals = heldList
+    .flatMap((r) => portalForRole[r] ?? [])
+    .filter((p) => {
+      if (seen.has(p.href)) return false;
+      seen.add(p.href);
+      return true;
+    });
   return (
     <div className="space-y-6">
       <div className="bg-white border rounded-lg p-5">
         <h2 className="text-xl font-bold text-[color:var(--navy)]">Welcome back, {me.username}</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Role: <span className="font-medium capitalize">{me.role}</span>
+          {((me as any).extraRoles ?? []).length > 0 && (
+            <span className="text-muted-foreground"> (also: {((me as any).extraRoles as string[]).join(", ")})</span>
+          )}
           {me.department && (
             <>
               {" "}
