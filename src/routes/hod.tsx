@@ -115,9 +115,7 @@ function HodPortal() {
           {view === "sessional" && <SessionalReportsView ay={ay} onBack={() => setView("home")} />}
           {view === "syllabus" && <SyllabusProgressView branch={branch} ay={ay} onBack={() => setView("home")} />}
           {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
-          {view === "lessons" && <LessonsReviewView ay={ay} onBack={() => setView("home")} />}
           {view === "marks" && <MarksApprovalsView ay={ay} onBack={() => setView("home")} />}
-          {view === "leave" && <LeaveApprovalsView onBack={() => setView("home")} />}
         </fieldset>
       </div>
     </PortalShell>
