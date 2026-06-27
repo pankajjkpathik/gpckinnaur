@@ -4,6 +4,7 @@ import { LogOut, ArrowLeft, MessageSquare, FileSpreadsheet } from "lucide-react"
 import { useQuery } from "@tanstack/react-query";
 import { staffLogout } from "@/lib/auth.functions";
 import { unreadCount } from "@/lib/messages.functions";
+import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
 
 export function portalMeta(title: string) {
   return {
