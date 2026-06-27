@@ -152,9 +152,14 @@ function StudentDashboard() {
             <button onClick={logout} className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
               Logout
             </button>
-            <div className="w-9 h-9 rounded-full bg-[#7b1f4c] text-white flex items-center justify-center font-bold text-sm">
-              {initials}
-            </div>
+            {me.image_url ? (
+              <img src={me.image_url} alt={me.name} className="w-9 h-9 rounded-full object-cover border-2 border-[#7b1f4c]/40" />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-[#7b1f4c] text-white flex items-center justify-center font-bold text-sm">
+                {initials}
+              </div>
+            )}
+            <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-gray-700">{me.name?.toUpperCase()}</span>
           </div>
         </div>
       </header>
@@ -263,7 +268,7 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, {me.name?.split(" ")[0] ?? "Student"}</h1>
+      <h1 className="text-2xl font-bold text-gray-800">Welcome, {me.name ? me.name.toUpperCase() : "STUDENT"}</h1>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (

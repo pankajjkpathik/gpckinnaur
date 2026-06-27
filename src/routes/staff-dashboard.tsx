@@ -24,6 +24,7 @@ import {
   submissionCounts,
 } from "@/lib/submissions.functions";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
 
 export const Route = createFileRoute("/staff-dashboard")({
   head: () => ({
@@ -93,11 +94,19 @@ function StaffDashboard() {
         </div>
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold">
-              {me.username?.[0]?.toUpperCase()}
-            </div>
+            {avatarUrl(me as any) ? (
+              <img
+                src={avatarUrl(me as any)!}
+                alt={displayName(me as any)}
+                className="w-10 h-10 rounded-full object-cover border-2 border-[color:var(--gold)] shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold shrink-0">
+                {initialsOf((me as any).name || me.username)}
+              </div>
+            )}
             <div className="min-w-0">
-              <p className="font-semibold truncate">{me.username}</p>
+              <p className="font-semibold truncate uppercase text-sm leading-tight">{displayName(me as any)}</p>
               <span className={`text-[10px] px-2 py-0.5 rounded ${roleBadge[role] ?? "bg-slate-200 text-slate-700"}`}>
                 {role}
               </span>
@@ -339,7 +348,7 @@ function DashboardHome({ me, counts }: any) {
   return (
     <div className="space-y-6">
       <div className="bg-white border rounded-lg p-5">
-        <h2 className="text-xl font-bold text-[color:var(--navy)]">Welcome back, {me.username}</h2>
+        <h2 className="text-xl font-bold text-[color:var(--navy)]">Welcome back, {((me as any).name || me.username).toString().toUpperCase()}</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Role: <span className="font-medium capitalize">{me.role}</span>
           {((me as any).extraRoles ?? []).length > 0 && (
