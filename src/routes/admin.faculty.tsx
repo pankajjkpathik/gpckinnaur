@@ -111,6 +111,13 @@ function FacultyManagement() {
                 {rows.map((f: any) => (
                   <tr key={f.id} className="border-t">
                     <td className="px-4 py-3">
+                      {facultyPhoto(f.name) ? (
+                        <img src={facultyPhoto(f.name)!} alt={f.name ?? ""} className="w-10 h-10 rounded-full object-cover border" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">—</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
                       <p className="font-medium">{f.name || <span className="text-gray-400 italic">(no name)</span>}</p>
                       <p className="text-xs text-gray-400">
                         @{f.username} · {f.role}
