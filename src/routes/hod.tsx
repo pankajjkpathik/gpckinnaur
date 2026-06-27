@@ -208,33 +208,6 @@ function HomeView({ me, deptLabel, onNav }: { me: any; deptLabel: string; onNav:
         ))}
       </div>
 
-      {/* Approval quick-access */}
-      <div className="bg-white border rounded-lg p-4">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Pending Approvals</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => onNav("lessons")}
-            className="text-xs border rounded px-3 py-1.5 hover:bg-gray-50 text-gray-700 inline-flex items-center gap-1.5"
-          >
-            <FileText className="w-3.5 h-3.5" /> Lesson Reviews{" "}
-            {q.data?.pending_lessons ? `(${q.data.pending_lessons})` : ""}
-          </button>
-          <button
-            onClick={() => onNav("marks")}
-            className="text-xs border rounded px-3 py-1.5 hover:bg-gray-50 text-gray-700 inline-flex items-center gap-1.5"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" /> Marks Approvals{" "}
-            {q.data?.pending_marks ? `(${q.data.pending_marks})` : ""}
-          </button>
-          <button
-            onClick={() => onNav("leave")}
-            className="text-xs border rounded px-3 py-1.5 hover:bg-gray-50 text-gray-700 inline-flex items-center gap-1.5"
-          >
-            <Calendar className="w-3.5 h-3.5" /> Leave Approvals{" "}
-            {q.data?.pending_leaves ? `(${q.data.pending_leaves})` : ""}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
