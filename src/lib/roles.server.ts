@@ -17,6 +17,9 @@ export async function requireStaff(): Promise<StaffSession> {
 
 export async function requireRole(roles: StaffRole[]): Promise<StaffSession> {
   const me = await requireStaff();
-  if (!roles.includes(me.role)) throw new Error("Forbidden: insufficient role");
+  const held = [me.role, ...(me.extraRoles ?? [])];
+  if (!held.some((r) => roles.includes(r as StaffRole))) {
+    throw new Error("Forbidden: insufficient role");
+  }
   return me;
 }
