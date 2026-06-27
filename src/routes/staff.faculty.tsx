@@ -84,7 +84,7 @@ function FacultyPage() {
           <Card name="Er. Pankaj Chatanta" designation="Lecturer (SWF)" qual="B.Tech Mech" exp="10+ yrs" />
         </Section>
         <Section title="Workshop">
-          <Card name="Workshop Superintendent" designation="Er. Harnem Dadhwal" qual="—" />
+          <Card name="Er. Harnem DadhwalWorkshop Superintendent" designation="Workshop Superintendent" qual="—" />
         </Section>
         <Section title="Applied Science & Humanities">
           <Card name="HOD-ASH" designation="Vacant" qual="—" />
