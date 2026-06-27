@@ -10,6 +10,8 @@ import {
   listCirculars,
   createCircular,
   deleteCircular,
+  principalMonthlyAttendance,
+  principalFinalSessional,
 } from "@/lib/principal.functions";
 import {
   principalListStudents,
@@ -17,7 +19,7 @@ import {
   createDisciplinaryAction,
   deleteDisciplinaryAction,
 } from "@/lib/assignments.functions";
-import { listPlacements } from "@/lib/tpo.functions";
+import { listPlacements, hodDepartmentOverview } from "@/lib/tpo.functions";
 import {
   listParentMessages,
   markParentMessageRead,
@@ -41,8 +43,10 @@ import {
   Shield,
   FileText,
   Video,
+  BarChart3,
 } from "lucide-react";
 import { BarStats, PieStats } from "@/components/portal/Charts";
+import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/principal")({
@@ -72,7 +76,8 @@ type View =
   | "messages"
   | "ptm"
   | "circulars"
-  | "disciplinary";
+  | "disciplinary"
+  | "department";
 
 function BackBtn({ onClick }: { onClick: () => void }) {
   return (
@@ -135,12 +140,7 @@ function PrincipalPortal() {
 
       <main className="container mx-auto px-4 py-6">
         {view === "home" && <HomeView year={year} onNav={setView} />}
-        {view === "attendance" && (
-          <>
-            <BackBtn onClick={() => setView("home")} />
-            <AttendanceMonitor />
-          </>
-        )}
+        {view === "attendance" && <AttendanceReportsView year={year} onBack={() => setView("home")} />}
         {view === "sessional" && (
           <>
             <BackBtn onClick={() => setView("home")} />
@@ -169,6 +169,7 @@ function PrincipalPortal() {
             <Disciplinary />
           </>
         )}
+        {view === "department" && <DepartmentOverviewView year={year} onBack={() => setView("home")} />}
       </main>
     </div>
   );
@@ -184,6 +185,14 @@ function HomeView({ year, onNav }: { year: string; onNav: (v: View) => void }) {
 
   const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View; badge?: number }[] =
     [
+      {
+        icon: BarChart3,
+        label: "Department Overview",
+        desc: "Department-wise stats & analytics",
+        color: "bg-[#5b1138]",
+        border: "border-[#5b1138]",
+        view: "department",
+      },
       {
         icon: ClipboardCheck,
         label: "Attendance Reports",
@@ -1210,4 +1219,471 @@ function Disciplinary() {
       )}
     </div>
   );
+}
+
+// ─── DEPARTMENT OVERVIEW (read-only, with department dropdown) ────────────────
+function DepartmentOverviewView({ year, onBack }: { year: string; onBack: () => void }) {
+  const [branch, setBranch] = useState("");
+  const q = useQuery({
+    enabled: !!branch,
+    queryKey: ["principal-dept-overview", branch, year],
+    queryFn: () => hodDepartmentOverview({ data: { branch, academic_year: year } }),
+  });
+
+  const BRANCHES = [
+    { value: "civil", label: "Civil Engineering" },
+    { value: "mechanical", label: "Mechanical Engineering" },
+    { value: "applied_science", label: "Applied Sciences" },
+  ];
+  const selectedLabel = BRANCHES.find((b) => b.value === branch)?.label;
+
+  return (
+    <div className="space-y-5">
+      <BackBtn onClick={onBack} />
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-2xl font-bold text-gray-800">
+          Department Overview{selectedLabel ? ` — ${selectedLabel}` : ""}
+        </h1>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-500">Department</label>
+          <select
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+            className="border rounded px-3 py-2 text-sm bg-white min-w-[200px]"
+          >
+            <option value="">Select a department…</option>
+            {BRANCHES.map((b) => (
+              <option key={b.value} value={b.value}>
+                {b.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {!branch ? (
+        <div className="bg-white border rounded-lg p-12 text-center">
+          <p className="text-gray-500 text-sm">
+            Please select a department from the dropdown above to view its overview.
+          </p>
+        </div>
+      ) : q.isLoading || !q.data ? (
+        <p className="text-sm text-gray-400">Loading department analytics…</p>
+      ) : (
+        <DepartmentOverviewPanel d={q.data as any} />
+      )}
+    </div>
+  );
+}
+
+// ─── ATTENDANCE REPORTS (read-only, department-wise) ──────────────────────────
+function AttendanceReportsView({ year, onBack }: { year: string; onBack: () => void }) {
+  const [branch, setBranch] = useState("");
+  const [sem, setSem] = useState<number | "">("");
+  const [tab, setTab] = useState<"monthly" | "final-att" | "sessional">("monthly");
+  const today = new Date().toISOString().slice(0, 10);
+  const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const [from, setFrom] = useState(monthAgo);
+  const [to, setTo] = useState(today);
+
+  const BRANCHES = [
+    { value: "civil", label: "Civil Engineering" },
+    { value: "mechanical", label: "Mechanical Engineering" },
+    { value: "applied_science", label: "Applied Sciences" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="flex items-center justify-between gap-3 flex-wrap print:hidden">
+        <h1 className="text-2xl font-bold text-gray-800">Attendance &amp; Sessional Reports</h1>
+        <button
+          onClick={() => window.print()}
+          className="border px-3 py-2 rounded text-sm inline-flex items-center gap-1.5"
+        >
+          <Download className="w-4 h-4" /> Print
+        </button>
+      </div>
+
+      <div className="bg-white border rounded-lg p-4 print:hidden">
+        <div className="grid sm:grid-cols-4 gap-3 text-sm">
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Department</label>
+            <select
+              value={branch}
+              onChange={(e) => setBranch(e.target.value)}
+              className="border rounded w-full px-3 py-2 bg-white"
+            >
+              <option value="">Select…</option>
+              {BRANCHES.map((b) => (
+                <option key={b.value} value={b.value}>
+                  {b.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Semester</label>
+            <select
+              value={sem}
+              onChange={(e) => setSem(e.target.value ? Number(e.target.value) : "")}
+              className="border rounded w-full px-3 py-2 bg-white"
+            >
+              <option value="">Select…</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>
+                  Sem {n}
+                </option>
+              ))}
+            </select>
+          </div>
+          {tab === "monthly" && (
+            <>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">From</label>
+                <input
+                  type="date"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  className="border rounded w-full px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">To</label>
+                <input
+                  type="date"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  className="border rounded w-full px-3 py-2"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex border rounded overflow-hidden mt-4 text-sm">
+          {(
+            [
+              { k: "monthly", label: "Monthly Attendance" },
+              { k: "final-att", label: "Final Attendance" },
+              { k: "sessional", label: "Final Sessional Report" },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.k}
+              onClick={() => setTab(t.k)}
+              className={`flex-1 py-2 font-medium ${tab === t.k ? "bg-[#7b1f4c] text-white" : "bg-gray-50 text-gray-600"}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {!branch || !sem ? (
+        <div className="bg-white border rounded-lg p-12 text-center">
+          <p className="text-gray-500 text-sm">Select a department and semester to view the report.</p>
+        </div>
+      ) : tab === "monthly" ? (
+        <MonthlyAttendanceReport branch={branch} sem={sem as number} from_date={from} to_date={to} />
+      ) : tab === "final-att" ? (
+        <MonthlyAttendanceReport
+          branch={branch}
+          sem={sem as number}
+          from_date={`${year.slice(0, 4)}-08-01`}
+          to_date={`${Number(year.slice(0, 4)) + 1}-07-31`}
+          isFinal
+        />
+      ) : (
+        <SessionalReport branch={branch} sem={sem as number} academic_year={year} />
+      )}
+    </div>
+  );
+}
+
+function MonthlyAttendanceReport({
+  branch,
+  sem,
+  from_date,
+  to_date,
+  isFinal,
+}: {
+  branch: string;
+  sem: number;
+  from_date: string;
+  to_date: string;
+  isFinal?: boolean;
+}) {
+  const q = useQuery({
+    queryKey: ["principal-monthly-att", branch, sem, from_date, to_date],
+    queryFn: () => principalMonthlyAttendance({ data: { branch, semester: sem, from_date, to_date } }),
+  });
+
+  if (q.isLoading || !q.data) {
+    return <p className="text-sm text-gray-400 text-center py-8">Loading…</p>;
+  }
+  const { students, subjects, cells } = q.data as any;
+  const theory = (subjects as any[]).filter((s) => s.kind === "theory");
+  const practical = (subjects as any[]).filter((s) => s.kind === "practical");
+
+  function rowSummary(sid: number, subset: any[]) {
+    let p = 0,
+      t = 0;
+    subset.forEach((sub) => {
+      const c = cells?.[sid]?.[sub.id];
+      if (c) {
+        p += c.present;
+        t += c.total;
+      }
+    });
+    const pct = t ? Math.round((p / t) * 1000) / 10 : 0;
+    return { p, t, pct, fine: pct < 75 ? Math.round((75 - pct) * 10) : 0 };
+  }
+
+  return (
+    <div className="bg-white border rounded-lg p-4 overflow-x-auto">
+      <div className="text-center mb-3">
+        <p className="font-bold text-gray-800">OFFICE OF THE PRINCIPAL</p>
+        <p className="font-bold text-gray-800">GOVT. POLYTECHNIC KINNAUR CAMP AT ROHRU</p>
+        <p className="text-sm mt-1">
+          {isFinal ? "FINAL " : ""}ATTENDANCE POSITION OF {sem}
+          {ordinalSuffix(sem)} SEM {branch.toUpperCase()} BRANCH
+          <span className="text-xs text-gray-500">
+            {" "}
+            · {from_date} to {to_date}
+          </span>
+        </p>
+      </div>
+      <table className="w-full text-xs border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
+            <th rowSpan={2} className="border px-2 py-1">
+              S.No
+            </th>
+            <th rowSpan={2} className="border px-2 py-1 text-left">
+              Name
+            </th>
+            {theory.length > 0 && (
+              <th colSpan={theory.length} className="border px-2 py-1">
+                THEORY
+              </th>
+            )}
+            {practical.length > 0 && (
+              <th colSpan={practical.length} className="border px-2 py-1">
+                PRACTICAL
+              </th>
+            )}
+            <th rowSpan={2} className="border px-2 py-1">
+              TOTAL
+            </th>
+            <th rowSpan={2} className="border px-2 py-1">
+              %age
+            </th>
+            <th rowSpan={2} className="border px-2 py-1">
+              FINE
+              <br />
+              RUPEES
+            </th>
+          </tr>
+          <tr className="bg-gray-50">
+            {theory.map((s: any) => (
+              <th key={s.id} className="border px-1 py-1 font-mono">
+                {s.code}
+              </th>
+            ))}
+            {practical.map((s: any) => (
+              <th key={s.id} className="border px-1 py-1 font-mono">
+                {s.code}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {(students as any[]).map((stud, i) => {
+            const all = rowSummary(stud.id, [...theory, ...practical]);
+            return (
+              <tr key={stud.id} className={all.pct < 75 ? "bg-rose-50" : ""}>
+                <td className="border px-2 py-1 text-center">{i + 1}</td>
+                <td className="border px-2 py-1">{stud.name}</td>
+                {theory.map((s: any) => {
+                  const c = cells?.[stud.id]?.[s.id];
+                  return (
+                    <td key={s.id} className="border px-1 py-1 text-center">
+                      {c ? `${c.present}/${c.total}` : "-"}
+                    </td>
+                  );
+                })}
+                {practical.map((s: any) => {
+                  const c = cells?.[stud.id]?.[s.id];
+                  return (
+                    <td key={s.id} className="border px-1 py-1 text-center">
+                      {c ? `${c.present}/${c.total}` : "-"}
+                    </td>
+                  );
+                })}
+                <td className="border px-2 py-1 text-center font-semibold">
+                  {all.p}/{all.t}
+                </td>
+                <td className="border px-2 py-1 text-center font-semibold">{all.pct}%</td>
+                <td className="border px-2 py-1 text-center text-rose-600">{all.fine > 0 ? all.fine : ""}</td>
+              </tr>
+            );
+          })}
+          {students.length === 0 && (
+            <tr>
+              <td colSpan={6 + theory.length + practical.length} className="border px-2 py-6 text-center text-gray-400">
+                No students found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <div className="flex justify-between mt-8 text-xs px-2">
+        <p className="font-bold">Class Incharge</p>
+        <p className="font-bold">HOD</p>
+        <p className="font-bold">
+          Principal
+          <br />
+          <span className="font-normal text-gray-500">GP Kinnaur</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SessionalReport({ branch, sem, academic_year }: { branch: string; sem: number; academic_year: string }) {
+  const q = useQuery({
+    queryKey: ["principal-final-sessional", branch, sem, academic_year],
+    queryFn: () => principalFinalSessional({ data: { branch, semester: sem, academic_year } }),
+  });
+
+  if (q.isLoading || !q.data) {
+    return <p className="text-sm text-gray-400 text-center py-8">Loading…</p>;
+  }
+  const { students, theory, practical, marks } = q.data as any;
+
+  function SubReport({ heading, subjects }: { heading: string; subjects: any[] }) {
+    if (subjects.length === 0) return null;
+    // Common max marks per subject in your format (Internal Assessment).
+    // Display 40 max / 16 min as in the reference; these can be configured later.
+    const maxPerSubject = 40;
+    const minPerSubject = 16;
+    const grandMax = maxPerSubject * subjects.length;
+
+    return (
+      <div className="overflow-x-auto mb-8">
+        <div className="text-center mb-3">
+          <p className="font-bold text-gray-800">CONSOLIDATED DETAIL OF INTERNAL ASSESSMENT ({heading})</p>
+          <p className="text-sm mt-1">
+            <span className="font-semibold">Institute:</span> GOVT. POLYTECHNIC KINNAUR ·
+            <span className="font-semibold ml-2">Semester:</span> {sem}
+            {ordinalSuffix(sem)} ·<span className="font-semibold ml-2">Branch:</span> {branch.toUpperCase()} ·
+            <span className="font-semibold ml-2">Session:</span> {academic_year}
+          </p>
+        </div>
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="bg-gray-50">
+              <th rowSpan={3} className="border px-2 py-1">
+                Sr.
+                <br />
+                No
+              </th>
+              <th rowSpan={3} className="border px-2 py-1">
+                Board Roll No
+              </th>
+              <th rowSpan={3} className="border px-2 py-1 text-left">
+                Name of the Candidate
+              </th>
+              <th colSpan={subjects.length} className="border px-2 py-1">
+                Name of the Subjects
+              </th>
+              <th rowSpan={3} className="border px-2 py-1">
+                Grand
+                <br />
+                Total
+              </th>
+            </tr>
+            <tr className="bg-gray-50">
+              {subjects.map((s: any) => (
+                <th key={s.id} className="border px-1 py-1 font-mono">
+                  {s.code}
+                </th>
+              ))}
+            </tr>
+            <tr className="bg-gray-50">
+              {subjects.map((s: any) => (
+                <th key={s.id} className="border px-1 py-1 text-[10px] text-gray-500">
+                  Max {maxPerSubject} / Min {minPerSubject}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {(students as any[]).map((stud, i) => {
+              const studentMarks = marks?.[stud.id] ?? {};
+              const total = subjects.reduce((sum: number, s: any) => sum + (studentMarks[s.id] ?? 0), 0);
+              return (
+                <tr key={stud.id}>
+                  <td className="border px-2 py-1 text-center">{i + 1}</td>
+                  <td className="border px-2 py-1 font-mono">{stud.enrollment_no}</td>
+                  <td className="border px-2 py-1">{stud.name}</td>
+                  {subjects.map((s: any) => {
+                    const v = studentMarks[s.id];
+                    const fail = v != null && v < minPerSubject;
+                    return (
+                      <td
+                        key={s.id}
+                        className={`border px-1 py-1 text-center ${fail ? "text-rose-600 font-semibold" : ""}`}
+                      >
+                        {v != null ? v.toFixed(1) : "-"}
+                      </td>
+                    );
+                  })}
+                  <td className="border px-2 py-1 text-center font-semibold">{total.toFixed(1)}</td>
+                </tr>
+              );
+            })}
+            {students.length === 0 && (
+              <tr>
+                <td colSpan={4 + subjects.length} className="border px-2 py-6 text-center text-gray-400">
+                  No students found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+          <tfoot>
+            <tr className="bg-gray-50 font-bold">
+              <td colSpan={3 + subjects.length} className="border px-2 py-1 text-right">
+                Grand Max:
+              </td>
+              <td className="border px-2 py-1 text-center">{grandMax}</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div className="flex justify-between mt-4 text-xs px-2">
+          <p>Prepared by: ____________</p>
+          <p>Checked by: ____________</p>
+          <p className="font-bold">Principal</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border rounded-lg p-4">
+      <SubReport heading="Theory" subjects={theory} />
+      <SubReport heading="Practical" subjects={practical} />
+      {theory.length === 0 && practical.length === 0 && (
+        <p className="text-sm text-gray-400 text-center py-8">No subjects configured for this branch/semester.</p>
+      )}
+    </div>
+  );
+}
+
+function ordinalSuffix(n: number) {
+  if (n % 10 === 1 && n !== 11) return "st";
+  if (n % 10 === 2 && n !== 12) return "nd";
+  if (n % 10 === 3 && n !== 13) return "rd";
+  return "th";
 }
