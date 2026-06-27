@@ -2,6 +2,8 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { Breadcrumb, PageLayout, PageHeader } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
+import { facultyPhoto } from "@/lib/faculty-photos";
+
 
 export const Route = createFileRoute("/departments/$id")({
   head: ({ params }) => {
