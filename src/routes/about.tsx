@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
+import pankajpathik from "@/assets/faculty/pankajpathik.png.asset.json";
 
 export const Route = createFileRoute("/about")({
   head: () => pageMeta({
@@ -74,7 +75,7 @@ function About() {
           <section className="bg-white border rounded-lg p-6">
             <h2 className="text-2xl font-bold text-[color:var(--navy)] mb-4">Principal&apos;s Message</h2>
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold shrink-0">PKP</div>
+              <img src={pankajpathik.url} alt="Sh. Pankaj K. Pathik" className="w-16 h-16 rounded-full object-cover border-2 border-[color:var(--gold)] shrink-0" />
               <div>
                 <p className="font-semibold text-[color:var(--navy)]">Sh. Pankaj K. Pathik</p>
                 <p className="text-xs text-muted-foreground mb-3">Principal · MCA, CCNA</p>
