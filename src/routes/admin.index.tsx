@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
-import { adminRoles } from "@/lib/roles";
+import { adminRoles, hasRole } from "@/lib/roles";
 import { adminListStaff, adminListStudents } from "@/lib/admin.functions";
 import {
   listClasses,
@@ -103,7 +103,7 @@ function AdminHub() {
   useEffect(() => {
     if (isLoading) return;
     if (!me) nav({ to: "/staff-login" });
-    else if (!adminRoles.includes(me.role as any)) nav({ to: "/staff-dashboard" });
+    else if (!hasRole(me, adminRoles)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
   const [view, setView] = useState<View>("home");
