@@ -112,7 +112,9 @@ function HodPortal() {
           {view === "attendance" && <AttendanceReportsView onBack={() => setView("home")} />}
           {view === "sessional" && <SessionalReportsView ay={ay} onBack={() => setView("home")} />}
           {view === "syllabus" && <SyllabusProgressView branch={branch} ay={ay} onBack={() => setView("home")} />}
-          {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
+          {view === "timetable" && (
+            <TimetableView branch={branch} ay={ay} editable={!isViewer} onBack={() => setView("home")} />
+          )}
           {view === "marks" && <MarksApprovalsView ay={ay} onBack={() => setView("home")} />}
         </fieldset>
       </div>
