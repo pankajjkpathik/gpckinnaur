@@ -423,6 +423,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
             <input
               type="date"
               value={date}
+              min={today}
               onChange={(e) => {
                 setDate(e.target.value);
                 setLoaded(false);
@@ -430,6 +431,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
               className="border rounded w-full px-3 py-2"
             />
           </div>
+
           <button
             onClick={() => setLoaded(true)}
             disabled={!asgId || !pno}
