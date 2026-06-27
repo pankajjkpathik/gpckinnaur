@@ -1,25 +1,31 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Printer, ArrowLeft } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles } from "@/lib/roles";
 import {
-  listPeriods, listSubjects, listStaffByRole, listTimetable, upsertTimetableSlot, publishTimetable,
-  bulkImportTimetable, bulkDeleteTimetable,
+  listPeriods,
+  listSubjects,
+  listStaffByRole,
+  listTimetable,
+  upsertTimetableSlot,
+  publishTimetable,
 } from "@/lib/academic.functions";
-import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
+import { TimetableGrid } from "@/components/portal/TimetableGrid";
 
 export const Route = createFileRoute("/admin/timetable")({
   head: () => portalMeta("Timetable Builder"),
   component: TimetablePage,
 });
 
-const DAYS = [
-  { v: 1, label: "Mon" }, { v: 2, label: "Tue" }, { v: 3, label: "Wed" },
-  { v: 4, label: "Thu" }, { v: 5, label: "Fri" }, { v: 6, label: "Sat" },
-];
+const BRANCH_LABELS: Record<string, string> = {
+  civil: "Civil Engineering",
+  mechanical: "Mechanical Engineering",
+  applied_science: "Applied Sciences",
+};
+const ORDINAL = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
 
 function TimetablePage() {
   const nav = useNavigate();
@@ -31,13 +37,21 @@ function TimetablePage() {
     else if (!adminRoles.includes(me.role as any)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
-  const [branch, setBranch] = useState("civil");
-  const [sem, setSem] = useState(1);
+  const [branch, setBranch] = useState("mechanical");
+  const [sem, setSem] = useState(3);
   const [year, setYear] = useState("2025-26");
 
   const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods(), enabled: !!me });
-  const subjQ = useQuery({ queryKey: ["subjects-of", branch, sem], queryFn: () => listSubjects({ data: { branch, semester: sem } as any }), enabled: !!me });
-  const staffQ = useQuery({ queryKey: ["staff-all"], queryFn: () => listStaffByRole({ data: {} as any }), enabled: !!me });
+  const subjQ = useQuery({
+    queryKey: ["subjects-of", branch, sem],
+    queryFn: () => listSubjects({ data: { branch, semester: sem } as any }),
+    enabled: !!me,
+  });
+  const staffQ = useQuery({
+    queryKey: ["staff-all"],
+    queryFn: () => listStaffByRole({ data: {} as any }),
+    enabled: !!me,
+  });
   const ttQ = useQuery({
     queryKey: ["timetable", branch, sem, year],
     queryFn: () => listTimetable({ data: { branch, semester: sem, academic_year: year } }),
@@ -45,126 +59,119 @@ function TimetablePage() {
   });
 
   const save = useMutation({
-    mutationFn: (d: any) => upsertTimetableSlot({ data: d }),
+    mutationFn: (d: any) => upsertTimetableSlot({ data: { branch, semester: sem, academic_year: year, ...d } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["timetable"] }),
   });
   const pub = useMutation({
-    mutationFn: (p: boolean) => publishTimetable({ data: { branch, semester: sem, academic_year: year, published: p } }),
+    mutationFn: (p: boolean) =>
+      publishTimetable({ data: { branch, semester: sem, academic_year: year, published: p } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["timetable"] }),
   });
-
-  const grid = useMemo(() => {
-    const map = new Map<string, any>();
-    (ttQ.data ?? []).forEach((s: any) => map.set(`${s.day_of_week}-${s.period_no}`, s));
-    return map;
-  }, [ttQ.data]);
 
   const isPublished = (ttQ.data ?? []).some((s: any) => s.published);
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
+  const classLabel = `${BRANCH_LABELS[branch] ?? branch} - ${ORDINAL[sem]} Semester`;
+
   return (
     <PortalShell title="Timetable Builder" subtitle="Admin · Weekly Schedule" me={me as any} accent="rose">
       <div className="container mx-auto px-4 py-6 space-y-4">
-        <div className="bg-white border rounded p-3 flex flex-wrap gap-2 items-center">
-          <select value={branch} onChange={(e) => setBranch(e.target.value)} className="border rounded px-2 py-1.5 text-sm bg-white">
-            {["civil","mechanical","applied_science"].map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
-          <select value={sem} onChange={(e) => setSem(Number(e.target.value))} className="border rounded px-2 py-1.5 text-sm bg-white">
-            {[1,2,3,4,5,6].map((s) => <option key={s} value={s}>Sem {s}</option>)}
-          </select>
-          <input value={year} onChange={(e) => setYear(e.target.value)} pattern="\d{4}-\d{2}" className="border rounded px-2 py-1.5 text-sm w-24" />
-          <span className={`text-xs px-2 py-1 rounded ml-auto ${isPublished ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-            {isPublished ? <>Published <Eye className="w-3 h-3 inline" /></> : <>Draft <EyeOff className="w-3 h-3 inline" /></>}
-          </span>
-          <button disabled={pub.isPending} onClick={() => pub.mutate(!isPublished)} className="bg-rose-700 text-white px-3 py-1.5 rounded text-sm font-semibold disabled:opacity-50">
-            {isPublished ? "Unpublish" : "Publish"}
-          </button>
-        </div>
-
-        <div className="flex justify-end">
-          <BulkOpsBar
-            sample={[
-              { branch: "civil", semester: 3, day_of_week: "Mon", period_no: 1, subject_code: "CE301", username: "prof.sharma", room: "R-101", academic_year: "2025-26" },
-              { branch: "civil", semester: 3, day_of_week: "Tue", period_no: 2, subject_code: "CE302", username: "prof.kumar", room: "R-101", academic_year: "2025-26" },
-            ]}
-            sampleName="timetable-sample"
-            onImport={async (rows) => {
-              const r = await bulkImportTimetable({ data: { rows } });
-              qc.invalidateQueries({ queryKey: ["timetable"] });
-              return r;
-            }}
-            selectedCount={(ttQ.data ?? []).length}
-            onBulkDelete={async () => {
-              const ids = (ttQ.data ?? []).map((s: any) => s.id);
-              if (!ids.length) return;
-              await bulkDeleteTimetable({ data: { ids } });
-              qc.invalidateQueries({ queryKey: ["timetable"] });
-            }}
-          />
-        </div>
-
-        {save.error && <p className="text-xs text-destructive bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>}
-
-        <div className="bg-white border rounded overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead className="bg-secondary">
-              <tr>
-                <th className="px-2 py-2 text-left">Period</th>
-                {DAYS.map((d) => <th key={d.v} className="px-2 py-2 text-left">{d.label}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {(periodsQ.data ?? []).map((p: any) => (
-                <tr key={p.id} className="border-t">
-                  <td className="px-2 py-2 bg-secondary/40">
-                    <div className="font-bold">{p.period_no}</div>
-                    <div className="text-[10px] text-muted-foreground">{p.start_time}–{p.end_time}</div>
-                    {p.label && <div className="text-[10px]">{p.label}</div>}
-                  </td>
-                  {DAYS.map((d) => {
-                    const slot = grid.get(`${d.v}-${p.period_no}`);
-                    return (
-                      <td key={d.v} className="px-1 py-1 align-top min-w-[140px]">
-                        <SlotCell
-                          slot={slot}
-                          period={p}
-                          day={d.v}
-                          subjects={subjQ.data ?? []}
-                          staff={staffQ.data ?? []}
-                          onSave={(payload: any) => save.mutate({ branch, semester: sem, day_of_week: d.v, period_no: p.period_no, academic_year: year, ...payload })}
-                        />
-                      </td>
-                    );
-                  })}
-                </tr>
+        <div className="flex items-center justify-between gap-3 flex-wrap print:hidden">
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-600 border rounded px-3 py-1.5 hover:bg-gray-50 bg-white"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Admin Console
+          </Link>
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={branch}
+              onChange={(e) => setBranch(e.target.value)}
+              className="border rounded px-3 py-2 text-sm bg-white"
+            >
+              {Object.keys(BRANCH_LABELS).map((b) => (
+                <option key={b} value={b}>
+                  {BRANCH_LABELS[b]}
+                </option>
               ))}
-              {(periodsQ.data ?? []).length === 0 && <tr><td colSpan={7} className="text-center py-6 text-muted-foreground">Configure Periods Master first.</td></tr>}
-            </tbody>
-          </table>
+            </select>
+            <select
+              value={sem}
+              onChange={(e) => setSem(Number(e.target.value))}
+              className="border rounded px-3 py-2 text-sm bg-white"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                <option key={s} value={s}>
+                  {ORDINAL[s]} Sem
+                </option>
+              ))}
+            </select>
+            <input
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              pattern="\d{4}-\d{2}"
+              className="border rounded px-3 py-2 text-sm w-24"
+            />
+            <span
+              className={`text-xs px-2 py-1 rounded ${isPublished ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
+            >
+              {isPublished ? (
+                <>
+                  Published <Eye className="w-3 h-3 inline" />
+                </>
+              ) : (
+                <>
+                  Draft <EyeOff className="w-3 h-3 inline" />
+                </>
+              )}
+            </span>
+            <button
+              disabled={pub.isPending}
+              onClick={() => pub.mutate(!isPublished)}
+              className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold disabled:opacity-50"
+            >
+              {isPublished ? "Unpublish" : "Publish"}
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="border px-3 py-2 rounded text-sm inline-flex items-center gap-1.5"
+            >
+              <Printer className="w-4 h-4" /> Print
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
+          <p className="text-xs text-gray-400">
+            View and edit the weekly schedule for any class. Click any slot to edit. Effective from 01-08-2025.
+          </p>
+        </div>
+
+        {save.error && (
+          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>
+        )}
+
+        <div className="bg-white border rounded-lg p-4">
+          {(periodsQ.data ?? []).length === 0 ? (
+            <p className="text-center py-8 text-gray-400 text-sm">
+              Configure the Periods Master first (Admin → Periods).
+            </p>
+          ) : (
+            <TimetableGrid
+              periods={periodsQ.data as any}
+              slots={(ttQ.data ?? []) as any}
+              subjects={subjQ.data as any}
+              staff={staffQ.data as any}
+              editable
+              onSaveSlot={(p) => save.mutate(p)}
+              institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
+              classLine={classLabel}
+            />
+          )}
         </div>
       </div>
     </PortalShell>
-  );
-}
-
-function SlotCell({ slot, subjects, staff, onSave, period }: any) {
-  const [subjId, setSubjId] = useState<number | "">(slot?.subject_id ?? "");
-  const [staffId, setStaffId] = useState<number | "">(slot?.staff_id ?? "");
-  const [room, setRoom] = useState<string>(slot?.room ?? "");
-  if (period?.is_break) return <div className="text-center text-muted-foreground italic">{period.label || "Break"}</div>;
-  return (
-    <div className="space-y-1">
-      <select value={subjId} onChange={(e) => setSubjId(e.target.value ? Number(e.target.value) : "")} className="w-full border rounded px-1 py-0.5 bg-white">
-        <option value="">— subject —</option>
-        {subjects.map((s: any) => <option key={s.id} value={s.id}>{s.code}</option>)}
-      </select>
-      <select value={staffId} onChange={(e) => setStaffId(e.target.value ? Number(e.target.value) : "")} className="w-full border rounded px-1 py-0.5 bg-white">
-        <option value="">— faculty —</option>
-        {staff.filter((s: any) => ["faculty","hod"].includes(s.role)).map((s: any) => <option key={s.id} value={s.id}>{s.username}</option>)}
-      </select>
-      <input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="room" className="w-full border rounded px-1 py-0.5" />
-      <button onClick={() => onSave({ subject_id: subjId || null, staff_id: staffId || null, room: room || null })} className="w-full bg-rose-100 text-rose-800 rounded px-1 py-0.5 text-[10px] font-semibold">Save</button>
-    </div>
   );
 }
