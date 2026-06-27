@@ -19,7 +19,7 @@ import { NoticeBoard } from "@/components/home/NoticeBoard";
 import { PhotoGallery } from "@/components/home/PhotoGallery";
 import civilAsset from "@/assets/civil.png.asset.json";
 import mechAsset from "@/assets/mech.png.asset.json";
-import s6Asset from "@/assets/s1.png.asset.json";
+import s6Asset from "@/assets/s6.jpg.asset.json";
 import news1Asset from "@/assets/news/news1.jpg.asset.json";
 import news2Asset from "@/assets/news/news2.jpg.asset.json";
 import news3Asset from "@/assets/news/news3.jpg.asset.json";
@@ -412,7 +412,6 @@ function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)]">Photo Gallery</h2>
             <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-2 mb-3" />
             <p className="text-muted-foreground">Glimpses of campus life, labs, and events at GP Kinnaur.</p>
-
           </div>
           <PhotoGallery />
         </div>
@@ -421,7 +420,9 @@ function Home() {
       {/* Important Links Strip — responsive blocks */}
       <section className="w-full bg-slate-50 border-y py-6">
         <div className="container mx-auto px-4">
-          <p className="text-center text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold mb-3">Quick Links</p>
+          <p className="text-center text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold mb-3">
+            Quick Links
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
             {[
               { label: "Directorate of Technical Education", href: "https://techedu.hp.gov.in/", icon: "🏛️" },
@@ -439,8 +440,12 @@ function Home() {
                 rel="noopener noreferrer"
                 className="group flex flex-col items-center justify-center text-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-3 hover:border-[color:var(--gold)] hover:shadow transition"
               >
-                <span className="text-xl" aria-hidden>{l.icon}</span>
-                <span className="text-[11px] font-medium text-slate-700 group-hover:text-[color:var(--navy)] leading-tight">{l.label}</span>
+                <span className="text-xl" aria-hidden>
+                  {l.icon}
+                </span>
+                <span className="text-[11px] font-medium text-slate-700 group-hover:text-[color:var(--navy)] leading-tight">
+                  {l.label}
+                </span>
               </a>
             ))}
           </div>
