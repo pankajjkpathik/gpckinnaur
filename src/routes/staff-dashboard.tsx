@@ -24,6 +24,7 @@ import {
   submissionCounts,
 } from "@/lib/submissions.functions";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
 
 export const Route = createFileRoute("/staff-dashboard")({
   head: () => ({
