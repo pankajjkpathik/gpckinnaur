@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
-import { hodRoles } from "@/lib/roles";
+import { hodRoles, hasRole } from "@/lib/roles";
 import {
   hodDashboard,
   hodPendingLessonPlans,
@@ -77,7 +77,7 @@ function HodPortal() {
   useEffect(() => {
     if (isLoading) return;
     if (!me) nav({ to: "/staff-login" });
-    else if (!hodRoles.includes(me.role as any)) nav({ to: "/staff-dashboard" });
+    else if (!hasRole(me, hodRoles)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
   const [view, setView] = useState<View>("home");
