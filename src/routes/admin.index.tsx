@@ -11,7 +11,6 @@ import {
   CreditCard,
   CalendarCheck,
   Mail,
-  Upload,
   Download,
   BookMarked,
   ArrowLeft,
@@ -47,18 +46,7 @@ export const Route = createFileRoute("/admin/")({
   component: AdminHub,
 });
 
-type View =
-  | "home"
-  | "classes"
-  | "faculty"
-  | "students"
-  | "announcements"
-  | "fees"
-  | "ptm"
-  | "messages"
-  | "upload-lists"
-  | "credentials"
-  | "guide";
+type View = "home" | "classes" | "faculty" | "students" | "announcements" | "fees" | "ptm" | "messages";
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -133,9 +121,6 @@ function AdminHub() {
         {view === "fees" && <FeesView onBack={() => setView("home")} />}
         {view === "ptm" && <PTMView onBack={() => setView("home")} />}
         {view === "messages" && <MessagesView onBack={() => setView("home")} />}
-        {view === "upload-lists" && <UploadListsView onBack={() => setView("home")} />}
-        {view === "credentials" && <CredentialsView onBack={() => setView("home")} />}
-        {view === "guide" && <GuideView onBack={() => setView("home")} />}
       </div>
     </PortalShell>
   );
@@ -143,6 +128,8 @@ function AdminHub() {
 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
 function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
+  // One unified card grid. Every destination appears exactly once.
+  // `action` starting with "/" navigates to a route; otherwise switches in-page view.
   const cards: { icon: any; label: string; desc: string; color: string; border: string; action: View | string }[] = [
     {
       icon: LayoutGrid,
@@ -217,44 +204,69 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       action: "messages",
     },
     {
-      icon: Upload,
-      label: "Upload Lists",
-      desc: "Bulk import data via CSV",
-      color: "bg-orange-500",
-      border: "border-orange-500",
-      action: "upload-lists",
+      icon: BookMarked,
+      label: "Periods Master",
+      desc: "Define daily period slots",
+      color: "bg-indigo-500",
+      border: "border-indigo-500",
+      action: "/admin/periods",
     },
     {
-      icon: Download,
-      label: "Download Credentials",
-      desc: "Download Credential of various users",
-      color: "bg-gray-500",
-      border: "border-gray-500",
-      action: "credentials",
+      icon: BookOpen,
+      label: "Grading Scheme",
+      desc: "Configure grade boundaries",
+      color: "bg-teal-600",
+      border: "border-teal-600",
+      action: "/admin/grading",
     },
     {
       icon: BookMarked,
-      label: "Implementation Guide",
-      desc: "Technical setup instructions",
-      color: "bg-green-600",
-      border: "border-green-600",
-      action: "guide",
+      label: "Syllabus",
+      desc: "Upload syllabus PDFs",
+      color: "bg-amber-500",
+      border: "border-amber-500",
+      action: "/admin/syllabus",
     },
-  ];
-
-  // Extra system links
-  const systemLinks = [
-    { to: "/admin/subjects", label: "Subjects Master" },
-    { to: "/admin/periods", label: "Periods Master" },
-    { to: "/admin/grading", label: "Grading Scheme" },
-    { to: "/admin/syllabus", label: "Syllabus" },
-    { to: "/admin/calendar", label: "Academic Calendar" },
-    { to: "/admin/timetable", label: "Timetable Builder" },
-    { to: "/admin/assignments", label: "Faculty Assignments" },
-    { to: "/admin/report-templates", label: "Report Templates" },
-    { to: "/admin-users", label: "User Management" },
-    { to: "/admin/audit", label: "Audit Log" },
-    { to: "/messages", label: "Messages" },
+    {
+      icon: Calendar,
+      label: "Academic Calendar",
+      desc: "Upload calendar PDFs",
+      color: "bg-sky-500",
+      border: "border-sky-500",
+      action: "/admin/calendar",
+    },
+    {
+      icon: BookOpen,
+      label: "Faculty Assignments",
+      desc: "Assign subjects to faculty",
+      color: "bg-fuchsia-600",
+      border: "border-fuchsia-600",
+      action: "/admin/assignments",
+    },
+    {
+      icon: Download,
+      label: "Report Templates",
+      desc: "Manage report templates",
+      color: "bg-slate-500",
+      border: "border-slate-500",
+      action: "/admin/report-templates",
+    },
+    {
+      icon: Users,
+      label: "User Management",
+      desc: "Staff & student accounts",
+      color: "bg-gray-600",
+      border: "border-gray-600",
+      action: "/admin-users",
+    },
+    {
+      icon: BookMarked,
+      label: "Audit Log",
+      desc: "Review system activity",
+      color: "bg-stone-500",
+      border: "border-stone-500",
+      action: "/admin/audit",
+    },
   ];
 
   return (
@@ -279,18 +291,6 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
             }}
           />
         ))}
-      </div>
-
-      {/* System config quick links */}
-      <div className="bg-white border rounded-lg p-4">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">System Configuration</p>
-        <div className="flex flex-wrap gap-2">
-          {systemLinks.map((l) => (
-            <Link key={l.to} to={l.to} className="text-xs border rounded px-3 py-1.5 hover:bg-gray-50 text-gray-700">
-              {l.label}
-            </Link>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -554,8 +554,7 @@ function StudentsView({ onBack }: { onBack: () => void }) {
       <h1 className="text-2xl font-bold text-gray-800">Manage Students</h1>
       <p className="text-sm text-gray-500">View, edit, and manage student records.</p>
       <p className="text-xs text-gray-400 bg-gray-50 border rounded px-3 py-2">
-        New students must be added via the "Upload Lists" page to create their login accounts. This page is for viewing
-        and editing their details.
+        New students can be added on the dedicated Student Management page, which also creates their login accounts.
       </p>
       <Card className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
@@ -1053,181 +1052,6 @@ function MessagesView({ onBack }: { onBack: () => void }) {
               )}
             </tbody>
           </table>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-// ─── UPLOAD LISTS ─────────────────────────────────────────────────────────────
-function UploadListsView({ onBack }: { onBack: () => void }) {
-  const templates = ["Classes", "Subjects", "Faculty", "Students", "Timetable"];
-
-  return (
-    <div className="space-y-4">
-      <BackBtn onClick={onBack} />
-      <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Upload Lists</h1>
-        <p className="text-xs text-gray-400 mb-5">
-          Perform bulk data upload using CSV files. This is the only way to add new users.
-        </p>
-
-        <div className="border rounded p-4 mb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="w-5 h-5 text-[#7b1f4c]" />
-            <p className="font-semibold text-gray-800">Student List Upload</p>
-          </div>
-          <p className="text-xs text-gray-400 mb-3">
-            Upload the master student list here. This will create login accounts for all students and their parents.
-          </p>
-          <label className="block">
-            <div className="bg-[#7b1f4c] text-white w-full py-2.5 rounded font-semibold text-sm text-center cursor-pointer flex items-center justify-center gap-2">
-              <Upload className="w-4 h-4" /> Upload Students.csv
-            </div>
-            <input type="file" accept=".csv" className="hidden" />
-          </label>
-        </div>
-
-        <div className="border rounded p-4 mb-5">
-          <div className="flex items-center gap-2 mb-2">
-            <FileText className="w-4 h-4 text-gray-500" />
-            <p className="font-semibold text-gray-700 text-sm">Instructions</p>
-          </div>
-          <ol className="text-xs text-gray-500 space-y-1 list-decimal list-inside">
-            <li>Download the required CSV template below.</li>
-            <li>
-              Fill the sheet with your data. For the `loginEmail` in the student sheet, use a unique identifier (e.g.,
-              `firstname.id`). The `@gpkinnaur.app` suffix will be added automatically.
-            </li>
-            <li>Click the corresponding "Upload" button above and select your completed CSV file.</li>
-            <li>The system will create all users and records. Default password for all new accounts is `poly@123`.</li>
-          </ol>
-        </div>
-
-        <div>
-          <p className="font-semibold text-gray-700 mb-3">Download Templates</p>
-          <div className="grid grid-cols-5 gap-2">
-            {templates.map((t) => (
-              <button
-                key={t}
-                className="border rounded py-2 text-sm flex items-center justify-center gap-1.5 hover:bg-gray-50 text-gray-700"
-              >
-                <Download className="w-4 h-4" /> {t}
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-// ─── CREDENTIALS ──────────────────────────────────────────────────────────────
-function CredentialsView({ onBack }: { onBack: () => void }) {
-  const studentQ = useQuery({ queryKey: ["admin-students"], queryFn: () => adminListStudents() });
-  const staffQ = useQuery({ queryKey: ["admin-staff"], queryFn: () => adminListStaff() });
-
-  const downloadStudents = () => {
-    const rows = (studentQ.data ?? []).map((r: any) => [
-      r.enrollment_no,
-      r.name,
-      `${r.enrollment_no}@gpkinnaur.app`,
-      "poly@123",
-    ]);
-    exportCSV("student-credentials", ["Enrollment No", "Name", "Login Email", "Default Password"], rows);
-  };
-  const downloadFaculty = () => {
-    const rows = (staffQ.data ?? [])
-      .filter((r: any) => ["faculty", "hod", "principal"].includes(r.role))
-      .map((r: any) => [r.id, r.username, `${r.username}@gpkinnaur.app`, "poly@123"]);
-    exportCSV("faculty-credentials", ["ID", "Username", "Login Email", "Default Password"], rows);
-  };
-
-  const creds = [
-    { label: "Student Credentials", onClick: downloadStudents },
-    { label: "Parent Credentials", onClick: () => {} },
-    { label: "Faculty Credentials", onClick: downloadFaculty },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <BackBtn onClick={onBack} />
-      <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Download Credentials</h1>
-        <p className="text-xs text-gray-400 mb-2">After a bulk upload, download the login information for all users.</p>
-        <p className="text-sm text-gray-500 mb-5">
-          You can download separate CSV files for Students, Parents, and Faculty. Each file contains the user's name,
-          their login ID (email), and the default password (poly@123).
-        </p>
-        <div className="grid sm:grid-cols-3 gap-4">
-          {creds.map((c) => (
-            <div key={c.label} className="border rounded p-5 flex flex-col items-center gap-3">
-              <FileSpreadsheet className="w-10 h-10 text-[#7b1f4c]" />
-              <p className="font-semibold text-gray-800">{c.label}</p>
-              <button onClick={c.onClick} className="bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold text-sm">
-                Download CSV
-              </button>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-// ─── GUIDE ────────────────────────────────────────────────────────────────────
-function GuideView({ onBack }: { onBack: () => void }) {
-  const steps = [
-    {
-      step: "1",
-      title: "Upload Classes & Subjects",
-      desc: "Start with the 'Upload Lists' page. Download the Classes and Subjects templates, fill them in, and upload.",
-    },
-    {
-      step: "2",
-      title: "Add Faculty Accounts",
-      desc: "Go to User Management → Staff and create accounts for each faculty member. Assign roles (Faculty, HoD, Principal).",
-    },
-    {
-      step: "3",
-      title: "Assign Subjects to Faculty",
-      desc: "Go to Admin → Faculty Assignments and map each faculty to their subjects and classes for the academic year.",
-    },
-    {
-      step: "4",
-      title: "Build Timetable",
-      desc: "Go to Timetable Builder, select each class/semester, and fill in the weekly schedule by assigning subjects and faculty per period.",
-    },
-    {
-      step: "5",
-      title: "Upload Student List",
-      desc: "Use Upload Lists → Students to bulk-create student login accounts. Download credentials and distribute.",
-    },
-    {
-      step: "6",
-      title: "Publish Timetable",
-      desc: "Once the timetable is ready, click Publish in the Timetable Builder. Students and faculty can now view it.",
-    },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <BackBtn onClick={onBack} />
-      <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Implementation Guide</h1>
-        <p className="text-xs text-gray-400 mb-5">Follow these steps to set up the GP Kinnaur portal from scratch.</p>
-        <div className="space-y-4">
-          {steps.map((s) => (
-            <div key={s.step} className="flex gap-4 border rounded p-4">
-              <div className="w-8 h-8 rounded-full bg-[#7b1f4c] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-                {s.step}
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">{s.title}</p>
-                <p className="text-sm text-gray-500 mt-0.5">{s.desc}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </Card>
     </div>
