@@ -100,6 +100,9 @@ export function PortalShell({
               <FileSpreadsheet className="w-3 h-3" /> <span className="hidden sm:inline">Reports</span>
             </Link>
             <MessagesLink />
+            <Link to="/staff-profile" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1" title="My Profile">
+              👤 <span className="hidden sm:inline">Profile</span>
+            </Link>
             <Link to="/staff-dashboard" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1">
               <ArrowLeft className="w-3 h-3" /> Dashboard
             </Link>

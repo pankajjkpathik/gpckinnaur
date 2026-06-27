@@ -10,9 +10,13 @@ export function UtilityBar() {
           <a className="px-3 py-1 rounded-full bg-sky-600 hover:bg-sky-500" href="/grievance">
             Student Grievance
           </a>
+          <a className="px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-500" href="/training-placement">
+            Placements
+          </a>
           <a className="px-3 py-1 rounded-full border border-white/40 hover:bg-white/10" href="/mandatory-disclosure">
             Mandatory Disclosure
           </a>
+
         </div>
       </div>
     </div>

@@ -54,7 +54,7 @@ export const staffMe = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: row } = await supabaseAdmin
     .from("staff_users")
-    .select("name, image_url, designation")
+    .select("name, image_url, designation, dob, ip_number, pmis_number, phone, email, address, date_of_joining, date_of_retirement, staff_id, last_login, created_at")
     .eq("id", session.data.id)
     .maybeSingle();
   return {
@@ -62,7 +62,19 @@ export const staffMe = createServerFn({ method: "GET" }).handler(async () => {
     name: row?.name ?? null,
     image_url: row?.image_url ?? null,
     designation: row?.designation ?? null,
+    dob: row?.dob ?? null,
+    ip_number: row?.ip_number ?? null,
+    pmis_number: row?.pmis_number ?? null,
+    phone: row?.phone ?? null,
+    email: row?.email ?? null,
+    address: row?.address ?? null,
+    date_of_joining: row?.date_of_joining ?? null,
+    date_of_retirement: row?.date_of_retirement ?? null,
+    staff_id: row?.staff_id ?? null,
+    last_login: row?.last_login ?? null,
+    created_at: row?.created_at ?? null,
   };
+
 });
 
 export const staffChangePassword = createServerFn({ method: "POST" })
