@@ -791,7 +791,7 @@ function AlumniRecords({ role }: { role: string }) {
   });
   const [branch, setBranch] = useState("");
   const [year, setYear] = useState("");
-  const canVerify = ["super_admin", "principal"].includes(role);
+  const canVerify = false;
 
   const filtered = data.filter(
     (a: any) => (!branch || a.branch === branch) && (!year || String(a.batch_year) === year),
