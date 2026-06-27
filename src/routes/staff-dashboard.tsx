@@ -130,15 +130,6 @@ function StaffDashboard() {
           )}
           {showInbox && (
             <NavBtn
-              icon={<Mail className="w-4 h-4" />}
-              active={view === "contact"}
-              onClick={() => setView("contact")}
-              label="Contact Inbox"
-              badge={counts?.unreadContact}
-            />
-          )}
-          {showInbox && (
-            <NavBtn
               icon={<GraduationCap className="w-4 h-4" />}
               active={view === "alumni"}
               onClick={() => setView("alumni")}
