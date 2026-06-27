@@ -870,23 +870,16 @@ function FeesView({ onBack }: { onBack: () => void }) {
   const { data = [], isLoading } = useQuery({ queryKey: ["student-fees"], queryFn: () => fn() });
   const inr = (n: number) => `₹${Number(n).toLocaleString("en-IN")}`;
 
-  // Use the latest fee record if present; otherwise show default structure.
+  // Only show admin-entered fee records; no hardcoded defaults.
   const record = (data as any[])[0];
-  const components: { label: string; amount: number }[] = record
-    ? Array.isArray(record.components)
-      ? record.components
-      : []
-    : [
-        { label: "Tuition Fee", amount: 12000 },
-        { label: "Exam Fee", amount: 2000 },
-        { label: "Development Fee", amount: 1500 },
-        { label: "Other Charges", amount: 500 },
-      ];
-  const total = record ? Number(record.total_amount) : components.reduce((s, c) => s + c.amount, 0);
+  const components: { label: string; amount: number }[] =
+    record && Array.isArray(record.components) ? record.components : [];
+  const total = record ? Number(record.total_amount) : 0;
   const paid = record ? Number(record.paid_amount) : 0;
   const balance = total - paid;
   const status = record?.status ?? "due";
-  const isPaid = status === "paid" || balance <= 0;
+  const isPaid = !!record && (status === "paid" || balance <= 0);
+
 
   return (
     <div className="space-y-4">
