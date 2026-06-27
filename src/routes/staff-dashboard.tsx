@@ -203,7 +203,7 @@ function StaffDashboard() {
         {view === "home" && <DashboardHome me={me} counts={counts} />}
         {view === "notices" && showNotices && <NoticesManager />}
         {view === "materials" && showMats && <MaterialsManager me={me} />}
-        {view === "contact" && showInbox && <ContactInbox />}
+        
         {view === "alumni" && showInbox && <AlumniRecords role={role} />}
         {view === "profile" && <MyProfile me={me} />}
       </main>
