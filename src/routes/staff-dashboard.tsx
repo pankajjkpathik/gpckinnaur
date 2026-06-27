@@ -5,7 +5,7 @@ import {
   LayoutDashboard,
   FileText,
   FolderOpen,
-  Mail,
+  
   GraduationCap,
   User,
   LogOut,
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/staff-dashboard")({
   component: StaffDashboard,
 });
 
-type View = "home" | "notices" | "materials" | "contact" | "alumni" | "profile";
+type View = "home" | "notices" | "materials" | "alumni" | "profile";
 const roleBadge: Record<string, string> = {
   super_admin: "bg-rose-100 text-rose-700",
   principal: "bg-indigo-100 text-indigo-700",
@@ -130,15 +130,6 @@ function StaffDashboard() {
           )}
           {showInbox && (
             <NavBtn
-              icon={<Mail className="w-4 h-4" />}
-              active={view === "contact"}
-              onClick={() => setView("contact")}
-              label="Contact Inbox"
-              badge={counts?.unreadContact}
-            />
-          )}
-          {showInbox && (
-            <NavBtn
               icon={<GraduationCap className="w-4 h-4" />}
               active={view === "alumni"}
               onClick={() => setView("alumni")}
@@ -212,7 +203,7 @@ function StaffDashboard() {
         {view === "home" && <DashboardHome me={me} counts={counts} />}
         {view === "notices" && showNotices && <NoticesManager />}
         {view === "materials" && showMats && <MaterialsManager me={me} />}
-        {view === "contact" && showInbox && <ContactInbox />}
+        
         {view === "alumni" && showInbox && <AlumniRecords role={role} />}
         {view === "profile" && <MyProfile me={me} />}
       </main>
@@ -382,11 +373,10 @@ function DashboardHome({ me, counts }: any) {
         </div>
       )}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard label="Total Notices" value={counts?.totalNotices ?? 0} />
         <StatCard label="Study Materials" value={counts?.totalMaterials ?? 0} />
-        <StatCard label="Unread Contact" value={counts?.unreadContact ?? 0} />
-        <StatCard label="Unverified Alumni" value={counts?.unverifiedAlumni ?? 0} />
+        <StatCard label="Alumni Records" value={counts?.unverifiedAlumni ?? 0} />
       </div>
       <div className="bg-white border rounded-lg">
         <div className="px-4 py-3 border-b font-semibold">Recent Notices</div>
@@ -801,7 +791,7 @@ function AlumniRecords({ role }: { role: string }) {
   });
   const [branch, setBranch] = useState("");
   const [year, setYear] = useState("");
-  const canVerify = ["super_admin", "principal"].includes(role);
+  const canVerify = false;
 
   const filtered = data.filter(
     (a: any) => (!branch || a.branch === branch) && (!year || String(a.batch_year) === year),

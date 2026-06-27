@@ -7,9 +7,6 @@ export function UtilityBar() {
           <span>✉ gpkinnaur@rediffmail.com</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <a className="px-3 py-1 rounded-full bg-orange-500 hover:bg-orange-400" href="/training-placement">
-            Placements
-          </a>
           <a className="px-3 py-1 rounded-full bg-sky-600 hover:bg-sky-500" href="/grievance">
             Student Grievance
           </a>
