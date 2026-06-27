@@ -348,7 +348,7 @@ function DashboardHome({ me, counts }: any) {
   return (
     <div className="space-y-6">
       <div className="bg-white border rounded-lg p-5">
-        <h2 className="text-xl font-bold text-[color:var(--navy)]">Welcome back, {me.username}</h2>
+        <h2 className="text-xl font-bold text-[color:var(--navy)]">Welcome back, {((me as any).name || me.username).toString().toUpperCase()}</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Role: <span className="font-medium capitalize">{me.role}</span>
           {((me as any).extraRoles ?? []).length > 0 && (
