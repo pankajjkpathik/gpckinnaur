@@ -898,7 +898,15 @@ function FeesView({ onBack }: { onBack: () => void }) {
 
         {isLoading ? (
           <p className="text-sm text-gray-400 text-center py-4">Loading…</p>
+        ) : !record ? (
+          <div className="border border-amber-200 bg-amber-50 rounded p-6 text-center">
+            <p className="text-amber-800 font-semibold">No fee details available yet.</p>
+            <p className="text-amber-700 text-sm mt-1">
+              The administration office has not posted any fee record for you. Please check back after the official notice.
+            </p>
+          </div>
         ) : (
+
           <>
             {isPaid ? (
               <div className="border border-green-200 bg-green-50 rounded p-4 mb-4">
