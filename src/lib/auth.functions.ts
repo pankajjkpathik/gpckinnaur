@@ -129,7 +129,7 @@ export const studentMe = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: row } = await supabaseAdmin
     .from("students")
-    .select("id, enrollment_no, name, father_name, branch, semester, batch_year, phone, email, created_at")
+    .select("id, enrollment_no, name, father_name, branch, semester, batch_year, phone, email, image_url, created_at")
     .eq("id", session.data.id)
     .maybeSingle();
   return row;
