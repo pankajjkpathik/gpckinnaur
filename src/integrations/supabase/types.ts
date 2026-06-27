@@ -128,6 +128,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
       assignment_submissions: {
         Row: {
           assignment_id: number
@@ -1373,6 +1391,7 @@ export type Database = {
           designation: string | null
           dob: string | null
           email: string | null
+          extra_roles: string[]
           id: number
           image_url: string | null
           ip_number: string | null
@@ -1396,6 +1415,7 @@ export type Database = {
           designation?: string | null
           dob?: string | null
           email?: string | null
+          extra_roles?: string[]
           id?: never
           image_url?: string | null
           ip_number?: string | null
@@ -1419,6 +1439,7 @@ export type Database = {
           designation?: string | null
           dob?: string | null
           email?: string | null
+          extra_roles?: string[]
           id?: never
           image_url?: string | null
           ip_number?: string | null
