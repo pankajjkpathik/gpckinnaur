@@ -50,7 +50,19 @@ export const staffMe = createServerFn({ method: "GET" }).handler(async () => {
   if (getStaffSessionSecretIssue()) return null;
   if (!getCookie(staffSessionConfig.name)) return null;
   const session = await useSession<StaffSession>(staffSessionConfig);
-  return session.data?.id ? session.data : null;
+  if (!session.data?.id) return null;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: row } = await supabaseAdmin
+    .from("staff_users")
+    .select("name, image_url, designation")
+    .eq("id", session.data.id)
+    .maybeSingle();
+  return {
+    ...session.data,
+    name: row?.name ?? null,
+    image_url: row?.image_url ?? null,
+    designation: row?.designation ?? null,
+  };
 });
 
 export const staffChangePassword = createServerFn({ method: "POST" })
