@@ -1,4 +1,4 @@
-import s1Asset from "@/assets/s1.png.asset.json";
+import s6Asset from "@/assets/s1.png.asset.json";
 import labAsset from "@/assets/lab.jpeg.asset.json";
 import seminarAsset from "@/assets/seminar.jpeg.asset.json";
 import vanmahoatsavAsset from "@/assets/vanmahoatsav.jpeg.asset.json";
