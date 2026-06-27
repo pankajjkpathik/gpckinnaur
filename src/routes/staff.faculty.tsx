@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
+import { facultyPhoto } from "@/lib/faculty-photos";
 
 export const Route = createFileRoute("/staff/faculty")({
   head: () => pageMeta({
@@ -14,9 +15,14 @@ export const Route = createFileRoute("/staff/faculty")({
 function initials(name: string) { return name.split(" ").map((w) => w[0]).slice(-2).join("").toUpperCase(); }
 
 function Card({ name, designation, qual, exp }: { name: string; designation: string; qual: string; exp?: string }) {
+  const photo = facultyPhoto(name);
   return (
     <div className="bg-white border rounded-lg p-4 flex items-start gap-3">
-      <div className="w-12 h-12 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold shrink-0">{initials(name)}</div>
+      {photo ? (
+        <img src={photo} alt={name} className="w-14 h-14 rounded-full object-cover shrink-0 border" />
+      ) : (
+        <div className="w-14 h-14 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold shrink-0">{initials(name)}</div>
+      )}
       <div className="min-w-0">
         <p className="font-semibold text-[color:var(--navy)]">{name}</p>
         <p className="text-xs text-muted-foreground">{designation}</p>
