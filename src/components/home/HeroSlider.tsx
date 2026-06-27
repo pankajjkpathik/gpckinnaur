@@ -9,29 +9,29 @@ import s5Asset from "@/assets/s5.jpeg.asset.json";
 
 const slides = [
   {
-    title: "Discover Kinnaur",
-    subtitle: "Nestled in the breathtaking Himalayas — where heritage, faith and learning meet.",
+    title: "Welcome to GP Kinnaur",
+    subtitle: "Empowering youth of Kinnaur through quality technical education.",
     cta: "About the Institute",
     to: "/about",
     image: s1Asset.url,
   },
   {
-    title: "Celebrating Culture & Heritage",
-    subtitle: "Our students proudly showcase the vibrant traditional attire of Himachal Pradesh.",
-    cta: "Student Life",
-    to: "/student-portal",
+    title: "Admissions Open 2026-27",
+    subtitle: "Diploma in Civil & Mechanical Engineering — apply now.",
+    cta: "Apply Now",
+    to: "/admissions",
     image: s2Asset.url,
   },
   {
     title: "Modern Mechanical Engineering Labs",
-    subtitle: "Hands-on training with CAD, CNC and 3D printing for industry-ready engineers.",
+    subtitle: "Hands-on training with CAD, 3D printing for industry-ready engineers.",
     cta: "Explore Mechanical",
     to: "/departments/2",
     image: s3Asset.url,
   },
   {
-    title: "Civil Engineering in the Field",
-    subtitle: "Practical surveying and site work amid the majestic Kinnaur landscape.",
+    title: "Civil Engineering ",
+    subtitle: "Practical surveying and site work.",
     cta: "Explore Civil",
     to: "/departments/1",
     image: s4Asset.url,
