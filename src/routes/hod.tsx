@@ -499,24 +499,105 @@ function SyllabusProgressView({ branch, ay, onBack }: { branch: string; ay: stri
   );
 }
 
-// ─── BRANCH TIMETABLE ─────────────────────────────────────────────────────────
-function TimetableView({ onBack }: { onBack: () => void }) {
+// ─── BRANCH TIMETABLE (HOD edits own branch only) ─────────────────────────────
+function TimetableView({
+  branch,
+  ay,
+  editable,
+  onBack,
+}: {
+  branch: string;
+  ay: string;
+  editable: boolean;
+  onBack: () => void;
+}) {
+  const qc = useQueryClient();
+  const [sem, setSem] = useState(3);
+  const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods() });
+  const ttQ = useQuery({
+    queryKey: ["hod-tt", branch, sem, ay],
+    queryFn: () => listTimetable({ data: { branch, semester: sem, academic_year: ay } }),
+    enabled: !!branch,
+  });
+  const subjQ = useQuery({
+    queryKey: ["subjects-of", branch, sem],
+    queryFn: () => listSubjects({ data: { branch, semester: sem } as any }),
+    enabled: !!branch,
+  });
+  const staffQ = useQuery({
+    queryKey: ["staff-all"],
+    queryFn: () => listStaffByRole({ data: {} as any }),
+  });
+  const save = useMutation({
+    mutationFn: (d: any) =>
+      hodUpsertTimetableSlot({ data: { branch, semester: sem, academic_year: ay, ...d } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hod-tt"] }),
+  });
+
+  const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
+  const BRANCHES: Record<string, string> = {
+    civil: "Civil Engineering",
+    mechanical: "Mechanical Engineering",
+    applied_science: "Applied Sciences",
+  };
+
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Branch Timetable</h1>
-        <p className="text-xs text-gray-400 mb-4">Verify class scheduling for your branch.</p>
-        <p className="text-sm text-gray-600">
-          The full weekly timetable builder is managed in the Admin console. View the published branch timetable at{" "}
-          <a href="/admin/timetable" className="text-[#7b1f4c] underline">
-            Timetable Builder →
-          </a>
-        </p>
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-3 print:hidden">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Branch Timetable</h1>
+            <p className="text-xs text-gray-400">
+              {editable ? "Click any slot to edit. Restricted to your own branch." : "Read-only."}
+            </p>
+          </div>
+          <div className="flex gap-2 items-center">
+            <select
+              value={sem}
+              onChange={(e) => setSem(Number(e.target.value))}
+              className="border rounded px-2 py-1.5 text-sm bg-white"
+            >
+              {[1, 2, 3, 4, 5, 6].map((s) => (
+                <option key={s} value={s}>
+                  {ORD[s]} Sem
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => window.print()}
+              className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
+            >
+              🖨️ Print
+            </button>
+          </div>
+        </div>
+        {save.error && (
+          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2 mb-2">
+            {(save.error as Error).message}
+          </p>
+        )}
+        {(periodsQ.data ?? []).length === 0 ? (
+          <p className="text-center py-8 text-gray-400 text-sm">
+            Periods Master not configured yet. Ask Admin to set it up.
+          </p>
+        ) : (
+          <TimetableGrid
+            periods={periodsQ.data as any}
+            slots={(ttQ.data ?? []) as any}
+            subjects={subjQ.data as any}
+            staff={staffQ.data as any}
+            editable={editable}
+            onSaveSlot={(p) => save.mutate(p)}
+            institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
+            classLine={`${BRANCHES[branch] ?? branch} - ${ORD[sem]} Semester`}
+          />
+        )}
       </Card>
     </div>
   );
 }
+
 
 // ─── LESSON REVIEWS ───────────────────────────────────────────────────────────
 function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
