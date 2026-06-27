@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
+import pankajpathik from "@/assets/faculty/pankajpathik.png.asset.json";
 
 export const Route = createFileRoute("/about")({
   head: () => pageMeta({
