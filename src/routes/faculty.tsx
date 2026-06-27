@@ -172,7 +172,7 @@ function FacultyPortal() {
           {view === "submissions" && <SubmissionsView onBack={() => setView("home")} />}
           {view === "syllabus" && <SyllabusView ay={ay} me={me as any} onBack={() => setView("home")} />}
           {view === "lesson-plans" && <LessonPlansView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "exam-schedule" && <ExamScheduleView onBack={() => setView("home")} />}
+          {view === "exam-schedule" && <ExamScheduleView ay={ay} me={me as any} onBack={() => setView("home")} />}
           {view === "reports" && <ReportsView ay={ay} me={me as any} onBack={() => setView("home")} />}
         </fieldset>
       </div>
@@ -423,6 +423,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
             <input
               type="date"
               value={date}
+              min={today}
               onChange={(e) => {
                 setDate(e.target.value);
                 setLoaded(false);
@@ -430,6 +431,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
               className="border rounded w-full px-3 py-2"
             />
           </div>
+
           <button
             onClick={() => setLoaded(true)}
             disabled={!asgId || !pno}
@@ -479,8 +481,11 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                 </tr>
               </thead>
               <tbody>
-                {rosterQ.data.map((s: any) => (
-                  <tr key={s.id} className="border-t">
+                {rosterQ.data.map((s: any) => {
+                  const st = marks[s.id] ?? "present";
+                  const rowCls = st === "absent" ? "bg-rose-50 text-rose-700 font-semibold" : "";
+                  return (
+                  <tr key={s.id} className={`border-t ${rowCls}`}>
                     <td className="px-4 py-3 font-mono text-xs">{s.enrollment_no}</td>
                     <td className="px-4 py-3">{s.name}</td>
                     <td className="px-4 py-3 text-right">
@@ -491,7 +496,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                               type="radio"
                               name={`att-${s.id}`}
                               value={opt}
-                              checked={(marks[s.id] ?? "present") === opt}
+                              checked={st === opt}
                               onChange={() => setMarks({ ...marks, [s.id]: opt })}
                               disabled={s.locked}
                               className="accent-[#7b1f4c]"
@@ -502,8 +507,10 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                       </span>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
+
             </table>
           </div>
           <div className="flex justify-end mt-4">
@@ -1140,15 +1147,45 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
 
 // ─── SYLLABUS COVERAGE ────────────────────────────────────────────────────────
 function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
+  const qc = useQueryClient();
   const asg = useQuery({
     queryKey: ["fac-asg", me.id, ay],
     queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
+  });
+  const list = useQuery({
+    queryKey: ["lessons", ay, me.id],
+    queryFn: () => listLessonPlans({ data: { academic_year: ay, staff_id: me.id } }),
   });
   const [asgId, setAsgId] = useState<number | "">("");
   const [totalUnits, setTotalUnits] = useState("10");
   const [unitsCovered, setUnitsCovered] = useState("");
   const [remarks, setRemarks] = useState("");
-  const pct = totalUnits && unitsCovered ? Math.round((Number(unitsCovered) / Number(totalUnits)) * 100) + "%" : "";
+  const pctNum = totalUnits && unitsCovered ? Math.round((Number(unitsCovered) / Number(totalUnits)) * 100) : 0;
+  const pct = unitsCovered ? `${pctNum}%` : "";
+  const a = (asg.data ?? []).find((x: any) => x.id === asgId);
+
+  const save = useMutation({
+    mutationFn: () =>
+      upsertLessonPlan({
+        data: {
+          subject_id: a!.subject_id,
+          branch: a!.branch,
+          semester: a!.semester,
+          topic: `Syllabus Coverage: ${unitsCovered}/${totalUnits} units (${pctNum}%)${remarks ? " — " + remarks : ""}`,
+          planned_date: new Date().toISOString().slice(0, 10),
+          actual_date: new Date().toISOString().slice(0, 10),
+          status: "submitted",
+          academic_year: ay,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lessons"] });
+      setUnitsCovered("");
+      setRemarks("");
+    },
+  });
+
+  const records = (list.data ?? []).filter((r: any) => (r.topic ?? "").startsWith("Syllabus Coverage:"));
 
   return (
     <div className="space-y-4">
@@ -1159,27 +1196,16 @@ function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => v
           <p className="font-semibold text-gray-800 mb-4">Add New Coverage Record</p>
           <div className="space-y-3 text-sm">
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Class</label>
+              <label className="text-xs text-gray-500 mb-1 block">Class &amp; Subject</label>
               <select
                 value={asgId}
                 onChange={(e) => setAsgId(e.target.value ? Number(e.target.value) : "")}
                 className="border rounded w-full px-3 py-2"
               >
-                <option value="">Select class…</option>
+                <option value="">Select…</option>
                 {(asg.data ?? []).map((x: any) => (
                   <option key={x.id} value={x.id}>
-                    {x.branch}-Sem{x.semester}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Subject</label>
-              <select className="border rounded w-full px-3 py-2">
-                <option>Select subject</option>
-                {(asg.data ?? []).map((x: any) => (
-                  <option key={x.id} value={x.subject_id}>
-                    {x.subjects?.name || x.subjects?.code}
+                    {x.subjects?.code} · {x.branch}-Sem{x.semester} — {x.subjects?.name}
                   </option>
                 ))}
               </select>
@@ -1218,7 +1244,15 @@ function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => v
                 className="border rounded w-full px-3 py-2 resize-y"
               />
             </div>
-            <button className="bg-[#7b1f4c] text-white w-full py-2 rounded font-semibold">Save</button>
+            <button
+              onClick={() => save.mutate()}
+              disabled={!a || !unitsCovered || save.isPending}
+              className="bg-[#7b1f4c] text-white w-full py-2 rounded font-semibold disabled:opacity-50"
+            >
+              {save.isPending ? "Saving…" : "Save"}
+            </button>
+            {save.isSuccess && <p className="text-xs text-green-700">Coverage saved.</p>}
+            {save.error && <p className="text-xs text-rose-700">{(save.error as Error).message}</p>}
           </div>
         </Card>
         <Card>
@@ -1229,17 +1263,26 @@ function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => v
                 <tr>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Class</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Units</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">% Covered</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Coverage</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
-                    No records found.
-                  </td>
-                </tr>
+                {records.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">
+                      No records found.
+                    </td>
+                  </tr>
+                )}
+                {records.map((r: any) => (
+                  <tr key={r.id} className="border-t">
+                    <td className="px-4 py-3">{r.subjects?.code}</td>
+                    <td className="px-4 py-3">{r.branch}-Sem{r.semester}</td>
+                    <td className="px-4 py-3">{r.actual_date ?? r.planned_date ?? ""}</td>
+                    <td className="px-4 py-3">{(r.topic ?? "").replace("Syllabus Coverage: ", "")}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -1248,6 +1291,7 @@ function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => v
     </div>
   );
 }
+
 
 // ─── LESSON PLANS ─────────────────────────────────────────────────────────────
 function LessonPlansView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
@@ -1362,8 +1406,17 @@ function LessonPlansView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
 }
 
 // ─── EXAM SCHEDULE ────────────────────────────────────────────────────────────
-function ExamScheduleView({ onBack }: { onBack: () => void }) {
+function ExamScheduleView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
   const [schedules] = useState<any[]>([]);
+  const asg = useQuery({
+    queryKey: ["fac-asg", me.id, ay],
+    queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
+  });
+  const classes = Array.from(
+    new Map(
+      (asg.data ?? []).map((x: any) => [`${x.branch}-${x.semester}`, { branch: x.branch, semester: x.semester }]),
+    ).values(),
+  );
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
@@ -1387,8 +1440,14 @@ function ExamScheduleView({ onBack }: { onBack: () => void }) {
             <label className="text-xs text-gray-500 mb-1 block">Class</label>
             <select className="border rounded w-full px-3 py-2">
               <option value="">Select a class</option>
+              {classes.map((c: any) => (
+                <option key={`${c.branch}-${c.semester}`} value={`${c.branch}-${c.semester}`}>
+                  {c.branch}-Sem{c.semester}
+                </option>
+              ))}
             </select>
           </div>
+
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
             <input type="date" className="border rounded w-full px-3 py-2" />
