@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
-import { facultyRoles } from "@/lib/roles";
+import { facultyRoles, hasRole } from "@/lib/roles";
 import { listAssignments, listPeriods } from "@/lib/academic.functions";
 import {
   facultyDashboard,
@@ -140,7 +140,7 @@ function FacultyPortal() {
   useEffect(() => {
     if (isLoading) return;
     if (!me) nav({ to: "/staff-login" });
-    else if (!facultyRoles.includes(me.role as any)) nav({ to: "/staff-dashboard" });
+    else if (!hasRole(me, facultyRoles)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
   const [view, setView] = useState<View>("home");
