@@ -101,8 +101,8 @@ function HodPortal() {
           </div>
         )}
         <fieldset
-          disabled={isViewer && ["lessons", "marks", "leave"].includes(view)}
-          className={isViewer && ["lessons", "marks", "leave"].includes(view) ? "pointer-events-none opacity-90" : ""}
+          disabled={isViewer && view === "marks"}
+          className={isViewer && view === "marks" ? "pointer-events-none opacity-90" : ""}
         >
           {view === "home" && <HomeView me={me as any} deptLabel={deptLabel} onNav={setView} />}
           {view === "overview" && (
