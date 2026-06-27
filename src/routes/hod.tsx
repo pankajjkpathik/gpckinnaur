@@ -591,7 +591,7 @@ function TimetableView({
             subjects={subjQ.data as any}
             staff={staffQ.data as any}
             editable={editable}
-            onSaveSlot={(p) => save.mutate(p)}
+            onSaveSlot={(p: any) => save.mutate(p)}
             institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
             classLine={`${BRANCHES[branch] ?? branch} - ${ORD[sem]} Semester`}
           />
