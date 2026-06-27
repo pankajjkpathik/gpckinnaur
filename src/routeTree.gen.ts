@@ -11,11 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrainingPlacementRouteImport } from './routes/training-placement'
 import { Route as TpoRouteImport } from './routes/tpo'
+import { Route as StudentProfileRouteImport } from './routes/student-profile'
 import { Route as StudentPortalRouteImport } from './routes/student-portal'
 import { Route as StudentLoginRouteImport } from './routes/student-login'
 import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
 import { Route as StudentChangePasswordRouteImport } from './routes/student-change-password'
 import { Route as StaffReportsRouteImport } from './routes/staff-reports'
+import { Route as StaffProfileRouteImport } from './routes/staff-profile'
 import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
@@ -70,6 +72,11 @@ const TpoRoute = TpoRouteImport.update({
   path: '/tpo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentProfileRoute = StudentProfileRouteImport.update({
+  id: '/student-profile',
+  path: '/student-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentPortalRoute = StudentPortalRouteImport.update({
   id: '/student-portal',
   path: '/student-portal',
@@ -93,6 +100,11 @@ const StudentChangePasswordRoute = StudentChangePasswordRouteImport.update({
 const StaffReportsRoute = StaffReportsRouteImport.update({
   id: '/staff-reports',
   path: '/staff-reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffProfileRoute = StaffProfileRouteImport.update({
+  id: '/staff-profile',
+  path: '/staff-profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffLoginRoute = StaffLoginRouteImport.update({
@@ -333,11 +345,13 @@ export interface FileRoutesByFullPath {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/staff-profile': typeof StaffProfileRoute
   '/staff-reports': typeof StaffReportsRoute
   '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/student-profile': typeof StudentProfileRoute
   '/tpo': typeof TpoRoute
   '/training-placement': typeof TrainingPlacementRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
@@ -384,11 +398,13 @@ export interface FileRoutesByTo {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/staff-profile': typeof StaffProfileRoute
   '/staff-reports': typeof StaffReportsRoute
   '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/student-profile': typeof StudentProfileRoute
   '/tpo': typeof TpoRoute
   '/training-placement': typeof TrainingPlacementRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
@@ -437,11 +453,13 @@ export interface FileRoutesById {
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
   '/staff-login': typeof StaffLoginRoute
+  '/staff-profile': typeof StaffProfileRoute
   '/staff-reports': typeof StaffReportsRoute
   '/student-change-password': typeof StudentChangePasswordRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/student-login': typeof StudentLoginRoute
   '/student-portal': typeof StudentPortalRoute
+  '/student-profile': typeof StudentProfileRoute
   '/tpo': typeof TpoRoute
   '/training-placement': typeof TrainingPlacementRoute
   '/admin/assignments': typeof AdminAssignmentsRoute
@@ -491,11 +509,13 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/staff-profile'
     | '/staff-reports'
     | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/student-profile'
     | '/tpo'
     | '/training-placement'
     | '/admin/assignments'
@@ -542,11 +562,13 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/staff-profile'
     | '/staff-reports'
     | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/student-profile'
     | '/tpo'
     | '/training-placement'
     | '/admin/assignments'
@@ -594,11 +616,13 @@ export interface FileRouteTypes {
     | '/staff-change-password'
     | '/staff-dashboard'
     | '/staff-login'
+    | '/staff-profile'
     | '/staff-reports'
     | '/student-change-password'
     | '/student-dashboard'
     | '/student-login'
     | '/student-portal'
+    | '/student-profile'
     | '/tpo'
     | '/training-placement'
     | '/admin/assignments'
@@ -647,11 +671,13 @@ export interface RootRouteChildren {
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
   StaffLoginRoute: typeof StaffLoginRoute
+  StaffProfileRoute: typeof StaffProfileRoute
   StaffReportsRoute: typeof StaffReportsRoute
   StudentChangePasswordRoute: typeof StudentChangePasswordRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLoginRoute: typeof StudentLoginRoute
   StudentPortalRoute: typeof StudentPortalRoute
+  StudentProfileRoute: typeof StudentProfileRoute
   TpoRoute: typeof TpoRoute
   TrainingPlacementRoute: typeof TrainingPlacementRoute
   AlumniRegisterRoute: typeof AlumniRegisterRoute
@@ -680,6 +706,13 @@ declare module '@tanstack/react-router' {
       path: '/tpo'
       fullPath: '/tpo'
       preLoaderRoute: typeof TpoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-profile': {
+      id: '/student-profile'
+      path: '/student-profile'
+      fullPath: '/student-profile'
+      preLoaderRoute: typeof StudentProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student-portal': {
@@ -715,6 +748,13 @@ declare module '@tanstack/react-router' {
       path: '/staff-reports'
       fullPath: '/staff-reports'
       preLoaderRoute: typeof StaffReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-profile': {
+      id: '/staff-profile'
+      path: '/staff-profile'
+      fullPath: '/staff-profile'
+      preLoaderRoute: typeof StaffProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff-login': {
@@ -1075,11 +1115,13 @@ const rootRouteChildren: RootRouteChildren = {
   StaffChangePasswordRoute: StaffChangePasswordRoute,
   StaffDashboardRoute: StaffDashboardRoute,
   StaffLoginRoute: StaffLoginRoute,
+  StaffProfileRoute: StaffProfileRoute,
   StaffReportsRoute: StaffReportsRoute,
   StudentChangePasswordRoute: StudentChangePasswordRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,
   StudentPortalRoute: StudentPortalRoute,
+  StudentProfileRoute: StudentProfileRoute,
   TpoRoute: TpoRoute,
   TrainingPlacementRoute: TrainingPlacementRoute,
   AlumniRegisterRoute: AlumniRegisterRoute,

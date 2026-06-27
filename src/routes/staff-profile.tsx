@@ -35,7 +35,7 @@ function StaffProfile() {
   const fullName = displayName(m);
 
   return (
-    <PortalShell me={m as any} accent="navy">
+    <PortalShell title="My Profile" me={m as any} accent="navy">
       <div className="max-w-4xl mx-auto">
         <div className="bg-gradient-to-r from-slate-50 to-teal-50 rounded-2xl p-6 border shadow-sm flex items-center gap-6">
           {photo ? (
