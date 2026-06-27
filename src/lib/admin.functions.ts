@@ -914,3 +914,73 @@ export const bulkImportGrading = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { inserted: count ?? valid.length, errors };
   });
+
+// ============================================================
+// Aliases & wrappers for legacy admin user-management imports
+// ============================================================
+import {
+  facultyList as _facultyList,
+  facultyCreate as _facultyCreate,
+  facultyUpdate as _facultyUpdate,
+  facultyDelete as _facultyDelete,
+  facultyResetPassword as _facultyResetPassword,
+  studentList as _studentList,
+  studentCreate as _studentCreate,
+  studentUpdate as _studentUpdate,
+  studentDelete as _studentDelete,
+  studentResetPassword as _studentResetPassword,
+} from "./people.functions";
+import { adminRoles as _adminRoles } from "./roles";
+import { requireRole as _requireRole } from "./roles.server";
+
+export const adminListStaff = _facultyList;
+export const adminListStudents = _studentList;
+export const adminCreateStaff = _facultyCreate;
+export const adminCreateStudent = _studentCreate;
+export const adminUpdateStaff = _facultyUpdate;
+export const adminUpdateStudent = _studentUpdate;
+export const adminDeleteStaff = _facultyDelete;
+export const adminDeleteStudent = _studentDelete;
+export const adminResetStaffPassword = _facultyResetPassword;
+export const adminResetStudentPassword = _studentResetPassword;
+
+export const adminToggleStaffActive = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.number().int(), is_active: z.boolean() }).parse(d))
+  .handler(async ({ data }) => {
+    await _requireRole(_adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("staff_users").update({ is_active: data.is_active }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminToggleStudentActive = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.number().int(), is_active: z.boolean() }).parse(d))
+  .handler(async ({ data }) => {
+    await _requireRole(_adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("students").update({ is_active: data.is_active }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const studentChangePassword = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(6) }).parse(d))
+  .handler(async ({ data }) => {
+    const { getCookie, useSession } = await import("@tanstack/react-start/server");
+    const { studentSessionConfig, getStudentSessionSecretIssue } = await import("./sessions");
+    if (getStudentSessionSecretIssue()) throw new Error("Session not configured");
+    if (!getCookie(studentSessionConfig.name)) throw new Error("Not authenticated");
+    const session = await useSession<{ id: number }>(studentSessionConfig);
+    if (!session.data?.id) throw new Error("Not authenticated");
+    const bcrypt = (await import("bcryptjs")).default;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("students").select("password_hash").eq("id", session.data.id).maybeSingle();
+    if (!row) throw new Error("User not found");
+    const ok = await bcrypt.compare(data.currentPassword, row.password_hash);
+    if (!ok) throw new Error("Current password incorrect");
+    const newHash = await bcrypt.hash(data.newPassword, 12);
+    await supabaseAdmin.from("students").update({ password_hash: newHash }).eq("id", session.data.id);
+    return { success: true };
+  });
