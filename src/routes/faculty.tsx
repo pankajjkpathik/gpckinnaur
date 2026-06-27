@@ -172,7 +172,7 @@ function FacultyPortal() {
           {view === "submissions" && <SubmissionsView onBack={() => setView("home")} />}
           {view === "syllabus" && <SyllabusView ay={ay} me={me as any} onBack={() => setView("home")} />}
           {view === "lesson-plans" && <LessonPlansView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "exam-schedule" && <ExamScheduleView onBack={() => setView("home")} />}
+          {view === "exam-schedule" && <ExamScheduleView ay={ay} me={me as any} onBack={() => setView("home")} />}
           {view === "reports" && <ReportsView ay={ay} me={me as any} onBack={() => setView("home")} />}
         </fieldset>
       </div>
