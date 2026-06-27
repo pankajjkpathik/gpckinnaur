@@ -62,7 +62,7 @@ export function PortalShell({
 }: {
   title: string;
   subtitle?: string;
-  me: { username: string; role: string; department: string | null };
+  me: { username: string; role: string; department: string | null; name?: string | null; image_url?: string | null };
   accent?: "navy" | "teal" | "indigo" | "rose" | "amber";
   scheme?: PortalScheme;
   children: ReactNode;
