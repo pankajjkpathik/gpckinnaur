@@ -87,36 +87,47 @@ export const syllabusCompliance = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await requireRole(principalRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Total syllabus units per subject (denominator)
+    const { data: subjects } = await supabaseAdmin
+      .from("subjects")
+      .select("id, code, name, branch, semester");
+    const totalUnits = new Map<number, number>();
+    const { data: allUnits } = await supabaseAdmin.from("syllabus_units").select("subject_id");
+    (allUnits ?? []).forEach((u: any) =>
+      totalUnits.set(u.subject_id, (totalUnits.get(u.subject_id) ?? 0) + 1),
+    );
+    // Lesson plans for this AY (numerator + coverage avg)
     const { data: plans } = await supabaseAdmin
       .from("lesson_plans")
-      .select("subject_id, status, coverage_pct, subjects(code,name,branch,semester)")
+      .select("subject_id, status, coverage_pct")
       .eq("academic_year", data.academic_year);
-    const agg = new Map<number, any>();
+    const agg = new Map<number, { plans: number; approved: number; cov_sum: number }>();
     (plans ?? []).forEach((p: any) => {
-      if (!agg.has(p.subject_id))
-        agg.set(p.subject_id, {
-          subject_id: p.subject_id,
-          code: p.subjects?.code,
-          name: p.subjects?.name,
-          branch: p.subjects?.branch,
-          semester: p.subjects?.semester,
-          units: 0,
-          coverage_sum: 0,
-          approved: 0,
-        });
-      const a = agg.get(p.subject_id);
-      a.units += 1;
-      a.coverage_sum += Number(p.coverage_pct || 0);
+      if (!agg.has(p.subject_id)) agg.set(p.subject_id, { plans: 0, approved: 0, cov_sum: 0 });
+      const a = agg.get(p.subject_id)!;
+      a.plans += 1;
+      a.cov_sum += Number(p.coverage_pct || 0);
       if (p.status === "approved") a.approved += 1;
     });
-    return Array.from(agg.values())
-      .map((a) => ({
-        ...a,
-        avg_coverage: a.units ? Math.round((a.coverage_sum / a.units) * 10) / 10 : 0,
-        approved_pct: a.units ? Math.round((a.approved / a.units) * 100) : 0,
-      }))
-      .sort((a, b) => (a.branch || "").localeCompare(b.branch || "") || a.semester - b.semester);
+    return (subjects ?? [])
+      .map((s: any) => {
+        const a = agg.get(s.id) ?? { plans: 0, approved: 0, cov_sum: 0 };
+        const total = totalUnits.get(s.id) ?? 0;
+        return {
+          subject_id: s.id,
+          code: s.code,
+          name: s.name,
+          branch: s.branch,
+          semester: s.semester,
+          units: total,
+          avg_coverage: a.plans ? Math.round((a.cov_sum / a.plans) * 10) / 10 : 0,
+          approved_pct: total ? Math.round((a.approved / total) * 100) : 0,
+        };
+      })
+      .filter((r) => r.units > 0)
+      .sort((x, y) => (x.branch || "").localeCompare(y.branch || "") || x.semester - y.semester);
   });
+
 
 // ============ RESULTS OVERVIEW ============
 export const instituteResults = createServerFn({ method: "GET" })

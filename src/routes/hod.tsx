@@ -26,9 +26,12 @@ import {
   hodMarksDetail,
   hodReviewMarks,
   deptClassAttendance,
+  hodUpsertTimetableSlot,
 } from "@/lib/hod.functions";
 import { hodDepartmentOverview } from "@/lib/tpo.functions";
 import { reviewLessonPlan, pendingLeavesForReview, reviewLeave } from "@/lib/faculty.functions";
+import { listPeriods, listTimetable, listSubjects, listStaffByRole } from "@/lib/academic.functions";
+import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
 import { BarStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
@@ -109,10 +112,14 @@ function HodPortal() {
             <OverviewView branch={branch} ay={ay} deptLabel={deptLabel} onBack={() => setView("home")} />
           )}
           {view === "faculty" && <FacultyView branch={branch} ay={ay} onBack={() => setView("home")} />}
-          {view === "attendance" && <AttendanceReportsView onBack={() => setView("home")} />}
+          {view === "attendance" && (
+            <AttendanceReportsView defaultBranch={branch} onBack={() => setView("home")} />
+          )}
           {view === "sessional" && <SessionalReportsView ay={ay} onBack={() => setView("home")} />}
           {view === "syllabus" && <SyllabusProgressView branch={branch} ay={ay} onBack={() => setView("home")} />}
-          {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
+          {view === "timetable" && (
+            <TimetableView branch={branch} ay={ay} editable={!isViewer} onBack={() => setView("home")} />
+          )}
           {view === "marks" && <MarksApprovalsView ay={ay} onBack={() => setView("home")} />}
         </fieldset>
       </div>
@@ -318,14 +325,19 @@ function FacultyView({ branch, ay, onBack }: { branch: string; ay: string; onBac
 }
 
 // ─── ATTENDANCE REPORTS (class monitor) ───────────────────────────────────────
-function AttendanceReportsView({ onBack }: { onBack: () => void }) {
+function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?: string; onBack: () => void }) {
   const today = new Date().toISOString().slice(0, 10);
   const monthAgo = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
     return d.toISOString().slice(0, 10);
   }, []);
-  const [branch, setBranch] = useState("");
+  const semesterAgo = useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 6);
+    return d.toISOString().slice(0, 10);
+  }, []);
+  const [branch, setBranch] = useState(defaultBranch);
   const [sem, setSem] = useState<number | "">("");
   const [from, setFrom] = useState(monthAgo);
   const [to, setTo] = useState(today);
@@ -344,31 +356,32 @@ function AttendanceReportsView({ onBack }: { onBack: () => void }) {
       <BackBtn onClick={onBack} />
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Attendance Reports</h1>
-        <p className="text-xs text-gray-400 mb-4">Review branch-wide attendance.</p>
-        <div className="grid sm:grid-cols-4 gap-2 text-sm mb-3">
-          <input
-            value={branch}
-            onChange={(e) => setBranch(e.target.value)}
-            placeholder="Branch (e.g. civil)"
-            className="border rounded px-3 py-2"
-          />
-          <input
-            type="number"
-            min={1}
-            max={8}
+        <p className="text-xs text-gray-400 mb-4">Filter by branch + semester. Use quick ranges for monthly / semester view.</p>
+        <div className="grid sm:grid-cols-4 gap-2 text-sm mb-2">
+          <select value={branch} onChange={(e) => setBranch(e.target.value)} className="border rounded px-3 py-2 bg-white">
+            <option value="">— Branch —</option>
+            <option value="civil">Civil Engineering</option>
+            <option value="mechanical">Mechanical Engineering</option>
+            <option value="applied_science">Applied Sciences</option>
+          </select>
+          <select
             value={sem}
             onChange={(e) => setSem(e.target.value ? Number(e.target.value) : "")}
-            placeholder="Semester"
-            className="border rounded px-3 py-2"
-          />
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="border rounded px-3 py-2"
-          />
+            className="border rounded px-3 py-2 bg-white"
+          >
+            <option value="">— Semester —</option>
+            {[1, 2, 3, 4, 5, 6].map((s) => (
+              <option key={s} value={s}>Sem {s}</option>
+            ))}
+          </select>
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="border rounded px-3 py-2" />
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="border rounded px-3 py-2" />
         </div>
+        <div className="flex gap-2 mb-3 text-xs">
+          <button onClick={() => { setFrom(monthAgo); setTo(today); }} className="border rounded px-2 py-1 hover:bg-gray-50">📅 This Month</button>
+          <button onClick={() => { setFrom(semesterAgo); setTo(today); }} className="border rounded px-2 py-1 hover:bg-gray-50">📚 This Semester</button>
+        </div>
+
         {rows.length > 0 && (
           <div className="flex gap-2 mb-3">
             <button
@@ -497,24 +510,105 @@ function SyllabusProgressView({ branch, ay, onBack }: { branch: string; ay: stri
   );
 }
 
-// ─── BRANCH TIMETABLE ─────────────────────────────────────────────────────────
-function TimetableView({ onBack }: { onBack: () => void }) {
+// ─── BRANCH TIMETABLE (HOD edits own branch only) ─────────────────────────────
+function TimetableView({
+  branch,
+  ay,
+  editable,
+  onBack,
+}: {
+  branch: string;
+  ay: string;
+  editable: boolean;
+  onBack: () => void;
+}) {
+  const qc = useQueryClient();
+  const [sem, setSem] = useState(3);
+  const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods() });
+  const ttQ = useQuery({
+    queryKey: ["hod-tt", branch, sem, ay],
+    queryFn: () => listTimetable({ data: { branch, semester: sem, academic_year: ay } }),
+    enabled: !!branch,
+  });
+  const subjQ = useQuery({
+    queryKey: ["subjects-of", branch, sem],
+    queryFn: () => listSubjects({ data: { branch, semester: sem } as any }),
+    enabled: !!branch,
+  });
+  const staffQ = useQuery({
+    queryKey: ["staff-all"],
+    queryFn: () => listStaffByRole({ data: {} as any }),
+  });
+  const save = useMutation({
+    mutationFn: (d: any) =>
+      hodUpsertTimetableSlot({ data: { branch, semester: sem, academic_year: ay, ...d } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hod-tt"] }),
+  });
+
+  const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
+  const BRANCHES: Record<string, string> = {
+    civil: "Civil Engineering",
+    mechanical: "Mechanical Engineering",
+    applied_science: "Applied Sciences",
+  };
+
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Branch Timetable</h1>
-        <p className="text-xs text-gray-400 mb-4">Verify class scheduling for your branch.</p>
-        <p className="text-sm text-gray-600">
-          The full weekly timetable builder is managed in the Admin console. View the published branch timetable at{" "}
-          <a href="/admin/timetable" className="text-[#7b1f4c] underline">
-            Timetable Builder →
-          </a>
-        </p>
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-3 print:hidden">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Branch Timetable</h1>
+            <p className="text-xs text-gray-400">
+              {editable ? "Click any slot to edit. Restricted to your own branch." : "Read-only."}
+            </p>
+          </div>
+          <div className="flex gap-2 items-center">
+            <select
+              value={sem}
+              onChange={(e) => setSem(Number(e.target.value))}
+              className="border rounded px-2 py-1.5 text-sm bg-white"
+            >
+              {[1, 2, 3, 4, 5, 6].map((s) => (
+                <option key={s} value={s}>
+                  {ORD[s]} Sem
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => window.print()}
+              className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
+            >
+              🖨️ Print
+            </button>
+          </div>
+        </div>
+        {save.error && (
+          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2 mb-2">
+            {(save.error as Error).message}
+          </p>
+        )}
+        {(periodsQ.data ?? []).length === 0 ? (
+          <p className="text-center py-8 text-gray-400 text-sm">
+            Periods Master not configured yet. Ask Admin to set it up.
+          </p>
+        ) : (
+          <TimetableGrid
+            periods={periodsQ.data as any}
+            slots={(ttQ.data ?? []) as any}
+            subjects={subjQ.data as any}
+            staff={staffQ.data as any}
+            editable={editable}
+            onSaveSlot={(p: any) => save.mutate(p)}
+            institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
+            classLine={`${BRANCHES[branch] ?? branch} - ${ORD[sem]} Semester`}
+          />
+        )}
       </Card>
     </div>
   );
 }
+
 
 // ─── LESSON REVIEWS ───────────────────────────────────────────────────────────
 function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {

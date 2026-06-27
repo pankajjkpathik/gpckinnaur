@@ -138,3 +138,85 @@ export const deptClassAttendance = createServerFn({ method: "GET" })
       return { ...s, total: a.t, present: a.p, pct: a.t ? Math.round((a.p / a.t) * 1000) / 10 : 0 };
     });
   });
+
+// ============ HOD-SCOPED TIMETABLE EDITS (own branch only) ============
+const yearReTT = /^\d{4}-\d{2}$/;
+
+async function assertOwnBranch(branch: string) {
+  const me = await requireRole(hodRoles);
+  const dept = (me.department || "").toLowerCase();
+  // super_admin / principal may edit any branch; HOD only their own.
+  if (me.role === "hod" && dept !== branch.toLowerCase()) {
+    throw new Error("You may only edit your own department's timetable.");
+  }
+  return me;
+}
+
+export const hodUpsertTimetableSlot = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        branch: z.string(),
+        semester: z.number().int(),
+        day_of_week: z.number().int().min(1).max(6),
+        period_no: z.number().int().min(1).max(12),
+        subject_id: z.number().int().nullable(),
+        staff_id: z.number().int().nullable(),
+        room: z.string().max(30).optional().nullable(),
+        academic_year: z.string().regex(yearReTT),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await assertOwnBranch(data.branch);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.staff_id) {
+      const { data: conflict } = await supabaseAdmin
+        .from("timetable")
+        .select("id, branch, semester")
+        .eq("academic_year", data.academic_year)
+        .eq("day_of_week", data.day_of_week)
+        .eq("period_no", data.period_no)
+        .eq("staff_id", data.staff_id)
+        .neq("branch", data.branch)
+        .limit(1);
+      if (conflict && conflict.length > 0) {
+        throw new Error(
+          `Faculty conflict: already teaching ${conflict[0].branch}-Sem${conflict[0].semester} at this slot.`,
+        );
+      }
+    }
+    const { error } = await supabaseAdmin
+      .from("timetable")
+      .upsert(
+        { ...data, room: data.room || null },
+        { onConflict: "branch,semester,day_of_week,period_no,academic_year" },
+      );
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const hodPublishTimetable = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        branch: z.string(),
+        semester: z.number().int(),
+        academic_year: z.string().regex(yearReTT),
+        published: z.boolean(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await assertOwnBranch(data.branch);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("timetable")
+      .update({ published: data.published })
+      .eq("branch", data.branch)
+      .eq("semester", data.semester)
+      .eq("academic_year", data.academic_year);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+

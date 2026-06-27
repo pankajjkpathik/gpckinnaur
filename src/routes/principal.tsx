@@ -20,6 +20,8 @@ import {
   deleteDisciplinaryAction,
 } from "@/lib/assignments.functions";
 import { listPlacements, hodDepartmentOverview } from "@/lib/tpo.functions";
+import { listPeriods, listTimetable } from "@/lib/academic.functions";
+import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import {
   listParentMessages,
   markParentMessageRead,
@@ -311,10 +313,14 @@ function PlacementDataView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      <div className="flex items-center justify-between gap-2 print:hidden">
+        <BackBtn onClick={onBack} />
+        <button onClick={() => window.print()} className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5 bg-white">🖨️ Print</button>
+      </div>
       <div className="bg-white border rounded-lg p-5">
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Placement Data</h1>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Placement Data (Read-only)</h1>
         <p className="text-xs text-gray-400 mb-4">View and analyze student placement records.</p>
+
         {byCompany.length > 0 ? (
           <>
             <p className="font-semibold text-gray-800 mb-3">Placements by Company ({latestYear})</p>
@@ -618,24 +624,60 @@ function PTMView({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ─── VIEW TIMETABLE ───────────────────────────────────────────────────────────
+// ─── VIEW TIMETABLE (read-only with branch + sem selector) ────────────────────
 function TimetableView({ onBack }: { onBack: () => void }) {
+  const [branch, setBranch] = useState("mechanical");
+  const [sem, setSem] = useState(3);
+  const [year, setYear] = useState(defaultYear());
+  const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods() });
+  const ttQ = useQuery({
+    queryKey: ["principal-tt", branch, sem, year],
+    queryFn: () => listTimetable({ data: { branch, semester: sem, academic_year: year } }),
+  });
+  const BRANCHES: Record<string, string> = {
+    civil: "Civil Engineering",
+    mechanical: "Mechanical Engineering",
+    applied_science: "Applied Sciences",
+  };
+  const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <div className="bg-white border rounded-lg p-5">
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Timetable</h1>
-        <p className="text-xs text-gray-400 mb-4">View the weekly schedule for any class.</p>
-        <p className="text-sm text-gray-600">
-          View and print published class timetables in the Admin console at{" "}
-          <a href="/admin/timetable" className="text-[#7b1f4c] underline">
-            Timetable Builder →
-          </a>
-        </p>
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-3 print:hidden">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Branch Timetable (Read-only)</h1>
+            <p className="text-xs text-gray-400">View weekly schedule for any class.</p>
+          </div>
+          <div className="flex gap-2 flex-wrap items-center">
+            <select value={branch} onChange={(e) => setBranch(e.target.value)} className="border rounded px-2 py-1.5 text-sm bg-white">
+              {Object.entries(BRANCHES).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+            <select value={sem} onChange={(e) => setSem(Number(e.target.value))} className="border rounded px-2 py-1.5 text-sm bg-white">
+              {[1, 2, 3, 4, 5, 6].map((s) => <option key={s} value={s}>{ORD[s]} Sem</option>)}
+            </select>
+            <input value={year} onChange={(e) => setYear(e.target.value)} pattern="\d{4}-\d{2}" className="border rounded px-2 py-1.5 text-sm w-24" />
+            <button onClick={() => window.print()} className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5">
+              🖨️ Print
+            </button>
+          </div>
+        </div>
+        {(periodsQ.data ?? []).length === 0 ? (
+          <p className="text-center py-8 text-gray-400 text-sm">Periods Master not configured.</p>
+        ) : (
+          <TimetableGrid
+            periods={periodsQ.data as any}
+            slots={(ttQ.data ?? []) as any}
+            editable={false}
+            institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
+            classLine={`${BRANCHES[branch] ?? branch} - ${ORD[sem]} Semester`}
+          />
+        )}
       </div>
     </div>
   );
 }
+
 
 function Card({ label, value, tone }: { label: string; value: number | string; tone?: string }) {
   return (
