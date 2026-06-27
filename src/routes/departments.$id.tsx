@@ -191,10 +191,15 @@ function DepartmentPage() {
                     {data.faculty.map((f) => (
                       <tr key={f.name} className="border-t">
                         <td className="px-4 py-3">
-                          <div className="w-12 h-12 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-xs">
-                            {f.name.split(" ").slice(-2).map((w) => w[0]).join("")}
-                          </div>
+                          {facultyPhoto(f.name) ? (
+                            <img src={facultyPhoto(f.name)!} alt={f.name} className="w-12 h-12 rounded-full object-cover ring-2 ring-slate-200" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-xs">
+                              {f.name.split(" ").slice(-2).map((w) => w[0]).join("")}
+                            </div>
+                          )}
                         </td>
+
                         <td className="px-4 py-3 font-medium">{f.name}</td>
                         <td className="px-4 py-3">{f.designation}</td>
                         <td className="px-4 py-3">{f.qualification}</td>
