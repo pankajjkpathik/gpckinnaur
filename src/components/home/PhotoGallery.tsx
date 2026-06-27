@@ -6,7 +6,7 @@ import eventAsset from "@/assets/event.jpeg.asset.json";
 import s5Asset from "@/assets/s5.jpeg.asset.json";
 
 const tiles = [
-  { title: "Campus", image: s6Asset.url },
+  { title: "Campus", image: s1Asset.url },
   { title: "Laboratory", image: labAsset.url },
   { title: "Seminars", image: seminarAsset.url },
   { title: "Events", image: vanmahoatsavAsset.url },
