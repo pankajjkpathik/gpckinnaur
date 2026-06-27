@@ -7,8 +7,16 @@ async function requireAdmin() {
   return requireRole(adminRoles);
 }
 
-const optStr = z.string().optional().nullable().or(z.literal("").transform(() => null));
-const optDate = z.string().optional().nullable().or(z.literal("").transform(() => null));
+const optStr = z
+  .string()
+  .optional()
+  .nullable()
+  .or(z.literal("").transform(() => null));
+const optDate = z
+  .string()
+  .optional()
+  .nullable()
+  .or(z.literal("").transform(() => null));
 const optNum = z.number().optional().nullable();
 
 // =====================================================================
@@ -22,8 +30,10 @@ export const facultyList = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("staff_users")
-      .select("id, username, name, designation, role, department, dob, ip_number, pmis_number, phone, email, last_salary_drawn, address, date_of_joining, date_of_retirement, is_active")
-      .in("role", ["faculty", "hod", "principal"])
+      .select(
+        "id, username, name, designation, role, extra_roles, department, dob, ip_number, pmis_number, phone, email, last_salary_drawn, address, date_of_joining, date_of_retirement, is_active",
+      )
+      .in("role", ["faculty", "hod", "principal", "tpo", "admin_staff"])
       .order("name", { nullsFirst: false });
     if (data.department) q = q.eq("department", data.department);
     const { data: rows, error } = await q;
@@ -51,7 +61,8 @@ export const facultyCreate = createServerFn({ method: "POST" })
     facultyProfileSchema
       .extend({
         username: z.string().min(3).max(40),
-        role: z.enum(["faculty", "hod", "principal"]).default("faculty"),
+        role: z.enum(["faculty", "hod", "principal", "tpo", "admin_staff", "clerk"]).default("faculty"),
+        extra_roles: z.array(z.enum(["faculty", "hod", "principal", "tpo", "admin_staff", "clerk"])).default([]),
         password: z.string().min(8).max(100),
       })
       .parse(d),
@@ -80,7 +91,8 @@ export const facultyUpdate = createServerFn({ method: "POST" })
       .extend({
         id: z.number().int(),
         username: z.string().min(3).max(40).optional(),
-        role: z.enum(["faculty", "hod", "principal"]).optional(),
+        role: z.enum(["faculty", "hod", "principal", "tpo", "admin_staff", "clerk"]).optional(),
+        extra_roles: z.array(z.enum(["faculty", "hod", "principal", "tpo", "admin_staff", "clerk"])).optional(),
       })
       .parse(d),
   )
@@ -112,13 +124,17 @@ export const facultyDelete = createServerFn({ method: "POST" })
 // =====================================================================
 
 export const studentList = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ branch: z.string().optional(), semester: z.number().int().optional() }).parse(d ?? {}))
+  .inputValidator((d) =>
+    z.object({ branch: z.string().optional(), semester: z.number().int().optional() }).parse(d ?? {}),
+  )
   .handler(async ({ data }) => {
     await requireAdmin();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("students")
-      .select("id, enrollment_no, name, father_name, guardian_name, dob, branch, semester, batch_year, address, aadhaar_number, phone, parent_phone, email, bank_account_number, is_active")
+      .select(
+        "id, enrollment_no, name, father_name, guardian_name, dob, branch, semester, batch_year, address, aadhaar_number, phone, parent_phone, email, bank_account_number, is_active",
+      )
       .order("name");
     if (data.branch) q = q.eq("branch", data.branch);
     if (data.semester) q = q.eq("semester", data.semester);
