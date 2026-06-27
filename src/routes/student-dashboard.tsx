@@ -268,7 +268,7 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, {me.name?.split(" ")[0] ?? "Student"}</h1>
+      <h1 className="text-2xl font-bold text-gray-800">Welcome, {me.name ? me.name.toUpperCase() : "STUDENT"}</h1>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
