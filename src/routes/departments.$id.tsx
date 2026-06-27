@@ -2,6 +2,8 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { Breadcrumb, PageLayout, PageHeader } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
+import { facultyPhoto } from "@/lib/faculty-photos";
+
 
 export const Route = createFileRoute("/departments/$id")({
   head: ({ params }) => {
@@ -157,9 +159,14 @@ function DepartmentPage() {
 
             {tab === 2 && (
               <div className="flex flex-col sm:flex-row gap-6">
-                <div className="w-32 h-32 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-3xl shrink-0">
-                  {data.hod.name.split(" ").slice(-2).map((w) => w[0]).join("")}
-                </div>
+                {facultyPhoto(data.hod.name) ? (
+                  <img src={facultyPhoto(data.hod.name)!} alt={data.hod.name} className="w-32 h-32 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-3xl shrink-0">
+                    {data.hod.name.split(" ").slice(-2).map((w) => w[0]).join("")}
+                  </div>
+                )}
+
                 <div>
                   <p className="font-bold text-[color:var(--navy)] text-lg">{data.hod.name}</p>
                   <p className="text-sm text-muted-foreground mb-3">{data.hod.title}</p>
@@ -184,10 +191,15 @@ function DepartmentPage() {
                     {data.faculty.map((f) => (
                       <tr key={f.name} className="border-t">
                         <td className="px-4 py-3">
-                          <div className="w-12 h-12 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-xs">
-                            {f.name.split(" ").slice(-2).map((w) => w[0]).join("")}
-                          </div>
+                          {facultyPhoto(f.name) ? (
+                            <img src={facultyPhoto(f.name)!} alt={f.name} className="w-12 h-12 rounded-full object-cover ring-2 ring-slate-200" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-xs">
+                              {f.name.split(" ").slice(-2).map((w) => w[0]).join("")}
+                            </div>
+                          )}
                         </td>
+
                         <td className="px-4 py-3 font-medium">{f.name}</td>
                         <td className="px-4 py-3">{f.designation}</td>
                         <td className="px-4 py-3">{f.qualification}</td>
