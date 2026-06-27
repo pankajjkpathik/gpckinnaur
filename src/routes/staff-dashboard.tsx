@@ -192,12 +192,6 @@ function StaffDashboard() {
               >
                 <GraduationCap className="w-4 h-4" /> Principal Portal
               </a>
-              <a href="/hod" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
-                <GraduationCap className="w-4 h-4" /> HOD View
-              </a>
-              <a href="/faculty" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
-                <GraduationCap className="w-4 h-4" /> Faculty View
-              </a>
               <a href="/tpo" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-white/90">
                 <GraduationCap className="w-4 h-4" /> Training & Placement
               </a>
@@ -295,18 +289,6 @@ const portalForRole: Record<string, { href: string; title: string; desc: string;
       title: "Principal Portal",
       desc: "Institute-wide monitoring & circulars",
       accent: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-    },
-    {
-      href: "/hod",
-      title: "HOD View",
-      desc: "Read-only department drill-down",
-      accent: "bg-sky-50 text-sky-700 ring-sky-200",
-    },
-    {
-      href: "/faculty",
-      title: "Faculty View",
-      desc: "Read-only faculty workload",
-      accent: "bg-teal-50 text-teal-700 ring-teal-200",
     },
     {
       href: "/tpo",
