@@ -26,9 +26,7 @@ export function getSessionSecretIssue(name: string): string | null {
 function requireSecret(name: string): string {
   const issue = getSessionSecretIssue(name);
   if (issue) {
-    throw new Error(
-      `${name} is not set or is too short (must be >=32 chars). Configure it as a project secret.`,
-    );
+    throw new Error(`${name} is not set or is too short (must be >=32 chars). Configure it as a project secret.`);
   }
   return getSessionSecretValue(name)!;
 }
@@ -68,6 +66,7 @@ export type StaffSession = {
   id: number;
   username: string;
   role: "super_admin" | "principal" | "hod" | "faculty" | "admin_staff" | "clerk" | "tpo";
+  extraRoles?: ("super_admin" | "principal" | "hod" | "faculty" | "admin_staff" | "clerk" | "tpo")[];
   department: string | null;
 };
 
