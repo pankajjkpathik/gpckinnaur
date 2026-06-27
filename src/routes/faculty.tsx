@@ -481,8 +481,11 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                 </tr>
               </thead>
               <tbody>
-                {rosterQ.data.map((s: any) => (
-                  <tr key={s.id} className="border-t">
+                {rosterQ.data.map((s: any) => {
+                  const st = marks[s.id] ?? "present";
+                  const rowCls = st === "absent" ? "bg-rose-50 text-rose-700 font-semibold" : "";
+                  return (
+                  <tr key={s.id} className={`border-t ${rowCls}`}>
                     <td className="px-4 py-3 font-mono text-xs">{s.enrollment_no}</td>
                     <td className="px-4 py-3">{s.name}</td>
                     <td className="px-4 py-3 text-right">
@@ -493,7 +496,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                               type="radio"
                               name={`att-${s.id}`}
                               value={opt}
-                              checked={(marks[s.id] ?? "present") === opt}
+                              checked={st === opt}
                               onChange={() => setMarks({ ...marks, [s.id]: opt })}
                               disabled={s.locked}
                               className="accent-[#7b1f4c]"
@@ -504,8 +507,10 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                       </span>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
+
             </table>
           </div>
           <div className="flex justify-end mt-4">
