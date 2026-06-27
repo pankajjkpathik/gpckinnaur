@@ -159,9 +159,14 @@ function DepartmentPage() {
 
             {tab === 2 && (
               <div className="flex flex-col sm:flex-row gap-6">
-                <div className="w-32 h-32 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-3xl shrink-0">
-                  {data.hod.name.split(" ").slice(-2).map((w) => w[0]).join("")}
-                </div>
+                {facultyPhoto(data.hod.name) ? (
+                  <img src={facultyPhoto(data.hod.name)!} alt={data.hod.name} className="w-32 h-32 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-[color:var(--navy)] text-white flex items-center justify-center font-bold text-3xl shrink-0">
+                    {data.hod.name.split(" ").slice(-2).map((w) => w[0]).join("")}
+                  </div>
+                )}
+
                 <div>
                   <p className="font-bold text-[color:var(--navy)] text-lg">{data.hod.name}</p>
                   <p className="text-sm text-muted-foreground mb-3">{data.hod.title}</p>
