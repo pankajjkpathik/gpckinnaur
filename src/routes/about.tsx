@@ -4,11 +4,13 @@ import { pageMeta } from "@/lib/seo";
 import pankajpathik from "@/assets/faculty/pankajpathik.png.asset.json";
 
 export const Route = createFileRoute("/about")({
-  head: () => pageMeta({
-    title: "About — Government Polytechnic, Kinnaur",
-    description: "Established in 2013, GP Kinnaur offers AICTE-approved diploma programs in Civil and Mechanical Engineering, affiliated to HPTSB.",
-    path: "/about",
-  }),
+  head: () =>
+    pageMeta({
+      title: "About — Government Polytechnic, Kinnaur",
+      description:
+        "Established in 2013, GP Kinnaur offers AICTE-approved diploma programs in Civil and Mechanical Engineering, affiliated to HPTSB.",
+      path: "/about",
+    }),
   component: About,
 });
 
@@ -34,10 +36,9 @@ function About() {
           <section>
             <h1 className="text-3xl font-bold text-[color:var(--navy)] mb-3">About the Institute</h1>
             <p className="text-muted-foreground leading-relaxed">
-              Government Polytechnic, Kinnaur was established in 2013 under the
-              Himachal Pradesh government to provide quality technical education
-              to the youth of Kinnaur district. The institute currently operates
-              from its camp campus at Government Polytechnic Rohru, Distt. Shimla.
+              Government Polytechnic, Kinnaur was established in 2013 under the Himachal Pradesh government to provide
+              quality technical education to the youth of Kinnaur district. The institute currently operates from its
+              camp campus at Government Polytechnic Rohru, Distt. Shimla.
             </p>
           </section>
 
@@ -45,17 +46,15 @@ function About() {
             <div className="bg-white border border-l-4 border-l-[color:var(--gold)] rounded-lg p-5">
               <h3 className="font-bold text-[color:var(--navy)] mb-2">Our Vision</h3>
               <p className="italic text-sm text-muted-foreground">
-                To be a premier technical institution providing world-class education
-                and producing skilled engineers who contribute to the development of
-                Himachal Pradesh and the nation.
+                To be a premier technical institution providing world-class education and producing skilled engineers
+                who contribute to the development of Himachal Pradesh and the nation.
               </p>
             </div>
             <div className="bg-white border border-l-4 border-l-[color:var(--gold)] rounded-lg p-5">
               <h3 className="font-bold text-[color:var(--navy)] mb-2">Our Mission</h3>
               <p className="italic text-sm text-muted-foreground">
-                To impart quality technical education, develop practical skills,
-                foster innovation, and produce industry-ready diploma engineers with
-                strong ethical values.
+                To impart quality technical education, develop practical skills, foster innovation, and produce
+                industry-ready diploma engineers with strong ethical values.
               </p>
             </div>
           </div>
@@ -75,20 +74,22 @@ function About() {
           <section className="bg-white border rounded-lg p-6">
             <h2 className="text-2xl font-bold text-[color:var(--navy)] mb-4">Principal&apos;s Message</h2>
             <div className="flex items-start gap-4">
-              <img src={pankajpathik.url} alt="Sh. Pankaj K. Pathik" className="w-16 h-16 rounded-full object-cover border-2 border-[color:var(--gold)] shrink-0" />
+              <img
+                src={pankajpathik.url}
+                alt="Sh. Pankaj K. Pathik"
+                className="w-32 h-32 rounded-full object-cover border-2 border-[color:var(--gold)] shrink-0"
+              />
               <div>
                 <p className="font-semibold text-[color:var(--navy)]">Sh. Pankaj K. Pathik</p>
                 <p className="text-xs text-muted-foreground mb-3">Principal · MCA, CCNA</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  It gives me immense pleasure to welcome you to Government Polytechnic,
-                  Kinnaur. Our institute is committed to providing quality diploma
-                  education, building practical engineering skills, and shaping
+                  It gives me immense pleasure to welcome you to Government Polytechnic, Kinnaur. Our institute is
+                  committed to providing quality diploma education, building practical engineering skills, and shaping
                   industry-ready professionals from the youth of our region.
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-                  We continue to invest in modern laboratories, qualified faculty, and
-                  student welfare initiatives so that every student leaves the campus
-                  with confidence, character, and a strong technical foundation.
+                  We continue to invest in modern laboratories, qualified faculty, and student welfare initiatives so
+                  that every student leaves the campus with confidence, character, and a strong technical foundation.
                 </p>
               </div>
             </div>
