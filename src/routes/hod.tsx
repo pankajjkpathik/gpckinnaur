@@ -325,14 +325,19 @@ function FacultyView({ branch, ay, onBack }: { branch: string; ay: string; onBac
 }
 
 // ─── ATTENDANCE REPORTS (class monitor) ───────────────────────────────────────
-function AttendanceReportsView({ onBack }: { onBack: () => void }) {
+function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?: string; onBack: () => void }) {
   const today = new Date().toISOString().slice(0, 10);
   const monthAgo = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
     return d.toISOString().slice(0, 10);
   }, []);
-  const [branch, setBranch] = useState("");
+  const semesterAgo = useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 6);
+    return d.toISOString().slice(0, 10);
+  }, []);
+  const [branch, setBranch] = useState(defaultBranch);
   const [sem, setSem] = useState<number | "">("");
   const [from, setFrom] = useState(monthAgo);
   const [to, setTo] = useState(today);
@@ -351,31 +356,32 @@ function AttendanceReportsView({ onBack }: { onBack: () => void }) {
       <BackBtn onClick={onBack} />
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Attendance Reports</h1>
-        <p className="text-xs text-gray-400 mb-4">Review branch-wide attendance.</p>
-        <div className="grid sm:grid-cols-4 gap-2 text-sm mb-3">
-          <input
-            value={branch}
-            onChange={(e) => setBranch(e.target.value)}
-            placeholder="Branch (e.g. civil)"
-            className="border rounded px-3 py-2"
-          />
-          <input
-            type="number"
-            min={1}
-            max={8}
+        <p className="text-xs text-gray-400 mb-4">Filter by branch + semester. Use quick ranges for monthly / semester view.</p>
+        <div className="grid sm:grid-cols-4 gap-2 text-sm mb-2">
+          <select value={branch} onChange={(e) => setBranch(e.target.value)} className="border rounded px-3 py-2 bg-white">
+            <option value="">— Branch —</option>
+            <option value="civil">Civil Engineering</option>
+            <option value="mechanical">Mechanical Engineering</option>
+            <option value="applied_science">Applied Sciences</option>
+          </select>
+          <select
             value={sem}
             onChange={(e) => setSem(e.target.value ? Number(e.target.value) : "")}
-            placeholder="Semester"
-            className="border rounded px-3 py-2"
-          />
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="border rounded px-3 py-2"
-          />
+            className="border rounded px-3 py-2 bg-white"
+          >
+            <option value="">— Semester —</option>
+            {[1, 2, 3, 4, 5, 6].map((s) => (
+              <option key={s} value={s}>Sem {s}</option>
+            ))}
+          </select>
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="border rounded px-3 py-2" />
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="border rounded px-3 py-2" />
         </div>
+        <div className="flex gap-2 mb-3 text-xs">
+          <button onClick={() => { setFrom(monthAgo); setTo(today); }} className="border rounded px-2 py-1 hover:bg-gray-50">📅 This Month</button>
+          <button onClick={() => { setFrom(semesterAgo); setTo(today); }} className="border rounded px-2 py-1 hover:bg-gray-50">📚 This Semester</button>
+        </div>
+
         {rows.length > 0 && (
           <div className="flex gap-2 mb-3">
             <button
