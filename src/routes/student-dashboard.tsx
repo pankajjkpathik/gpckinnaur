@@ -140,6 +140,9 @@ function StudentDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <Link to="/student-profile" className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
+              👤 Profile
+            </Link>
             <Link to="/messages" className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
               Messages
             </Link>
