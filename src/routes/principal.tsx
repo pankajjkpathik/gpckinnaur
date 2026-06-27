@@ -20,6 +20,8 @@ import {
   deleteDisciplinaryAction,
 } from "@/lib/assignments.functions";
 import { listPlacements, hodDepartmentOverview } from "@/lib/tpo.functions";
+import { listPeriods, listTimetable } from "@/lib/academic.functions";
+import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import {
   listParentMessages,
   markParentMessageRead,
