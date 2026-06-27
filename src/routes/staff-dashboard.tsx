@@ -39,7 +39,7 @@ export const Route = createFileRoute("/staff-dashboard")({
   component: StaffDashboard,
 });
 
-type View = "home" | "notices" | "materials" | "contact" | "alumni" | "profile";
+type View = "home" | "notices" | "materials" | "alumni" | "profile";
 const roleBadge: Record<string, string> = {
   super_admin: "bg-rose-100 text-rose-700",
   principal: "bg-indigo-100 text-indigo-700",
