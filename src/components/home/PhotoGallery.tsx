@@ -1,4 +1,4 @@
-import s6Asset from "@/assets/s6.jpg.asset.json";
+import s1Asset from "@/assets/s1.png.asset.json";
 import labAsset from "@/assets/lab.jpeg.asset.json";
 import seminarAsset from "@/assets/seminar.jpeg.asset.json";
 import vanmahoatsavAsset from "@/assets/vanmahoatsav.jpeg.asset.json";
@@ -6,7 +6,7 @@ import eventAsset from "@/assets/event.jpeg.asset.json";
 import s5Asset from "@/assets/s5.jpeg.asset.json";
 
 const tiles = [
-  { title: "Campus Building", image: s6Asset.url },
+  { title: "Kinnaur Landscape", image: s1Asset.url },
   { title: "Laboratory", image: labAsset.url },
   { title: "Seminars", image: seminarAsset.url },
   { title: "Events", image: vanmahoatsavAsset.url },

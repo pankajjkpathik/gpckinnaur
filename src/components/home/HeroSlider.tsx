@@ -1,31 +1,47 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import s1Asset from "@/assets/s1.jpg.asset.json";
-import s2Asset from "@/assets/s2.jpg.asset.json";
-import s3Asset from "@/assets/s3.jpg.asset.json";
+import s1Asset from "@/assets/s1.png.asset.json";
+import s2Asset from "@/assets/s2.png.asset.json";
+import s3Asset from "@/assets/s3.png.asset.json";
+import s4Asset from "@/assets/s4.png.asset.json";
+import s5Asset from "@/assets/s5.jpeg.asset.json";
 
 const slides = [
   {
-    title: "Welcome to GP Kinnaur",
-    subtitle: "Empowering youth of Kinnaur through quality technical education.",
-    cta: "Explore Courses",
-    to: "/departments/1",
+    title: "Discover Kinnaur",
+    subtitle: "Nestled in the breathtaking Himalayas — where heritage, faith and learning meet.",
+    cta: "About the Institute",
+    to: "/about",
     image: s1Asset.url,
   },
   {
-    title: "Admissions Open 2026-27",
-    subtitle: "Diploma in Civil & Mechanical Engineering — apply now.",
-    cta: "Apply Now",
-    to: "/admissions",
+    title: "Celebrating Culture & Heritage",
+    subtitle: "Our students proudly showcase the vibrant traditional attire of Himachal Pradesh.",
+    cta: "Student Life",
+    to: "/student-portal",
     image: s2Asset.url,
   },
   {
-    title: "Community & Outreach",
-    subtitle: "Engaging with society through meaningful initiatives and programmes.",
-    cta: "Learn More",
-    to: "/about",
+    title: "Modern Mechanical Engineering Labs",
+    subtitle: "Hands-on training with CAD, CNC and 3D printing for industry-ready engineers.",
+    cta: "Explore Mechanical",
+    to: "/departments/2",
     image: s3Asset.url,
+  },
+  {
+    title: "Civil Engineering in the Field",
+    subtitle: "Practical surveying and site work amid the majestic Kinnaur landscape.",
+    cta: "Explore Civil",
+    to: "/departments/1",
+    image: s4Asset.url,
+  },
+  {
+    title: "Champions of GP Kinnaur",
+    subtitle: "Our students excel in academics, sports and co-curricular achievements.",
+    cta: "Achievements",
+    to: "/about",
+    image: s5Asset.url,
   },
 ];
 
