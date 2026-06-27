@@ -26,9 +26,12 @@ import {
   hodMarksDetail,
   hodReviewMarks,
   deptClassAttendance,
+  hodUpsertTimetableSlot,
 } from "@/lib/hod.functions";
 import { hodDepartmentOverview } from "@/lib/tpo.functions";
 import { reviewLessonPlan, pendingLeavesForReview, reviewLeave } from "@/lib/faculty.functions";
+import { listPeriods, listTimetable, listSubjects, listStaffByRole } from "@/lib/academic.functions";
+import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
 import { BarStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
