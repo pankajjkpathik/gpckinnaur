@@ -18,14 +18,14 @@ export const principalRoles: StaffRole[] = ["super_admin", "principal"];
 export const tpoRoles: StaffRole[] = ["super_admin", "principal", "admin_staff", "tpo"];
 
 // All roles a staff member effectively holds (primary + extras).
-export function heldRoles(me: { role: StaffRole; extraRoles?: StaffRole[] } | null | undefined): StaffRole[] {
+export function heldRoles(me: { role?: StaffRole | null; extraRoles?: StaffRole[] | null } | null | undefined): StaffRole[] {
   if (!me) return [];
-  return [me.role, ...(me.extraRoles ?? [])];
+  return [...(me.role ? [me.role] : []), ...(me.extraRoles ?? [])];
 }
 
 // Does this person hold ANY of the allowed roles (primary or extra)?
 export function hasRole(
-  me: { role: StaffRole; extraRoles?: StaffRole[] } | null | undefined,
+  me: { role?: StaffRole | null; extraRoles?: StaffRole[] | null } | null | undefined,
   allowed: StaffRole[],
 ): boolean {
   if (!me) return false;
