@@ -46,9 +46,7 @@ type View =
   | "sessional"
   | "syllabus"
   | "timetable"
-  | "lessons"
-  | "marks"
-  | "leave";
+  | "marks";
 
 function defaultAY() {
   const d = new Date();
