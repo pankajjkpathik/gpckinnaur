@@ -5,7 +5,7 @@ import {
   LayoutDashboard,
   FileText,
   FolderOpen,
-  Mail,
+  
   GraduationCap,
   User,
   LogOut,
