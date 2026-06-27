@@ -48,7 +48,7 @@ function FacultyPage() {
       <Breadcrumb items={[{ label: "Home" }, { label: "Staff" }, { label: "Our Faculty" }]} />
       <div className="container mx-auto px-4 py-10 space-y-10">
         <div className="bg-[color:var(--navy)] text-white rounded-lg p-6 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold text-lg">PKP</div>
+          <img src={facultyPhoto("Pankaj Pathik") ?? ""} alt="Principal" className="w-20 h-20 rounded-full object-cover border-2 border-[color:var(--gold)]" />
           <div>
             <p className="text-[color:var(--gold)] text-xs uppercase font-semibold tracking-wider">Principal</p>
             <p className="font-bold text-white text-lg">Sh. Pankaj K. Pathik</p>
