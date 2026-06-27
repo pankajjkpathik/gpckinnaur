@@ -13,13 +13,7 @@ import {
 // ---------- STAFF ----------
 
 export const staffLogin = createServerFn({ method: "POST" })
-  .inputValidator((d) =>
-    z.object({
-      username: z.string().min(1),
-      password: z.string().min(1),
-      allowedRoles: z.array(z.string()).optional(),
-    }).parse(d),
-  )
+  .inputValidator((d) => z.object({ username: z.string().min(1), password: z.string().min(1) }).parse(d))
   .handler(async ({ data }) => {
     const secretIssue = getStaffSessionSecretIssue();
     if (secretIssue) throw new Error(secretIssue);
@@ -34,18 +28,13 @@ export const staffLogin = createServerFn({ method: "POST" })
     if (!row) throw new Error("Invalid credentials");
     const ok = await bcrypt.compare(data.password, row.password_hash);
     if (!ok) throw new Error("Invalid credentials");
-    if (data.allowedRoles && data.allowedRoles.length > 0 && !data.allowedRoles.includes(row.role)) {
-      throw new Error("This login is not permitted for your role.");
-    }
-    await supabaseAdmin
-      .from("staff_users")
-      .update({ last_login: new Date().toISOString() })
-      .eq("id", row.id);
+    await supabaseAdmin.from("staff_users").update({ last_login: new Date().toISOString() }).eq("id", row.id);
     const session = await useSession<StaffSession>(staffSessionConfig);
     await session.update({
       id: row.id,
       username: row.username,
       role: row.role as StaffSession["role"],
+      extraRoles: (row.extra_roles ?? []) as StaffSession["extraRoles"],
       department: row.department,
     });
     return { success: true, role: row.role };
@@ -65,11 +54,7 @@ export const staffMe = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const staffChangePassword = createServerFn({ method: "POST" })
-  .inputValidator((d) =>
-    z
-      .object({ currentPassword: z.string().min(1), newPassword: z.string().min(8) })
-      .parse(d),
-  )
+  .inputValidator((d) => z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(8) }).parse(d))
   .handler(async ({ data }) => {
     const session = await useSession<StaffSession>(staffSessionConfig);
     if (!session.data?.id) throw new Error("Not authenticated");
@@ -84,19 +69,14 @@ export const staffChangePassword = createServerFn({ method: "POST" })
     const ok = await bcrypt.compare(data.currentPassword, row.password_hash);
     if (!ok) throw new Error("Current password incorrect");
     const newHash = await bcrypt.hash(data.newPassword, 12);
-    await supabaseAdmin
-      .from("staff_users")
-      .update({ password_hash: newHash })
-      .eq("id", session.data.id);
+    await supabaseAdmin.from("staff_users").update({ password_hash: newHash }).eq("id", session.data.id);
     return { success: true };
   });
 
 // ---------- STUDENT ----------
 
 export const studentLogin = createServerFn({ method: "POST" })
-  .inputValidator((d) =>
-    z.object({ enrollmentNo: z.string().min(1), password: z.string().min(1) }).parse(d),
-  )
+  .inputValidator((d) => z.object({ enrollmentNo: z.string().min(1), password: z.string().min(1) }).parse(d))
   .handler(async ({ data }) => {
     const secretIssue = getStudentSessionSecretIssue();
     if (secretIssue) throw new Error(secretIssue);
