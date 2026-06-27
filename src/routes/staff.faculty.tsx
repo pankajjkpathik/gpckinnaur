@@ -71,7 +71,7 @@ function FacultyPage() {
           <div>
             <p className="text-[color:var(--gold)] text-xs uppercase font-semibold tracking-wider">Principal</p>
             <p className="font-bold text-white text-lg">Sh. Pankaj K. Pathik</p>
-            <p className="text-white/80 text-sm">MCA, CCNA · 15+ Years</p>
+            <p className="text-white/80 text-sm">MCA, CCNA · 27+ Years</p>
           </div>
         </div>
         <Section title="Civil Engineering">
