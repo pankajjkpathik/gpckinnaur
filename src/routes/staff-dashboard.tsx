@@ -373,11 +373,10 @@ function DashboardHome({ me, counts }: any) {
         </div>
       )}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard label="Total Notices" value={counts?.totalNotices ?? 0} />
         <StatCard label="Study Materials" value={counts?.totalMaterials ?? 0} />
-        <StatCard label="Unread Contact" value={counts?.unreadContact ?? 0} />
-        <StatCard label="Unverified Alumni" value={counts?.unverifiedAlumni ?? 0} />
+        <StatCard label="Alumni Records" value={counts?.unverifiedAlumni ?? 0} />
       </div>
       <div className="bg-white border rounded-lg">
         <div className="px-4 py-3 border-b font-semibold">Recent Notices</div>
