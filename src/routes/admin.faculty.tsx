@@ -6,6 +6,7 @@ import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
 import { facultyList, facultyCreate, facultyUpdate, facultyDelete, facultyResetPassword } from "@/lib/people.functions";
+import { facultyPhoto } from "@/lib/faculty-photos";
 
 export const Route = createFileRoute("/admin/faculty")({
   head: () => portalMeta("Faculty Management"),
@@ -95,6 +96,7 @@ function FacultyManagement() {
             <table className="w-full text-sm whitespace-nowrap">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Photo</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Name</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Designation</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Department</th>
@@ -108,6 +110,13 @@ function FacultyManagement() {
               <tbody>
                 {rows.map((f: any) => (
                   <tr key={f.id} className="border-t">
+                    <td className="px-4 py-3">
+                      {facultyPhoto(f.name) ? (
+                        <img src={facultyPhoto(f.name)!} alt={f.name ?? ""} className="w-10 h-10 rounded-full object-cover border" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">—</div>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <p className="font-medium">{f.name || <span className="text-gray-400 italic">(no name)</span>}</p>
                       <p className="text-xs text-gray-400">
@@ -156,7 +165,7 @@ function FacultyManagement() {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
                       {listQ.isLoading ? "Loading…" : "No faculty found."}
                     </td>
                   </tr>
