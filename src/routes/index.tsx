@@ -19,7 +19,7 @@ import { NoticeBoard } from "@/components/home/NoticeBoard";
 import { PhotoGallery } from "@/components/home/PhotoGallery";
 import civilAsset from "@/assets/civil.png.asset.json";
 import mechAsset from "@/assets/mech.png.asset.json";
-import s6Asset from "@/assets/s6.jpg.asset.json";
+import s6Asset from "@/assets/s1.png.asset.json";
 import news1Asset from "@/assets/news/news1.jpg.asset.json";
 import news2Asset from "@/assets/news/news2.jpg.asset.json";
 import news3Asset from "@/assets/news/news3.jpg.asset.json";
