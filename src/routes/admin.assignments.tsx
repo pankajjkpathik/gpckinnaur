@@ -36,8 +36,10 @@ function AssignmentsPage() {
     else if (!hasRole(me, adminRoles)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
-  const [year, setYear] = useState("2025-26");
+  const [year, setYear] = useState("2026-27");
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [form, setForm] = useState({ branch: "", semester: 0, subject_id: 0, staff_id: 0 });
+
   const assignQ = useQuery({
     queryKey: ["assignments", year],
     queryFn: () => listAssignments({ data: { academic_year: year } as any }),
@@ -48,22 +50,25 @@ function AssignmentsPage() {
     queryFn: () => listStaffByRole({ data: {} as any }),
     enabled: !!me,
   });
+  // Cascading subjects: only fetch once branch + semester are chosen.
   const subjQ = useQuery({
-    queryKey: ["subjects-all"],
-    queryFn: () => listSubjects({ data: {} as any }),
-    enabled: !!me,
+    queryKey: ["subjects-of", form.branch, form.semester],
+    queryFn: () => listSubjects({ data: { branch: form.branch, semester: form.semester } as any }),
+    enabled: !!me && !!form.branch && !!form.semester,
   });
 
   const save = useMutation({
     mutationFn: (d: any) => upsertAssignment({ data: d }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["assignments"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["assignments"] });
+      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0 }));
+    },
   });
   const del = useMutation({
     mutationFn: (id: number) => deleteAssignment({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["assignments"] }),
   });
 
-  const [form, setForm] = useState({ staff_id: 0, subject_id: 0, branch: "", semester: 1 });
   const toggle = (id: number) => {
     const s = new Set(selected);
     s.has(id) ? s.delete(id) : s.add(id);
@@ -75,6 +80,12 @@ function AssignmentsPage() {
   };
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
+
+  const BRANCHES: Array<[string, string]> = [
+    ["civil", "Civil Engineering"],
+    ["mechanical", "Mechanical Engineering"],
+    ["applied_science", "Applied Sciences"],
+  ];
 
   return (
     <PortalShell title="Faculty Assignments" subtitle="Admin · Teaching Allocation" me={me as any} accent="rose">
@@ -109,47 +120,60 @@ function AssignmentsPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!form.staff_id || !form.subject_id || !form.branch) return;
+            if (!form.staff_id || !form.subject_id || !form.branch || !form.semester) return;
             save.mutate({ ...form, academic_year: year });
           }}
           className="bg-white border rounded p-3 grid sm:grid-cols-5 gap-2 items-end"
         >
           <label className="text-xs">
-            Faculty
+            1. Branch
             <select
-              value={form.staff_id}
-              onChange={(e) => setForm({ ...form, staff_id: Number(e.target.value) })}
+              value={form.branch}
+              onChange={(e) => setForm({ ...form, branch: e.target.value, semester: 0, subject_id: 0 })}
               required
               className="w-full border rounded px-2 py-1.5 text-sm bg-white"
             >
-              <option value={0}>—</option>
-              {(staffQ.data ?? [])
-                .filter((s: any) => ["faculty", "hod"].includes(s.role))
-                .map((s: any) => (
-                  <option key={s.id} value={s.id}>
-                    {s.username} ({s.role})
-                  </option>
-                ))}
+              <option value="">— select —</option>
+              {BRANCHES.map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
             </select>
           </label>
           <label className="text-xs">
-            Subject
+            2. Semester
+            <select
+              value={form.semester}
+              onChange={(e) => setForm({ ...form, semester: Number(e.target.value), subject_id: 0 })}
+              required
+              disabled={!form.branch}
+              className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+            >
+              <option value={0}>— select —</option>
+              {[1, 2, 3, 4, 5, 6].map((s) => (
+                <option key={s} value={s}>
+                  Sem {s}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs">
+            3. Subject
             <select
               value={form.subject_id}
-              onChange={(e) => {
-                const id = Number(e.target.value);
-                const subj = (subjQ.data ?? []).find((s: any) => s.id === id);
-                setForm({
-                  ...form,
-                  subject_id: id,
-                  branch: subj?.branch ?? form.branch,
-                  semester: subj?.semester ?? form.semester,
-                });
-              }}
+              onChange={(e) => setForm({ ...form, subject_id: Number(e.target.value) })}
               required
-              className="w-full border rounded px-2 py-1.5 text-sm bg-white"
+              disabled={!form.semester}
+              className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
             >
-              <option value={0}>—</option>
+              <option value={0}>
+                {!form.semester
+                  ? "— pick branch + sem first —"
+                  : (subjQ.data ?? []).length === 0
+                  ? "— no subjects —"
+                  : "— select —"}
+              </option>
               {(subjQ.data ?? []).map((s: any) => (
                 <option key={s.id} value={s.id}>
                   {s.code} · {s.name}
@@ -158,34 +182,33 @@ function AssignmentsPage() {
             </select>
           </label>
           <label className="text-xs">
-            Branch
-            <input
-              value={form.branch}
-              onChange={(e) => setForm({ ...form, branch: e.target.value })}
+            4. Faculty
+            <select
+              value={form.staff_id}
+              onChange={(e) => setForm({ ...form, staff_id: Number(e.target.value) })}
               required
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
-          </label>
-          <label className="text-xs">
-            Sem
-            <input
-              type="number"
-              min={1}
-              max={8}
-              value={form.semester}
-              onChange={(e) => setForm({ ...form, semester: Number(e.target.value) })}
-              required
-              className="w-full border rounded px-2 py-1.5 text-sm"
-            />
+              disabled={!form.subject_id}
+              className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+            >
+              <option value={0}>— select —</option>
+              {(staffQ.data ?? [])
+                .filter((s: any) => ["faculty", "hod"].includes(s.role) || (s.extra_roles ?? []).includes("faculty"))
+                .map((s: any) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name || s.username} ({s.role})
+                  </option>
+                ))}
+            </select>
           </label>
           <button
-            disabled={save.isPending}
+            disabled={save.isPending || !form.staff_id}
             className="bg-rose-700 text-white rounded px-3 py-2 text-sm font-semibold inline-flex items-center gap-1 justify-center disabled:opacity-50"
           >
             <Plus className="w-4 h-4" /> Assign
           </button>
           {save.error && <p className="col-span-full text-xs text-destructive">{save.error.message}</p>}
         </form>
+
 
         <div className="bg-white border rounded overflow-x-auto">
           <table className="w-full text-sm">
