@@ -88,9 +88,13 @@ export function PortalShell({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className={`hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full ${s.chip} uppercase tracking-wider`}>
-              <span aria-hidden>👤</span>
-              {me.username.toUpperCase()} · {me.role.replace(/_/g, " ").toUpperCase()}
+            <span className={`hidden sm:inline-flex items-center gap-2 text-[11px] font-bold pl-1 pr-2.5 py-1 rounded-full ${s.chip} uppercase tracking-wider`}>
+              {avatarUrl(me) ? (
+                <img src={avatarUrl(me)!} alt={displayName(me)} className="w-6 h-6 rounded-full object-cover border border-white" />
+              ) : (
+                <span className="w-6 h-6 rounded-full bg-white/70 text-slate-700 flex items-center justify-center text-[10px] font-bold">{initialsOf(me.name || me.username)}</span>
+              )}
+              {displayName(me)} · {me.role.replace(/_/g, " ").toUpperCase()}
             </span>
             <Link to="/staff-reports" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1" title="Report Templates">
               <FileSpreadsheet className="w-3 h-3" /> <span className="hidden sm:inline">Reports</span>
