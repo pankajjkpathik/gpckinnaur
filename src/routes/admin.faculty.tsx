@@ -96,6 +96,7 @@ function FacultyManagement() {
             <table className="w-full text-sm whitespace-nowrap">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Photo</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Name</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Designation</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Department</th>
