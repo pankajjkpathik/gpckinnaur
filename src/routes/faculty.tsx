@@ -1406,8 +1406,17 @@ function LessonPlansView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
 }
 
 // ─── EXAM SCHEDULE ────────────────────────────────────────────────────────────
-function ExamScheduleView({ onBack }: { onBack: () => void }) {
+function ExamScheduleView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
   const [schedules] = useState<any[]>([]);
+  const asg = useQuery({
+    queryKey: ["fac-asg", me.id, ay],
+    queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
+  });
+  const classes = Array.from(
+    new Map(
+      (asg.data ?? []).map((x: any) => [`${x.branch}-${x.semester}`, { branch: x.branch, semester: x.semester }]),
+    ).values(),
+  );
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
@@ -1431,8 +1440,14 @@ function ExamScheduleView({ onBack }: { onBack: () => void }) {
             <label className="text-xs text-gray-500 mb-1 block">Class</label>
             <select className="border rounded w-full px-3 py-2">
               <option value="">Select a class</option>
+              {classes.map((c: any) => (
+                <option key={`${c.branch}-${c.semester}`} value={`${c.branch}-${c.semester}`}>
+                  {c.branch}-Sem{c.semester}
+                </option>
+              ))}
             </select>
           </div>
+
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
             <input type="date" className="border rounded w-full px-3 py-2" />
