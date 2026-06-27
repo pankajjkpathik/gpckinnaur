@@ -7,6 +7,10 @@ export type StaffRole = StaffSession["role"];
 // super_admin can do everything.
 export const adminRoles: StaffRole[] = ["super_admin", "admin_staff"];
 export const clerkRoles: StaffRole[] = ["super_admin", "clerk"];
+// Roles permitted in the hidden /admin-login console.
+export const adminPortalRoles: StaffRole[] = ["super_admin", "admin_staff", "clerk"];
+// Roles permitted in the public /staff-login page.
+export const publicStaffRoles: StaffRole[] = ["principal", "hod", "faculty", "tpo"];
 export const hodRoles: StaffRole[] = ["super_admin", "principal", "hod"];
 export const facultyRoles: StaffRole[] = ["super_admin", "principal", "hod", "faculty"];
 export const principalRoles: StaffRole[] = ["super_admin", "principal"];
