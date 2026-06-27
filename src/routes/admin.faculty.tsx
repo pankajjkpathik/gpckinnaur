@@ -6,6 +6,7 @@ import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
 import { facultyList, facultyCreate, facultyUpdate, facultyDelete, facultyResetPassword } from "@/lib/people.functions";
+import { facultyPhoto } from "@/lib/faculty-photos";
 
 export const Route = createFileRoute("/admin/faculty")({
   head: () => portalMeta("Faculty Management"),
