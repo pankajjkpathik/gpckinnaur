@@ -17,8 +17,8 @@ import pradeepDR from "@/assets/alumni/Pradeep.jpeg.asset.json";
 import rishav from "@/assets/alumni/Rishav.jpeg.asset.json";
 import rohitNew from "@/assets/alumni/Rohit.jpg.asset.json";
 import sachet from "@/assets/alumni/Sachet.jpeg.asset.json";
-import sachin from "@/assets/alumni/Sachin.jpeg.asset.json";
-import sachinn from "@/assets/alumni/Sachinn.jpeg.asset.json";
+import sachinn from "@/assets/alumni/Sachin.jpeg.asset.json";
+import sachin from "@/assets/alumni/Sachinn.jpeg.asset.json";
 import vikas from "@/assets/alumni/Vikas.jpeg.asset.json";
 
 void rohitOld;
