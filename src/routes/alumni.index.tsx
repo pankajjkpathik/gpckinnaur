@@ -66,10 +66,10 @@ function AlumniPage() {
                     <img
                       src={photo}
                       alt={name}
-                      className="w-12 h-12 rounded-full object-cover ring-2 ring-[color:var(--gold)]"
+                      className="w-24 h-24 rounded-full object-cover ring-2 ring-[color:var(--gold)]"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold">
+                    <div className="w-24 h-24 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold">
                       {name
                         .split(" ")
                         .map((s) => s[0])
