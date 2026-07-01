@@ -31,7 +31,7 @@ const alumni = [
   ["Sumit Sharma", "Crompton Greaves"],
   ["Manish", "Maruti Suzuki Ltd."],
   ["Nitin Negi", "Lemon Tree Hotels"],
-  ["Katik", "Zydus Life Sciences"],
+  ["Kartik", "Zydus Life Sciences"],
   ["Rohit Kumar", "Sickle Innovation"],
   ["Manish Rana", "Dr. Reddys"],
   ["Akhil Patiyal", "Dr. Reddys"],
@@ -63,10 +63,17 @@ function AlumniPage() {
               return (
                 <div key={i} className="bg-white border rounded-lg p-4 flex items-center gap-3">
                   {photo ? (
-                    <img src={photo} alt={name} className="w-12 h-12 rounded-full object-cover ring-2 ring-[color:var(--gold)]" />
+                    <img
+                      src={photo}
+                      alt={name}
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-[color:var(--gold)]"
+                    />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold">
-                      {name.split(" ").map((s) => s[0]).join("")}
+                      {name
+                        .split(" ")
+                        .map((s) => s[0])
+                        .join("")}
                     </div>
                   )}
                   <div className="min-w-0">
