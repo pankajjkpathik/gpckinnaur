@@ -18,6 +18,8 @@ import rishav from "@/assets/alumni/Rishav.jpeg.asset.json";
 import rohitNew from "@/assets/alumni/Rohit.jpg.asset.json";
 import sachet from "@/assets/alumni/Sachet.jpeg.asset.json";
 import sachin from "@/assets/alumni/Sachin.jpeg.asset.json";
+import sachinn from "@/assets/alumni/Sachinn.jpeg.asset.json";
+import vikas from "@/assets/alumni/Vikas.jpeg.asset.json";
 
 void rohitOld;
 
@@ -26,7 +28,9 @@ const EXACT: Record<string, string> = {
   "Rohit Kumar|Suzuki Motors": rohitNew.url,
   "Rohit Kumar|Sickle Innovation": rohitNew.url,
   "Manjeet Kumar|IDMC": manjeet.url,
+  "Sachin|IDMC": sachinn.url,
   "Sachin|Krishna Maruti": sachin.url,
+  "Vikas Thakur|Centum Electronics": vikas.url,
   "Happy|IDMC": happy.url,
   "Rishav Bharol|Godrej & Boyce": rishav.url,
   "Pradeep Kumar|Dr. Reddy": pradeepDR.url,
