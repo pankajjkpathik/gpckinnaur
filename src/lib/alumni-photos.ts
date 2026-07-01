@@ -25,7 +25,7 @@ void rohitOld;
 
 // Match by exact "Name|Company" key to disambiguate duplicates
 const EXACT: Record<string, string> = {
-  "Rohit Kumar|Suzuki Motors": rohitNew.url,
+  "Rohit Kumar|Suzuki Motors": rohitOld.url,
   "Rohit Kumar|Sickle Innovation": rohitNew.url,
   "Manjeet Kumar|IDMC": manjeet.url,
   "Sachin|IDMC": sachinn.url,
