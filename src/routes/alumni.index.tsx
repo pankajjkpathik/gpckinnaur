@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Breadcrumb, PageLayout } from "@/components/layout/PageLayout";
 import { pageMeta } from "@/lib/seo";
+import { alumniPhoto } from "@/lib/alumni-photos";
 
 export const Route = createFileRoute("/alumni/")({
   head: () =>
