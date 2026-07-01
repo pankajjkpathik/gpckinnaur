@@ -58,23 +58,27 @@ function AlumniPage() {
         <section>
           <h2 className="text-2xl font-bold text-[color:var(--navy)] mb-4">Our Placed Alumni</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {alumni.map(([name, co], i) => (
-              <div key={i} className="bg-white border rounded-lg p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold">
-                  {name
-                    .split(" ")
-                    .map((s) => s[0])
-                    .join("")}
+            {alumni.map(([name, co], i) => {
+              const photo = alumniPhoto(name, co);
+              return (
+                <div key={i} className="bg-white border rounded-lg p-4 flex items-center gap-3">
+                  {photo ? (
+                    <img src={photo} alt={name} className="w-12 h-12 rounded-full object-cover ring-2 ring-[color:var(--gold)]" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-[color:var(--gold)] text-[color:var(--navy)] flex items-center justify-center font-bold">
+                      {name.split(" ").map((s) => s[0]).join("")}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[color:var(--navy)] truncate">{name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{co}</p>
+                    <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                      Mechanical
+                    </span>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-[color:var(--navy)] truncate">{name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{co}</p>
-                  <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                    Mechanical
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>
