@@ -42,7 +42,7 @@ const EXACT: Record<string, string> = {
   "Krish|Dr. Reddys": krish.url,
   "Akhil Patiyal|Dr. Reddys": akhil.url,
   "Manish Rana|Dr. Reddys": manishRana.url,
-  "Katik|Zydus Life Sciences": kartik.url,
+  "Kartik|Zydus Life Sciences": kartik.url,
   "Nitin Negi|Lemon Tree Hotels": nitin.url,
   "Manish|Maruti Suzuki Ltd.": manish.url,
   "Sumit Sharma|Crompton Greaves": sumit.url,
