@@ -65,12 +65,20 @@ function StudentManagement() {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Admin Console
           </Link>
-          <button
-            onClick={() => setCreating(true)}
-            className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" /> Add Student
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadStudentSampleXlsx}
+              className="border px-3 py-2 rounded text-sm font-semibold flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700"
+            >
+              <FileSpreadsheet className="w-4 h-4" /> Sample .xlsx
+            </button>
+            <button
+              onClick={() => setCreating(true)}
+              className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> Add Student
+            </button>
+          </div>
         </div>
 
         <div className="bg-white border rounded-lg p-5">
