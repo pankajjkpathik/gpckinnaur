@@ -9,7 +9,7 @@ import { pdfDocList, pdfDocUpload, pdfDocDownload, pdfDocDelete } from "@/lib/pd
 
 const BRANCHES = ["civil", "mechanical", "applied_science"];
 
-export function PdfDocsPage({ docType, title, subtitle }: { docType: "calendar" | "syllabus"; title: string; subtitle: string }) {
+export function PdfDocsPage({ docType, title, subtitle }: { docType: "calendar" | "syllabus" | "lesson_plan" | "exam_schedule"; title: string; subtitle: string }) {
   const nav = useNavigate();
   const { data: me, isLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
   useEffect(() => {
@@ -114,7 +114,7 @@ export function PdfDocsPage({ docType, title, subtitle }: { docType: "calendar" 
         </div>
 
         <div className="bg-white border rounded-lg p-5">
-          <p className="font-semibold text-gray-800 mb-4">Uploaded {docType === "calendar" ? "Calendars" : "Syllabi"}</p>
+          <p className="font-semibold text-gray-800 mb-4">Uploaded {docType === "calendar" ? "Calendars" : docType === "syllabus" ? "Syllabi" : docType === "lesson_plan" ? "Lesson Plans" : "Exam Schedules"}</p>
           <div className="border rounded overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">

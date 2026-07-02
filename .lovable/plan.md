@@ -1,39 +1,46 @@
-# Staff Portal Overhaul — Phased Plan
+## 1. Parent Portal (under Student Portal)
+- New migration: `parent_users(student_id PK/FK, password_hash, created_at, last_login)`. Login = student IR (Enrollment No.); password set by the student.
+- Student portal: add "Parent Access" page → set/reset parent password.
+- New routes: `/parent-login`, `/parent-dashboard` with tabs: **Attendance**, **Marks**, **Board Marks**, **Disciplinary Actions**, **Fees Payment** (read-only views of existing student data).
+- Session cookie `parent_session` (mirrors staff/student session pattern).
 
-## Phase 1 (this turn) — Access Control + Quick Wins
-- **Role-based gating** on every portal route. Faculty cannot reach `/hod`, `/principal`, `/admin`, `/admin-users`, `/clerk`. Likewise for HOD, Principal, Clerk.
-- **Staff dashboard sidebar** only shows the *one* portal the user owns + read-only "Views" for higher roles.
-- **Merge Admin + Super Admin behavior**: `admin_staff` gets the same admin-only experience as `super_admin` and loses access to other portals.
-- **Clerk loses Admin Console** access entirely.
-- **Faculty attendance**: cannot mark past dates (date input min = today).
-- **Faculty marks**: add `first_class_test`, `second_class_test`, `house_test` to exam types.
-- **HOD / Principal renames**: "Faculty Portal" → "Faculty View", "HOD Portal" → "HOD View", "Principal Portal" → "Principal View" in higher-role contexts; underlying views become read-only.
-- **Remove Study Material** tab/link from Principal portal.
+## 2. Bulk-upload sample for students
+- Add a downloadable `students-sample.xlsx` template button on `admin.students.tsx` (and clerk bulk-upload) with columns: enrollment_no, name, father_name, mother_name, dob, gender, category, branch, semester, batch_year, phone, email, address, admission_date.
 
-## Phase 2 — Charts on dashboards
-- Add `recharts` (already in many Lovable templates) and replace stat cards on Faculty, HOD, Principal, Student dashboards with bar/line/pie charts (attendance trends, marks distribution, dept pass %, etc.).
+## 3. Faculty "Generate Reports" — 6 official reports
+Add under `staff-reports.tsx` (or new `/staff-reports/*` sub-routes). Each generates a print-ready HTML page (browser print → PDF), auto-populated from attendance/marks tables:
 
-## Phase 3 — Direct Messaging (1:1, DB-polling)
-- New `messages` table (sender_role/id, recipient_role/id, body, read_at).
-- "Messages" tab in every portal: compose, inbox, sent. 30 s polling.
+| Report | Source | Format |
+|---|---|---|
+| Individual Subject Register | attendance filtered by class+subject, daily grid | Roll × Date table |
+| Cumulative Consolidated Register | attendance grouped by student × subject | Class matrix |
+| Subject Sessional Report (S-1) | marks (CT1, CT2, Assignment, Attendance) for one subject | S-1 proforma from `s1s2.pdf` |
+| End-Semester Sessional Report (S-2) | marks across all subjects | S-2 consolidated proforma |
+| Monthly Attendance Register | attendance for month, all subjects | Theory%, Practical%, Overall% (no fine) |
+| Final Attendance Report | attendance + house test + athletics/cultural weightage + fine (₹5/period absent) | Matches `sem4.pdf` layout |
 
-## Phase 4 — Clerk Bulk Excel + Salary  ✅ done
-- `clerkBulkImportStudents` now accepts .xlsx upload (SheetJS) in addition to CSV paste.
-- "Download Sample.xlsx" button in Clerk Import tab.
-- Admin Users page: Delete buttons for staff (super-admin) and students.
-- New `staff_salary` table + Clerk "Salary" tab with month/year filter, upsert, delete, export to xlsx.
+Selectors: branch, semester, month/session; "Print" button on each.
 
-## Phase 6 — Admin Upload Formats  ✅ done
-- New `report_templates` table (kind: monthly_attendance / mid_sessional / final_sessional / external_practical / other) storing base64 xlsx.
-- `/admin/report-templates` admin route: upload, list, delete.
-- `/staff-reports` route for every staff role: pick branch+semester, download a copy of the template with class roster appended as a "Roster" sheet.
+## 4. Marks entry restructure (`faculty.tsx` marks section)
+- Primary selector = **Subject name** (not exam type).
+- Table columns: Roll No. · Name · Class Test 1 · Class Test 2 · House Test · Assignment 1 · Assignment 2.
+- One row per student with all 5 exam-type inputs inline; saves to `marks` table with existing `exam_type` enum extended.
 
-## Phase 5 — Department-wise display
-- Add a Department filter (Civil / Mechanical / Applied Science) to every attendance & marks list in HOD/Principal/Admin.
+## 5. Lesson Plans — PDF (not syllabus coverage)
+- Replace syllabus-coverage UI in Manage Lesson Plans with PDF upload + list (reuse `PdfDocsPage` with `docType='lesson_plan'`). Faculty upload PDF per subject; students/HOD/Principal can view/download.
 
-## Phase 6 — Admin Upload Formats
-- New `report_templates` table (name, kind, xlsx_storage_path).
-- Admin uploads .xlsx; Faculty downloads a pre-filled copy with class roster injected (Monthly Attendance, Mid-Sessional, Final Sessional, External Practical).
+## 6. Fix Exam Schedule upload
+- `admin.calendar.tsx` (or wherever `docType='exam_schedule'` lives): the "Upload Schedule" button currently no-ops. Wire it to `pdfDocuments.upload` server fn; refresh list on success.
 
-## Phase 7 — Student dashboard charts
-- Same recharts upgrade for the student "Home" tab.
+## 7. Student portal cleanup
+- "Upload Assignment" tab: fetch **pending** assignments (assignments where `due_date >= today` and no submission for this student) — show list with Upload button.
+- Remove standalone "My Assignments" card from student dashboard.
+- Documents tab: enforce PDF only + explicit Download button on each row.
+
+## Technical notes
+- Add `app_role` extension in a migration for `parent`; no auth.users linkage (parents use enrollment_no + password like students).
+- Marks `exam_type` enum: add `class_test_1`, `class_test_2`, `house_test`, `assignment_1`, `assignment_2` (keep old for compat).
+- All new tables get `GRANT` + RLS as per project rules.
+- Reports render as `<div className="print:...">` pages, use existing `report-export.ts` helpers.
+
+Approve to proceed.

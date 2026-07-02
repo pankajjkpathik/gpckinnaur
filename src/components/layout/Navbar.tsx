@@ -115,12 +115,20 @@ export function Navbar() {
               My Portal
             </Link>
           ) : (
-            <Link
-              to="/student-login"
-              className="px-3 py-1.5 text-xs sm:text-sm rounded-md bg-[color:var(--gold)] text-[color:var(--navy)] hover:opacity-90 font-semibold"
-            >
-              Student Portal
-            </Link>
+            <>
+              <Link
+                to="/student-login"
+                className="px-3 py-1.5 text-xs sm:text-sm rounded-md bg-[color:var(--gold)] text-[color:var(--navy)] hover:opacity-90 font-semibold"
+              >
+                Student Portal
+              </Link>
+              <Link
+                to="/parent-login"
+                className="hidden md:inline px-3 py-1.5 text-xs sm:text-sm rounded-md border border-emerald-300 text-emerald-100 hover:bg-emerald-500/20"
+              >
+                Parent Portal
+              </Link>
+            </>
           )}
           {staff ? (
             <Link

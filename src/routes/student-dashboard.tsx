@@ -43,6 +43,7 @@ import {
   studentMyFees,
   studentMyDisciplinary,
 } from "@/lib/assignments.functions";
+import { studentParentStatus, studentSetParentPassword } from "@/lib/parent.functions";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/student-dashboard")({
@@ -65,12 +66,12 @@ type View =
   | "marks"
   | "results"
   | "semester-reports"
-  | "assignments"
   | "upload"
   | "documents"
   | "fees"
   | "faculty"
-  | "disciplinary";
+  | "disciplinary"
+  | "parent-access";
 
 const EXAM_TABS = [
   { key: "house_test", label: "House Test" },
@@ -173,7 +174,7 @@ function StudentDashboard() {
         {view === "marks" && <MarksView onBack={() => setView("home")} />}
         {view === "results" && <ResultsView me={me} onBack={() => setView("home")} />}
         {view === "semester-reports" && <SemesterReportsView me={me} onBack={() => setView("home")} />}
-        {view === "assignments" && <AssignmentsView onBack={() => setView("home")} />}
+        {view === "parent-access" && <ParentAccessView onBack={() => setView("home")} />}
         {view === "upload" && <UploadAssignmentView onBack={() => setView("home")} />}
         {view === "documents" && <DocumentsView onBack={() => setView("home")} />}
         {view === "fees" && <FeesView onBack={() => setView("home")} />}
@@ -220,12 +221,12 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       view: "semester-reports",
     },
     {
-      icon: BookMarked,
-      label: "My Assignments",
-      desc: "Download assignment questions",
-      color: "bg-rose-600",
-      border: "border-rose-600",
-      view: "assignments",
+      icon: Users,
+      label: "Parent Access",
+      desc: "Set the password your parent will use to log in",
+      color: "bg-emerald-600",
+      border: "border-emerald-600",
+      view: "parent-access",
     },
     {
       icon: Upload,
@@ -625,83 +626,88 @@ function SemesterReportsView({ me, onBack }: { me: any; onBack: () => void }) {
 }
 
 // ─── MY ASSIGNMENTS ───────────────────────────────────────────────────────────
-function AssignmentsView({ onBack }: { onBack: () => void }) {
-  const fn = useServerFn(studentListAssignments);
-  const subsFn = useServerFn(studentMySubmissions);
-  const { data = [], isLoading } = useQuery({ queryKey: ["student-assignments"], queryFn: () => fn() });
-  const { data: subs = [] } = useQuery({ queryKey: ["student-my-subs"], queryFn: () => subsFn() });
-  const today = new Date().toISOString().slice(0, 10);
-
-  const submittedIds = new Set((subs as any[]).map((s) => s.assignment_id));
-
+// ─── PARENT ACCESS ────────────────────────────────────────────────────────────
+function ParentAccessView({ onBack }: { onBack: () => void }) {
+  const statusFn = useServerFn(studentParentStatus);
+  const setFn = useServerFn(studentSetParentPassword);
+  const qc = useQueryClient();
+  const { data: status } = useQuery({ queryKey: ["parent-status"], queryFn: () => statusFn() });
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const save = useMutation({
+    mutationFn: () => setFn({ data: { newPassword: pw } }),
+    onSuccess: () => {
+      setPw("");
+      setPw2("");
+      qc.invalidateQueries({ queryKey: ["parent-status"] });
+    },
+    onError: (e: any) => setErr(e.message),
+  });
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">My Assignments</h1>
-        <p className="text-xs text-gray-400 mb-4">View and download all assignments posted by your faculty.</p>
-        <div className="border rounded overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data as any[]).map((a: any) => {
-                const due = a.due_date;
-                const pastDue = due && due < today;
-                const submitted = submittedIds.has(a.id);
-                return (
-                  <tr key={a.id} className="border-t">
-                    <td className="px-4 py-3">{a.subject_name || a.subjects?.name || "—"}</td>
-                    <td className="px-4 py-3">{a.title}</td>
-                    <td className="px-4 py-3">{due ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      {submitted ? (
-                        <span className="text-xs px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
-                          Submitted
-                        </span>
-                      ) : pastDue ? (
-                        <span className="text-xs px-2.5 py-1 bg-rose-500 text-white rounded-full font-semibold">
-                          Past Due
-                        </span>
-                      ) : (
-                        <span className="text-xs px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full font-semibold">
-                          Open
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {a.file_url ? (
-                        <a
-                          href={a.file_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
-                        >
-                          <Download className="w-4 h-4" /> Download
-                        </a>
-                      ) : (
-                        <span className="text-xs text-gray-400">No file</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-              {!isLoading && (data as any[]).length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                    No assignments posted yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">👨‍👩‍👧 Parent Access</h1>
+        <p className="text-xs text-gray-500 mb-5">
+          Set (or reset) the password your parent will use to sign into the Parent Portal. Your parent will log in
+          using your Enrollment No. and the password you set below.
+        </p>
+
+        <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4 mb-5">
+          <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-1">
+            Parent Portal Login Details
+          </p>
+          <p className="text-sm text-gray-700">
+            Enrollment No. (IR): <b className="font-mono">{status?.enrollment_no ?? "—"}</b>
+          </p>
+          <p className="text-sm text-gray-700">
+            Status:{" "}
+            <span className={status?.enabled ? "text-emerald-700 font-semibold" : "text-amber-700 font-semibold"}>
+              {status?.enabled ? "✓ Enabled" : "Not set — parent cannot log in yet"}
+            </span>
+          </p>
+          {status?.last_login && (
+            <p className="text-xs text-gray-500 mt-1">Last parent login: {new Date(status.last_login).toLocaleString()}</p>
+          )}
+        </div>
+
+        <div className="max-w-sm space-y-3">
+          <div>
+            <label className="text-xs text-gray-600 font-medium mb-1 block">New Password (min 6 chars)</label>
+            <input
+              type="password"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              className="border rounded w-full px-3 py-2 text-sm"
+              minLength={6}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600 font-medium mb-1 block">Confirm Password</label>
+            <input
+              type="password"
+              value={pw2}
+              onChange={(e) => setPw2(e.target.value)}
+              className="border rounded w-full px-3 py-2 text-sm"
+            />
+          </div>
+          {err && <p className="text-xs text-rose-700">{err}</p>}
+          <button
+            onClick={() => {
+              setErr(null);
+              if (pw.length < 6) return setErr("Password must be at least 6 characters.");
+              if (pw !== pw2) return setErr("Passwords do not match.");
+              save.mutate();
+            }}
+            disabled={save.isPending}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-4 py-2 rounded text-sm disabled:opacity-60"
+          >
+            {save.isPending ? "Saving…" : status?.enabled ? "Reset Parent Password" : "Enable Parent Access"}
+          </button>
+          {save.isSuccess && (
+            <p className="text-xs text-emerald-700">Saved. Share the password with your parent.</p>
+          )}
         </div>
       </Card>
     </div>
@@ -712,10 +718,15 @@ function AssignmentsView({ onBack }: { onBack: () => void }) {
 function UploadAssignmentView({ onBack }: { onBack: () => void }) {
   const qc = useQueryClient();
   const fn = useServerFn(studentListAssignments);
+  const mySubsFn = useServerFn(studentMySubmissions);
   const submitFn = useServerFn(studentSubmitAssignment);
   const { data = [] } = useQuery({ queryKey: ["student-assignments"], queryFn: () => fn() });
+  const { data: mySubs = [] } = useQuery({ queryKey: ["student-my-subs"], queryFn: () => mySubsFn() });
+  const submittedIds = new Set((mySubs as any[]).map((s: any) => s.assignment_id));
   const today = new Date().toISOString().slice(0, 10);
-  const pending = (data as any[]).filter((a: any) => !a.due_date || a.due_date >= today);
+  const pending = (data as any[]).filter(
+    (a: any) => (!a.due_date || a.due_date >= today) && !submittedIds.has(a.id),
+  );
   const [selected, setSelected] = useState("");
   const [fileUrl, setFileUrl] = useState("");
   const [comments, setComments] = useState("");
@@ -736,9 +747,37 @@ function UploadAssignmentView({ onBack }: { onBack: () => void }) {
       <BackBtn onClick={onBack} />
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Upload Assignment</h1>
-        <p className="text-xs text-gray-400 mb-6">Submit your completed assignment files directly to your faculty.</p>
+        <p className="text-xs text-gray-400 mb-4">Submit your completed assignment files directly to your faculty.</p>
 
         <div className="max-w-lg mx-auto space-y-4">
+          <div className="border rounded-lg divide-y bg-gray-50/50">
+            <p className="px-3 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              📌 Pending Assignments ({pending.length})
+            </p>
+            {pending.length === 0 ? (
+              <p className="px-3 py-4 text-sm text-emerald-700 text-center">
+                No pending assignments. You’re all caught up! ✅
+              </p>
+            ) : (
+              pending.map((a: any) => (
+                <div key={a.id} className="px-3 py-2 text-xs flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-800 truncate">{a.title}</p>
+                    <p className="text-gray-500 truncate">
+                      {a.subject_name || "—"}
+                      {a.due_date ? ` · Due ${a.due_date}` : ""}
+                    </p>
+                  </div>
+                  {a.file_url && (
+                    <a href={a.file_url} target="_blank" rel="noreferrer" className="text-emerald-700 font-semibold hover:underline shrink-0">
+                      Download PDF
+                    </a>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
           <div>
             <label className="text-sm text-gray-700 mb-1 block">Select Assignment</label>
             <select

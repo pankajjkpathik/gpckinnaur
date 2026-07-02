@@ -1,9 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { adminRoles } from "./roles";
-import { requireRole, requireStaff } from "./roles.server";
+import { requireStaff } from "./roles.server";
 
-const DOC_TYPES = ["calendar", "syllabus"] as const;
+const DOC_TYPES = ["calendar", "syllabus", "lesson_plan", "exam_schedule"] as const;
 
 export const pdfDocList = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ doc_type: z.enum(DOC_TYPES) }).parse(d))
@@ -31,7 +30,7 @@ export const pdfDocUpload = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    const me = await requireRole(adminRoles);
+    const me = await requireStaff();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("pdf_documents").insert({
       doc_type: data.doc_type,
@@ -63,7 +62,7 @@ export const pdfDocDownload = createServerFn({ method: "POST" })
 export const pdfDocDelete = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
   .handler(async ({ data }) => {
-    await requireRole(adminRoles);
+    await requireStaff();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("pdf_documents").delete().eq("id", data.id);
     if (error) throw new Error(error.message);

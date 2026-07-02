@@ -1134,6 +1134,41 @@ export type Database = {
           },
         ]
       }
+      parent_users: {
+        Row: {
+          created_at: string
+          is_active: boolean
+          last_login: string | null
+          password_hash: string
+          student_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          is_active?: boolean
+          last_login?: string | null
+          password_hash: string
+          student_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          is_active?: boolean
+          last_login?: string | null
+          password_hash?: string
+          student_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_users_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pdf_documents: {
         Row: {
           branch: string | null
