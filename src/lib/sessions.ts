@@ -33,6 +33,8 @@ function requireSecret(name: string): string {
 
 export const getStaffSessionSecretIssue = () => getSessionSecretIssue("STAFF_SESSION_SECRET");
 export const getStudentSessionSecretIssue = () => getSessionSecretIssue("STUDENT_SESSION_SECRET");
+// Parents share the student session secret (issue signalled via student session).
+export const getParentSessionSecretIssue = () => getSessionSecretIssue("STUDENT_SESSION_SECRET");
 
 export const staffSessionConfig = {
   get password() {
@@ -62,6 +64,20 @@ export const studentSessionConfig = {
   maxAge: 60 * 60 * 4, // 4h
 };
 
+export const parentSessionConfig = {
+  get password() {
+    return requireSecret("STUDENT_SESSION_SECRET");
+  },
+  name: "gpk_parent_sid",
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+  },
+  maxAge: 60 * 60 * 4, // 4h
+};
+
 export type StaffSession = {
   id: number;
   username: string;
@@ -77,4 +93,12 @@ export type StudentSession = {
   branch: string;
   semester: number;
   batchYear: number;
+};
+
+export type ParentSession = {
+  studentId: number;
+  enrollmentNo: string;
+  studentName: string;
+  branch: string;
+  semester: number;
 };

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
+import { PdfDocsInline } from "@/components/portal/PdfDocsInline";
 import { facultyRoles, hasRole } from "@/lib/roles";
 import { listAssignments, listPeriods } from "@/lib/academic.functions";
 import {
@@ -37,6 +38,12 @@ import {
   cancelLeave,
   attendanceReport,
   marksReport,
+  individualSubjectRegister,
+  cumulativeConsolidatedRegister,
+  subjectSessionalReport,
+  endSemSessionalReport,
+  monthlyAttendanceRegister,
+  finalAttendanceReport,
 } from "@/lib/faculty.functions";
 import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
 import {
@@ -70,11 +77,21 @@ const EXAM_TYPES = [
   "house_test",
   "internal",
   "assignment",
+  "assignment_2",
   "mid_sessional",
   "final_sessional",
   "practical",
   "viva",
 ] as const;
+
+// Test types used in Marks Entry (in display order)
+const MARKS_ENTRY_TESTS: { key: (typeof EXAM_TYPES)[number]; label: string; defaultMax: number }[] = [
+  { key: "first_class_test", label: "Class Test 1", defaultMax: 20 },
+  { key: "second_class_test", label: "Class Test 2", defaultMax: 20 },
+  { key: "house_test", label: "House Test", defaultMax: 40 },
+  { key: "assignment", label: "Assignment 1", defaultMax: 10 },
+  { key: "assignment_2", label: "Assignment 2", defaultMax: 10 },
+];
 
 const DAY_LABELS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -541,70 +558,92 @@ function MarksView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void
     queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
   });
   const [asgId, setAsgId] = useState<number | "">("");
-  const [examType, setExamType] = useState<(typeof EXAM_TYPES)[number]>("internal");
-  const [maxMarks, setMaxMarks] = useState<number>(20);
   const [loaded, setLoaded] = useState(false);
   const a = (asg.data ?? []).find((x: any) => x.id === asgId);
 
-  const data = useQuery({
-    enabled: !!a && loaded,
-    queryKey: ["marks", a?.subject_id, examType, ay],
-    queryFn: () =>
-      getMarks({
-        data: {
-          branch: a!.branch,
-          semester: a!.semester,
-          subject_id: a!.subject_id,
-          exam_type: examType,
-          academic_year: ay,
-        },
-      }),
-  });
-  const [entries, setEntries] = useState<Record<number, { obtained: string; remarks: string }>>({});
+  // Fetch marks per test type
+  const queries = MARKS_ENTRY_TESTS.map((t) =>
+    useQuery({
+      enabled: !!a && loaded,
+      queryKey: ["marks-multi", a?.subject_id, t.key, ay],
+      queryFn: () =>
+        getMarks({
+          data: {
+            branch: a!.branch,
+            semester: a!.semester,
+            subject_id: a!.subject_id,
+            exam_type: t.key as any,
+            academic_year: ay,
+          },
+        }),
+    }),
+  );
+
+  const students: any[] = (queries[0]?.data as any)?.rows ?? [];
+  const anySubmitted = queries.some((q) => (q.data as any)?.submitted);
+
+  const [maxMarks, setMaxMarks] = useState<Record<string, number>>({});
+  const [entries, setEntries] = useState<Record<string, Record<number, string>>>({});
+
   useEffect(() => {
-    if (data.data) {
-      const m: any = {};
-      data.data.rows.forEach(
-        (r: any) => (m[r.id] = { obtained: r.obtained != null ? String(r.obtained) : "", remarks: r.remarks ?? "" }),
-      );
-      setEntries(m);
-      if (data.data.rows[0]?.max_marks) setMaxMarks(Number(data.data.rows[0].max_marks));
-    }
-  }, [data.data]);
+    const newEntries: Record<string, Record<number, string>> = {};
+    const newMax: Record<string, number> = {};
+    MARKS_ENTRY_TESTS.forEach((t, i) => {
+      const d: any = queries[i]?.data;
+      if (!d) return;
+      const m: Record<number, string> = {};
+      d.rows.forEach((r: any) => {
+        m[r.id] = r.obtained != null ? String(r.obtained) : "";
+      });
+      newEntries[t.key] = m;
+      const firstMax = d.rows.find((r: any) => r.max_marks)?.max_marks;
+      newMax[t.key] = Number(firstMax || t.defaultMax);
+    });
+    setEntries((prev) => ({ ...newEntries, ...prev }));
+    setMaxMarks((prev) => ({ ...newMax, ...prev }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queries.map((q) => q.dataUpdatedAt).join("|")]);
 
   const save = useMutation({
-    mutationFn: (submit: boolean) =>
-      saveMarks({
-        data: {
-          subject_id: a!.subject_id,
-          branch: a!.branch,
-          semester: a!.semester,
-          exam_type: examType,
-          academic_year: ay,
-          max_marks: maxMarks,
-          submit,
-          entries: Object.entries(entries).map(([id, v]) => ({
-            student_id: Number(id),
-            obtained: v.obtained === "" ? null : Number(v.obtained),
-            remarks: v.remarks || null,
-          })),
-        },
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["marks"] }),
+    mutationFn: async (submit: boolean) => {
+      const jobs = MARKS_ENTRY_TESTS.map((t) => {
+        const m = entries[t.key] || {};
+        const cellEntries = students
+          .map((s) => ({
+            student_id: s.id,
+            obtained: m[s.id] === undefined || m[s.id] === "" ? null : Number(m[s.id]),
+            remarks: null as string | null,
+          }))
+          .filter((e) => e.obtained !== null);
+        if (cellEntries.length === 0) return null;
+        return saveMarks({
+          data: {
+            subject_id: a!.subject_id,
+            exam_type: t.key as any,
+            academic_year: ay,
+            max_marks: maxMarks[t.key] || t.defaultMax,
+            submit_to_hod: submit,
+            entries: cellEntries,
+          } as any,
+        });
+      });
+      return Promise.all(jobs.filter(Boolean));
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["marks-multi"] }),
   });
-  const locked = data.data?.submitted;
-  const selectedSubject = a ? `${a.subjects?.name || a.subjects?.code}` : "";
+
+  const subjectLabel = a ? `${a.subjects?.code ?? ""} — ${a.subjects?.name ?? ""}` : "";
 
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h1 className="text-2xl font-bold text-gray-800">Enter Student Marks</h1>
+      <h1 className="text-2xl font-bold text-gray-800">📝 Enter Student Marks</h1>
 
       <Card>
-        <p className="font-semibold text-gray-800 mb-4">Select Class &amp; Subject</p>
+        <p className="font-semibold text-gray-800 mb-4">Select Subject</p>
         <div className="grid sm:grid-cols-3 gap-3 text-sm items-end">
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Class</label>
+          <div className="sm:col-span-2">
+            <label className="text-xs text-gray-500 mb-1 block">Subject (Class · Sem · Subject)</label>
             <select
               value={asgId}
               onChange={(e) => {
@@ -613,24 +652,10 @@ function MarksView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void
               }}
               className="border rounded w-full px-3 py-2"
             >
-              <option value="">Select class…</option>
+              <option value="">Select subject…</option>
               {(asg.data ?? []).map((x: any) => (
                 <option key={x.id} value={x.id}>
-                  {x.branch}-Sem{x.semester}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Subject</label>
-            <select
-              value={examType}
-              onChange={(e) => setExamType(e.target.value as any)}
-              className="border rounded w-full px-3 py-2"
-            >
-              {EXAM_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t.replace(/_/g, " ")}
+                  {x.branch}-Sem{x.semester} · {x.subjects?.code} — {x.subjects?.name}
                 </option>
               ))}
             </select>
@@ -645,89 +670,108 @@ function MarksView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void
         </div>
       </Card>
 
-      {data.data && (
+      {loaded && a && (
         <Card>
-          <p className="font-semibold text-gray-800 mb-4">Enter Marks: {selectedSubject}</p>
-          <div className="border rounded overflow-hidden">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <p className="font-semibold text-gray-800">
+              Subject: <span className="text-[#7b1f4c]">{subjectLabel}</span>
+            </p>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {MARKS_ENTRY_TESTS.map((t) => (
+                <label key={t.key} className="inline-flex items-center gap-1 border rounded px-2 py-1 bg-gray-50">
+                  <span className="text-gray-600">{t.label} max:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={200}
+                    value={maxMarks[t.key] ?? t.defaultMax}
+                    onChange={(e) => setMaxMarks({ ...maxMarks, [t.key]: Number(e.target.value) })}
+                    disabled={anySubmitted}
+                    className="w-14 border rounded px-1 py-0.5 text-xs"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="border rounded overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Roll</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Name</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">House Test</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Class Test 1</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Class Test 2</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Assignment 1</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Assignment 2</th>
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Roll No.</th>
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Name</th>
+                  {MARKS_ENTRY_TESTS.map((t) => (
+                    <th key={t.key} className="text-left px-3 py-2 text-gray-500 font-medium">
+                      {t.label}
+                      <span className="text-[10px] text-gray-400 font-normal"> /{maxMarks[t.key] ?? t.defaultMax}</span>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {data.data.rows.map((r: any) => (
+                {students.map((r: any) => (
                   <tr key={r.id} className="border-t">
-                    <td className="px-4 py-3 font-mono text-xs">{r.enrollment_no}</td>
-                    <td className="px-4 py-3">{r.name}</td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        step={0.5}
-                        min={0}
-                        max={maxMarks}
-                        disabled={locked || r.locked}
-                        value={entries[r.id]?.obtained ?? ""}
-                        onChange={(e) =>
-                          setEntries({
-                            ...entries,
-                            [r.id]: { obtained: e.target.value, remarks: entries[r.id]?.remarks ?? "" },
-                          })
-                        }
-                        className="border rounded px-2 py-1 w-20 text-sm"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input type="number" disabled={locked} className="border rounded px-2 py-1 w-20 text-sm" />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input type="number" disabled={locked} className="border rounded px-2 py-1 w-20 text-sm" />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input type="number" disabled={locked} className="border rounded px-2 py-1 w-20 text-sm" />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input type="number" disabled={locked} className="border rounded px-2 py-1 w-20 text-sm" />
-                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">{r.enrollment_no}</td>
+                    <td className="px-3 py-2">{r.name}</td>
+                    {MARKS_ENTRY_TESTS.map((t) => (
+                      <td key={t.key} className="px-3 py-1">
+                        <input
+                          type="number"
+                          step={0.5}
+                          min={0}
+                          max={maxMarks[t.key] ?? t.defaultMax}
+                          disabled={anySubmitted || r.locked}
+                          value={entries[t.key]?.[r.id] ?? ""}
+                          onChange={(e) =>
+                            setEntries({
+                              ...entries,
+                              [t.key]: { ...(entries[t.key] || {}), [r.id]: e.target.value },
+                            })
+                          }
+                          className="border rounded px-2 py-1 w-16 text-sm"
+                        />
+                      </td>
+                    ))}
                   </tr>
                 ))}
+                {students.length === 0 && (
+                  <tr>
+                    <td colSpan={2 + MARKS_ENTRY_TESTS.length} className="px-4 py-8 text-center text-gray-400 text-sm">
+                      No students found for this class.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-          {!locked && (
+          {!anySubmitted && (
             <div className="flex gap-2 mt-4 justify-end">
               <button
                 onClick={() => save.mutate(false)}
                 disabled={save.isPending}
-                className="border px-4 py-2 rounded text-sm text-gray-700"
+                className="border px-4 py-2 rounded text-sm text-gray-700 disabled:opacity-60"
               >
-                Save Draft
+                💾 Save Draft
               </button>
               <button
                 onClick={() => {
-                  if (confirm("Submit to HOD? This will lock all entries.")) save.mutate(true);
+                  if (confirm("Submit all test marks to HOD? This will lock entries.")) save.mutate(true);
                 }}
                 disabled={save.isPending}
-                className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold"
+                className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold disabled:opacity-60"
               >
-                Submit to HOD
+                ✅ Submit to HOD
               </button>
             </div>
           )}
-          {locked && <p className="text-xs text-amber-700 mt-2">Submitted to HOD — entries locked.</p>}
-          {save.isSuccess && <p className="text-xs text-green-700 mt-2">Saved.</p>}
+          {anySubmitted && <p className="text-xs text-amber-700 mt-2">Some entries have been submitted to HOD and are now locked.</p>}
+          {save.isSuccess && <p className="text-xs text-emerald-700 mt-2">Marks saved.</p>}
           {save.error && <p className="text-xs text-rose-700 mt-2">{(save.error as Error).message}</p>}
         </Card>
       )}
     </div>
   );
 }
+
 
 // ─── SEMESTER MARKS (HP Board) ────────────────────────────────────────────────
 function SemesterMarksView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
@@ -1294,429 +1338,314 @@ function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => v
 
 
 // ─── LESSON PLANS ─────────────────────────────────────────────────────────────
-function LessonPlansView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
-  const qc = useQueryClient();
-  const list = useQuery({
-    queryKey: ["lessons", ay, me.id],
-    queryFn: () => listLessonPlans({ data: { academic_year: ay, staff_id: me.id } }),
-  });
-  const asg = useQuery({
-    queryKey: ["fac-asg", me.id, ay],
-    queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
-  });
-  const del = useMutation({
-    mutationFn: (id: number) => deleteLessonPlan({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["lessons"] }),
-  });
-
+function LessonPlansView({ onBack }: { ay: string; me: any; onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h1 className="text-2xl font-bold text-gray-800">Manage Lesson Plans</h1>
-
-      <Card>
-        <p className="font-semibold text-gray-800 mb-1">Upload New Lesson Plan</p>
-        <p className="text-xs text-gray-400 mb-4">Upload a lesson plan document for a class.</p>
-        <div className="grid sm:grid-cols-2 gap-4 text-sm">
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Plan Title</label>
-            <input placeholder="e.g., Unit 1 Plan" className="border rounded w-full px-3 py-2" />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Class</label>
-            <select className="border rounded w-full px-3 py-2">
-              <option value="">Select a class</option>
-              {(asg.data ?? []).map((x: any) => (
-                <option key={x.id} value={x.id}>
-                  {x.branch}-Sem{x.semester}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Subject</label>
-            <select className="border rounded w-full px-3 py-2">
-              <option value="">Select a subject</option>
-              {(asg.data ?? []).map((x: any) => (
-                <option key={x.id} value={x.subject_id}>
-                  {x.subjects?.name || x.subjects?.code}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Lesson Plan File</label>
-            <input type="file" className="border rounded w-full px-3 py-2 text-sm" />
-          </div>
-        </div>
-        <button className="mt-4 bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold text-sm">Upload Plan</button>
-      </Card>
-
-      <Card>
-        <p className="font-semibold text-gray-800 mb-4">Uploaded Lesson Plans</p>
-        <div className="border rounded overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Class</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Upload Date</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(list.data ?? []).map((p: any) => (
-                <tr key={p.id} className="border-t">
-                  <td className="px-4 py-3">{p.topic}</td>
-                  <td className="px-4 py-3">
-                    {p.branch}-Sem{p.semester}
-                  </td>
-                  <td className="px-4 py-3">{p.subjects?.code}</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
-                    {p.planned_date ?? p.created_at?.slice(0, 10) ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {(p.status === "draft" || p.status === "returned") && (
-                      <button
-                        onClick={() => {
-                          if (confirm("Delete?")) del.mutate(p.id);
-                        }}
-                        className="text-rose-600 hover:text-rose-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {list.data && list.data.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
-                    No lesson plans found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <h1 className="text-2xl font-bold text-gray-800">📘 Manage Lesson Plans</h1>
+      <p className="text-xs text-gray-500 -mt-2">Upload your lesson plan PDFs. Students can download these from their portal.</p>
+      <PdfDocsInline docType="lesson_plan" uploadLabel="Upload New Lesson Plan (PDF)" />
     </div>
   );
 }
 
 // ─── EXAM SCHEDULE ────────────────────────────────────────────────────────────
-function ExamScheduleView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
-  const [schedules] = useState<any[]>([]);
-  const asg = useQuery({
-    queryKey: ["fac-asg", me.id, ay],
-    queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
-  });
-  const classes = Array.from(
-    new Map(
-      (asg.data ?? []).map((x: any) => [`${x.branch}-${x.semester}`, { branch: x.branch, semester: x.semester }]),
-    ).values(),
-  );
+function ExamScheduleView({ onBack }: { ay: string; me: any; onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h1 className="text-2xl font-bold text-gray-800">Manage Exam Schedules</h1>
-
-      <Card>
-        <p className="font-semibold text-gray-800 mb-1">Upload New Exam Schedule</p>
-        <p className="text-xs text-gray-400 mb-4">Upload a datesheet document for an examination.</p>
-        <div className="grid sm:grid-cols-2 gap-4 text-sm">
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Name of Exam</label>
-            <select className="border rounded w-full px-3 py-2">
-              <option value="">Select an exam</option>
-              <option>House Test</option>
-              <option>Mid Semester</option>
-              <option>End Semester</option>
-              <option>Practical</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Class</label>
-            <select className="border rounded w-full px-3 py-2">
-              <option value="">Select a class</option>
-              {classes.map((c: any) => (
-                <option key={`${c.branch}-${c.semester}`} value={`${c.branch}-${c.semester}`}>
-                  {c.branch}-Sem{c.semester}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
-            <input type="date" className="border rounded w-full px-3 py-2" />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">End Date</label>
-            <input type="date" className="border rounded w-full px-3 py-2" />
-          </div>
-          <div className="col-span-2">
-            <label className="text-xs text-gray-500 mb-1 block">Datesheet File (PDF)</label>
-            <input type="file" accept=".pdf" className="border rounded w-full px-3 py-2 text-sm" />
-          </div>
-        </div>
-        <button className="mt-4 bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold text-sm">
-          Upload Schedule
-        </button>
-      </Card>
-
-      <Card>
-        <p className="font-semibold text-gray-800 mb-4">Uploaded Schedules</p>
-        <div className="border rounded overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Exam Name</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Class</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Start Date</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">End Date</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedules.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
-                    No schedules uploaded yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <h1 className="text-2xl font-bold text-gray-800">🗓️ Manage Exam Schedules</h1>
+      <p className="text-xs text-gray-500 -mt-2">Upload exam datesheets as PDFs. Students will see them in their Documents tab.</p>
+      <PdfDocsInline docType="exam_schedule" uploadLabel="Upload New Exam Schedule (PDF)" />
     </div>
   );
 }
 
 // ─── REPORTS ──────────────────────────────────────────────────────────────────
+type ReportKey =
+  | "subject_register"
+  | "consolidated_register"
+  | "sessional_s1"
+  | "sessional_s2"
+  | "monthly_att"
+  | "final_att";
+
+function printHtml(html: string, title: string) {
+  const w = window.open("", "_blank", "width=1100,height=800");
+  if (!w) return;
+  w.document.write(`<!doctype html><html><head><title>${title}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; padding: 24px; color: #111; }
+  h1 { font-size: 18px; text-align:center; margin: 0 0 4px 0; }
+  h2 { font-size: 14px; text-align:center; margin: 0 0 14px 0; color: #444; font-weight: normal; }
+  table { border-collapse: collapse; width: 100%; font-size: 11px; }
+  th, td { border: 1px solid #333; padding: 4px 6px; text-align: center; }
+  th { background: #eee; }
+  td.name, th.name, td.l, th.l { text-align: left; }
+  .footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 11px; }
+  @media print { .noprint { display: none; } body { padding: 8px; } }
+  .btn { background:#7b1f4c; color:#fff; padding:6px 14px; border:0; border-radius:4px; cursor:pointer; font-weight:600; }
+</style></head><body>
+<div class="noprint" style="text-align:right;margin-bottom:10px"><button class="btn" onclick="window.print()">🖨 Print</button></div>
+${html}
+</body></html>`);
+  w.document.close();
+}
+
+function esc(s: any): string {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
 function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
   const asg = useQuery({
     queryKey: ["fac-asg", me.id, ay],
     queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
   });
-  const [kind, setKind] = useState<"attendance" | "marks">("attendance");
-  const [asgId, setAsgId] = useState<number | "">("");
-  const today = new Date().toISOString().slice(0, 10);
-  const monthAgo = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
-  }, []);
-  const [from, setFrom] = useState(monthAgo);
-  const [to, setTo] = useState(today);
-  const [examType, setExamType] = useState<(typeof EXAM_TYPES)[number]>("internal");
-  const a = (asg.data ?? []).find((x: any) => x.id === asgId);
+  const classes = Array.from(
+    new Map((asg.data ?? []).map((x: any) => [`${x.branch}|${x.semester}`, { branch: x.branch, semester: x.semester }])).values(),
+  );
+  const [kind, setKind] = useState<ReportKey>("subject_register");
+  const [classKey, setClassKey] = useState<string>("");
+  const [subjectId, setSubjectId] = useState<number | "">("");
+  const today = new Date();
+  const [from, setFrom] = useState(new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10));
+  const [to, setTo] = useState(today.toISOString().slice(0, 10));
+  const [month, setMonth] = useState(today.getMonth() + 1);
+  const [year, setYear] = useState(today.getFullYear());
+  const [houseBonus, setHouseBonus] = useState(0);
+  const [sportsBonus, setSportsBonus] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [branch, semester] = classKey ? classKey.split("|") : ["", ""];
+  const subjects = (asg.data ?? [])
+    .filter((x: any) => x.branch === branch && String(x.semester) === semester)
+    .map((x: any) => ({ id: x.subject_id, code: x.subjects?.code, name: x.subjects?.name }));
 
-  const attQ = useQuery({
-    enabled: kind === "attendance" && !!a,
-    queryKey: ["att-rep", a?.id, from, to],
-    queryFn: () =>
-      attendanceReport({
-        data: { branch: a!.branch, semester: a!.semester, subject_id: a!.subject_id, from_date: from, to_date: to },
-      }),
-  });
-  const mkQ = useQuery({
-    enabled: kind === "marks" && !!a,
-    queryKey: ["marks-rep", a?.id, examType, ay],
-    queryFn: () =>
-      marksReport({
-        data: {
-          branch: a!.branch,
-          semester: a!.semester,
-          subject_id: a!.subject_id,
-          exam_type: examType,
-          academic_year: ay,
-        },
-      }),
-  });
+  const needSubject = kind === "subject_register" || kind === "sessional_s1";
+  const needMonth = kind === "monthly_att";
+  const needDateRange = kind === "subject_register" || kind === "consolidated_register" || kind === "final_att";
 
-  const reportCards = [
-    {
-      label: "Individual Subject Register",
-      desc: "Generate a daily attendance register for a specific class and subject.",
-      icon: CheckSquare,
-    },
-    {
-      label: "Cumulative Consolidated Register",
-      desc: "View a cumulative attendance summary for all subjects in a class.",
-      icon: BarChart2,
-    },
-    {
-      label: "Subject Sessional Report",
-      desc: "Generate a detailed sessional mark breakdown for a single subject.",
-      icon: FileText,
-    },
-    {
-      label: "End-Semester Sessional Report",
-      desc: "Generate the final consolidated sessional marks for all subject types.",
-      icon: FileSpreadsheet,
-    },
-    {
-      label: "Final Attendance Report",
-      desc: "Generate the official detailed attendance report for the board, including fine calculations.",
-      icon: ClipboardList,
-    },
+  async function generate() {
+    setErr(null);
+    if (!branch || !semester) return setErr("Select class");
+    if (needSubject && !subjectId) return setErr("Select subject");
+    setBusy(true);
+    try {
+      const header = `<h1>Government Polytechnic Kinnaur</h1>`;
+      if (kind === "subject_register") {
+        const d = await individualSubjectRegister({
+          data: { branch, semester: Number(semester), subject_id: Number(subjectId), from_date: from, to_date: to },
+        });
+        const cols = d.dates.map((x: string) => `<th>${x.slice(5)}</th>`).join("");
+        const rows = d.students
+          .map(
+            (s: any, i: number) =>
+              `<tr><td>${i + 1}</td><td>${esc(s.enrollment_no)}</td><td class="name">${esc(s.name)}</td>${s.marks
+                .map((m: string) => `<td>${m ? m[0].toUpperCase() : "-"}</td>`)
+                .join("")}<td><b>${s.present}/${s.total}</b></td><td><b>${s.pct}%</b></td></tr>`,
+          )
+          .join("");
+        printHtml(
+          `${header}<h2>Individual Subject Attendance Register — ${esc(d.subject?.code)} ${esc(d.subject?.name)}<br/>${esc(branch)} · Sem ${esc(semester)} · ${from} to ${to}</h2>
+          <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th>${cols}<th>P/T</th><th>%</th></tr></thead><tbody>${rows}</tbody></table>`,
+          "Subject Register",
+        );
+      } else if (kind === "consolidated_register") {
+        const d = await cumulativeConsolidatedRegister({
+          data: { branch, semester: Number(semester), from_date: from, to_date: to },
+        });
+        const cols = d.subjects.map((s: any) => `<th>${esc(s.code)}</th>`).join("");
+        const rows = d.students
+          .map(
+            (st: any, i: number) =>
+              `<tr><td>${i + 1}</td><td>${esc(st.enrollment_no)}</td><td class="name">${esc(st.name)}</td>${st.per_subject
+                .map((p: any) => `<td>${p.pct}%</td>`)
+                .join("")}</tr>`,
+          )
+          .join("");
+        printHtml(
+          `${header}<h2>Cumulative Consolidated Attendance Register — ${esc(branch)} · Sem ${esc(semester)} · ${from} to ${to}</h2>
+          <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th>${cols}</tr></thead><tbody>${rows}</tbody></table>`,
+          "Consolidated Register",
+        );
+      } else if (kind === "sessional_s1") {
+        const d = await subjectSessionalReport({
+          data: { branch, semester: Number(semester), subject_id: Number(subjectId), academic_year: ay },
+        });
+        const cell = (r: any) => (r?.obtained != null ? `${r.obtained}/${r.max_marks}` : "-");
+        const rows = d.students
+          .map(
+            (s: any, i: number) =>
+              `<tr><td>${i + 1}</td><td>${esc(s.enrollment_no)}</td><td class="name">${esc(s.name)}</td>
+              <td>${cell(s.ct1)}</td><td>${cell(s.ct2)}</td><td>${cell(s.ht)}</td>
+              <td>${cell(s.a1)}</td><td>${cell(s.a2)}</td></tr>`,
+          )
+          .join("");
+        printHtml(
+          `${header}<h2>Subject Sessional Report (S-1) — ${esc(d.subject?.code)} ${esc(d.subject?.name)}<br/>${esc(branch)} · Sem ${esc(semester)} · AY ${esc(ay)}</h2>
+          <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th><th>CT-1</th><th>CT-2</th><th>House</th><th>Asg-1</th><th>Asg-2</th></tr></thead><tbody>${rows}</tbody></table>`,
+          "Sessional S-1",
+        );
+      } else if (kind === "sessional_s2") {
+        const d = await endSemSessionalReport({
+          data: { branch, semester: Number(semester), academic_year: ay },
+        });
+        const cols = d.subjects.map((s: any) => `<th>${esc(s.code)}</th>`).join("");
+        const rows = d.students
+          .map(
+            (s: any, i: number) =>
+              `<tr><td>${i + 1}</td><td>${esc(s.enrollment_no)}</td><td class="name">${esc(s.name)}</td>${s.per_subject
+                .map((p: any) => `<td>${p.obtained}/${p.max || "-"}</td>`)
+                .join("")}</tr>`,
+          )
+          .join("");
+        printHtml(
+          `${header}<h2>End-Semester Sessional Report (S-2) — ${esc(branch)} · Sem ${esc(semester)} · AY ${esc(ay)}</h2>
+          <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th>${cols}</tr></thead><tbody>${rows}</tbody></table>`,
+          "Sessional S-2",
+        );
+      } else if (kind === "monthly_att") {
+        const d = await monthlyAttendanceRegister({
+          data: { branch, semester: Number(semester), year, month },
+        });
+        const rows = d.students
+          .map(
+            (s: any, i: number) =>
+              `<tr><td>${i + 1}</td><td>${esc(s.enrollment_no)}</td><td class="name">${esc(s.name)}</td>
+              <td>${s.theory_present}/${s.theory_total}</td><td>${s.theory_pct}%</td>
+              <td>${s.practical_present}/${s.practical_total}</td><td>${s.practical_pct}%</td>
+              <td><b>${s.overall_pct}%</b></td></tr>`,
+          )
+          .join("");
+        printHtml(
+          `${header}<h2>Monthly Attendance Register — ${esc(branch)} · Sem ${esc(semester)} · ${String(month).padStart(2, "0")}/${year}</h2>
+          <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th><th>Theory P/T</th><th>Theory %</th><th>Practical P/T</th><th>Practical %</th><th>Overall %</th></tr></thead><tbody>${rows}</tbody></table>`,
+          "Monthly Attendance",
+        );
+      } else if (kind === "final_att") {
+        const d = await finalAttendanceReport({
+          data: {
+            branch,
+            semester: Number(semester),
+            from_date: from,
+            to_date: to,
+            academic_year: ay,
+            house_test_bonus_periods: houseBonus,
+            sports_bonus_periods: sportsBonus,
+          },
+        });
+        const cols = d.subjects.map((s: any) => `<th colspan="2">${esc(s.code)}</th>`).join("");
+        const sub2 = d.subjects.map(() => `<th>P/T</th><th>%</th>`).join("");
+        const rows = d.students
+          .map(
+            (s: any, i: number) =>
+              `<tr><td>${i + 1}</td><td>${esc(s.enrollment_no)}</td><td class="name">${esc(s.name)}</td>${s.per_subject
+                .map((p: any) => `<td>${p.present}/${p.total}</td><td>${p.pct}%</td>`)
+                .join("")}<td>${s.total_periods}</td><td>${s.present_periods}</td><td>${s.absent_periods}</td><td><b>${s.overall_pct}%</b></td><td><b>${s.adjusted_pct}%</b></td><td>₹${s.fine_rupees}</td></tr>`,
+          )
+          .join("");
+        printHtml(
+          `${header}<h2>Final Attendance Report (Board) — ${esc(branch)} · Sem ${esc(semester)} · ${from} to ${to}<br/>House-Test Bonus: ${houseBonus} periods · Sports Bonus: ${sportsBonus} periods · Fine: ₹${d.fine_per_period}/period</h2>
+          <table><thead>
+            <tr><th rowspan="2">#</th><th rowspan="2">Enroll</th><th rowspan="2" class="l">Name</th>${cols}<th rowspan="2">Total</th><th rowspan="2">Present</th><th rowspan="2">Absent</th><th rowspan="2">Raw %</th><th rowspan="2">Adj %</th><th rowspan="2">Fine</th></tr>
+            <tr>${sub2}</tr>
+          </thead><tbody>${rows}</tbody></table>`,
+          "Final Attendance Report",
+        );
+      }
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const cards: { key: ReportKey; icon: any; label: string; desc: string }[] = [
+    { key: "subject_register", icon: CheckSquare, label: "Individual Subject Register", desc: "Daily attendance register for a specific class & subject." },
+    { key: "consolidated_register", icon: BarChart2, label: "Cumulative Consolidated Register", desc: "Cumulative attendance summary for all subjects in a class." },
+    { key: "sessional_s1", icon: FileText, label: "Subject Sessional Report", desc: "Detailed sessional mark breakdown for a single subject (S-1)." },
+    { key: "sessional_s2", icon: FileSpreadsheet, label: "End-Semester Sessional Report", desc: "Final consolidated sessional marks — all subjects (S-2)." },
+    { key: "monthly_att", icon: Calendar, label: "Monthly Attendance Register", desc: "Theory %, Practical %, Overall % per student for the month." },
+    { key: "final_att", icon: ClipboardList, label: "Final Attendance Report (Board)", desc: "Includes House-Test / Sports bonus & fine @ ₹5/period." },
   ];
-
-  const rows =
-    kind === "attendance"
-      ? (attQ.data ?? []).map((s: any) => [s.enrollment_no, s.name, s.present, s.total, `${s.pct}%`])
-      : (mkQ.data ?? []).map((s: any) => [
-          s.enrollment_no,
-          s.name,
-          s.obtained ?? "",
-          s.max_marks ?? "",
-          s.remarks ?? "",
-        ]);
-  const header =
-    kind === "attendance"
-      ? ["Enrollment", "Name", "Present", "Total", "Percentage"]
-      : ["Enrollment", "Name", "Obtained", "Max", "Remarks"];
-  const fileBase = `${kind}_${a?.subjects?.code ?? "rep"}_${a?.branch ?? ""}_S${a?.semester ?? ""}`;
-  const title =
-    kind === "attendance"
-      ? `Attendance Report — ${a?.subjects?.code ?? ""}`
-      : `Marks Report — ${a?.subjects?.code ?? ""} (${examType})`;
-  const subtitle =
-    kind === "attendance"
-      ? `${a?.branch}-Sem${a?.semester} · ${from} to ${to}`
-      : `${a?.branch}-Sem${a?.semester} · AY ${ay}`;
 
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h1 className="text-2xl font-bold text-gray-800">Generate Reports</h1>
-      <p className="text-sm text-gray-500">Select a report type to generate and download.</p>
+      <h1 className="text-2xl font-bold text-gray-800">📊 Generate Reports</h1>
+      <p className="text-sm text-gray-500">Select the report type. All reports open a print-ready page.</p>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {reportCards.map((rc) => (
-          <div key={rc.label} className="bg-white border rounded-lg shadow-sm p-5 flex flex-col gap-3">
+        {cards.map((rc) => (
+          <button
+            key={rc.key}
+            onClick={() => setKind(rc.key)}
+            className={`text-left bg-white border rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow ${
+              kind === rc.key ? "ring-2 ring-[#7b1f4c] border-[#7b1f4c]" : ""
+            }`}
+          >
             <div className="flex items-start justify-between">
               <p className="font-semibold text-gray-800 text-sm">{rc.label}</p>
               <rc.icon className="w-5 h-5 text-[#7b1f4c] flex-shrink-0" />
             </div>
-            <p className="text-xs text-gray-500 flex-1">{rc.desc}</p>
-            <button
-              onClick={() => {
-                if (rows.length > 0) {
-                  exportPDF(fileBase, title, subtitle, header, rows);
-                }
-              }}
-              className="bg-[#7b1f4c] text-white w-full py-2 rounded text-sm font-semibold flex items-center justify-center gap-2"
-            >
-              <Download className="w-4 h-4" /> Generate
-            </button>
-          </div>
+            <p className="text-xs text-gray-500 mt-2">{rc.desc}</p>
+          </button>
         ))}
       </div>
 
-      {/* Filter panel */}
       <Card>
-        <p className="font-semibold text-gray-800 mb-3">Report Filters</p>
-        <div className="grid sm:grid-cols-5 gap-2 text-sm">
-          <select value={kind} onChange={(e) => setKind(e.target.value as any)} className="border rounded px-3 py-2">
-            <option value="attendance">Attendance</option>
-            <option value="marks">Marks</option>
-          </select>
-          <select
-            value={asgId}
-            onChange={(e) => setAsgId(e.target.value ? Number(e.target.value) : "")}
-            className="border rounded px-3 py-2 col-span-2"
-          >
-            <option value="">Subject / Class…</option>
-            {(asg.data ?? []).map((x: any) => (
-              <option key={x.id} value={x.id}>
-                {x.subjects?.code} · {x.branch}-Sem{x.semester}
-              </option>
-            ))}
-          </select>
-          {kind === "attendance" ? (
-            <>
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="border rounded px-3 py-2"
-              />
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="border rounded px-3 py-2"
-              />
-            </>
-          ) : (
-            <select
-              value={examType}
-              onChange={(e) => setExamType(e.target.value as any)}
-              className="border rounded px-3 py-2 col-span-2"
-            >
-              {EXAM_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t.replace(/_/g, " ")}
+        <p className="font-semibold text-gray-800 mb-3">Report Parameters</p>
+        <div className="grid sm:grid-cols-3 gap-3 text-sm">
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Class</label>
+            <select value={classKey} onChange={(e) => { setClassKey(e.target.value); setSubjectId(""); }} className="border rounded w-full px-3 py-2">
+              <option value="">Select class…</option>
+              {classes.map((c: any) => (
+                <option key={`${c.branch}|${c.semester}`} value={`${c.branch}|${c.semester}`}>
+                  {c.branch} · Sem {c.semester}
                 </option>
               ))}
             </select>
+          </div>
+          {needSubject && (
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Subject</label>
+              <select value={subjectId} onChange={(e) => setSubjectId(Number(e.target.value))} className="border rounded w-full px-3 py-2">
+                <option value="">Select subject…</option>
+                {subjects.map((s: any) => (<option key={s.id} value={s.id}>{s.code} — {s.name}</option>))}
+              </select>
+            </div>
+          )}
+          {needDateRange && (
+            <>
+              <div><label className="text-xs text-gray-500 mb-1 block">From</label><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="border rounded w-full px-3 py-2" /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">To</label><input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="border rounded w-full px-3 py-2" /></div>
+            </>
+          )}
+          {needMonth && (
+            <>
+              <div><label className="text-xs text-gray-500 mb-1 block">Month</label>
+                <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="border rounded w-full px-3 py-2">
+                  {Array.from({ length: 12 }, (_, i) => (<option key={i + 1} value={i + 1}>{new Date(2000, i, 1).toLocaleString(undefined, { month: "long" })}</option>))}
+                </select>
+              </div>
+              <div><label className="text-xs text-gray-500 mb-1 block">Year</label><input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} className="border rounded w-full px-3 py-2" /></div>
+            </>
+          )}
+          {kind === "final_att" && (
+            <>
+              <div><label className="text-xs text-gray-500 mb-1 block">House-Test Bonus (periods)</label><input type="number" value={houseBonus} onChange={(e) => setHouseBonus(Number(e.target.value))} className="border rounded w-full px-3 py-2" /></div>
+              <div><label className="text-xs text-gray-500 mb-1 block">Sports Bonus (periods)</label><input type="number" value={sportsBonus} onChange={(e) => setSportsBonus(Number(e.target.value))} className="border rounded w-full px-3 py-2" /></div>
+            </>
           )}
         </div>
-        {rows.length > 0 && (
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => exportPDF(fileBase, title, subtitle, header, rows)}
-              className="text-xs bg-rose-600 text-white px-3 py-1.5 rounded"
-            >
-              Download PDF
-            </button>
-            <button
-              onClick={() => exportExcel(fileBase, "Report", header, rows)}
-              className="text-xs bg-green-700 text-white px-3 py-1.5 rounded"
-            >
-              Download Excel
-            </button>
-            <button
-              onClick={() => exportCSV(fileBase, header, rows)}
-              className="text-xs bg-gray-100 px-3 py-1.5 rounded"
-            >
-              CSV
-            </button>
-          </div>
-        )}
-        {rows.length > 0 && (
-          <div className="border rounded overflow-hidden mt-3">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  {header.map((h) => (
-                    <th key={h} className="text-left px-4 py-2 text-gray-400 font-medium">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, i) => (
-                  <tr key={i} className="border-t">
-                    {r.map((c: any, j: number) => (
-                      <td key={j} className="px-4 py-2">
-                        {c}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {a && rows.length === 0 && !attQ.isLoading && !mkQ.isLoading && (
-          <p className="text-sm text-gray-400 mt-3">No data for selected filters.</p>
-        )}
+        <div className="flex items-center gap-3 mt-4">
+          <button disabled={busy} onClick={generate} className="bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold text-sm inline-flex items-center gap-2 disabled:opacity-60">
+            <Printer className="w-4 h-4" /> {busy ? "Generating…" : "Generate & Print"}
+          </button>
+          {err && <p className="text-xs text-rose-700">{err}</p>}
+        </div>
       </Card>
     </div>
   );

@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, KeyRound, Search } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, KeyRound, Search, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
@@ -64,12 +65,20 @@ function StudentManagement() {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Admin Console
           </Link>
-          <button
-            onClick={() => setCreating(true)}
-            className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" /> Add Student
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadStudentSampleXlsx}
+              className="border px-3 py-2 rounded text-sm font-semibold flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700"
+            >
+              <FileSpreadsheet className="w-4 h-4" /> Sample .xlsx
+            </button>
+            <button
+              onClick={() => setCreating(true)}
+              className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> Add Student
+            </button>
+          </div>
         </div>
 
         <div className="bg-white border rounded-lg p-5">
@@ -401,4 +410,47 @@ function StudentForm({
       </div>
     </div>
   );
+}
+
+function downloadStudentSampleXlsx() {
+  const rows = [
+    {
+      enrollment_no: "2026CE001",
+      name: "Ravi Kumar",
+      father_name: "Suresh Kumar",
+      mother_name: "Sita Devi",
+      dob: "2005-06-15",
+      gender: "Male",
+      category: "General",
+      email: "ravi@example.com",
+      phone: "9876543210",
+      parent_phone: "9876543211",
+      address: "Village Chagaon, Kinnaur",
+      branch: "Civil Engineering",
+      semester: 1,
+      batch_year: 2026,
+      admission_date: "2026-07-15",
+    },
+    {
+      enrollment_no: "2026ME002",
+      name: "Priya Sharma",
+      father_name: "Rakesh Sharma",
+      mother_name: "Kavita Sharma",
+      dob: "2005-09-20",
+      gender: "Female",
+      category: "OBC",
+      email: "priya@example.com",
+      phone: "9876500000",
+      parent_phone: "9876500001",
+      address: "Reckong Peo, Kinnaur",
+      branch: "Mechanical Engineering",
+      semester: 1,
+      batch_year: 2026,
+      admission_date: "2026-07-15",
+    },
+  ];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, "Students");
+  XLSX.writeFile(wb, "students_sample.xlsx");
 }

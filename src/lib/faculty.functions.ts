@@ -151,7 +151,7 @@ export const getMarks = createServerFn({ method: "GET" })
         branch: z.string(),
         semester: z.number().int(),
         subject_id: z.number().int(),
-        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "mid_sessional", "final_sessional", "practical", "viva"]),
+        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva"]),
         academic_year: z.string().regex(yearRe),
       })
       .parse(d),
@@ -192,7 +192,7 @@ export const saveMarks = createServerFn({ method: "POST" })
     z
       .object({
         subject_id: z.number().int(),
-        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "mid_sessional", "final_sessional", "practical", "viva"]),
+        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva"]),
         academic_year: z.string().regex(yearRe),
         max_marks: z.number().min(1).max(1000),
         submit_to_hod: z.boolean().default(false),
@@ -485,7 +485,7 @@ export const marksReport = createServerFn({ method: "GET" })
         branch: z.string(),
         semester: z.number().int(),
         subject_id: z.number().int(),
-        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "mid_sessional", "final_sessional", "practical", "viva"]),
+        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva"]),
         academic_year: z.string().regex(yearRe),
       })
       .parse(d),
@@ -514,4 +514,338 @@ export const marksReport = createServerFn({ method: "GET" })
       max_marks: map.get(s.id)?.max_marks ?? null,
       remarks: map.get(s.id)?.remarks ?? null,
     }));
+  });
+
+// ═══ OFFICIAL REPORT DATA (Individual Register, Consolidated, Sessional, Monthly, Final Attendance) ═══
+
+async function loadRoster(branch: string, semester: number) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("students")
+    .select("id, enrollment_no, name, father_name")
+    .eq("branch", branch)
+    .eq("semester", semester)
+    .eq("is_active", true)
+    .order("enrollment_no");
+  return data ?? [];
+}
+
+// 1. Individual Subject Register — daily attendance grid
+export const individualSubjectRegister = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({
+      branch: z.string(),
+      semester: z.number().int(),
+      subject_id: z.number().int(),
+      from_date: z.string(),
+      to_date: z.string(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const students = await loadRoster(data.branch, data.semester);
+    const { data: subj } = await supabaseAdmin.from("subjects").select("code, name").eq("id", data.subject_id).maybeSingle();
+    const { data: rec } = await supabaseAdmin
+      .from("attendance")
+      .select("student_id, date, status")
+      .eq("subject_id", data.subject_id)
+      .gte("date", data.from_date)
+      .lte("date", data.to_date);
+    const dateSet = new Set<string>();
+    (rec ?? []).forEach((r: any) => dateSet.add(r.date));
+    const dates = Array.from(dateSet).sort();
+    const map = new Map<string, string>();
+    (rec ?? []).forEach((r: any) => map.set(`${r.student_id}|${r.date}`, r.status));
+    return {
+      subject: subj,
+      dates,
+      students: students.map((s: any) => {
+        const marks = dates.map((d) => map.get(`${s.id}|${d}`) || "");
+        const total = marks.filter((m) => m).length;
+        const present = marks.filter((m) => m === "present" || m === "late").length;
+        return {
+          ...s,
+          marks,
+          total,
+          present,
+          pct: total ? Math.round((present / total) * 1000) / 10 : 0,
+        };
+      }),
+    };
+  });
+
+// 2. Cumulative Consolidated Attendance Register — per subject % across the class
+export const cumulativeConsolidatedRegister = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({
+      branch: z.string(),
+      semester: z.number().int(),
+      from_date: z.string(),
+      to_date: z.string(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const students = await loadRoster(data.branch, data.semester);
+    const { data: subs } = await supabaseAdmin
+      .from("subjects")
+      .select("id, code, name")
+      .eq("branch", data.branch)
+      .eq("semester", data.semester)
+      .order("code");
+    const { data: rec } = await supabaseAdmin
+      .from("attendance")
+      .select("student_id, subject_id, status")
+      .gte("date", data.from_date)
+      .lte("date", data.to_date)
+      .in("subject_id", (subs ?? []).map((s: any) => s.id));
+    const agg = new Map<string, { total: number; present: number }>();
+    (rec ?? []).forEach((r: any) => {
+      const k = `${r.student_id}|${r.subject_id}`;
+      if (!agg.has(k)) agg.set(k, { total: 0, present: 0 });
+      const a = agg.get(k)!;
+      a.total += 1;
+      if (r.status === "present" || r.status === "late") a.present += 1;
+    });
+    return {
+      subjects: subs ?? [],
+      students: students.map((s: any) => ({
+        ...s,
+        per_subject: (subs ?? []).map((sub: any) => {
+          const a = agg.get(`${s.id}|${sub.id}`) || { total: 0, present: 0 };
+          return {
+            subject_id: sub.id,
+            code: sub.code,
+            total: a.total,
+            present: a.present,
+            pct: a.total ? Math.round((a.present / a.total) * 1000) / 10 : 0,
+          };
+        }),
+      })),
+    };
+  });
+
+// 3. Subject Sessional Report (S-1) — all test types for a single subject
+export const subjectSessionalReport = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({
+      branch: z.string(),
+      semester: z.number().int(),
+      subject_id: z.number().int(),
+      academic_year: z.string().regex(yearRe),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const students = await loadRoster(data.branch, data.semester);
+    const { data: subj } = await supabaseAdmin.from("subjects").select("code, name, credits").eq("id", data.subject_id).maybeSingle();
+    const { data: rows } = await supabaseAdmin
+      .from("marks")
+      .select("student_id, exam_type, obtained, max_marks")
+      .eq("subject_id", data.subject_id)
+      .eq("academic_year", data.academic_year);
+    const map = new Map<string, { obtained: number | null; max_marks: number | null }>();
+    (rows ?? []).forEach((r: any) => map.set(`${r.student_id}|${r.exam_type}`, r));
+    return {
+      subject: subj,
+      students: students.map((s: any) => ({
+        ...s,
+        ct1: map.get(`${s.id}|first_class_test`) ?? null,
+        ct2: map.get(`${s.id}|second_class_test`) ?? null,
+        ht: map.get(`${s.id}|house_test`) ?? null,
+        a1: map.get(`${s.id}|assignment`) ?? null,
+        a2: map.get(`${s.id}|assignment_2`) ?? null,
+      })),
+    };
+  });
+
+// 4. End-Semester Sessional Report (S-2) — all subjects consolidated
+export const endSemSessionalReport = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({
+      branch: z.string(),
+      semester: z.number().int(),
+      academic_year: z.string().regex(yearRe),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const students = await loadRoster(data.branch, data.semester);
+    const { data: subs } = await supabaseAdmin
+      .from("subjects")
+      .select("id, code, name, credits")
+      .eq("branch", data.branch)
+      .eq("semester", data.semester)
+      .order("code");
+    const { data: rows } = await supabaseAdmin
+      .from("marks")
+      .select("student_id, subject_id, exam_type, obtained, max_marks")
+      .eq("academic_year", data.academic_year)
+      .in("subject_id", (subs ?? []).map((s: any) => s.id));
+    // For each student × subject, sum all internal test marks
+    const agg = new Map<string, { obtained: number; max: number }>();
+    (rows ?? []).forEach((r: any) => {
+      if (r.obtained == null) return;
+      const k = `${r.student_id}|${r.subject_id}`;
+      if (!agg.has(k)) agg.set(k, { obtained: 0, max: 0 });
+      const a = agg.get(k)!;
+      a.obtained += Number(r.obtained);
+      a.max += Number(r.max_marks || 0);
+    });
+    return {
+      subjects: subs ?? [],
+      students: students.map((s: any) => ({
+        ...s,
+        per_subject: (subs ?? []).map((sub: any) => {
+          const a = agg.get(`${s.id}|${sub.id}`) || { obtained: 0, max: 0 };
+          return { subject_id: sub.id, code: sub.code, obtained: a.obtained, max: a.max };
+        }),
+      })),
+    };
+  });
+
+// 5. Monthly Attendance Register — theory/practical/overall %
+export const monthlyAttendanceRegister = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({
+      branch: z.string(),
+      semester: z.number().int(),
+      year: z.number().int(),
+      month: z.number().int().min(1).max(12),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const students = await loadRoster(data.branch, data.semester);
+    const { data: subs } = await supabaseAdmin
+      .from("subjects")
+      .select("id, code, name, kind")
+      .eq("branch", data.branch)
+      .eq("semester", data.semester)
+    const startD = new Date(data.year, data.month - 1, 1);
+    const endD = new Date(data.year, data.month, 0);
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+    const { data: rec } = await supabaseAdmin
+      .from("attendance")
+      .select("student_id, subject_id, status")
+      .gte("date", fmt(startD))
+      .lte("date", fmt(endD))
+      .in("subject_id", (subs ?? []).map((s: any) => s.id));
+    const type = new Map<number, string>();
+    (subs ?? []).forEach((s: any) => type.set(s.id, s.kind));
+    const per = new Map<number, { th_t: number; th_p: number; pr_t: number; pr_p: number }>();
+    students.forEach((s: any) => per.set(s.id, { th_t: 0, th_p: 0, pr_t: 0, pr_p: 0 }));
+    (rec ?? []).forEach((r: any) => {
+      const st = per.get(r.student_id);
+      if (!st) return;
+      const isPractical = type.get(r.subject_id) === "practical";
+      if (isPractical) {
+        st.pr_t += 1;
+        if (r.status === "present" || r.status === "late") st.pr_p += 1;
+      } else {
+        st.th_t += 1;
+        if (r.status === "present" || r.status === "late") st.th_p += 1;
+      }
+    });
+    return {
+      month: data.month,
+      year: data.year,
+      students: students.map((s: any) => {
+        const x = per.get(s.id)!;
+        const tt = x.th_t + x.pr_t;
+        const tp = x.th_p + x.pr_p;
+        return {
+          ...s,
+          theory_present: x.th_p,
+          theory_total: x.th_t,
+          theory_pct: x.th_t ? Math.round((x.th_p / x.th_t) * 1000) / 10 : 0,
+          practical_present: x.pr_p,
+          practical_total: x.pr_t,
+          practical_pct: x.pr_t ? Math.round((x.pr_p / x.pr_t) * 1000) / 10 : 0,
+          overall_pct: tt ? Math.round((tp / tt) * 1000) / 10 : 0,
+        };
+      }),
+    };
+  });
+
+// 6. Final Attendance Report (Board) — includes House Test weightage & fine (₹5/period)
+export const finalAttendanceReport = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({
+      branch: z.string(),
+      semester: z.number().int(),
+      from_date: z.string(),
+      to_date: z.string(),
+      academic_year: z.string().regex(yearRe),
+      house_test_bonus_periods: z.number().int().default(0),
+      sports_bonus_periods: z.number().int().default(0),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const students = await loadRoster(data.branch, data.semester);
+    const { data: subs } = await supabaseAdmin
+      .from("subjects")
+      .select("id, code, name, kind")
+      .eq("branch", data.branch)
+      .eq("semester", data.semester)
+      .order("code");
+    const { data: rec } = await supabaseAdmin
+      .from("attendance")
+      .select("student_id, subject_id, status")
+      .gte("date", data.from_date)
+      .lte("date", data.to_date)
+      .in("subject_id", (subs ?? []).map((s: any) => s.id));
+    const agg = new Map<string, { t: number; p: number }>();
+    (rec ?? []).forEach((r: any) => {
+      const k = `${r.student_id}|${r.subject_id}`;
+      if (!agg.has(k)) agg.set(k, { t: 0, p: 0 });
+      const a = agg.get(k)!;
+      a.t += 1;
+      if (r.status === "present" || r.status === "late") a.p += 1;
+    });
+    const FINE_PER_PERIOD = 5;
+    return {
+      subjects: subs ?? [],
+      house_test_bonus: data.house_test_bonus_periods,
+      sports_bonus: data.sports_bonus_periods,
+      fine_per_period: FINE_PER_PERIOD,
+      students: students.map((s: any) => {
+        let total = 0;
+        let present = 0;
+        const perSub = (subs ?? []).map((sub: any) => {
+          const a = agg.get(`${s.id}|${sub.id}`) || { t: 0, p: 0 };
+          total += a.t;
+          present += a.p;
+          return {
+            subject_id: sub.id,
+            code: sub.code,
+            total: a.t,
+            present: a.p,
+            pct: a.t ? Math.round((a.p / a.t) * 1000) / 10 : 0,
+          };
+        });
+        const adjustedPresent =
+          present + data.house_test_bonus_periods + data.sports_bonus_periods;
+        const absentPeriods = Math.max(0, total - present);
+        const fine = absentPeriods * FINE_PER_PERIOD;
+        return {
+          ...s,
+          per_subject: perSub,
+          total_periods: total,
+          present_periods: present,
+          adjusted_present: adjustedPresent,
+          absent_periods: absentPeriods,
+          overall_pct: total ? Math.round((present / total) * 1000) / 10 : 0,
+          adjusted_pct: total ? Math.round((adjustedPresent / total) * 1000) / 10 : 0,
+          fine_rupees: fine,
+        };
+      }),
+    };
   });

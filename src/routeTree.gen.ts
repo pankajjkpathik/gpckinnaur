@@ -23,6 +23,8 @@ import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrincipalRouteImport } from './routes/principal'
+import { Route as ParentLoginRouteImport } from './routes/parent-login'
+import { Route as ParentDashboardRouteImport } from './routes/parent-dashboard'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MandatoryDisclosureRouteImport } from './routes/mandatory-disclosure'
 import { Route as HptsbAffiliationRouteImport } from './routes/hptsb-affiliation'
@@ -130,6 +132,16 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const PrincipalRoute = PrincipalRouteImport.update({
   id: '/principal',
   path: '/principal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParentLoginRoute = ParentLoginRouteImport.update({
+  id: '/parent-login',
+  path: '/parent-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParentDashboardRoute = ParentDashboardRouteImport.update({
+  id: '/parent-dashboard',
+  path: '/parent-dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MessagesRoute = MessagesRouteImport.update({
@@ -340,6 +352,8 @@ export interface FileRoutesByFullPath {
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/messages': typeof MessagesRoute
+  '/parent-dashboard': typeof ParentDashboardRoute
+  '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -393,6 +407,8 @@ export interface FileRoutesByTo {
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/messages': typeof MessagesRoute
+  '/parent-dashboard': typeof ParentDashboardRoute
+  '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -448,6 +464,8 @@ export interface FileRoutesById {
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/messages': typeof MessagesRoute
+  '/parent-dashboard': typeof ParentDashboardRoute
+  '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
@@ -504,6 +522,8 @@ export interface FileRouteTypes {
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
     | '/messages'
+    | '/parent-dashboard'
+    | '/parent-login'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -557,6 +577,8 @@ export interface FileRouteTypes {
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
     | '/messages'
+    | '/parent-dashboard'
+    | '/parent-login'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -611,6 +633,8 @@ export interface FileRouteTypes {
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
     | '/messages'
+    | '/parent-dashboard'
+    | '/parent-login'
     | '/principal'
     | '/sitemap.xml'
     | '/staff-change-password'
@@ -666,6 +690,8 @@ export interface RootRouteChildren {
   HptsbAffiliationRoute: typeof HptsbAffiliationRoute
   MandatoryDisclosureRoute: typeof MandatoryDisclosureRoute
   MessagesRoute: typeof MessagesRoute
+  ParentDashboardRoute: typeof ParentDashboardRoute
+  ParentLoginRoute: typeof ParentLoginRoute
   PrincipalRoute: typeof PrincipalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
@@ -790,6 +816,20 @@ declare module '@tanstack/react-router' {
       path: '/principal'
       fullPath: '/principal'
       preLoaderRoute: typeof PrincipalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent-login': {
+      id: '/parent-login'
+      path: '/parent-login'
+      fullPath: '/parent-login'
+      preLoaderRoute: typeof ParentLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent-dashboard': {
+      id: '/parent-dashboard'
+      path: '/parent-dashboard'
+      fullPath: '/parent-dashboard'
+      preLoaderRoute: typeof ParentDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/messages': {
@@ -1110,6 +1150,8 @@ const rootRouteChildren: RootRouteChildren = {
   HptsbAffiliationRoute: HptsbAffiliationRoute,
   MandatoryDisclosureRoute: MandatoryDisclosureRoute,
   MessagesRoute: MessagesRoute,
+  ParentDashboardRoute: ParentDashboardRoute,
+  ParentLoginRoute: ParentLoginRoute,
   PrincipalRoute: PrincipalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
@@ -1138,13 +1180,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
