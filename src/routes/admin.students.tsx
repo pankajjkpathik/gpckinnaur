@@ -411,3 +411,46 @@ function StudentForm({
     </div>
   );
 }
+
+function downloadStudentSampleXlsx() {
+  const rows = [
+    {
+      enrollment_no: "2026CE001",
+      name: "Ravi Kumar",
+      father_name: "Suresh Kumar",
+      mother_name: "Sita Devi",
+      dob: "2005-06-15",
+      gender: "Male",
+      category: "General",
+      email: "ravi@example.com",
+      phone: "9876543210",
+      parent_phone: "9876543211",
+      address: "Village Chagaon, Kinnaur",
+      branch: "Civil Engineering",
+      semester: 1,
+      batch_year: 2026,
+      admission_date: "2026-07-15",
+    },
+    {
+      enrollment_no: "2026ME002",
+      name: "Priya Sharma",
+      father_name: "Rakesh Sharma",
+      mother_name: "Kavita Sharma",
+      dob: "2005-09-20",
+      gender: "Female",
+      category: "OBC",
+      email: "priya@example.com",
+      phone: "9876500000",
+      parent_phone: "9876500001",
+      address: "Reckong Peo, Kinnaur",
+      branch: "Mechanical Engineering",
+      semester: 1,
+      batch_year: 2026,
+      admission_date: "2026-07-15",
+    },
+  ];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, "Students");
+  XLSX.writeFile(wb, "students_sample.xlsx");
+}
