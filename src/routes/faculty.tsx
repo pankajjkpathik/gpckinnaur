@@ -709,44 +709,83 @@ function MarksView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void
                   {MARKS_ENTRY_TESTS.map((t) => (
                     <th key={t.key} className="text-left px-3 py-2 text-gray-500 font-medium">
                       {t.label}
-                      <span className="text-[10px] text-gray-400 font-normal"> /{maxMarks[t.key] ?? t.defaultMax}</span>
+                      <span className="block text-[9px] text-gray-400 font-normal">
+                        {t.section === "practical" ? "Practical" : "Theory"} · /{maxMarks[t.key] ?? t.defaultMax}
+                      </span>
                     </th>
                   ))}
+                  <th className="text-left px-3 py-2 text-gray-700 font-semibold">Sessional Total</th>
                 </tr>
               </thead>
               <tbody>
-                {students.map((r: any) => (
-                  <tr key={r.id} className="border-t">
-                    <td className="px-3 py-2 font-mono text-xs">{r.enrollment_no}</td>
-                    <td className="px-3 py-2">{r.name}</td>
-                    {MARKS_ENTRY_TESTS.map((t) => (
-                      <td key={t.key} className="px-3 py-1">
-                        <input
-                          type="number"
-                          step={0.5}
-                          min={0}
-                          max={maxMarks[t.key] ?? t.defaultMax}
-                          disabled={anySubmitted || r.locked}
-                          value={entries[t.key]?.[r.id] ?? ""}
-                          onChange={(e) =>
-                            setEntries({
-                              ...entries,
-                              [t.key]: { ...(entries[t.key] || {}), [r.id]: e.target.value },
-                            })
-                          }
-                          className="border rounded px-2 py-1 w-16 text-sm"
-                        />
+                {students.map((r: any) => {
+                  const val = (k: string) => {
+                    const v = entries[k]?.[r.id];
+                    const n = v === undefined || v === "" ? null : Number(v);
+                    return Number.isFinite(n as number) ? (n as number) : null;
+                  };
+                  // Compute weighted sessional per HP TSB rules
+                  const avgOf = (a: number | null, b: number | null) => {
+                    const arr = [a, b].filter((x): x is number => x != null);
+                    return arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
+                  };
+                  const scale = (n: number | null, cap: number, key: string) => {
+                    if (n == null) return null;
+                    const denom = maxMarks[key] || cap;
+                    return Math.round(((n / denom) * cap) * 10) / 10;
+                  };
+                  const testScore = avgOf(scale(val("first_class_test"), 20, "first_class_test"), scale(val("second_class_test"), 20, "second_class_test"));
+                  const asgScore = avgOf(scale(val("assignment"), 20, "assignment"), scale(val("assignment_2"), 20, "assignment_2"));
+                  const htScore = scale(val("house_test"), 40, "house_test");
+                  const theory = [testScore, asgScore, htScore].filter((x): x is number => x != null).reduce((s, v) => s + v, 0);
+                  const perf = scale(val("practical"), 60, "practical");
+                  const rep = scale(val("report_writing"), 20, "report_writing");
+                  const viv = scale(val("viva"), 20, "viva");
+                  const practical = [perf, rep, viv].filter((x): x is number => x != null).reduce((s, v) => s + v, 0);
+                  const total = Math.round((theory + practical) * 10) / 10;
+                  const hasAny = [testScore, asgScore, htScore, perf, rep, viv].some((x) => x != null);
+                  return (
+                    <tr key={r.id} className="border-t">
+                      <td className="px-3 py-2 font-mono text-xs">{r.enrollment_no}</td>
+                      <td className="px-3 py-2">{r.name}</td>
+                      {MARKS_ENTRY_TESTS.map((t) => (
+                        <td key={t.key} className="px-3 py-1">
+                          <input
+                            type="number"
+                            step={0.5}
+                            min={0}
+                            max={maxMarks[t.key] ?? t.defaultMax}
+                            disabled={anySubmitted || r.locked}
+                            value={entries[t.key]?.[r.id] ?? ""}
+                            onChange={(e) =>
+                              setEntries({
+                                ...entries,
+                                [t.key]: { ...(entries[t.key] || {}), [r.id]: e.target.value },
+                              })
+                            }
+                            className="border rounded px-2 py-1 w-16 text-sm"
+                          />
+                        </td>
+                      ))}
+                      <td className="px-3 py-2 font-semibold text-[#7b1f4c]">
+                        {hasAny ? total : "—"}
+                        {hasAny && (
+                          <span className="block text-[9px] text-gray-400 font-normal">
+                            T:{Math.round(theory * 10) / 10} + P:{Math.round(practical * 10) / 10}
+                          </span>
+                        )}
                       </td>
-                    ))}
-                  </tr>
-                ))}
+                    </tr>
+                  );
+                })}
                 {students.length === 0 && (
                   <tr>
-                    <td colSpan={2 + MARKS_ENTRY_TESTS.length} className="px-4 py-8 text-center text-gray-400 text-sm">
+                    <td colSpan={3 + MARKS_ENTRY_TESTS.length} className="px-4 py-8 text-center text-gray-400 text-sm">
                       No students found for this class.
                     </td>
                   </tr>
                 )}
+
               </tbody>
             </table>
           </div>
