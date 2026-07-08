@@ -835,17 +835,37 @@ function UploadAssignmentView({ onBack }: { onBack: () => void }) {
 // ─── DOCUMENTS ────────────────────────────────────────────────────────────────
 function DocumentsView({ onBack }: { onBack: () => void }) {
   const fn = useServerFn(studentDocuments);
-  const [tab, setTab] = useState<"assignment" | "lesson_plan" | "exam_schedule">("assignment");
+  const ttFn = useServerFn(studentTimetable);
+  const sylFn = useServerFn(studentSyllabus);
+  const [tab, setTab] = useState<"assignment" | "lesson_plan" | "exam_schedule" | "timetable" | "syllabus">(
+    "assignment",
+  );
+  const isDoc = tab === "assignment" || tab === "lesson_plan" || tab === "exam_schedule";
   const { data = [], isLoading } = useQuery({
     queryKey: ["student-docs", tab],
-    queryFn: () => fn({ data: { type: tab } }),
+    queryFn: () => fn({ data: { type: tab as "assignment" | "lesson_plan" | "exam_schedule" } }),
+    enabled: isDoc,
+  });
+  const { data: tt } = useQuery({
+    queryKey: ["student-tt-docs"],
+    queryFn: () => ttFn(),
+    enabled: tab === "timetable",
+  });
+  const { data: syl = [] } = useQuery({
+    queryKey: ["student-syl-docs"],
+    queryFn: () => sylFn(),
+    enabled: tab === "syllabus",
   });
 
   const tabs = [
     { key: "assignment" as const, label: "Assignments" },
     { key: "lesson_plan" as const, label: "Lesson Plans" },
     { key: "exam_schedule" as const, label: "Exam Schedules" },
+    { key: "timetable" as const, label: "Timetable" },
+    { key: "syllabus" as const, label: "Syllabus" },
   ];
+
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <div className="space-y-4">
@@ -856,7 +876,7 @@ function DocumentsView({ onBack }: { onBack: () => void }) {
           A central repository for all important documents shared by your faculty.
         </p>
 
-        <div className="flex gap-1 border-b mb-4">
+        <div className="flex flex-wrap gap-1 border-b mb-4">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -868,44 +888,138 @@ function DocumentsView({ onBack }: { onBack: () => void }) {
           ))}
         </div>
 
-        <div className="border rounded overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data as any[]).map((d: any) => (
-                <tr key={d.id} className="border-t">
-                  <td className="px-4 py-3">{d.subject ?? "—"}</td>
-                  <td className="px-4 py-3">{d.title}</td>
-                  <td className="px-4 py-3">{d.uploaded_at?.slice(0, 10) ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <a
-                      href={d.file_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
-                    >
-                      <Download className="w-4 h-4" /> Download
-                    </a>
-                  </td>
-                </tr>
-              ))}
-              {!isLoading && (data as any[]).length === 0 && (
+        {isDoc && (
+          <div className="border rounded overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
-                    No documents in this category yet.
-                  </td>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
+                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {(data as any[]).map((d: any) => (
+                  <tr key={d.id} className="border-t">
+                    <td className="px-4 py-3">{d.subject ?? "—"}</td>
+                    <td className="px-4 py-3">{d.title}</td>
+                    <td className="px-4 py-3">{d.uploaded_at?.slice(0, 10) ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <a
+                        href={d.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
+                      >
+                        <Download className="w-4 h-4" /> Download
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+                {!isLoading && (data as any[]).length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                      No documents in this category yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === "timetable" && (
+          <div className="border rounded overflow-x-auto">
+            {!tt ? (
+              <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
+            ) : (tt.entries as any[]).length === 0 ? (
+              <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
+            ) : (
+              <table className="w-full text-sm min-w-[720px]">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left px-3 py-2 text-gray-500">Day</th>
+                    {(tt.periods as any[]).map((p) => (
+                      <th key={p.period_no} className="text-left px-3 py-2 text-gray-500">
+                        P{p.period_no}
+                        <div className="text-[10px] text-gray-400 font-normal">
+                          {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[1, 2, 3, 4, 5, 6].map((d) => (
+                    <tr key={d} className="border-t align-top">
+                      <td className="px-3 py-2 font-medium text-gray-700">{DAYS[d]}</td>
+                      {(tt.periods as any[]).map((p) => {
+                        const slots = (tt.entries as any[]).filter(
+                          (e) => e.day_of_week === d && e.period_no === p.period_no,
+                        );
+                        return (
+                          <td key={p.period_no} className="px-3 py-2">
+                            {slots.length === 0 ? (
+                              <span className="text-gray-300">—</span>
+                            ) : (
+                              slots.map((s, i) => (
+                                <div key={i} className="mb-1 last:mb-0">
+                                  <div className="font-semibold text-gray-800">
+                                    {s.subjects?.code ?? "—"}
+                                  </div>
+                                  <div className="text-[11px] text-gray-500">{s.subjects?.name}</div>
+                                  <div className="text-[11px] text-gray-500">
+                                    {s.staff_users?.username ? `@${s.staff_users.username}` : ""}
+                                    {s.room ? ` · ${s.room}` : ""}
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
+        {tab === "syllabus" && (
+          <div className="space-y-4">
+            {(syl as any[]).length === 0 ? (
+              <p className="p-6 text-center text-sm text-gray-400 border rounded">
+                No syllabus available for your class yet.
+              </p>
+            ) : (
+              (syl as any[]).map((s: any) => (
+                <div key={s.id} className="border rounded overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-2 font-semibold text-gray-700">
+                    {s.code} — {s.name}
+                  </div>
+                  {(s.units ?? []).length === 0 ? (
+                    <p className="px-4 py-3 text-sm text-gray-400">No units added.</p>
+                  ) : (
+                    <ul className="divide-y">
+                      {s.units.map((u: any) => (
+                        <li key={u.unit_no} className="px-4 py-3">
+                          <p className="text-sm font-medium text-gray-800">
+                            Unit {u.unit_no}: {u.title}
+                          </p>
+                          {u.topics && (
+                            <p className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{u.topics}</p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </Card>
     </div>
   );
