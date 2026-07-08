@@ -84,14 +84,19 @@ const EXAM_TYPES = [
   "viva",
 ] as const;
 
-// Test types used in Marks Entry (in display order)
-const MARKS_ENTRY_TESTS: { key: (typeof EXAM_TYPES)[number]; label: string; defaultMax: number }[] = [
-  { key: "first_class_test", label: "Class Test 1", defaultMax: 20 },
-  { key: "second_class_test", label: "Class Test 2", defaultMax: 20 },
-  { key: "house_test", label: "House Test", defaultMax: 40 },
-  { key: "assignment", label: "Assignment 1", defaultMax: 10 },
-  { key: "assignment_2", label: "Assignment 2", defaultMax: 10 },
+// Test types used in Marks Entry (in display order). Practical fields (Performance/Report/Viva)
+// stay blank for pure-theory subjects; they contribute to the Sessional S-1 total when filled.
+const MARKS_ENTRY_TESTS: { key: (typeof EXAM_TYPES)[number]; label: string; defaultMax: number; section: "theory" | "practical" }[] = [
+  { key: "first_class_test", label: "Class Test 1", defaultMax: 20, section: "theory" },
+  { key: "second_class_test", label: "Class Test 2", defaultMax: 20, section: "theory" },
+  { key: "house_test", label: "House Test", defaultMax: 40, section: "theory" },
+  { key: "assignment", label: "Assignment 1", defaultMax: 10, section: "theory" },
+  { key: "assignment_2", label: "Assignment 2", defaultMax: 10, section: "theory" },
+  { key: "practical", label: "Performance", defaultMax: 60, section: "practical" },
+  { key: "report_writing" as any, label: "Report", defaultMax: 20, section: "practical" },
+  { key: "viva", label: "Viva", defaultMax: 20, section: "practical" },
 ];
+
 
 const DAY_LABELS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
