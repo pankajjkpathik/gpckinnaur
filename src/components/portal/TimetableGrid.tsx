@@ -176,8 +176,11 @@ export function TimetableGrid({
                       );
                     }
                     const slotsHere = slotMap.get(`${d.v}-${p.period_no}`) ?? [];
-                    const span = Math.max(1, ...slotsHere.map((s) => s.span_periods || 1));
-                    // Count how many following non-break periods are covered by this span
+                    // Only merge colSpan for a whole-class slot. Grouped (G1/G2) slots
+                    // must stay per-period so each group can hold different subjects
+                    // in consecutive periods.
+                    const wholeClass = slotsHere.find((s) => !s.group_label);
+                    const span = Math.max(1, wholeClass?.span_periods || 1);
                     let colSpan = 1;
                     if (span > 1) {
                       let taken = 0;
