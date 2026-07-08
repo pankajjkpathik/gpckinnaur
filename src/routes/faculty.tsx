@@ -82,7 +82,9 @@ const EXAM_TYPES = [
   "final_sessional",
   "practical",
   "viva",
+  "report_writing",
 ] as const;
+
 
 // Test types used in Marks Entry (in display order). Practical fields (Performance/Report/Viva)
 // stay blank for pure-theory subjects; they contribute to the Sessional S-1 total when filled.
