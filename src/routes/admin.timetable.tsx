@@ -184,7 +184,12 @@ function TimetablePage() {
               onSaveSlot={(p) => save.mutate(p)}
               institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
               classLine={classLabel}
+              classInchargeName={(() => {
+                const s = (staffQ.data ?? []).find((x: any) => x.id === ciId);
+                return s ? (s.name || s.username) : undefined;
+              })()}
             />
+
           )}
         </div>
       </div>
