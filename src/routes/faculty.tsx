@@ -1626,6 +1626,8 @@ function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => vo
           `${header}<h2>End-Semester Sessional Report (S-2) — ${esc(branch)} · Sem ${esc(semester)} · AY ${esc(ay)}</h2>
           <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th>${cols}</tr></thead><tbody>${rows}</tbody></table>`,
           "Sessional S-2",
+          { landscape: true },
+
         );
       } else if (kind === "monthly_att") {
         const d = await monthlyAttendanceRegister({
