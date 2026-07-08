@@ -90,8 +90,9 @@ function ParentLogin() {
           </button>
         </form>
         <p className="text-[11px] text-gray-400 text-center mt-6">
-          Student can set the parent password from Student Portal → Parent Access.
+          Access is enabled by default for every active student. Use enrollment prefix <b>p-</b> and password <b>Welcome@123</b>.
         </p>
+
       </div>
     </div>
   );
