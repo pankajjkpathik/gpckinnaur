@@ -326,7 +326,7 @@ export const listTimetable = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("timetable")
-      .select("*, subjects(code,name), staff_users(username)")
+      .select("*, subjects(code,name), staff_users(username,name)")
       .eq("branch", data.branch)
       .eq("semester", data.semester)
       .eq("academic_year", data.academic_year)
@@ -348,34 +348,41 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
         staff_id: z.number().int().nullable(),
         room: z.string().max(30).optional().nullable(),
         academic_year: z.string().regex(yearRe),
+        group_label: z.string().max(8).optional().default(""),
+        span_periods: z.number().int().min(1).max(6).optional().default(1),
+        co_staff_ids: z.array(z.number().int()).optional().default([]),
       })
       .parse(d),
   )
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // Conflict check: same faculty in same day/period elsewhere
-    if (data.staff_id) {
+    const group_label = data.group_label || "";
+    const co = data.co_staff_ids ?? [];
+    // Conflict check: same faculty (primary or co) in same day/period elsewhere
+    const allStaff = [data.staff_id, ...co].filter(Boolean) as number[];
+    if (allStaff.length) {
       const { data: conflict } = await supabaseAdmin
         .from("timetable")
-        .select("id, branch, semester")
+        .select("id, branch, semester, staff_id, co_staff_ids, group_label")
         .eq("academic_year", data.academic_year)
         .eq("day_of_week", data.day_of_week)
-        .eq("period_no", data.period_no)
-        .eq("staff_id", data.staff_id)
-        .neq("branch", data.branch)
-        .limit(1);
-      if (conflict && conflict.length > 0) {
-        throw new Error(`Faculty conflict: already teaching ${conflict[0].branch}-Sem${conflict[0].semester} at this slot.`);
-      }
+        .eq("period_no", data.period_no);
+      const clash = (conflict ?? []).find((c: any) => {
+        if (c.branch === data.branch && c.semester === data.semester && (c.group_label || "") === group_label) return false;
+        const theirs: number[] = [c.staff_id, ...(c.co_staff_ids ?? [])].filter(Boolean);
+        return theirs.some((sid) => allStaff.includes(sid));
+      });
+      if (clash) throw new Error(`Faculty conflict: already teaching ${clash.branch}-Sem${clash.semester} at this slot.`);
     }
     const { error } = await supabaseAdmin.from("timetable").upsert(
-      { ...data, room: data.room || null },
-      { onConflict: "branch,semester,day_of_week,period_no,academic_year" },
+      { ...data, group_label, co_staff_ids: co, room: data.room || null },
+      { onConflict: "branch,semester,day_of_week,period_no,academic_year,group_label" },
     );
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 export const publishTimetable = createServerFn({ method: "POST" })
   .inputValidator((d) =>
@@ -417,7 +424,7 @@ export const listStaffByRole = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await requireRole(facultyRoles.concat(adminRoles));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin.from("staff_users").select("id, username, role, department").eq("is_active", true).order("username");
+    let q = supabaseAdmin.from("staff_users").select("id, username, name, role, department").eq("is_active", true).order("username");
     if (data.role) q = q.eq("role", data.role);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);

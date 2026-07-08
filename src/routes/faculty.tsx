@@ -82,16 +82,23 @@ const EXAM_TYPES = [
   "final_sessional",
   "practical",
   "viva",
+  "report_writing",
 ] as const;
 
-// Test types used in Marks Entry (in display order)
-const MARKS_ENTRY_TESTS: { key: (typeof EXAM_TYPES)[number]; label: string; defaultMax: number }[] = [
-  { key: "first_class_test", label: "Class Test 1", defaultMax: 20 },
-  { key: "second_class_test", label: "Class Test 2", defaultMax: 20 },
-  { key: "house_test", label: "House Test", defaultMax: 40 },
-  { key: "assignment", label: "Assignment 1", defaultMax: 10 },
-  { key: "assignment_2", label: "Assignment 2", defaultMax: 10 },
+
+// Test types used in Marks Entry (in display order). Practical fields (Performance/Report/Viva)
+// stay blank for pure-theory subjects; they contribute to the Sessional S-1 total when filled.
+const MARKS_ENTRY_TESTS: { key: (typeof EXAM_TYPES)[number]; label: string; defaultMax: number; section: "theory" | "practical" }[] = [
+  { key: "first_class_test", label: "Class Test 1", defaultMax: 20, section: "theory" },
+  { key: "second_class_test", label: "Class Test 2", defaultMax: 20, section: "theory" },
+  { key: "house_test", label: "House Test", defaultMax: 40, section: "theory" },
+  { key: "assignment", label: "Assignment 1", defaultMax: 10, section: "theory" },
+  { key: "assignment_2", label: "Assignment 2", defaultMax: 10, section: "theory" },
+  { key: "practical", label: "Performance", defaultMax: 60, section: "practical" },
+  { key: "report_writing", label: "Report", defaultMax: 20, section: "practical" },
+  { key: "viva", label: "Viva", defaultMax: 20, section: "practical" },
 ];
+
 
 const DAY_LABELS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -702,44 +709,83 @@ function MarksView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void
                   {MARKS_ENTRY_TESTS.map((t) => (
                     <th key={t.key} className="text-left px-3 py-2 text-gray-500 font-medium">
                       {t.label}
-                      <span className="text-[10px] text-gray-400 font-normal"> /{maxMarks[t.key] ?? t.defaultMax}</span>
+                      <span className="block text-[9px] text-gray-400 font-normal">
+                        {t.section === "practical" ? "Practical" : "Theory"} · /{maxMarks[t.key] ?? t.defaultMax}
+                      </span>
                     </th>
                   ))}
+                  <th className="text-left px-3 py-2 text-gray-700 font-semibold">Sessional Total</th>
                 </tr>
               </thead>
               <tbody>
-                {students.map((r: any) => (
-                  <tr key={r.id} className="border-t">
-                    <td className="px-3 py-2 font-mono text-xs">{r.enrollment_no}</td>
-                    <td className="px-3 py-2">{r.name}</td>
-                    {MARKS_ENTRY_TESTS.map((t) => (
-                      <td key={t.key} className="px-3 py-1">
-                        <input
-                          type="number"
-                          step={0.5}
-                          min={0}
-                          max={maxMarks[t.key] ?? t.defaultMax}
-                          disabled={anySubmitted || r.locked}
-                          value={entries[t.key]?.[r.id] ?? ""}
-                          onChange={(e) =>
-                            setEntries({
-                              ...entries,
-                              [t.key]: { ...(entries[t.key] || {}), [r.id]: e.target.value },
-                            })
-                          }
-                          className="border rounded px-2 py-1 w-16 text-sm"
-                        />
+                {students.map((r: any) => {
+                  const val = (k: string) => {
+                    const v = entries[k]?.[r.id];
+                    const n = v === undefined || v === "" ? null : Number(v);
+                    return Number.isFinite(n as number) ? (n as number) : null;
+                  };
+                  // Compute weighted sessional per HP TSB rules
+                  const avgOf = (a: number | null, b: number | null) => {
+                    const arr = [a, b].filter((x): x is number => x != null);
+                    return arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
+                  };
+                  const scale = (n: number | null, cap: number, key: string) => {
+                    if (n == null) return null;
+                    const denom = maxMarks[key] || cap;
+                    return Math.round(((n / denom) * cap) * 10) / 10;
+                  };
+                  const testScore = avgOf(scale(val("first_class_test"), 20, "first_class_test"), scale(val("second_class_test"), 20, "second_class_test"));
+                  const asgScore = avgOf(scale(val("assignment"), 20, "assignment"), scale(val("assignment_2"), 20, "assignment_2"));
+                  const htScore = scale(val("house_test"), 40, "house_test");
+                  const theory = [testScore, asgScore, htScore].filter((x): x is number => x != null).reduce((s, v) => s + v, 0);
+                  const perf = scale(val("practical"), 60, "practical");
+                  const rep = scale(val("report_writing"), 20, "report_writing");
+                  const viv = scale(val("viva"), 20, "viva");
+                  const practical = [perf, rep, viv].filter((x): x is number => x != null).reduce((s, v) => s + v, 0);
+                  const total = Math.round((theory + practical) * 10) / 10;
+                  const hasAny = [testScore, asgScore, htScore, perf, rep, viv].some((x) => x != null);
+                  return (
+                    <tr key={r.id} className="border-t">
+                      <td className="px-3 py-2 font-mono text-xs">{r.enrollment_no}</td>
+                      <td className="px-3 py-2">{r.name}</td>
+                      {MARKS_ENTRY_TESTS.map((t) => (
+                        <td key={t.key} className="px-3 py-1">
+                          <input
+                            type="number"
+                            step={0.5}
+                            min={0}
+                            max={maxMarks[t.key] ?? t.defaultMax}
+                            disabled={anySubmitted || r.locked}
+                            value={entries[t.key]?.[r.id] ?? ""}
+                            onChange={(e) =>
+                              setEntries({
+                                ...entries,
+                                [t.key]: { ...(entries[t.key] || {}), [r.id]: e.target.value },
+                              })
+                            }
+                            className="border rounded px-2 py-1 w-16 text-sm"
+                          />
+                        </td>
+                      ))}
+                      <td className="px-3 py-2 font-semibold text-[#7b1f4c]">
+                        {hasAny ? total : "—"}
+                        {hasAny && (
+                          <span className="block text-[9px] text-gray-400 font-normal">
+                            T:{Math.round(theory * 10) / 10} + P:{Math.round(practical * 10) / 10}
+                          </span>
+                        )}
                       </td>
-                    ))}
-                  </tr>
-                ))}
+                    </tr>
+                  );
+                })}
                 {students.length === 0 && (
                   <tr>
-                    <td colSpan={2 + MARKS_ENTRY_TESTS.length} className="px-4 py-8 text-center text-gray-400 text-sm">
+                    <td colSpan={3 + MARKS_ENTRY_TESTS.length} className="px-4 py-8 text-center text-gray-400 text-sm">
                       No students found for this class.
                     </td>
                   </tr>
                 )}
+
               </tbody>
             </table>
           </div>
@@ -1473,20 +1519,68 @@ function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => vo
         const d = await subjectSessionalReport({
           data: { branch, semester: Number(semester), subject_id: Number(subjectId), academic_year: ay },
         });
-        const cell = (r: any) => (r?.obtained != null ? `${r.obtained}/${r.max_marks}` : "-");
+        const W = d.weightage as any;
+        const cell = (n: number | null | undefined) => (n == null ? "-" : String(n));
         const rows = d.students
           .map(
             (s: any, i: number) =>
-              `<tr><td>${i + 1}</td><td>${esc(s.enrollment_no)}</td><td class="name">${esc(s.name)}</td>
-              <td>${cell(s.ct1)}</td><td>${cell(s.ct2)}</td><td>${cell(s.ht)}</td>
-              <td>${cell(s.a1)}</td><td>${cell(s.a2)}</td></tr>`,
+              `<tr>
+                <td>${i + 1}</td>
+                <td>${esc(s.enrollment_no)}</td>
+                <td class="name">${esc(s.name)}</td>
+                <td>${cell(s.test_score)}</td>
+                <td>${cell(s.assignment_score)}</td>
+                <td>${cell(s.attendance_score)}${s.attendance_pct != null ? `<div style="font-size:9px;color:#888">${s.attendance_pct}%</div>` : ""}</td>
+                <td>${cell(s.house_test_score)}</td>
+                <td><b>${cell(s.theory_total)}</b></td>
+                <td>${cell(s.performance_score)}</td>
+                <td>${cell(s.report_score)}</td>
+                <td>${cell(s.viva_score)}</td>
+                <td><b>${cell(s.practical_total)}</b></td>
+                <td><b>${cell(s.grand_total)}</b></td>
+              </tr>`,
           )
           .join("");
         printHtml(
-          `${header}<h2>Subject Sessional Report (S-1) — ${esc(d.subject?.code)} ${esc(d.subject?.name)}<br/>${esc(branch)} · Sem ${esc(semester)} · AY ${esc(ay)}</h2>
-          <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th><th>CT-1</th><th>CT-2</th><th>House</th><th>Asg-1</th><th>Asg-2</th></tr></thead><tbody>${rows}</tbody></table>`,
+          `${header}
+          <h2>Proforma for Sessional (Internal Assessment) Marks — S-1<br/>
+            ${esc(d.subject?.code ?? "")} ${esc(d.subject?.name ?? "")} · ${esc(branch)} · Sem ${esc(semester)} · AY ${esc(ay)}
+          </h2>
+          <p style="font-size:11px;color:#555;margin:4px 0 10px">
+            Weightage per HP TSB rules — Theory: House Test 40% + Class Test 20% + Assignment 20% + Attendance 20%.
+            Practical: Performance 60% + Report Writing 20% + Viva 20%.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">#</th>
+                <th rowspan="2">Board Roll No.</th>
+                <th rowspan="2" class="l">Name</th>
+                <th colspan="5">Theory Marks</th>
+                <th colspan="4">Practical Marks</th>
+                <th rowspan="2">Grand Total (A+B)</th>
+              </tr>
+              <tr>
+                <th>Test (${W.test})</th>
+                <th>Assignment (${W.assignment})</th>
+                <th>Attendance (${W.attendance})</th>
+                <th>House Test (${W.house_test})</th>
+                <th>Total A (${W.test + W.assignment + W.attendance + W.house_test})</th>
+                <th>Performance (${W.performance})</th>
+                <th>Report (${W.report})</th>
+                <th>Viva (${W.viva})</th>
+                <th>Total B (${W.performance + W.report + W.viva})</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div style="display:flex;justify-content:space-between;margin-top:40px;font-size:11px">
+            <div><b>Signature of HOD</b></div>
+            <div><b>Signature of the Teacher</b></div>
+          </div>`,
           "Sessional S-1",
         );
+
       } else if (kind === "sessional_s2") {
         const d = await endSemSessionalReport({
           data: { branch, semester: Number(semester), academic_year: ay },
