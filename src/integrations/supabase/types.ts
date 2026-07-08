@@ -1722,6 +1722,7 @@ export type Database = {
           created_at: string
           day_of_week: number
           group_label: string
+          guest_faculty: string | null
           id: number
           period_no: number
           published: boolean
@@ -1739,6 +1740,7 @@ export type Database = {
           created_at?: string
           day_of_week: number
           group_label?: string
+          guest_faculty?: string | null
           id?: number
           period_no: number
           published?: boolean
@@ -1756,6 +1758,7 @@ export type Database = {
           created_at?: string
           day_of_week?: number
           group_label?: string
+          guest_faculty?: string | null
           id?: number
           period_no?: number
           published?: boolean
