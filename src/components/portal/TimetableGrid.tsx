@@ -176,8 +176,11 @@ export function TimetableGrid({
                       );
                     }
                     const slotsHere = slotMap.get(`${d.v}-${p.period_no}`) ?? [];
-                    const span = Math.max(1, ...slotsHere.map((s) => s.span_periods || 1));
-                    // Count how many following non-break periods are covered by this span
+                    // Only merge colSpan for a whole-class slot. Grouped (G1/G2) slots
+                    // must stay per-period so each group can hold different subjects
+                    // in consecutive periods.
+                    const wholeClass = slotsHere.find((s) => !s.group_label);
+                    const span = Math.max(1, wholeClass?.span_periods || 1);
                     let colSpan = 1;
                     if (span > 1) {
                       let taken = 0;
@@ -198,7 +201,7 @@ export function TimetableGrid({
                         </td>
                       );
                     }
-                    if (slotsHere.length === 1) {
+                    if (slotsHere.length === 1 && !slotsHere[0].group_label) {
                       const s = slotsHere[0];
                       return (
                         <td key={p.id}
@@ -211,18 +214,29 @@ export function TimetableGrid({
                         </td>
                       );
                     }
-                    // Two (or more) groups sharing the same period → stack halves
-                    const sorted = [...slotsHere].sort((a, b) => (a.group_label || "").localeCompare(b.group_label || ""));
+                    // One or more grouped slots (G1/G2/G3) sharing the same period → stack halves,
+                    // with a "+ Gx" affordance for any missing group when editable.
+                    const sorted = [...slotsHere]
+                      .filter((s) => s.group_label)
+                      .sort((a, b) => (a.group_label || "").localeCompare(b.group_label || ""));
+                    const usedGroups = new Set(sorted.map((s) => s.group_label as string));
+                    const rows: Array<{ slot?: TTSlot; group: string }> = sorted.map((s) => ({ slot: s, group: s.group_label as string }));
+                    if (editable && rows.length < 2) {
+                      const nextGroup = ["G1", "G2", "G3"].find((g) => !usedGroups.has(g)) || "G2";
+                      rows.push({ group: nextGroup });
+                    }
                     return (
                       <td key={p.id} colSpan={colSpan} className="border p-0 align-middle">
-                        <div className="grid grid-rows-2 h-14">
-                          {sorted.slice(0, 2).map((s, i) => (
+                        <div className={`grid h-14`} style={{ gridTemplateRows: `repeat(${Math.max(2, rows.length)}, minmax(0, 1fr))` }}>
+                          {rows.map((r, i) => (
                             <div key={i}
-                              onClick={() => editable && setEditing({ day: d.v, period: p, slot: s, group: s.group_label || "" })}
-                              className={`flex items-center justify-center ${i === 0 ? "border-b" : ""} ${editable ? "cursor-pointer hover:bg-black/5" : ""}`}
-                              style={{ backgroundColor: colorFor(s.subject_id) }}
+                              onClick={() => editable && setEditing({ day: d.v, period: p, slot: r.slot, group: r.group })}
+                              className={`flex items-center justify-center ${i < rows.length - 1 ? "border-b" : ""} ${editable ? "cursor-pointer hover:bg-black/5" : ""}`}
+                              style={{ backgroundColor: r.slot ? colorFor(r.slot.subject_id) : "transparent" }}
                             >
-                              {renderSlotContent(s)}
+                              {r.slot ? renderSlotContent(r.slot) : (
+                                <span className="text-[10px] text-gray-400">+ {r.group}</span>
+                              )}
                             </div>
                           ))}
                         </div>
