@@ -115,6 +115,20 @@ function TimetablePage() {
               pattern="\d{4}-\d{2}"
               className="border rounded px-3 py-2 text-sm w-24"
             />
+            <select
+              value={ciId}
+              onChange={(e) => setCiId(e.target.value ? Number(e.target.value) : "")}
+              className="border rounded px-3 py-2 text-sm bg-white max-w-[180px]"
+              title="Class Incharge"
+            >
+              <option value="">— Class Incharge —</option>
+              {(staffQ.data ?? [])
+                .filter((s: any) => !s.role || ["faculty", "hod"].includes(s.role))
+                .map((s: any) => (
+                  <option key={s.id} value={s.id}>{s.name || s.username}</option>
+                ))}
+            </select>
+
             <span
               className={`text-xs px-2 py-1 rounded ${isPublished ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
             >
