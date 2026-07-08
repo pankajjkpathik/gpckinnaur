@@ -95,7 +95,7 @@ const MARKS_ENTRY_TESTS: { key: (typeof EXAM_TYPES)[number]; label: string; defa
   { key: "assignment", label: "Assignment 1", defaultMax: 10, section: "theory" },
   { key: "assignment_2", label: "Assignment 2", defaultMax: 10, section: "theory" },
   { key: "practical", label: "Performance", defaultMax: 60, section: "practical" },
-  { key: "report_writing" as any, label: "Report", defaultMax: 20, section: "practical" },
+  { key: "report_writing", label: "Report", defaultMax: 20, section: "practical" },
   { key: "viva", label: "Viva", defaultMax: 20, section: "practical" },
 ];
 
