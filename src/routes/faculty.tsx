@@ -1473,20 +1473,68 @@ function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => vo
         const d = await subjectSessionalReport({
           data: { branch, semester: Number(semester), subject_id: Number(subjectId), academic_year: ay },
         });
-        const cell = (r: any) => (r?.obtained != null ? `${r.obtained}/${r.max_marks}` : "-");
+        const W = d.weightage as any;
+        const cell = (n: number | null | undefined) => (n == null ? "-" : String(n));
         const rows = d.students
           .map(
             (s: any, i: number) =>
-              `<tr><td>${i + 1}</td><td>${esc(s.enrollment_no)}</td><td class="name">${esc(s.name)}</td>
-              <td>${cell(s.ct1)}</td><td>${cell(s.ct2)}</td><td>${cell(s.ht)}</td>
-              <td>${cell(s.a1)}</td><td>${cell(s.a2)}</td></tr>`,
+              `<tr>
+                <td>${i + 1}</td>
+                <td>${esc(s.enrollment_no)}</td>
+                <td class="name">${esc(s.name)}</td>
+                <td>${cell(s.test_score)}</td>
+                <td>${cell(s.assignment_score)}</td>
+                <td>${cell(s.attendance_score)}${s.attendance_pct != null ? `<div style="font-size:9px;color:#888">${s.attendance_pct}%</div>` : ""}</td>
+                <td>${cell(s.house_test_score)}</td>
+                <td><b>${cell(s.theory_total)}</b></td>
+                <td>${cell(s.performance_score)}</td>
+                <td>${cell(s.report_score)}</td>
+                <td>${cell(s.viva_score)}</td>
+                <td><b>${cell(s.practical_total)}</b></td>
+                <td><b>${cell(s.grand_total)}</b></td>
+              </tr>`,
           )
           .join("");
         printHtml(
-          `${header}<h2>Subject Sessional Report (S-1) — ${esc(d.subject?.code)} ${esc(d.subject?.name)}<br/>${esc(branch)} · Sem ${esc(semester)} · AY ${esc(ay)}</h2>
-          <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th><th>CT-1</th><th>CT-2</th><th>House</th><th>Asg-1</th><th>Asg-2</th></tr></thead><tbody>${rows}</tbody></table>`,
+          `${header}
+          <h2>Proforma for Sessional (Internal Assessment) Marks — S-1<br/>
+            ${esc(d.subject?.code ?? "")} ${esc(d.subject?.name ?? "")} · ${esc(branch)} · Sem ${esc(semester)} · AY ${esc(ay)}
+          </h2>
+          <p style="font-size:11px;color:#555;margin:4px 0 10px">
+            Weightage per HP TSB rules — Theory: House Test 40% + Class Test 20% + Assignment 20% + Attendance 20%.
+            Practical: Performance 60% + Report Writing 20% + Viva 20%.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">#</th>
+                <th rowspan="2">Board Roll No.</th>
+                <th rowspan="2" class="l">Name</th>
+                <th colspan="5">Theory Marks</th>
+                <th colspan="4">Practical Marks</th>
+                <th rowspan="2">Grand Total (A+B)</th>
+              </tr>
+              <tr>
+                <th>Test (${W.test})</th>
+                <th>Assignment (${W.assignment})</th>
+                <th>Attendance (${W.attendance})</th>
+                <th>House Test (${W.house_test})</th>
+                <th>Total A (${W.test + W.assignment + W.attendance + W.house_test})</th>
+                <th>Performance (${W.performance})</th>
+                <th>Report (${W.report})</th>
+                <th>Viva (${W.viva})</th>
+                <th>Total B (${W.performance + W.report + W.viva})</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div style="display:flex;justify-content:space-between;margin-top:40px;font-size:11px">
+            <div><b>Signature of HOD</b></div>
+            <div><b>Signature of the Teacher</b></div>
+          </div>`,
           "Sessional S-1",
         );
+
       } else if (kind === "sessional_s2") {
         const d = await endSemSessionalReport({
           data: { branch, semester: Number(semester), academic_year: ay },
