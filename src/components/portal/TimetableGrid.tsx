@@ -19,9 +19,11 @@ export type TTSlot = {
   group_label?: string | null;
   span_periods?: number | null;
   co_staff_ids?: number[] | null;
+  guest_faculty?: string | null;
   subjects?: { code: string; name: string } | null;
   staff_users?: { username: string; name?: string | null } | null;
 };
+
 export type TTSubject = { id: number; code: string; name: string };
 export type TTStaff = { id: number; username: string; name?: string | null; role?: string };
 
