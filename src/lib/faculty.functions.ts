@@ -151,7 +151,7 @@ export const getMarks = createServerFn({ method: "GET" })
         branch: z.string(),
         semester: z.number().int(),
         subject_id: z.number().int(),
-        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva"]),
+        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva", "report_writing"]),
         academic_year: z.string().regex(yearRe),
       })
       .parse(d),
@@ -192,7 +192,7 @@ export const saveMarks = createServerFn({ method: "POST" })
     z
       .object({
         subject_id: z.number().int(),
-        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva"]),
+        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva", "report_writing"]),
         academic_year: z.string().regex(yearRe),
         max_marks: z.number().min(1).max(1000),
         submit_to_hod: z.boolean().default(false),
@@ -485,7 +485,7 @@ export const marksReport = createServerFn({ method: "GET" })
         branch: z.string(),
         semester: z.number().int(),
         subject_id: z.number().int(),
-        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva"]),
+        exam_type: z.enum(["first_class_test", "second_class_test", "house_test", "internal", "assignment", "assignment_2", "class_test_1", "class_test_2", "mid_sessional", "final_sessional", "practical", "viva", "report_writing"]),
         academic_year: z.string().regex(yearRe),
       })
       .parse(d),
