@@ -40,6 +40,8 @@ function TimetablePage() {
   const [branch, setBranch] = useState("mechanical");
   const [sem, setSem] = useState(3);
   const [year, setYear] = useState("2025-26");
+  const [ciId, setCiId] = useState<number | "">("");
+
 
   const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods(), enabled: !!me });
   const subjQ = useQuery({
