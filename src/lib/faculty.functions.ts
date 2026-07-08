@@ -627,7 +627,9 @@ export const cumulativeConsolidatedRegister = createServerFn({ method: "GET" })
     };
   });
 
-// 3. Subject Sessional Report (S-1) — all test types for a single subject
+// 3. Subject Sessional Report (S-1) — Theory + Practical breakdown per HP TSB rules
+//   Theory weightage: House Test 40% + avg(CT-1, CT-2) 20% + avg(Assignment-1, Assignment-2) 20% + Attendance 20%
+//   Practical weightage: Performance 60% + Report Writing 20% + Viva 20%
 export const subjectSessionalReport = createServerFn({ method: "GET" })
   .inputValidator((d) =>
     z.object({
@@ -641,7 +643,7 @@ export const subjectSessionalReport = createServerFn({ method: "GET" })
     await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
-    const { data: subj } = await supabaseAdmin.from("subjects").select("code, name, credits").eq("id", data.subject_id).maybeSingle();
+    const { data: subj } = await supabaseAdmin.from("subjects").select("code, name, credits, kind").eq("id", data.subject_id).maybeSingle();
     const { data: rows } = await supabaseAdmin
       .from("marks")
       .select("student_id, exam_type, obtained, max_marks")
@@ -649,18 +651,88 @@ export const subjectSessionalReport = createServerFn({ method: "GET" })
       .eq("academic_year", data.academic_year);
     const map = new Map<string, { obtained: number | null; max_marks: number | null }>();
     (rows ?? []).forEach((r: any) => map.set(`${r.student_id}|${r.exam_type}`, r));
+
+    // Attendance % per student for this subject
+    const { data: att } = await supabaseAdmin
+      .from("attendance")
+      .select("student_id, status")
+      .eq("subject_id", data.subject_id);
+    const attAgg = new Map<number, { p: number; t: number }>();
+    (att ?? []).forEach((r: any) => {
+      const cur = attAgg.get(r.student_id) || { p: 0, t: 0 };
+      cur.t += 1;
+      if (r.status === "present" || r.status === "P") cur.p += 1;
+      attAgg.set(r.student_id, cur);
+    });
+
+    // Weightage maxes (out of total 100 per section)
+    const MAX = {
+      test: 20,        // avg CT1/CT2 mapped to 20
+      assignment: 20,  // avg A1/A2 mapped to 20
+      house_test: 40,
+      attendance: 20,
+      performance: 60,
+      report: 20,
+      viva: 20,
+    };
+
+    const scale = (m: any, cap: number) => {
+      if (!m || m.obtained == null) return null;
+      const denom = Number(m.max_marks) || cap;
+      return Math.round(((Number(m.obtained) / denom) * cap) * 10) / 10;
+    };
+    const avg = (a: number | null, b: number | null) => {
+      const vals = [a, b].filter((x): x is number => x != null);
+      if (vals.length === 0) return null;
+      return Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 10) / 10;
+    };
+
     return {
       subject: subj,
-      students: students.map((s: any) => ({
-        ...s,
-        ct1: map.get(`${s.id}|first_class_test`) ?? null,
-        ct2: map.get(`${s.id}|second_class_test`) ?? null,
-        ht: map.get(`${s.id}|house_test`) ?? null,
-        a1: map.get(`${s.id}|assignment`) ?? null,
-        a2: map.get(`${s.id}|assignment_2`) ?? null,
-      })),
+      weightage: MAX,
+      students: students.map((s: any) => {
+        const ct1 = map.get(`${s.id}|first_class_test`) ?? null;
+        const ct2 = map.get(`${s.id}|second_class_test`) ?? null;
+        const ht = map.get(`${s.id}|house_test`) ?? null;
+        const a1 = map.get(`${s.id}|assignment`) ?? null;
+        const a2 = map.get(`${s.id}|assignment_2`) ?? null;
+        const perf = map.get(`${s.id}|practical`) ?? null;
+        const rep = map.get(`${s.id}|report_writing`) ?? null;
+        const viv = map.get(`${s.id}|viva`) ?? null;
+
+        const testScore = avg(scale(ct1, MAX.test), scale(ct2, MAX.test));
+        const asgScore = avg(scale(a1, MAX.assignment), scale(a2, MAX.assignment));
+        const htScore = scale(ht, MAX.house_test);
+        const agg = attAgg.get(s.id) || { p: 0, t: 0 };
+        const attPct = agg.t > 0 ? (agg.p / agg.t) * 100 : null;
+        const attScore = attPct != null ? Math.round((attPct * MAX.attendance / 100) * 10) / 10 : null;
+        const totalA = [testScore, asgScore, htScore, attScore]
+          .filter((v): v is number => v != null)
+          .reduce((s, v) => s + v, 0);
+
+        const perfScore = scale(perf, MAX.performance);
+        const repScore = scale(rep, MAX.report);
+        const vivScore = scale(viv, MAX.viva);
+        const totalB = [perfScore, repScore, vivScore]
+          .filter((v): v is number => v != null)
+          .reduce((s, v) => s + v, 0);
+
+        return {
+          ...s,
+          ct1, ct2, ht, a1, a2,
+          perf, rep, viv,
+          test_score: testScore, assignment_score: asgScore, house_test_score: htScore,
+          attendance_pct: attPct != null ? Math.round(attPct * 10) / 10 : null,
+          attendance_score: attScore,
+          theory_total: Math.round(totalA * 10) / 10,
+          performance_score: perfScore, report_score: repScore, viva_score: vivScore,
+          practical_total: Math.round(totalB * 10) / 10,
+          grand_total: Math.round((totalA + totalB) * 10) / 10,
+        };
+      }),
     };
   });
+
 
 // 4. End-Semester Sessional Report (S-2) — all subjects consolidated
 export const endSemSessionalReport = createServerFn({ method: "GET" })
