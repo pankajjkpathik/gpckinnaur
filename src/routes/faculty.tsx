@@ -1676,6 +1676,8 @@ function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => vo
             <tr>${sub2}</tr>
           </thead><tbody>${rows}</tbody></table>`,
           "Final Attendance Report",
+          { landscape: true },
+
         );
       }
     } catch (e: any) {
