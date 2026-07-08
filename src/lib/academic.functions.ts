@@ -351,6 +351,7 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
         group_label: z.string().max(8).optional().default(""),
         span_periods: z.number().int().min(1).max(6).optional().default(1),
         co_staff_ids: z.array(z.number().int()).optional().default([]),
+        guest_faculty: z.string().max(100).optional().nullable(),
       })
       .parse(d),
   )
@@ -376,9 +377,10 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
       if (clash) throw new Error(`Faculty conflict: already teaching ${clash.branch}-Sem${clash.semester} at this slot.`);
     }
     const { error } = await supabaseAdmin.from("timetable").upsert(
-      { ...data, group_label, co_staff_ids: co, room: data.room || null },
+      { ...data, group_label, co_staff_ids: co, room: data.room || null, guest_faculty: data.guest_faculty || null },
       { onConflict: "branch,semester,day_of_week,period_no,academic_year,group_label" },
     );
+
     if (error) throw new Error(error.message);
     return { ok: true };
   });
