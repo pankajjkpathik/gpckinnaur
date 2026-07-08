@@ -23,6 +23,9 @@ import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { PdfDocsInline } from "@/components/portal/PdfDocsInline";
 import { facultyRoles, hasRole } from "@/lib/roles";
+import logoAsset from "@/assets/logo.png.asset.json";
+import hpAsset from "@/assets/hp.png.asset.json";
+
 import { listAssignments, listPeriods } from "@/lib/academic.functions";
 import {
   facultyDashboard,
@@ -1416,28 +1419,51 @@ type ReportKey =
   | "monthly_att"
   | "final_att";
 
-function printHtml(html: string, title: string) {
-  const w = window.open("", "_blank", "width=1100,height=800");
+function printHtml(html: string, title: string, opts?: { landscape?: boolean }) {
+  const w = window.open("", "_blank", "width=1200,height=850");
   if (!w) return;
+  const landscape = !!opts?.landscape;
+  const origin = window.location.origin;
+  const logo = origin + logoAsset.url;
+  const hp = origin + hpAsset.url;
+  const brandHeader = `
+    <div class="brand">
+      <img src="${hp}" alt="HP" />
+      <div class="brand-text">
+        <div class="l1">Government of Himachal Pradesh</div>
+        <div class="l2">Government Polytechnic, Kinnaur</div>
+        <div class="l3">Camp at GP Rohru, Distt. Shimla (H.P.)</div>
+      </div>
+      <img src="${logo}" alt="GPK" />
+    </div>`;
   w.document.write(`<!doctype html><html><head><title>${title}</title>
 <style>
+  @page { size: A4 ${landscape ? "landscape" : "portrait"}; margin: 8mm; }
   * { box-sizing: border-box; }
-  body { font-family: system-ui, sans-serif; padding: 24px; color: #111; }
-  h1 { font-size: 18px; text-align:center; margin: 0 0 4px 0; }
-  h2 { font-size: 14px; text-align:center; margin: 0 0 14px 0; color: #444; font-weight: normal; }
-  table { border-collapse: collapse; width: 100%; font-size: 11px; }
-  th, td { border: 1px solid #333; padding: 4px 6px; text-align: center; }
+  body { font-family: system-ui, sans-serif; padding: 16px; color: #111; }
+  .brand { display:flex; align-items:center; justify-content:space-between; gap:14px; border-bottom:2px solid #111; padding-bottom:6px; margin-bottom:10px; }
+  .brand img { width:56px; height:56px; object-fit:contain; }
+  .brand-text { text-align:center; flex:1; }
+  .brand .l1 { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .brand .l2 { font-size:16px; font-weight:800; }
+  .brand .l3 { font-size:11px; color:#333; }
+  h1 { font-size: 16px; text-align:center; margin: 0 0 4px 0; }
+  h2 { font-size: 13px; text-align:center; margin: 0 0 12px 0; color: #333; font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; font-size: ${landscape ? "10px" : "11px"}; table-layout: ${landscape ? "auto" : "auto"}; }
+  th, td { border: 1px solid #333; padding: 3px 5px; text-align: center; }
   th { background: #eee; }
   td.name, th.name, td.l, th.l { text-align: left; }
   .footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 11px; }
-  @media print { .noprint { display: none; } body { padding: 8px; } }
+  @media print { .noprint { display: none; } body { padding: 6px; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } }
   .btn { background:#7b1f4c; color:#fff; padding:6px 14px; border:0; border-radius:4px; cursor:pointer; font-weight:600; }
 </style></head><body>
 <div class="noprint" style="text-align:right;margin-bottom:10px"><button class="btn" onclick="window.print()">🖨 Print</button></div>
+${brandHeader}
 ${html}
 </body></html>`);
   w.document.close();
 }
+
 
 function esc(s: any): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
@@ -1579,6 +1605,8 @@ function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => vo
             <div><b>Signature of the Teacher</b></div>
           </div>`,
           "Sessional S-1",
+          { landscape: true },
+
         );
 
       } else if (kind === "sessional_s2") {
@@ -1598,6 +1626,8 @@ function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => vo
           `${header}<h2>End-Semester Sessional Report (S-2) — ${esc(branch)} · Sem ${esc(semester)} · AY ${esc(ay)}</h2>
           <table><thead><tr><th>#</th><th>Enroll</th><th class="l">Name</th>${cols}</tr></thead><tbody>${rows}</tbody></table>`,
           "Sessional S-2",
+          { landscape: true },
+
         );
       } else if (kind === "monthly_att") {
         const d = await monthlyAttendanceRegister({
@@ -1646,6 +1676,8 @@ function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => vo
             <tr>${sub2}</tr>
           </thead><tbody>${rows}</tbody></table>`,
           "Final Attendance Report",
+          { landscape: true },
+
         );
       }
     } catch (e: any) {

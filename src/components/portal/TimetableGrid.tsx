@@ -19,9 +19,11 @@ export type TTSlot = {
   group_label?: string | null;
   span_periods?: number | null;
   co_staff_ids?: number[] | null;
+  guest_faculty?: string | null;
   subjects?: { code: string; name: string } | null;
   staff_users?: { username: string; name?: string | null } | null;
 };
+
 export type TTSubject = { id: number; code: string; name: string };
 export type TTStaff = { id: number; username: string; name?: string | null; role?: string };
 
@@ -67,7 +69,8 @@ export function TimetableGrid({
   onSaveSlot?: (payload: {
     day_of_week: number; period_no: number;
     subject_id: number | null; staff_id: number | null; room: string | null;
-    group_label: string; span_periods: number; co_staff_ids: number[];
+    group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
+
   }) => void;
   institutionLine?: string;
   classLine?: string;
@@ -110,6 +113,10 @@ export function TimetableGrid({
     slots.forEach((s) => {
       add(s.staff_id);
       (s.co_staff_ids ?? []).forEach(add);
+      if (s.guest_faculty) {
+        const g = s.guest_faculty.trim();
+        if (g) seen.set(`G-${g.slice(0, 2).toUpperCase()}`, `${g} (Guest)`);
+      }
     });
     return Array.from(seen.entries()).sort();
   }, [slots, staffById]);
@@ -125,19 +132,22 @@ export function TimetableGrid({
     const primary = facultyLabel(s.staff_id, s.staff_users);
     const cos = (s.co_staff_ids ?? []).map((id) => initialsFromStaff(staffById.get(id))).filter(Boolean);
     const initList = [primary, ...cos].filter(Boolean).join("/");
+    const guest = (s.guest_faculty || "").trim();
     return (
       <div className="px-1 leading-tight">
         {s.group_label ? <div className="text-[9px] font-bold text-gray-600">({s.group_label})</div> : null}
         <div className="font-semibold text-gray-800 text-[11px]">{code}</div>
         {initList && <div className="text-[10px] text-gray-500">({initList})</div>}
+        {guest && <div className="text-[10px] italic text-emerald-700">Guest: {guest}</div>}
         {s.room && <div className="text-[9px] text-gray-400">{s.room}</div>}
       </div>
     );
   }
 
+
   return (
     <div className="bg-white">
-      <div className="text-center py-3">
+      <div className="text-center py-3 print:hidden">
         {institutionLine && <p className="font-bold text-gray-800">{institutionLine}</p>}
         {classLine && <p className="font-semibold text-gray-700 text-sm">{classLine}</p>}
         {classInchargeName && (
@@ -311,7 +321,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
   onClose: () => void;
   onSave: (p: {
     subject_id: number | null; staff_id: number | null; room: string | null;
-    group_label: string; span_periods: number; co_staff_ids: number[];
+    group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
   }) => void;
 }) {
   const [subjId, setSubjId] = useState<number | "">(editing.slot?.subject_id ?? "");
@@ -320,6 +330,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
   const [groupLabel, setGroupLabel] = useState<string>(editing.slot?.group_label ?? editing.group ?? "");
   const [span, setSpan] = useState<number>(editing.slot?.span_periods || 1);
   const [coIds, setCoIds] = useState<number[]>(editing.slot?.co_staff_ids ?? []);
+  const [guest, setGuest] = useState<string>(editing.slot?.guest_faculty ?? "");
 
   const dayLabel = DAYS.find((d) => d.v === editing.day)?.label;
   const codeForTitle = subjects.find((s) => s.id === subjId)?.code;
@@ -352,6 +363,10 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
               {staff.map((s) => <option key={s.id} value={s.id}>{initialsFromStaff(s)} - {s.name || s.username}</option>)}
             </select>
           </div>
+          <div className="grid grid-cols-[100px_1fr] items-center gap-2">
+            <label className="text-gray-600">Guest Faculty <span className="block text-[10px] text-gray-400">(external / other polytechnic)</span></label>
+            <input value={guest} onChange={(e) => setGuest(e.target.value)} placeholder="e.g. Sh. Ramesh Sharma (GP Rohru)" className="border rounded px-3 py-2" />
+          </div>
           <div className="grid grid-cols-[100px_1fr] items-start gap-2">
             <label className="text-gray-600 mt-2">Co-Faculty <span className="block text-[10px] text-gray-400">(for practicals)</span></label>
             <div className="border rounded p-2 max-h-32 overflow-y-auto bg-white">
@@ -380,7 +395,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
             <input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="optional" className="border rounded px-3 py-2" />
           </div>
           <p className="text-[11px] text-gray-500 leading-snug">
-            Use <b>Group</b> (G1/G2) to split a practical between two groups in the same period. Use <b>Span</b> for clubbed practical periods (e.g. 2 or 3 consecutive periods). Add <b>Co-Faculty</b> when multiple teachers take the lab together.
+            Use <b>Group</b> (G1/G2) to split a practical between two groups in the same period. Use <b>Span</b> for clubbed practical periods (e.g. 2 or 3 consecutive periods). Add <b>Co-Faculty</b> when multiple teachers take the lab together. Use <b>Guest Faculty</b> for external teachers who don't have a login.
           </p>
         </div>
 
@@ -395,6 +410,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
                 group_label: groupLabel || "",
                 span_periods: span,
                 co_staff_ids: coIds,
+                guest_faculty: guest.trim() || null,
               })
             }
             className="bg-[#7b1f4c] text-white px-5 py-2 rounded text-sm font-semibold"
@@ -406,3 +422,4 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
     </div>
   );
 }
+
