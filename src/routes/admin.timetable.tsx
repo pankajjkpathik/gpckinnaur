@@ -172,7 +172,17 @@ function TimetablePage() {
           <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>
         )}
 
-        <div className="bg-white border rounded-lg p-4">
+        <div className="bg-white border rounded-lg p-4 tt-print-area">
+          {/* Print-only header with institute logos */}
+          <div className="hidden print:flex items-center justify-between gap-4 mb-3 pb-2 border-b border-gray-800">
+            <img src={hpAsset.url} alt="HP" className="w-14 h-14 object-contain" />
+            <div className="text-center">
+              <p className="text-[13px] font-bold uppercase tracking-wide">Government of Himachal Pradesh</p>
+              <p className="text-[15px] font-extrabold">Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)</p>
+              <p className="text-[12px] font-semibold">Time Table {classLabel} · w.e.f. 01-08-{year.slice(-2) === "26" ? "2026" : year.split("-")[0]}</p>
+            </div>
+            <img src={logoAsset.url} alt="GPK" className="w-14 h-14 object-contain" />
+          </div>
           {(periodsQ.data ?? []).length === 0 ? (
             <p className="text-center py-8 text-gray-400 text-sm">
               Configure the Periods Master first (Admin → Periods).
@@ -191,11 +201,22 @@ function TimetablePage() {
                 const s = (staffQ.data ?? []).find((x: any) => x.id === ciId) as any;
                 return s ? (s.name || s.username) : undefined;
               })()}
-
             />
-
           )}
         </div>
+
+        <style>{`
+          @media print {
+            @page { size: A4 landscape; margin: 8mm; }
+            html, body { background: #fff !important; }
+            body * { visibility: hidden !important; }
+            .tt-print-area, .tt-print-area * { visibility: visible !important; }
+            .tt-print-area { position: absolute; inset: 0; border: 0 !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; width: 100%; }
+            .tt-print-area table { font-size: 9px !important; page-break-inside: avoid; }
+            .tt-print-area th, .tt-print-area td { padding: 3px 4px !important; }
+          }
+        `}</style>
+
       </div>
     </PortalShell>
   );
