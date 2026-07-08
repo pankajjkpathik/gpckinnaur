@@ -1721,7 +1721,7 @@ export type Database = {
           co_staff_ids: number[]
           created_at: string
           day_of_week: number
-          group_label: string | null
+          group_label: string
           id: number
           period_no: number
           published: boolean
@@ -1738,7 +1738,7 @@ export type Database = {
           co_staff_ids?: number[]
           created_at?: string
           day_of_week: number
-          group_label?: string | null
+          group_label?: string
           id?: number
           period_no: number
           published?: boolean
@@ -1755,7 +1755,7 @@ export type Database = {
           co_staff_ids?: number[]
           created_at?: string
           day_of_week?: number
-          group_label?: string | null
+          group_label?: string
           id?: number
           period_no?: number
           published?: boolean
