@@ -113,6 +113,10 @@ export function TimetableGrid({
     slots.forEach((s) => {
       add(s.staff_id);
       (s.co_staff_ids ?? []).forEach(add);
+      if (s.guest_faculty) {
+        const g = s.guest_faculty.trim();
+        if (g) seen.set(`G-${g.slice(0, 2).toUpperCase()}`, `${g} (Guest)`);
+      }
     });
     return Array.from(seen.entries()).sort();
   }, [slots, staffById]);
@@ -128,15 +132,18 @@ export function TimetableGrid({
     const primary = facultyLabel(s.staff_id, s.staff_users);
     const cos = (s.co_staff_ids ?? []).map((id) => initialsFromStaff(staffById.get(id))).filter(Boolean);
     const initList = [primary, ...cos].filter(Boolean).join("/");
+    const guest = (s.guest_faculty || "").trim();
     return (
       <div className="px-1 leading-tight">
         {s.group_label ? <div className="text-[9px] font-bold text-gray-600">({s.group_label})</div> : null}
         <div className="font-semibold text-gray-800 text-[11px]">{code}</div>
         {initList && <div className="text-[10px] text-gray-500">({initList})</div>}
+        {guest && <div className="text-[10px] italic text-emerald-700">Guest: {guest}</div>}
         {s.room && <div className="text-[9px] text-gray-400">{s.room}</div>}
       </div>
     );
   }
+
 
   return (
     <div className="bg-white">
