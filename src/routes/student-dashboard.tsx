@@ -220,14 +220,8 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       border: "border-green-600",
       view: "semester-reports",
     },
-    {
-      icon: Users,
-      label: "Parent Access",
-      desc: "Set the password your parent will use to log in",
-      color: "bg-emerald-600",
-      border: "border-emerald-600",
-      view: "parent-access",
-    },
+
+
     {
       icon: Upload,
       label: "Upload Assignment",
