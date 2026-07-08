@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Eye, EyeOff, Briefcase, Crown, Users, GraduationCap } from "lucide-react";
+import { Eye, EyeOff, Briefcase, Crown, Users, GraduationCap, ClipboardList } from "lucide-react";
 import { staffLogin, staffMe } from "@/lib/auth.functions";
 import { adminPortalRoles } from "@/lib/roles";
 import logoAsset from "@/assets/logo.png.asset.json";
@@ -9,20 +9,22 @@ import logoAsset from "@/assets/logo.png.asset.json";
 export const Route = createFileRoute("/staff-login")({
   head: () => ({ meta: [
     { title: "Staff Login — GP Kinnaur" },
-    { name: "description", content: "Sign in to the GP Kinnaur staff portal — Principal, HOD, Faculty and TPO access." },
+    { name: "description", content: "Sign in to the GP Kinnaur staff portal — Principal, HOD, Faculty, TPO and Clerk access." },
     { name: "robots", content: "noindex, nofollow" },
   ] }),
   component: StaffLoginPage,
 });
 
-type RoleTab = "principal" | "hod" | "faculty" | "tpo";
+type RoleTab = "principal" | "hod" | "faculty" | "tpo" | "clerk";
 
 const tabs: { id: RoleTab; label: string; icon: any; hint: string }[] = [
   { id: "principal", label: "Principal", icon: Crown, hint: "Institute-wide leadership" },
   { id: "hod", label: "HOD", icon: Briefcase, hint: "Department head" },
   { id: "faculty", label: "Faculty", icon: GraduationCap, hint: "Teaching staff" },
   { id: "tpo", label: "TPO", icon: Users, hint: "Training & Placement Officer" },
+  { id: "clerk", label: "Clerk", icon: ClipboardList, hint: "Office / clerical staff" },
 ];
+
 
 function StaffLoginPage() {
   const navigate = useNavigate();
