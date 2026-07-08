@@ -424,7 +424,7 @@ export const listStaffByRole = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await requireRole(facultyRoles.concat(adminRoles));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin.from("staff_users").select("id, username, role, department").eq("is_active", true).order("username");
+    let q = supabaseAdmin.from("staff_users").select("id, username, name, role, department").eq("is_active", true).order("username");
     if (data.role) q = q.eq("role", data.role);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
