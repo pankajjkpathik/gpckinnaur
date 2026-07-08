@@ -1605,6 +1605,8 @@ function ReportsView({ ay, me, onBack }: { ay: string; me: any; onBack: () => vo
             <div><b>Signature of the Teacher</b></div>
           </div>`,
           "Sessional S-1",
+          { landscape: true },
+
         );
 
       } else if (kind === "sessional_s2") {
