@@ -42,8 +42,9 @@ function ParentLogin() {
         <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs rounded-lg p-3 mb-5 flex gap-2">
           <Users className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <span>
-            Sign in with your child's <b>Enrollment Number (IR)</b>. Password is configured by your child from
-            their Student Portal &rarr; <i>Parent Access</i>.
+            Sign in with your ward's <b>Enrollment Number</b> prefixed by <b>p-</b>
+            &nbsp;(e.g. <code>p-250824009024</code>). Standard password is{" "}
+            <b>Welcome@123</b>.
           </span>
         </div>
         <form
@@ -54,16 +55,17 @@ function ParentLogin() {
           className="space-y-4"
         >
           <div>
-            <label className="text-xs text-gray-600 font-medium mb-1 block">Enrollment No. (IR)</label>
+            <label className="text-xs text-gray-600 font-medium mb-1 block">Ward Enrollment (prefix with p-)</label>
             <input
               value={enroll}
               onChange={(e) => setEnroll(e.target.value)}
-              placeholder="e.g. 2023CS001"
+              placeholder="p-250824009024"
               autoFocus
-              className="border rounded-lg w-full px-3 py-2.5 text-sm uppercase tracking-wide focus:ring-2 focus:ring-emerald-400 outline-none"
+              className="border rounded-lg w-full px-3 py-2.5 text-sm tracking-wide focus:ring-2 focus:ring-emerald-400 outline-none"
               required
             />
           </div>
+
           <div>
             <label className="text-xs text-gray-600 font-medium mb-1 block">Password</label>
             <input
@@ -88,8 +90,9 @@ function ParentLogin() {
           </button>
         </form>
         <p className="text-[11px] text-gray-400 text-center mt-6">
-          Student can set the parent password from Student Portal → Parent Access.
+          Access is enabled by default for every active student. Use enrollment prefix <b>p-</b> and password <b>Welcome@123</b>.
         </p>
+
       </div>
     </div>
   );
