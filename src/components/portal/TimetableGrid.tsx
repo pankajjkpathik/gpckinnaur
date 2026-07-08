@@ -321,7 +321,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
   onClose: () => void;
   onSave: (p: {
     subject_id: number | null; staff_id: number | null; room: string | null;
-    group_label: string; span_periods: number; co_staff_ids: number[];
+    group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
   }) => void;
 }) {
   const [subjId, setSubjId] = useState<number | "">(editing.slot?.subject_id ?? "");
@@ -330,6 +330,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
   const [groupLabel, setGroupLabel] = useState<string>(editing.slot?.group_label ?? editing.group ?? "");
   const [span, setSpan] = useState<number>(editing.slot?.span_periods || 1);
   const [coIds, setCoIds] = useState<number[]>(editing.slot?.co_staff_ids ?? []);
+  const [guest, setGuest] = useState<string>(editing.slot?.guest_faculty ?? "");
 
   const dayLabel = DAYS.find((d) => d.v === editing.day)?.label;
   const codeForTitle = subjects.find((s) => s.id === subjId)?.code;
@@ -362,6 +363,10 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
               {staff.map((s) => <option key={s.id} value={s.id}>{initialsFromStaff(s)} - {s.name || s.username}</option>)}
             </select>
           </div>
+          <div className="grid grid-cols-[100px_1fr] items-center gap-2">
+            <label className="text-gray-600">Guest Faculty <span className="block text-[10px] text-gray-400">(external / other polytechnic)</span></label>
+            <input value={guest} onChange={(e) => setGuest(e.target.value)} placeholder="e.g. Sh. Ramesh Sharma (GP Rohru)" className="border rounded px-3 py-2" />
+          </div>
           <div className="grid grid-cols-[100px_1fr] items-start gap-2">
             <label className="text-gray-600 mt-2">Co-Faculty <span className="block text-[10px] text-gray-400">(for practicals)</span></label>
             <div className="border rounded p-2 max-h-32 overflow-y-auto bg-white">
@@ -390,7 +395,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
             <input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="optional" className="border rounded px-3 py-2" />
           </div>
           <p className="text-[11px] text-gray-500 leading-snug">
-            Use <b>Group</b> (G1/G2) to split a practical between two groups in the same period. Use <b>Span</b> for clubbed practical periods (e.g. 2 or 3 consecutive periods). Add <b>Co-Faculty</b> when multiple teachers take the lab together.
+            Use <b>Group</b> (G1/G2) to split a practical between two groups in the same period. Use <b>Span</b> for clubbed practical periods (e.g. 2 or 3 consecutive periods). Add <b>Co-Faculty</b> when multiple teachers take the lab together. Use <b>Guest Faculty</b> for external teachers who don't have a login.
           </p>
         </div>
 
@@ -405,6 +410,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
                 group_label: groupLabel || "",
                 span_periods: span,
                 co_staff_ids: coIds,
+                guest_faculty: guest.trim() || null,
               })
             }
             className="bg-[#7b1f4c] text-white px-5 py-2 rounded text-sm font-semibold"
@@ -416,3 +422,4 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
     </div>
   );
 }
+
