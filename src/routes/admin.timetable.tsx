@@ -14,6 +14,9 @@ import {
   publishTimetable,
 } from "@/lib/academic.functions";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
+import logoAsset from "@/assets/logo.png.asset.json";
+import hpAsset from "@/assets/hp.png.asset.json";
+
 
 export const Route = createFileRoute("/admin/timetable")({
   head: () => portalMeta("Timetable Builder"),
