@@ -72,7 +72,7 @@ function StaffLoginPage() {
         <h1 className="text-2xl font-bold text-[color:var(--navy)]">Staff Portal Login</h1>
         <p className="text-sm text-muted-foreground mb-5">Select your role and sign in.</p>
 
-        <div className="grid grid-cols-4 gap-2 mb-5" role="tablist">
+        <div className="grid grid-cols-5 gap-2 mb-5" role="tablist">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = role === t.id;
