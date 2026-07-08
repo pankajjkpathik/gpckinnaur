@@ -1718,13 +1718,16 @@ export type Database = {
         Row: {
           academic_year: string
           branch: string
+          co_staff_ids: number[]
           created_at: string
           day_of_week: number
+          group_label: string | null
           id: number
           period_no: number
           published: boolean
           room: string | null
           semester: number
+          span_periods: number
           staff_id: number | null
           subject_id: number | null
           updated_at: string
@@ -1732,13 +1735,16 @@ export type Database = {
         Insert: {
           academic_year: string
           branch: string
+          co_staff_ids?: number[]
           created_at?: string
           day_of_week: number
+          group_label?: string | null
           id?: number
           period_no: number
           published?: boolean
           room?: string | null
           semester: number
+          span_periods?: number
           staff_id?: number | null
           subject_id?: number | null
           updated_at?: string
@@ -1746,13 +1752,16 @@ export type Database = {
         Update: {
           academic_year?: string
           branch?: string
+          co_staff_ids?: number[]
           created_at?: string
           day_of_week?: number
+          group_label?: string | null
           id?: number
           period_no?: number
           published?: boolean
           room?: string | null
           semester?: number
+          span_periods?: number
           staff_id?: number | null
           subject_id?: number | null
           updated_at?: string
