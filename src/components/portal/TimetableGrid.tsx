@@ -147,7 +147,7 @@ export function TimetableGrid({
 
   return (
     <div className="bg-white">
-      <div className="text-center py-3">
+      <div className="text-center py-3 print:hidden">
         {institutionLine && <p className="font-bold text-gray-800">{institutionLine}</p>}
         {classLine && <p className="font-semibold text-gray-700 text-sm">{classLine}</p>}
         {classInchargeName && (
