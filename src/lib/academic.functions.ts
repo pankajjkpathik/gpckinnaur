@@ -326,7 +326,7 @@ export const listTimetable = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("timetable")
-      .select("*, subjects(code,name), staff_users(username)")
+      .select("*, subjects(code,name), staff_users(username,name)")
       .eq("branch", data.branch)
       .eq("semester", data.semester)
       .eq("academic_year", data.academic_year)
