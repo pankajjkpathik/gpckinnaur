@@ -185,9 +185,10 @@ function TimetablePage() {
               institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
               classLine={classLabel}
               classInchargeName={(() => {
-                const s = (staffQ.data ?? []).find((x: any) => x.id === ciId);
+                const s = (staffQ.data ?? []).find((x: any) => x.id === ciId) as any;
                 return s ? (s.name || s.username) : undefined;
               })()}
+
             />
 
           )}
