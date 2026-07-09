@@ -14,20 +14,16 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: async () => {
         const entries: SitemapEntry[] = [
-          { path: "/", changefreq: "weekly", priority: "1.0" },
-          { path: "/about", changefreq: "monthly", priority: "0.8" },
           { path: "/admissions", changefreq: "weekly", priority: "0.9" },
-          { path: "/departments/1", changefreq: "monthly", priority: "0.8" },
-          { path: "/departments/2", changefreq: "monthly", priority: "0.8" },
-          { path: "/staff/faculty", changefreq: "monthly", priority: "0.6" },
-          { path: "/staff/admin", changefreq: "monthly", priority: "0.5" },
-          { path: "/staff/non-teaching", changefreq: "monthly", priority: "0.5" },
-          { path: "/staff/committees", changefreq: "monthly", priority: "0.5" },
-          { path: "/alumni", changefreq: "monthly", priority: "0.6" },
-          { path: "/alumni/register", changefreq: "yearly", priority: "0.4" },
-          { path: "/anti-ragging", changefreq: "yearly", priority: "0.5" },
           { path: "/contact", changefreq: "yearly", priority: "0.6" },
+          { path: "/anti-ragging", changefreq: "yearly", priority: "0.5" },
+          { path: "/mandatory-disclosure", changefreq: "yearly", priority: "0.5" },
+          { path: "/aicte-approval", changefreq: "yearly", priority: "0.5" },
+          { path: "/hptsb-affiliation", changefreq: "yearly", priority: "0.5" },
+          { path: "/rti", changefreq: "yearly", priority: "0.5" },
+          { path: "/grievance", changefreq: "yearly", priority: "0.5" },
         ];
+
 
         const urls = entries.map((e) =>
           [

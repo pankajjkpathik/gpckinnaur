@@ -1,456 +1,213 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Award,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  CreditCard,
-  GraduationCap,
-  Hammer,
-  Newspaper,
-  Receipt,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
-import { PageLayout } from "@/components/layout/PageLayout";
-import { HeroSlider } from "@/components/home/HeroSlider";
-import { NewsTicker } from "@/components/home/NewsTicker";
-import { NoticeBoard } from "@/components/home/NoticeBoard";
-import { PhotoGallery } from "@/components/home/PhotoGallery";
-import civilAsset from "@/assets/civil.png.asset.json";
-import mechAsset from "@/assets/mech.png.asset.json";
-import s6Asset from "@/assets/s6.jpg.asset.json";
-import news1Asset from "@/assets/news/news1.jpg.asset.json";
-import news2Asset from "@/assets/news/news2.jpg.asset.json";
-import news3Asset from "@/assets/news/news3.jpg.asset.json";
-import news4Asset from "@/assets/news/news4.jpg.asset.json";
+import { ArrowRight, Briefcase, GraduationCap, ShieldCheck, Users } from "lucide-react";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GP Kinnaur — Diploma in Civil & Mechanical Engineering" },
+      { title: "GP Kinnaur — Institute Portal" },
       {
         name: "description",
         content:
-          "Government Polytechnic, Kinnaur (HP) — AICTE-approved, HPTSB-affiliated. 3-year diploma programs in Civil and Mechanical Engineering with modern labs.",
+          "Secure institute portal for Government Polytechnic, Kinnaur — access for students, parents and staff.",
       },
-      { property: "og:title", content: "GP Kinnaur — Diploma in Civil & Mechanical Engineering" },
-      {
-        property: "og:description",
-        content: "Empowering youth of Kinnaur through quality technical education.",
-      },
-      { property: "og:url", content: "https://gpckinnaur.lovable.app/" },
-      { property: "og:type", content: "website" },
-    ],
-    links: [{ rel: "canonical", href: "https://gpckinnaur.lovable.app/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "EducationalOrganization",
-          name: "Government Polytechnic, Kinnaur",
-          url: "https://gpckinnaur.lovable.app",
-          department: [
-            { "@type": "EducationalOrganization", name: "Department of Civil Engineering" },
-            { "@type": "EducationalOrganization", name: "Department of Mechanical Engineering" },
-          ],
-        }),
-      },
+      { name: "robots", content: "noindex, nofollow" },
+      { property: "og:title", content: "GP Kinnaur — Institute Portal" },
+      { property: "og:description", content: "Sign in to the GP Kinnaur institute portal." },
     ],
   }),
-  component: Home,
+  component: PortalLanding,
 });
 
-const events = [
+const cards = [
   {
-    day: "06",
-    month: "JUL",
-    title: "First Round of Admission — PAT",
-    desc: "First counselling round for Polytechnic Admission Test (PAT) candidates.",
-    venue: "GP Kinnaur (Camp Rohru)",
+    tag: "For Enrolled Students",
+    title: "Student Portal",
+    desc: "Attendance, results, timetable, assignments & study materials.",
+    to: "/student-login",
+    icon: GraduationCap,
+    tone: "outline",
   },
   {
-    day: "08",
-    month: "JUL",
-    title: "First Round of Admission — LEET",
-    desc: "First counselling round for Lateral Entry Entrance Test (LEET) candidates.",
-    venue: "GP Kinnaur (Camp Rohru)",
+    tag: "For Parents & Guardians",
+    title: "Parent Portal",
+    desc: "Track your ward's attendance, performance and notices.",
+    to: "/parent-login",
+    icon: Users,
+    tone: "outline",
   },
   {
-    day: "25",
-    month: "JUL",
-    title: "Second Round of Admission — PAT",
-    desc: "Second counselling round for Polytechnic Admission Test (PAT) candidates.",
-    venue: "GP Kinnaur (Camp Rohru)",
+    tag: "Principal · HOD · Faculty · TPO · Clerk",
+    title: "Staff Portal",
+    desc: "Teaching, administration, placements and office operations.",
+    to: "/staff-login",
+    icon: Briefcase,
+    tone: "solid",
   },
-  {
-    day: "27",
-    month: "JUL",
-    title: "Second Round of Admission — LEET",
-    desc: "Second counselling round for Lateral Entry Entrance Test (LEET) candidates.",
-    venue: "GP Kinnaur (Camp Rohru)",
-  },
+] as const;
+
+const bottomLinks: { label: string; to: string; external?: boolean }[] = [
+  { label: "Admissions", to: "/admissions" },
+  { label: "Contact", to: "/contact" },
+  { label: "Anti-Ragging", to: "/anti-ragging" },
+  { label: "Mandatory Disclosure", to: "/mandatory-disclosure" },
+  { label: "AICTE Approval", to: "/aicte-approval" },
+  { label: "HPTSB Affiliation", to: "/hptsb-affiliation" },
+  { label: "RTI", to: "/rti" },
+  { label: "Grievance", to: "/grievance" },
 ];
 
-const news = [
-  {
-    tag: "ADMISSIONS",
-    source: "Daily Tribune",
-    date: "12 Jun 2026",
-    title: "GP Kinnaur students secure top ranks in HPTSB Diploma exams",
-  },
-  {
-    tag: "ADMISSIONS",
-    source: "Himachal Weekly",
-    date: "05 May 2026",
-    title: "New batch of Diploma in Civil Engineering students inducted at GP Kinnaur",
-  },
-  {
-    tag: "CAMPUS",
-    source: "HP Express",
-    date: "18 Apr 2026",
-    title: "GP Kinnaur holds Anti-Ragging awareness drive for students",
-  },
-  {
-    tag: "SPORTS",
-    source: "Times of HP",
-    date: "10 Feb 2026",
-    title: "Annual Sports Meet 2025 organised at GP Kinnaur; Civil Dept wins overall trophy",
-  },
-];
-
-const programs = [
-  {
-    title: "Department of Civil Engineering",
-    blurb: "3-year AICTE-approved diploma in surveying, structures and construction technology.",
-    image: civilAsset.url,
-    accent: "var(--gold)",
-    icon: Building2,
-    to: "/departments/1",
-  },
-  {
-    title: "Department of Mechanical Engineering",
-    blurb: "3-year AICTE-approved diploma in design, manufacturing and thermal systems.",
-    image: mechAsset.url,
-    accent: "#3b82f6",
-    icon: Hammer,
-    to: "/departments/2",
-  },
-];
-
-function Home() {
+function PortalLanding() {
   return (
-    <PageLayout>
-      <HeroSlider />
-      <NewsTicker />
+    <div
+      className="relative min-h-screen text-white overflow-hidden flex flex-col"
+      style={{
+        background:
+          "radial-gradient(circle at 15% 25%, oklch(0.32 0.08 155) 0%, transparent 55%), radial-gradient(circle at 85% 75%, oklch(0.25 0.07 155) 0%, transparent 60%), oklch(0.16 0.05 155)",
+      }}
+    >
+      {/* Diagonal texture */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.08] pointer-events-none"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(135deg, rgba(255,255,255,0.6) 0 1px, transparent 1px 14px)",
+        }}
+      />
 
-      {/* About snippet */}
-      <section className="container mx-auto px-4 py-14 grid lg:grid-cols-2 gap-10 items-center">
-        <div>
-          <p className="text-xs font-bold tracking-widest text-[color:var(--gold-dark)]">ABOUT OUR INSTITUTE</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)] mt-2 mb-4">
-            Building Tomorrow's Engineers in the Hills of Kinnaur
-          </h2>
-          <p className="text-muted-foreground leading-relaxed mb-3">
-            Government Polytechnic, Kinnaur is a premier technical institute affiliated to HPTSB and approved by AICTE,
-            offering diploma programs with modern, well-equipped facilities and a conducive learning environment.
-          </p>
-          <p className="text-muted-foreground leading-relaxed mb-5">
-            Our institution creates skilled professionals ready to meet the challenges of the modern industrial
-            landscape through rigorous academic curriculum and practical exposure.
-          </p>
-          <ul className="grid sm:grid-cols-2 gap-2 mb-6">
-            {["AICTE Approved", "Highly Qualified Faculty", "Modern Laboratories", "Industry Oriented Curriculum"].map(
-              (f) => (
-                <li key={f} className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-[color:var(--gold-dark)]" />
-                  {f}
-                </li>
-              ),
-            )}
-          </ul>
-          <Link
-            to="/about"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[color:var(--navy)] text-white font-semibold hover:opacity-90"
-          >
-            Read More About Us →
-          </Link>
-        </div>
-        <div className="relative">
-          <img
-            src={s6Asset.url}
-            alt="GP Kinnaur campus"
-            className="rounded-xl shadow-lg w-full h-[340px] object-cover"
-          />
-          <div className="absolute -bottom-6 -left-4 md:left-6 bg-white rounded-lg shadow-lg p-4 w-64 border">
-            <div className="flex items-center gap-3 mb-3">
-              <Award className="w-8 h-8 text-[color:var(--gold-dark)]" />
-              <div>
-                <p className="text-xs text-muted-foreground">Excellence</p>
-                <p className="font-bold text-[color:var(--navy)] text-sm">Top Rated Institute</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-[color:var(--gold-dark)]" />
-              <div>
-                <p className="text-xs text-muted-foreground">Success</p>
-                <p className="font-bold text-[color:var(--navy)] text-sm">High Placement Rate</p>
-              </div>
+      {/* Top bar */}
+      <header className="relative z-10">
+        <div className="container mx-auto px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src={logoAsset.url}
+              alt="GP Kinnaur logo"
+              className="w-12 h-12 rounded-full bg-white/95 p-1 object-contain"
+            />
+            <div className="leading-tight">
+              <p className="text-[10px] tracking-[0.22em] font-semibold text-[color:var(--gold)]">
+                GOVERNMENT POLYTECHNIC
+              </p>
+              <p className="text-sm font-bold text-white">
+                Kinnaur <span className="text-white/50">·</span>{" "}
+                <span className="text-white/85 font-medium">Himachal Pradesh</span>
+              </p>
             </div>
           </div>
+          <div className="hidden sm:flex items-center gap-2 text-xs text-white/75">
+            <ShieldCheck className="w-4 h-4 text-[color:var(--gold)]" />
+            Secure portal · Authorised users only
+          </div>
         </div>
-      </section>
+      </header>
 
-      {/* Academic Programs */}
-      <section className="bg-secondary/40 py-14 border-y">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)]">Our Academic Programs</h2>
-            <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-2 mb-3" />
-            <p className="text-muted-foreground">
-              Offering diploma courses designed to build strong technical foundations.
+      {/* Main split */}
+      <main className="relative z-10 flex-1">
+        <div className="container mx-auto px-6 py-10 lg:py-20 grid lg:grid-cols-2 gap-14 items-center">
+          {/* Left copy */}
+          <div>
+            <p className="text-[11px] tracking-[0.28em] font-semibold text-[color:var(--gold)] mb-6">
+              INSTITUTE PORTAL
             </p>
+            <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl leading-[1.05] tracking-tight text-white">
+              Welcome to{" "}
+              <span className="italic text-[color:var(--gold)]">GP Kinnaur.</span>
+            </h1>
+            <p className="mt-6 text-white/70 max-w-md leading-relaxed">
+              A single sign-in for the entire institute — attendance, results, timetables,
+              assignments, notices and administration. Choose your portal to continue.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-6 text-sm">
+              <span className="text-white/80">
+                <span className="font-bold text-white">2</span> departments
+              </span>
+              <span className="w-px h-4 bg-white/25" />
+              <span className="text-white/80">
+                <span className="font-bold text-white">AICTE</span> approved
+              </span>
+              <span className="w-px h-4 bg-white/25" />
+              <span className="text-white/80">
+                <span className="font-bold text-white">HPTSB</span> affiliated
+              </span>
+            </div>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            {programs.map((p) => (
-              <Link
-                key={p.title}
-                to={p.to}
-                className="group relative overflow-hidden rounded-xl border bg-white shadow-sm hover:shadow-xl transition"
-              >
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={p.image}
-                    alt={p.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                  />
+
+          {/* Right portal cards */}
+          <div className="flex flex-col gap-5">
+            {cards.map((c) => {
+              const solid = c.tone === "solid";
+              const base = solid
+                ? "bg-[color:var(--gold)] text-[color:var(--navy-dark)] border-[color:var(--gold)]"
+                : "bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-white";
+              return (
+                <Link
+                  key={c.title}
+                  to={c.to}
+                  className={`group relative rounded-2xl border ${base} p-5 md:p-6 transition-all hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] flex items-center gap-5`}
+                >
                   <div
-                    className="absolute inset-0"
-                    style={{
-                      background: `linear-gradient(135deg, rgba(11,33,71,0.85), rgba(11,33,71,0.3))`,
-                    }}
-                  />
-                  <div className="absolute inset-0 flex flex-col justify-center items-center text-white p-6 text-center">
-                    <p className="text-xs tracking-widest opacity-90">DEPARTMENT OF</p>
-                    <h3 className="text-2xl md:text-3xl font-extrabold mt-1" style={{ color: p.accent }}>
-                      {p.title.replace("Department of ", "").toUpperCase()}
+                    className={`shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${
+                      solid ? "bg-[color:var(--navy-dark)] text-[color:var(--gold)]" : "bg-white/5 text-[color:var(--gold)]"
+                    }`}
+                  >
+                    <c.icon className="w-7 h-7" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-[10px] tracking-[0.2em] font-semibold uppercase ${
+                        solid ? "text-[color:var(--navy-dark)]/70" : "text-white/55"
+                      }`}
+                    >
+                      {c.tag}
+                    </p>
+                    <h3
+                      className={`mt-1 text-2xl font-bold ${
+                        solid ? "text-[color:var(--navy-dark)]" : "text-[color:var(--gold)]"
+                      }`}
+                    >
+                      {c.title}
                     </h3>
-                    <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs">
-                      <GraduationCap className="w-4 h-4" /> Diploma Program
-                    </div>
+                    <p
+                      className={`mt-1 text-sm ${solid ? "text-[color:var(--navy-dark)]/80" : "text-white/65"}`}
+                    >
+                      {c.desc}
+                    </p>
                   </div>
-                </div>
-                <div className="p-5">
-                  <p className="text-sm text-muted-foreground">{p.blurb}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Events + Notices */}
-      {/* Fees Payment block */}
-      <section className="relative py-14 overflow-hidden bg-[color:var(--navy)]">
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            background:
-              "radial-gradient(circle at 20% 30%, rgba(245,179,66,0.35), transparent 45%), radial-gradient(circle at 80% 70%, rgba(59,130,246,0.35), transparent 50%)",
-          }}
-        />
-        <div className="relative container mx-auto px-4">
-          <div className="text-center mb-10">
-            <p className="text-xs font-bold tracking-widest text-[color:var(--gold)]">PAY ONLINE — SECURE & INSTANT</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mt-2">Fees Payment Portal</h2>
-            <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-3" />
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                title: "Online Fees Payment",
-                subtitle: "For Existing Students",
-                desc: "Semester fees, tuition and other dues for currently enrolled students.",
-                icon: CreditCard,
-                href: "https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805",
-                accent: "from-emerald-500 to-emerald-700",
-                cta: "Pay Semester Fee",
-              },
-              {
-                title: "New Admission Fees",
-                subtitle: "For Freshly Admitted Students",
-                desc: "Complete your admission by paying the prescribed first-year fees online.",
-                icon: GraduationCap,
-                href: "https://form.qfixonline.com/gpckaf",
-                accent: "from-amber-500 to-orange-600",
-                cta: "Pay Admission Fee",
-              },
-              {
-                title: "Fine Payment",
-                subtitle: "Library / Hostel / Misc.",
-                desc: "Clear outstanding fines such as library, hostel or other miscellaneous dues.",
-                icon: Receipt,
-                href: "https://paydirect.eduqfix.com/app/VVCO30lzy1+8f9Cwn903U0k6styIKc5RHS16JRoA/10880/32805",
-                accent: "from-rose-500 to-red-700",
-                cta: "Pay Fine",
-              },
-            ].map((c) => (
-              <a
-                key={c.title}
-                href={c.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative rounded-2xl bg-white/95 backdrop-blur p-6 shadow-xl hover:-translate-y-1 hover:shadow-2xl transition border border-white/40"
-              >
-                <div
-                  className={`inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${c.accent} text-white shadow-md mb-4`}
-                >
-                  <c.icon className="w-7 h-7" />
-                </div>
-                <p className="text-[10px] tracking-widest font-bold text-[color:var(--gold-dark)]">
-                  {c.subtitle.toUpperCase()}
-                </p>
-                <h3 className="text-xl font-bold text-[color:var(--navy)] mt-1">{c.title}</h3>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{c.desc}</p>
-                <span
-                  className={`mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r ${c.accent} text-white text-sm font-semibold group-hover:opacity-90`}
-                >
-                  <Wallet className="w-4 h-4" /> {c.cta} →
-                </span>
-              </a>
-            ))}
-          </div>
-          <p className="text-center text-xs text-white/70 mt-6">
-            Payments are processed securely via Eduqfix PayDirect. Keep your receipt for records.
-          </p>
-        </div>
-      </section>
-
-      {/* Combined: News Clippings + Upcoming Events + Notice Board */}
-      <section className="container mx-auto px-4 py-14">
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* News Clippings (Images only) */}
-          <div className="bg-white rounded-lg border shadow-sm flex flex-col">
-            <div className="px-4 py-3 border-b flex items-center gap-2">
-              <Newspaper className="w-5 h-5 text-[color:var(--gold-dark)]" />
-              <h3 className="text-lg font-bold text-[color:var(--navy)] border-b-2 border-[color:var(--gold)] pb-1">
-                News Clippings
-              </h3>
-            </div>
-            <div className="p-4 grid grid-cols-2 gap-3 max-h-[420px] overflow-y-auto">
-              {[
-                { src: news1Asset.url, alt: "News clipping — Nitin Negi selected at Lemon Tree Hotels" },
-                { src: news2Asset.url, alt: "News clipping — 10 students placed at GP Kinnaur" },
-                { src: news3Asset.url, alt: "News clipping — Himachal Aas Paas placement coverage" },
-                { src: news4Asset.url, alt: "News clipping — Digital Media News placement coverage" },
-              ].map((img) => (
-                <a
-                  key={img.src}
-                  href={img.src}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block aspect-[4/5] rounded-md overflow-hidden border hover:shadow-md transition group"
-                >
-                  <img
-                    src={img.src}
-                    alt={img.alt}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                    loading="lazy"
+                  <ArrowRight
+                    className={`w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1 ${
+                      solid ? "text-[color:var(--navy-dark)]" : "text-white/70"
+                    }`}
                   />
-                </a>
-              ))}
-            </div>
-            <div className="px-4 py-2 border-t bg-secondary/40 text-right">
-              <a href="#" className="text-xs font-semibold text-[color:var(--navy)] hover:underline">
-                View All →
-              </a>
-            </div>
-          </div>
-
-          {/* Upcoming Events */}
-          <div className="bg-white rounded-lg border shadow-sm flex flex-col">
-            <div className="px-4 py-3 border-b flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[color:var(--gold-dark)]" />
-              <h3 className="text-lg font-bold text-[color:var(--navy)] border-b-2 border-[color:var(--gold)] pb-1">
-                Upcoming Events
-              </h3>
-            </div>
-            <ul className="divide-y max-h-[420px] overflow-y-auto">
-              {events.map((e) => (
-                <li key={e.title} className="px-4 py-3 hover:bg-secondary/40">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-14 text-center bg-[color:var(--navy)] text-white rounded-md py-1.5">
-                      <p className="text-[10px] font-semibold text-[color:var(--gold)]">{e.month}</p>
-                      <p className="text-xl font-bold leading-none">{e.day}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="text-sm font-semibold text-[color:var(--navy)]">{e.title}</h4>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{e.desc}</p>
-                      <p className="text-[11px] text-[color:var(--gold-dark)] mt-1">📍 {e.venue}</p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="px-4 py-2 border-t bg-secondary/40 text-right">
-              <Link to="/about" className="text-xs font-semibold text-[color:var(--navy)] hover:underline">
-                View All →
-              </Link>
-            </div>
-          </div>
-
-          {/* Notice Board */}
-          <NoticeBoard />
-        </div>
-      </section>
-
-      {/* Photo Gallery */}
-      <section className="bg-secondary/40 py-14 border-y">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-[color:var(--navy)]">Photo Gallery</h2>
-            <div className="w-16 h-1 bg-[color:var(--gold)] mx-auto mt-2 mb-3" />
-            <p className="text-muted-foreground">Glimpses of campus life, labs, and events at GP Kinnaur.</p>
-          </div>
-          <PhotoGallery />
-        </div>
-      </section>
-
-      {/* Important Links Strip — responsive blocks */}
-      <section className="w-full bg-slate-50 border-y py-6">
-        <div className="container mx-auto px-4">
-          <p className="text-center text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold mb-3">
-            Quick Links
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
-            {[
-              { label: "Directorate of Technical Education", href: "https://techedu.hp.gov.in/", icon: "🏛️" },
-              { label: "HP Takniki Shiksha Board", href: "https://www.hptechboard.com/", icon: "📜" },
-              { label: "AICTE", href: "https://www.aicte.gov.in/", icon: "🎓" },
-              { label: "Swayam Portal", href: "https://swayam.gov.in/", icon: "📚" },
-              { label: "Digilocker NAD", href: "https://nad.digilocker.gov.in/", icon: "🗂️" },
-              { label: "Himachal Government", href: "https://himachal.nic.in/", icon: "🏔️" },
-              { label: "SHEBOX Portal", href: "https://shebox.wcd.gov.in/", icon: "🛡️" },
-            ].map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex flex-col items-center justify-center text-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-3 hover:border-[color:var(--gold)] hover:shadow transition"
-              >
-                <span className="text-xl" aria-hidden>
-                  {l.icon}
-                </span>
-                <span className="text-[11px] font-medium text-slate-700 group-hover:text-[color:var(--navy)] leading-tight">
-                  {l.label}
-                </span>
-              </a>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
-      </section>
-    </PageLayout>
+      </main>
+
+      {/* Bottom strip: public info links */}
+      <div className="relative z-10 border-t border-white/10 bg-black/25 backdrop-blur">
+        <div className="container mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
+          {bottomLinks.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="text-white/70 hover:text-[color:var(--gold)] transition-colors"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/10">
+        <div className="container mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-white/50">
+          <span>© {new Date().getFullYear()} Government Polytechnic, Kinnaur. All rights reserved.</span>
+          <span className="text-white/40">Unauthorised access is prohibited.</span>
+        </div>
+      </footer>
+    </div>
   );
 }
