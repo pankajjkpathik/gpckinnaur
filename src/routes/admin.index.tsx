@@ -228,6 +228,15 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       action: "/admin/syllabus",
     },
     {
+      icon: BookOpen,
+      label: "Planned Unit Hours",
+      desc: "Set unit hours for coverage %",
+      color: "bg-lime-600",
+      border: "border-lime-600",
+      action: "/admin/syllabus-units",
+    },
+
+    {
       icon: Calendar,
       label: "Academic Calendar",
       desc: "Upload calendar PDFs",
