@@ -107,15 +107,25 @@ export const parentLogin = createServerFn({ method: "POST" })
     const raw = data.enrollmentNo.trim();
     const stripped = raw.replace(/^[pP]\s*[-_ ]\s*/, "");
     if (stripped === raw) {
+      await logParentAuth("parent_login_failure", {
+        enrollmentInput: raw, reason: "missing_p_prefix",
+      });
       throw new Error('Enrollment must be prefixed with "p-" (e.g. p-250824009024).');
     }
+    const resolvedEnrollment = stripped.toUpperCase();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: student } = await supabaseAdmin
       .from("students")
       .select("id, enrollment_no, name, branch, semester, is_active")
-      .eq("enrollment_no", stripped.toUpperCase())
+      .eq("enrollment_no", resolvedEnrollment)
       .maybeSingle();
-    if (!student || !student.is_active) throw new Error("Invalid credentials");
+    if (!student || !student.is_active) {
+      await logParentAuth("parent_login_failure", {
+        enrollmentInput: raw, resolvedEnrollment,
+        reason: student ? "student_inactive" : "student_not_found",
+      });
+      throw new Error("Invalid credentials");
+    }
 
     const { data: pu } = await supabaseAdmin
       .from("parent_users")
@@ -123,13 +133,23 @@ export const parentLogin = createServerFn({ method: "POST" })
       .eq("student_id", student.id)
       .maybeSingle();
     if (!pu?.password_hash || !pu.is_active) {
+      await logParentAuth("parent_login_failure", {
+        studentId: student.id, enrollmentInput: raw, resolvedEnrollment,
+        reason: !pu ? "parent_not_provisioned" : (!pu.password_hash ? "no_password_set" : "parent_inactive"),
+      });
       throw new Error(
         "Parent access has not been set up yet. Ask your ward to set a parent password from their student portal.",
       );
     }
     const bcrypt = (await import("bcryptjs")).default;
     const ok = await bcrypt.compare(data.password, pu.password_hash);
-    if (!ok) throw new Error("Invalid credentials");
+    if (!ok) {
+      await logParentAuth("parent_login_failure", {
+        studentId: student.id, enrollmentInput: raw, resolvedEnrollment,
+        reason: "bad_password",
+      });
+      throw new Error("Invalid credentials");
+    }
 
     await supabaseAdmin
       .from("parent_users")
@@ -144,13 +164,19 @@ export const parentLogin = createServerFn({ method: "POST" })
       branch: student.branch,
       semester: student.semester,
     });
+    await logParentAuth("parent_login_success", {
+      studentId: student.id, enrollmentInput: raw, resolvedEnrollment,
+    });
     return { success: true };
   });
 
 
 export const parentLogout = createServerFn({ method: "POST" }).handler(async () => {
   const s = await useSession<ParentSession>(parentSessionConfig);
+  const studentId = (s.data as ParentSession | undefined)?.studentId ?? null;
+  const enrollmentNo = (s.data as ParentSession | undefined)?.enrollmentNo ?? null;
   await s.clear();
+  await logParentAuth("parent_logout", { studentId, resolvedEnrollment: enrollmentNo });
   return { success: true };
 });
 
