@@ -7,11 +7,54 @@ import {
   type ParentSession,
 } from "./sessions";
 
-async function requireParent(): Promise<ParentSession> {
+// Every parent-facing server fn MUST go through this guard. It:
+//  1. requires a signed parent session cookie
+//  2. re-verifies on every request that the parent_users row is still
+//     active for the session's studentId (revocation / deactivation)
+//  3. re-verifies the target student still exists and is active
+//  4. returns ONLY the server-verified studentId — callers must never trust
+//     a studentId that arrives from the client (query params, body, etc.).
+async function requireParent(): Promise<ParentSession & { studentId: number }> {
   if (!getCookie(parentSessionConfig.name)) throw new Error("Not authenticated");
   const s = await useSession<ParentSession>(parentSessionConfig);
-  if (!s.data?.studentId) throw new Error("Not authenticated");
-  return s.data as ParentSession;
+  const sd = s.data;
+  if (!sd?.studentId) throw new Error("Not authenticated");
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const [{ data: pu }, { data: student }] = await Promise.all([
+    supabaseAdmin
+      .from("parent_users")
+      .select("student_id, is_active")
+      .eq("student_id", sd.studentId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("students")
+      .select("id, is_active, enrollment_no")
+      .eq("id", sd.studentId)
+      .maybeSingle(),
+  ]);
+
+  if (!pu?.is_active || !student?.is_active) {
+    await s.clear();
+    throw new Error("Parent access has been revoked. Please sign in again.");
+  }
+  // Defence-in-depth: if the session enrollment no ever drifts from the
+  // database (e.g. student re-enrolled with a new number), refuse the request
+  // rather than serving another student's data.
+  if (sd.enrollmentNo && student.enrollment_no && sd.enrollmentNo !== student.enrollment_no) {
+    await s.clear();
+    throw new Error("Session mismatch. Please sign in again.");
+  }
+
+  return { ...sd, studentId: student.id };
+}
+
+// Helper for parent-scoped queries: throws if the caller tries to pass a
+// studentId that does not match the authenticated parent's ward.
+function assertOwnStudent(me: { studentId: number }, requested?: number | null) {
+  if (requested != null && Number(requested) !== me.studentId) {
+    throw new Error("Forbidden: cannot access another student's data");
+  }
 }
 
 // ─── LOGIN ───────────────────────────────────────────────────────────────────
