@@ -1241,7 +1241,7 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── SYLLABUS COVERAGE (date-wise lecture log + coverage %) ──────────────────
-function SyllabusView({ ay, onBack }: { ay: string; me: any; onBack: () => void }) {
+function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
