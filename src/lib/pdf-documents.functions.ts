@@ -1,6 +1,33 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getCookie, useSession } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireStaff } from "./roles.server";
+import {
+  staffSessionConfig,
+  studentSessionConfig,
+  parentSessionConfig,
+  type StaffSession,
+  type StudentSession,
+  type ParentSession,
+} from "./sessions";
+
+// Any authenticated portal user (staff, student, parent) may read shared PDFs.
+async function requireAnyPortal(): Promise<void> {
+  if (getCookie(staffSessionConfig.name)) {
+    const s = await useSession<StaffSession>(staffSessionConfig);
+    if (s.data?.id) return;
+  }
+  if (getCookie(studentSessionConfig.name)) {
+    const s = await useSession<StudentSession>(studentSessionConfig);
+    if (s.data?.id) return;
+  }
+  if (getCookie(parentSessionConfig.name)) {
+    const s = await useSession<ParentSession>(parentSessionConfig);
+    if (s.data?.studentId) return;
+  }
+  throw new Error("Not authenticated");
+}
+
 
 const DOC_TYPES = ["calendar", "syllabus", "lesson_plan", "exam_schedule"] as const;
 
