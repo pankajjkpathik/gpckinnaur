@@ -687,7 +687,7 @@ function MdImportModal({
     if (view.length === 0) return;
     if (target > 0 && total !== target) {
       setErr(
-        `Total unit hours (${total}) must equal required L+P×14 (${target}). Enable "Rescale hours" or adjust unit hours before importing.`,
+        `Total unit hours (${total}) must equal required L+P×14 (${target}). Click "Auto-distribute" or adjust unit hours in the preview below.`,
       );
       return;
     }
