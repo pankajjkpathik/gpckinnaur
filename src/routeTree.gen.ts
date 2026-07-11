@@ -53,6 +53,7 @@ import { Route as RtiDisclosureSection41bRouteImport } from './routes/rti.disclo
 import { Route as DepartmentsIdRouteImport } from './routes/departments.$id'
 import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
+import { Route as AdminSyllabusUnitsRouteImport } from './routes/admin.syllabus-units'
 import { Route as AdminSyllabusRouteImport } from './routes/admin.syllabus'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
@@ -284,6 +285,11 @@ const AdminTimetableRoute = AdminTimetableRouteImport.update({
   path: '/timetable',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSyllabusUnitsRoute = AdminSyllabusUnitsRouteImport.update({
+  id: '/syllabus-units',
+  path: '/syllabus-units',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSyllabusRoute = AdminSyllabusRouteImport.update({
   id: '/syllabus',
   path: '/syllabus',
@@ -378,6 +384,7 @@ export interface FileRoutesByFullPath {
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
+  '/admin/syllabus-units': typeof AdminSyllabusUnitsRoute
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
@@ -433,6 +440,7 @@ export interface FileRoutesByTo {
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
+  '/admin/syllabus-units': typeof AdminSyllabusUnitsRoute
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
@@ -490,6 +498,7 @@ export interface FileRoutesById {
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
+  '/admin/syllabus-units': typeof AdminSyllabusUnitsRoute
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
@@ -548,6 +557,7 @@ export interface FileRouteTypes {
     | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
+    | '/admin/syllabus-units'
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
@@ -603,6 +613,7 @@ export interface FileRouteTypes {
     | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
+    | '/admin/syllabus-units'
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
@@ -659,6 +670,7 @@ export interface FileRouteTypes {
     | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
+    | '/admin/syllabus-units'
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
@@ -1028,6 +1040,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTimetableRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/syllabus-units': {
+      id: '/admin/syllabus-units'
+      path: '/syllabus-units'
+      fullPath: '/admin/syllabus-units'
+      preLoaderRoute: typeof AdminSyllabusUnitsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/syllabus': {
       id: '/admin/syllabus'
       path: '/syllabus'
@@ -1112,6 +1131,7 @@ interface AdminRouteChildren {
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminSubjectsRoute: typeof AdminSubjectsRoute
   AdminSyllabusRoute: typeof AdminSyllabusRoute
+  AdminSyllabusUnitsRoute: typeof AdminSyllabusUnitsRoute
   AdminTimetableRoute: typeof AdminTimetableRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -1127,6 +1147,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStudentsRoute: AdminStudentsRoute,
   AdminSubjectsRoute: AdminSubjectsRoute,
   AdminSyllabusRoute: AdminSyllabusRoute,
+  AdminSyllabusUnitsRoute: AdminSyllabusUnitsRoute,
   AdminTimetableRoute: AdminTimetableRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
