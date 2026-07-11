@@ -35,7 +35,8 @@ function StaffLoginPage() {
   useEffect(() => {
     staffMe().then((s) => {
       if (!s?.id) return;
-      if (adminPortalRoles.includes(s.role as any)) window.location.href = "/admin";
+      if (s.role === "super_admin") window.location.href = "/admin";
+      else if (s.role === "clerk") window.location.href = "/clerk";
       else navigate({ to: "/staff-dashboard" });
     }).catch(() => {});
   }, [navigate]);
