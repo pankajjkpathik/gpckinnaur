@@ -835,10 +835,10 @@ function DocumentsView({ onBack }: { onBack: () => void }) {
   const [tab, setTab] = useState<"assignment" | "lesson_plan" | "exam_schedule" | "timetable" | "syllabus">(
     "assignment",
   );
-  const isDoc = tab === "assignment" || tab === "lesson_plan" || tab === "exam_schedule";
+  const isDoc = tab === "assignment" || tab === "exam_schedule";
   const { data = [], isLoading } = useQuery({
     queryKey: ["student-docs", tab],
-    queryFn: () => fn({ data: { type: tab as "assignment" | "lesson_plan" | "exam_schedule" } }),
+    queryFn: () => fn({ data: { type: tab as "assignment" | "exam_schedule" } }),
     enabled: isDoc,
   });
   const { data: tt } = useQuery({
