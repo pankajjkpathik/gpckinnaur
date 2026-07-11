@@ -1225,15 +1225,34 @@ function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => v
   );
 }
 
-function LessonPlansView({ onBack }: { ay: string; me: any; onBack: () => void }) {
+function LessonPlansView({ ay, onBack }: { ay: string; me: any; onBack: () => void }) {
+  const [tab, setTab] = useState<"generator" | "pdf">("generator");
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h1 className="text-2xl font-bold text-gray-800">📘 Manage Lesson Plans</h1>
+      <h1 className="text-2xl font-bold text-gray-800">📘 Lesson Plans</h1>
       <p className="text-xs text-gray-500 -mt-2">
-        Upload your lesson-plan PDFs. Students, HOD and Principal can view and download them.
+        Generate a 14-week plan from your syllabus, or upload a ready-made lesson-plan PDF.
       </p>
-      <LessonPlanLibrary docType="lesson_plan" canUpload canDelete />
+      <div className="border-b flex gap-1 print:hidden">
+        <button
+          onClick={() => setTab("generator")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${tab === "generator" ? "border-[#7b1f4c] text-[#7b1f4c]" : "border-transparent text-gray-500"}`}
+        >
+          14-Week Plan Generator
+        </button>
+        <button
+          onClick={() => setTab("pdf")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${tab === "pdf" ? "border-[#7b1f4c] text-[#7b1f4c]" : "border-transparent text-gray-500"}`}
+        >
+          Upload / Browse PDFs
+        </button>
+      </div>
+      {tab === "generator" ? (
+        <WeeklyPlanGenerator academicYear={ay} />
+      ) : (
+        <LessonPlanLibrary docType="lesson_plan" canUpload canDelete />
+      )}
     </div>
   );
 }
