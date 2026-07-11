@@ -176,15 +176,55 @@ function SyllabusUnitsPage() {
                   <span className="text-xs font-normal text-muted-foreground">· AY {academicYear}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Subject L+P hours: <b>{subjectPlanned}</b> · Sum of unit hours ({academicYear}): <b>{totalPlanned}</b>
-                  {totalPlanned !== subjectPlanned && totalPlanned > 0 && (
-                    <span className="text-amber-600"> · mismatch — coverage uses unit hours ({totalPlanned})</span>
-                  )}
-                  {totalPlanned === 0 && (
-                    <span className="text-amber-600"> · no units yet for {academicYear} — coverage falls back to L+P ({subjectPlanned})</span>
-                  )}
+                  L {subject.lecture_hours ?? 0} + P {subject.practical_hours ?? 0} ={" "}
+                  <b>{subjectPlanned}</b>/week × <b>{WEEKS}</b> weeks ={" "}
+                  <b>{requiredTotal}</b> required · unit hours total <b>{totalPlanned}</b>
                 </p>
               </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setImportOpen(true)}
+                  className="border border-rose-700 text-rose-700 px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-rose-50"
+                >
+                  <Upload className="w-4 h-4" /> Import from .md
+                </button>
+                <button
+                  onClick={() =>
+                    setEditing({
+                      subject_id: subject.id,
+                      academic_year: academicYear,
+                      semester: null,
+                      unit_no: (units.at(-1)?.unit_no ?? 0) + 1,
+                      title: "",
+                      topics: [],
+                      hours: 0,
+                    })
+                  }
+                  className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" /> Add Unit
+                </button>
+              </div>
+            </div>
+
+            {requiredTotal > 0 && (
+              hoursValid ? (
+                <div className="rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
+                  ✓ Unit hours match required total ({requiredTotal}).
+                </div>
+              ) : units.length === 0 ? (
+                <div className="rounded border border-amber-200 bg-amber-50 text-amber-800 text-xs px-3 py-2">
+                  No units defined for {academicYear}. Add units totalling <b>{requiredTotal}</b> hours (coverage falls back to L+P until then).
+                </div>
+              ) : (
+                <div className="rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
+                  ✗ Unit hours total <b>{totalPlanned}</b>, but <b>{requiredTotal}</b> required.{" "}
+                  {hoursDiff > 0
+                    ? <>Remove <b>{hoursDiff}</b> hour(s) from one or more units.</>
+                    : <>Add <b>{Math.abs(hoursDiff)}</b> more hour(s) across units.</>}
+                </div>
+              )
+            )}
               <div className="flex gap-2">
                 <button
                   onClick={() => setImportOpen(true)}
