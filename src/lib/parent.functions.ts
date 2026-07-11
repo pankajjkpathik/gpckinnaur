@@ -46,7 +46,7 @@ async function requireParent(): Promise<ParentSession & { studentId: number }> {
     throw new Error("Session mismatch. Please sign in again.");
   }
 
-  return { ...sd, studentId: student.id };
+  return { ...(sd as ParentSession), studentId: student.id };
 }
 
 // Helper for parent-scoped queries: throws if the caller tries to pass a
