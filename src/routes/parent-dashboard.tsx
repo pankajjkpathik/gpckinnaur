@@ -286,3 +286,50 @@ function FeesTab() {
     </div>
   );
 }
+
+function NoticesTab() {
+  const q = useQuery({ queryKey: ["parent-notices"], queryFn: () => parentNotices() });
+  const rows = q.data ?? [];
+  const fmt = (d: string) => {
+    try { return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
+    catch { return d; }
+  };
+  const badge = (c?: string | null) => {
+    const map: Record<string, string> = {
+      exam: "bg-indigo-100 text-indigo-800",
+      event: "bg-amber-100 text-amber-800",
+      holiday: "bg-rose-100 text-rose-800",
+      academic: "bg-emerald-100 text-emerald-800",
+    };
+    const cls = (c && map[c.toLowerCase()]) || "bg-sky-100 text-sky-800";
+    return <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${cls}`}>{c || "notice"}</span>;
+  };
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-gray-800 mb-4">📣 College Notices</h2>
+      {q.isLoading && <p className="text-sm text-gray-400">Loading…</p>}
+      {!q.isLoading && rows.length === 0 && (
+        <p className="text-sm text-gray-500 bg-gray-50 border rounded p-4">No notices posted yet.</p>
+      )}
+      <ul className="space-y-3">
+        {rows.map((n: any) => (
+          <li key={n.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-800">{n.title}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{fmt(n.date)}</p>
+              </div>
+              {badge(n.category)}
+            </div>
+            {n.content && <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{n.content}</p>}
+            {n.link && (
+              <a href={n.link} target="_blank" rel="noreferrer" className="text-xs text-sky-700 hover:underline mt-2 inline-block">
+                View attachment →
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
