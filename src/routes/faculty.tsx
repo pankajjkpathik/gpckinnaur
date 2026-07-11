@@ -113,37 +113,7 @@ function defaultAY() {
   return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
 }
 
-// ─── Shared card grid item ───────────────────────────────────────────────────
-function QuickCard({
-  icon: Icon,
-  label,
-  desc,
-  color,
-  border,
-  onClick,
-}: {
-  icon: any;
-  label: string;
-  desc: string;
-  color: string;
-  border: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-4 p-4 bg-white rounded border-t-4 ${border} shadow-sm hover:shadow-md transition-shadow text-left w-full`}
-    >
-      <span className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${color}`}>
-        <Icon className="w-6 h-6 text-white" />
-      </span>
-      <span>
-        <p className="font-semibold text-gray-800 text-sm">{label}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-      </span>
-    </button>
-  );
-}
+// QuickCard is imported from the shared portal component.
 
 // ─── Back button ─────────────────────────────────────────────────────────────
 function BackBtn({ onClick }: { onClick: () => void }) {
