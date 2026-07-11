@@ -164,15 +164,16 @@ function SyllabusUnitsPage() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <h3 className="font-semibold text-[color:var(--navy)]">
-                  {subject.code} · {subject.name}
+                  {subject.code} · {subject.name}{" "}
+                  <span className="text-xs font-normal text-muted-foreground">· AY {academicYear}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Subject L+P hours: <b>{subjectPlanned}</b> · Sum of unit hours: <b>{totalPlanned}</b>
+                  Subject L+P hours: <b>{subjectPlanned}</b> · Sum of unit hours ({academicYear}): <b>{totalPlanned}</b>
                   {totalPlanned !== subjectPlanned && totalPlanned > 0 && (
                     <span className="text-amber-600"> · mismatch — coverage uses unit hours ({totalPlanned})</span>
                   )}
                   {totalPlanned === 0 && (
-                    <span className="text-amber-600"> · no units yet — coverage falls back to L+P ({subjectPlanned})</span>
+                    <span className="text-amber-600"> · no units yet for {academicYear} — coverage falls back to L+P ({subjectPlanned})</span>
                   )}
                 </p>
               </div>
@@ -180,6 +181,8 @@ function SyllabusUnitsPage() {
                 onClick={() =>
                   setEditing({
                     subject_id: subject.id,
+                    academic_year: academicYear,
+                    semester: null,
                     unit_no: (units.at(-1)?.unit_no ?? 0) + 1,
                     title: "",
                     topics: [],
