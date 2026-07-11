@@ -173,6 +173,8 @@ export const upsertSyllabusUnit = createServerFn({ method: "POST" })
       .object({
         id: z.number().int().optional(),
         subject_id: z.number().int(),
+        academic_year: z.string().regex(/^\d{4}-\d{2}$/),
+        semester: z.number().int().min(1).max(8).nullable().optional(),
         unit_no: z.number().int().min(1).max(20),
         title: z.string().min(1).max(200),
         topics: z.array(z.string()).default([]),
@@ -185,6 +187,8 @@ export const upsertSyllabusUnit = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const payload = {
       subject_id: data.subject_id,
+      academic_year: data.academic_year,
+      semester: data.semester ?? null,
       unit_no: data.unit_no,
       title: data.title,
       topics: data.topics,
