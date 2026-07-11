@@ -323,3 +323,172 @@ export const parentNotices = createServerFn({ method: "GET" }).handler(async () 
     .limit(100);
   return data ?? [];
 });
+
+// ─── ADMIN: parent account management ────────────────────────────────────────
+// All admin fns below are gated by requireRole(adminRoles).
+
+export const adminListParentAccounts = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({ search: z.string().optional(), branch: z.string().optional(), semester: z.number().int().optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data }) => {
+    const { requireRole } = await import("./roles.server");
+    const { adminRoles } = await import("./roles");
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    let sq = supabaseAdmin
+      .from("students")
+      .select("id, enrollment_no, name, branch, semester, father_name, parent_phone, is_active")
+      .eq("is_active", true)
+      .order("branch")
+      .order("semester")
+      .order("enrollment_no");
+    if (data.branch) sq = sq.eq("branch", data.branch);
+    if (data.semester) sq = sq.eq("semester", data.semester);
+    if (data.search) {
+      const q = data.search.trim();
+      sq = sq.or(`enrollment_no.ilike.%${q}%,name.ilike.%${q}%`);
+    }
+    const { data: students, error: se } = await sq.limit(500);
+    if (se) throw new Error(se.message);
+
+    const ids = (students ?? []).map((s) => s.id);
+    const { data: pus } = await supabaseAdmin
+      .from("parent_users")
+      .select("student_id, is_active, last_login, updated_at, created_at")
+      .in("student_id", ids.length ? ids : [-1]);
+    const map = new Map((pus ?? []).map((p: any) => [p.student_id, p]));
+
+    // Latest login/logout audit event per student
+    const { data: audits } = await supabaseAdmin
+      .from("audit_log")
+      .select("actor_id, action, created_at, ip, details")
+      .eq("actor_type", "parent")
+      .in("action", ["parent_login_success", "parent_login_failure", "parent_logout"])
+      .in("actor_id", ids.length ? ids : [-1])
+      .order("created_at", { ascending: false })
+      .limit(2000);
+    const latest = new Map<number, { login?: any; logout?: any; fail?: any }>();
+    (audits ?? []).forEach((a: any) => {
+      const cur = latest.get(a.actor_id) ?? {};
+      if (a.action === "parent_login_success" && !cur.login) cur.login = a;
+      else if (a.action === "parent_logout" && !cur.logout) cur.logout = a;
+      else if (a.action === "parent_login_failure" && !cur.fail) cur.fail = a;
+      latest.set(a.actor_id, cur);
+    });
+
+    return (students ?? []).map((s: any) => {
+      const pu: any = map.get(s.id);
+      const ev = latest.get(s.id) ?? {};
+      return {
+        student_id: s.id,
+        enrollment_no: s.enrollment_no,
+        name: s.name,
+        branch: s.branch,
+        semester: s.semester,
+        father_name: s.father_name,
+        parent_phone: s.parent_phone,
+        provisioned: !!pu,
+        is_active: pu?.is_active ?? false,
+        last_login: pu?.last_login ?? null,
+        password_updated_at: pu?.updated_at ?? null,
+        created_at: pu?.created_at ?? null,
+        last_login_event: ev.login
+          ? { at: ev.login.created_at, ip: ev.login.ip }
+          : null,
+        last_logout_event: ev.logout
+          ? { at: ev.logout.created_at, ip: ev.logout.ip }
+          : null,
+        last_failure: ev.fail
+          ? { at: ev.fail.created_at, ip: ev.fail.ip, reason: ev.fail.details?.reason ?? null }
+          : null,
+      };
+    });
+  });
+
+export const adminResetParentPassword = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        studentId: z.number().int().positive(),
+        newPassword: z.string().min(6).max(60).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { requireRole } = await import("./roles.server");
+    const { adminRoles } = await import("./roles");
+    const me = await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const bcrypt = (await import("bcryptjs")).default;
+
+    const newPw = data.newPassword && data.newPassword.length >= 6 ? data.newPassword : "Welcome@123";
+    const hash = await bcrypt.hash(newPw, 12);
+    const { error } = await supabaseAdmin
+      .from("parent_users")
+      .upsert(
+        { student_id: data.studentId, password_hash: hash, is_active: true, updated_at: new Date().toISOString() },
+        { onConflict: "student_id" },
+      );
+    if (error) throw new Error(error.message);
+
+    // Audit trail
+    try {
+      const ip = (() => { try { return getRequestIP({ xForwardedFor: true }) ?? null; } catch { return null; } })();
+      await supabaseAdmin.from("audit_log").insert({
+        actor_type: "staff",
+        actor_id: me.id,
+        action: "parent_password_reset",
+        entity: "parent_users",
+        entity_id: String(data.studentId),
+        details: { by_username: me.username, default_password: newPw === "Welcome@123" },
+        ip,
+      });
+    } catch (e) {
+      console.error("[audit] parent password reset log failed", e);
+    }
+    return { ok: true, temporaryPassword: newPw };
+  });
+
+export const adminSetParentActive = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ studentId: z.number().int().positive(), isActive: z.boolean() }).parse(d))
+  .handler(async ({ data }) => {
+    const { requireRole } = await import("./roles.server");
+    const { adminRoles } = await import("./roles");
+    const me = await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("parent_users")
+      .update({ is_active: data.isActive, updated_at: new Date().toISOString() })
+      .eq("student_id", data.studentId);
+    if (error) throw new Error(error.message);
+    try {
+      await supabaseAdmin.from("audit_log").insert({
+        actor_type: "staff",
+        actor_id: me.id,
+        action: data.isActive ? "parent_enabled" : "parent_disabled",
+        entity: "parent_users",
+        entity_id: String(data.studentId),
+        details: { by_username: me.username },
+      });
+    } catch {}
+    return { ok: true };
+  });
+
+export const adminParentAuditEvents = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ studentId: z.number().int().positive(), limit: z.number().int().min(1).max(200).default(50) }).parse(d))
+  .handler(async ({ data }) => {
+    const { requireRole } = await import("./roles.server");
+    const { adminRoles } = await import("./roles");
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("audit_log")
+      .select("id, action, created_at, ip, details, actor_type")
+      .eq("entity", "parent_users")
+      .eq("entity_id", String(data.studentId))
+      .order("created_at", { ascending: false })
+      .limit(data.limit);
+    return rows ?? [];
+  });
