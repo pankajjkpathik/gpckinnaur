@@ -56,15 +56,22 @@ export const coverageMySubjects = createServerFn({ method: "GET" })
 
 // ─── Units for a subject ─────────────────────────────────────────────────────
 export const coverageUnits = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ subject_id: z.number().int() }).parse(d))
+  .inputValidator((d) =>
+    z.object({
+      subject_id: z.number().int(),
+      academic_year: z.string().regex(yearRe).optional(),
+    }).parse(d),
+  )
   .handler(async ({ data }) => {
     await requireAnyPortal();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: units, error } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("syllabus_units")
-      .select("id, unit_no, title, hours")
+      .select("id, unit_no, title, hours, academic_year")
       .eq("subject_id", data.subject_id)
       .order("unit_no");
+    if (data.academic_year) q = q.eq("academic_year", data.academic_year);
+    const { data: units, error } = await q;
     if (error) throw new Error(error.message);
     return units ?? [];
   });
