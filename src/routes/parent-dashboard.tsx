@@ -38,7 +38,7 @@ type Tab = "notices" | "attendance" | "marks" | "board" | "disciplinary" | "fees
 function ParentDashboard() {
   const nav = useNavigate();
   const { data: me, isLoading } = useQuery({ queryKey: ["parent-me"], queryFn: () => parentMe() });
-  const [tab, setTab] = useState<Tab>("attendance");
+  const [tab, setTab] = useState<Tab>("notices");
   useEffect(() => {
     if (!isLoading && !me) nav({ to: "/parent-login" });
   }, [isLoading, me, nav]);
