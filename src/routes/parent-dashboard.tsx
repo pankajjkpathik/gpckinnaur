@@ -106,7 +106,7 @@ function ParentDashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -126,6 +126,7 @@ function ParentDashboard() {
         </div>
 
         <div className="bg-white border rounded-lg p-5">
+          {tab === "notices" && <NoticesTab />}
           {tab === "attendance" && <AttTab />}
           {tab === "marks" && <MarksTab />}
           {tab === "board" && <BoardTab />}
