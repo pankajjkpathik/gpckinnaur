@@ -887,13 +887,13 @@ function ResultsMonitor({ year }: { year: string }) {
   );
 }
 
-function SyllabusMonitor(_props: { year: string }) {
+function SyllabusMonitor(props: { year: string }) {
   return (
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">
-        Lesson-plan PDFs uploaded by faculty. The same view is available in the HOD and Student portals.
+        Lectures delivered per subject across the institute. The same view is available in HOD and Student portals.
       </p>
-      <LessonPlanLibrary docType="lesson_plan" title="Institute-wide Lesson Plans" subtitle="Filter by branch/semester to review syllabus coverage." />
+      <SyllabusCoverage mode="view" academicYear={props.year} title="Institute-wide Syllabus Coverage" />
     </div>
   );
 }
