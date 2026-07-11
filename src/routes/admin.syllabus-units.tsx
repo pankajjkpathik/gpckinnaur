@@ -21,11 +21,20 @@ export const Route = createFileRoute("/admin/syllabus-units")({
 type Unit = {
   id?: number;
   subject_id: number;
+  academic_year: string;
+  semester?: number | null;
   unit_no: number;
   title: string;
   topics: string[];
   hours: number;
 };
+
+function currentAY(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const start = d.getMonth() >= 6 ? y : y - 1; // July onwards = new AY
+  return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+}
 
 function SyllabusUnitsPage() {
   const nav = useNavigate();
@@ -40,6 +49,7 @@ function SyllabusUnitsPage() {
   const [branch, setBranch] = useState("");
   const [sem, setSem] = useState<number | "">("");
   const [subjectId, setSubjectId] = useState<number | "">("");
+  const [academicYear, setAcademicYear] = useState<string>(currentAY());
 
   const subjectsQ = useQuery({
     queryKey: ["subjects", branch, sem],
@@ -48,9 +58,9 @@ function SyllabusUnitsPage() {
   });
 
   const unitsQ = useQuery({
-    queryKey: ["syllabus-units", subjectId],
-    queryFn: () => listSyllabus({ data: { subject_id: Number(subjectId) } }),
-    enabled: !!subjectId,
+    queryKey: ["syllabus-units", subjectId, academicYear],
+    queryFn: () => listSyllabus({ data: { subject_id: Number(subjectId), academic_year: academicYear } as any }),
+    enabled: !!subjectId && !!academicYear,
   });
 
   const save = useMutation({
@@ -83,6 +93,7 @@ function SyllabusUnitsPage() {
         </p>
 
         <ReconciliationPanel
+          academicYear={academicYear}
           onJump={(row) => {
             setBranch(row.branch);
             setSem(row.semester);
@@ -94,7 +105,20 @@ function SyllabusUnitsPage() {
         />
 
 
+
+
         <div className="flex flex-wrap gap-2 items-center bg-white border rounded p-3">
+          <label className="text-xs text-muted-foreground inline-flex items-center gap-1">
+            AY
+            <input
+              value={academicYear}
+              onChange={(e) => setAcademicYear(e.target.value)}
+              placeholder="2025-26"
+              pattern="\d{4}-\d{2}"
+              title="Format: YYYY-YY (e.g. 2025-26)"
+              className="border rounded px-2 py-1.5 text-sm w-24"
+            />
+          </label>
           <select
             value={branch}
             onChange={(e) => {
@@ -140,15 +164,16 @@ function SyllabusUnitsPage() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <h3 className="font-semibold text-[color:var(--navy)]">
-                  {subject.code} · {subject.name}
+                  {subject.code} · {subject.name}{" "}
+                  <span className="text-xs font-normal text-muted-foreground">· AY {academicYear}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Subject L+P hours: <b>{subjectPlanned}</b> · Sum of unit hours: <b>{totalPlanned}</b>
+                  Subject L+P hours: <b>{subjectPlanned}</b> · Sum of unit hours ({academicYear}): <b>{totalPlanned}</b>
                   {totalPlanned !== subjectPlanned && totalPlanned > 0 && (
                     <span className="text-amber-600"> · mismatch — coverage uses unit hours ({totalPlanned})</span>
                   )}
                   {totalPlanned === 0 && (
-                    <span className="text-amber-600"> · no units yet — coverage falls back to L+P ({subjectPlanned})</span>
+                    <span className="text-amber-600"> · no units yet for {academicYear} — coverage falls back to L+P ({subjectPlanned})</span>
                   )}
                 </p>
               </div>
@@ -156,6 +181,8 @@ function SyllabusUnitsPage() {
                 onClick={() =>
                   setEditing({
                     subject_id: subject.id,
+                    academic_year: academicYear,
+                    semester: null,
                     unit_no: (units.at(-1)?.unit_no ?? 0) + 1,
                     title: "",
                     topics: [],
@@ -254,6 +281,10 @@ function UnitModal({
   const [title, setTitle] = useState(initial.title);
   const [hours, setHours] = useState<number>(initial.hours);
   const [topicsText, setTopicsText] = useState((initial.topics ?? []).join("\n"));
+  const [ay, setAy] = useState<string>(initial.academic_year);
+  const [semOverride, setSemOverride] = useState<string>(
+    initial.semester != null ? String(initial.semester) : "",
+  );
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -268,6 +299,8 @@ function UnitModal({
             onSave({
               id: initial.id,
               subject_id: initial.subject_id,
+              academic_year: ay,
+              semester: semOverride ? Number(semOverride) : null,
               unit_no: unitNo,
               title,
               hours,
@@ -277,6 +310,27 @@ function UnitModal({
           className="space-y-3"
         >
           <div className="grid grid-cols-3 gap-2">
+            <label className="text-xs text-muted-foreground">
+              Academic Year
+              <input
+                required value={ay} onChange={(e) => setAy(e.target.value)}
+                placeholder="2025-26" pattern="\d{4}-\d{2}"
+                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
+              />
+            </label>
+            <label className="text-xs text-muted-foreground">
+              Semester override
+              <select
+                value={semOverride}
+                onChange={(e) => setSemOverride(e.target.value)}
+                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 bg-white"
+              >
+                <option value="">Use subject's semester</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                  <option key={s} value={s}>Sem {s}</option>
+                ))}
+              </select>
+            </label>
             <label className="text-xs text-muted-foreground">
               Unit No
               <input
@@ -337,22 +391,30 @@ type ReconRow = {
   status: "no_units" | "mismatch" | "match";
 };
 
-function ReconciliationPanel({ onJump }: { onJump: (row: ReconRow) => void }) {
+function ReconciliationPanel({
+  academicYear,
+  onJump,
+}: {
+  academicYear: string;
+  onJump: (row: ReconRow) => void;
+}) {
   const [open, setOpen] = useState(true);
   const [branch, setBranch] = useState("");
   const [sem, setSem] = useState<number | "">("");
   const [includeMatched, setIncludeMatched] = useState(false);
 
   const q = useQuery({
-    queryKey: ["syllabus-recon", branch, sem, includeMatched],
+    queryKey: ["syllabus-recon", branch, sem, includeMatched, academicYear],
     queryFn: () =>
       syllabusUnitReconciliation({
         data: {
           branch: branch || undefined,
           semester: sem || undefined,
+          academic_year: academicYear,
           include_matched: includeMatched,
         } as any,
       }),
+    enabled: !!academicYear,
   });
 
   const rows = (q.data ?? []) as ReconRow[];
@@ -369,7 +431,7 @@ function ReconciliationPanel({ onJump }: { onJump: (row: ReconRow) => void }) {
         <div>
           <h3 className="font-semibold text-[color:var(--navy)]">Unit Hours Reconciliation</h3>
           <p className="text-xs text-muted-foreground">
-            Subjects whose sum of unit hours doesn't match L+P{" "}
+            AY <b>{academicYear}</b> · subjects whose sum of unit hours doesn't match L+P{" "}
             {q.data && (
               <span className="ml-1">
                 · <b className="text-amber-700">{mismatches}</b> mismatched ·{" "}

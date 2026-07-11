@@ -56,15 +56,22 @@ export const coverageMySubjects = createServerFn({ method: "GET" })
 
 // ─── Units for a subject ─────────────────────────────────────────────────────
 export const coverageUnits = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ subject_id: z.number().int() }).parse(d))
+  .inputValidator((d) =>
+    z.object({
+      subject_id: z.number().int(),
+      academic_year: z.string().regex(yearRe).optional(),
+    }).parse(d),
+  )
   .handler(async ({ data }) => {
     await requireAnyPortal();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: units, error } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("syllabus_units")
-      .select("id, unit_no, title, hours")
+      .select("id, unit_no, title, hours, academic_year")
       .eq("subject_id", data.subject_id)
       .order("unit_no");
+    if (data.academic_year) q = q.eq("academic_year", data.academic_year);
+    const { data: units, error } = await q;
     if (error) throw new Error(error.message);
     return units ?? [];
   });
@@ -198,10 +205,11 @@ export const coverageSummary = createServerFn({ method: "GET" })
     const subjIds = subjects.map((s: any) => s.id);
     if (subjIds.length === 0) return [];
 
-    // 2. total planned hours per subject
+    // 2. total planned hours per subject (scoped to the requested academic year)
     const { data: units } = await supabaseAdmin
       .from("syllabus_units")
       .select("subject_id, hours")
+      .eq("academic_year", data.academic_year)
       .in("subject_id", subjIds);
     const plannedBySubj = new Map<number, number>();
     (units ?? []).forEach((u: any) => {

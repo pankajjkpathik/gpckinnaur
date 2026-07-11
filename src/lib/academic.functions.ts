@@ -154,17 +154,36 @@ export const replaceGrading = createServerFn({ method: "POST" })
 // ============ SYLLABUS UNITS ============
 
 export const listSyllabus = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ subject_id: z.number().int() }).parse(d))
+  .inputValidator((d) =>
+    z.object({
+      subject_id: z.number().int(),
+      academic_year: z.string().regex(yearRe).optional(),
+    }).parse(d),
+  )
   .handler(async ({ data }) => {
     await requireStaff();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("syllabus_units")
       .select("*")
       .eq("subject_id", data.subject_id)
       .order("unit_no");
+    if (data.academic_year) q = q.eq("academic_year", data.academic_year);
+    const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     return rows ?? [];
+  });
+
+export const syllabusUnitYears = createServerFn({ method: "GET" })
+  .handler(async () => {
+    await requireStaff();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("syllabus_units")
+      .select("academic_year")
+      .order("academic_year", { ascending: false });
+    if (error) throw new Error(error.message);
+    return Array.from(new Set((data ?? []).map((r: any) => r.academic_year as string)));
   });
 
 export const syllabusUnitReconciliation = createServerFn({ method: "GET" })
@@ -172,6 +191,7 @@ export const syllabusUnitReconciliation = createServerFn({ method: "GET" })
     z.object({
       branch: z.string().optional(),
       semester: z.number().int().optional(),
+      academic_year: z.string().regex(yearRe),
       include_matched: z.boolean().default(false),
     }).parse(d ?? {}),
   )
@@ -193,6 +213,7 @@ export const syllabusUnitReconciliation = createServerFn({ method: "GET" })
       const { data: units, error: ue } = await supabaseAdmin
         .from("syllabus_units")
         .select("subject_id,hours")
+        .eq("academic_year", data.academic_year)
         .in("subject_id", ids);
       if (ue) throw new Error(ue.message);
       for (const u of units ?? []) {
@@ -231,6 +252,8 @@ export const upsertSyllabusUnit = createServerFn({ method: "POST" })
       .object({
         id: z.number().int().optional(),
         subject_id: z.number().int(),
+        academic_year: z.string().regex(yearRe),
+        semester: z.number().int().min(1).max(8).nullable().optional(),
         unit_no: z.number().int().min(1).max(20),
         title: z.string().min(1).max(200),
         topics: z.array(z.string()).default([]),
@@ -243,6 +266,8 @@ export const upsertSyllabusUnit = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const payload = {
       subject_id: data.subject_id,
+      academic_year: data.academic_year,
+      semester: data.semester ?? null,
       unit_no: data.unit_no,
       title: data.title,
       topics: data.topics,
@@ -254,6 +279,7 @@ export const upsertSyllabusUnit = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 export const deleteSyllabusUnit = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
@@ -559,6 +585,7 @@ const syllabusRowSchema = z.object({
   subject_code: z.string().min(1),
   branch: z.string().min(1),
   semester: z.number().int().min(1).max(8),
+  academic_year: z.string().regex(yearRe),
   unit_no: z.number().int().min(1).max(20),
   title: z.string().min(1).max(200),
   hours: z.number().int().min(0).default(0),
@@ -584,6 +611,7 @@ export const bulkImportSyllabus = createServerFn({ method: "POST" })
             subject_code: String(raw.subject_code ?? raw.code ?? raw.Code ?? "").trim(),
             branch: String(raw.branch ?? raw.Branch ?? "").trim().toLowerCase(),
             semester: Number(raw.semester ?? raw.Semester ?? 0),
+            academic_year: String(raw.academic_year ?? raw["Academic Year"] ?? "").trim(),
             unit_no: Number(raw.unit_no ?? raw.Unit ?? raw.unit ?? 0),
             title: String(raw.title ?? raw.Title ?? "").trim(),
             hours: Number(raw.hours ?? raw.Hours ?? 0),
@@ -613,14 +641,21 @@ export const bulkImportSyllabus = createServerFn({ method: "POST" })
         errors.push({ row: i + 2, error: `Subject not found: ${r.subject_code} (${r.branch} sem ${r.semester})` });
         return;
       }
-      payload.push({ subject_id: id, unit_no: r.unit_no, title: r.title, hours: r.hours, topics: r.topics });
+      payload.push({
+        subject_id: id,
+        academic_year: r.academic_year,
+        unit_no: r.unit_no,
+        title: r.title,
+        hours: r.hours,
+        topics: r.topics,
+      });
     });
 
     let inserted = 0;
     if (payload.length > 0) {
       const { error, count } = await supabaseAdmin
         .from("syllabus_units")
-        .upsert(payload, { onConflict: "subject_id,unit_no", count: "exact" });
+        .upsert(payload, { onConflict: "subject_id,academic_year,unit_no", count: "exact" });
       if (error) throw new Error(error.message);
       inserted = count ?? payload.length;
     }
