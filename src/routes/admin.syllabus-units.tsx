@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Save, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, X, Upload, FileText } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
@@ -12,6 +12,7 @@ import {
   deleteSyllabusUnit,
   syllabusUnitReconciliation,
 } from "@/lib/academic.functions";
+import { parseSyllabusMarkdown, rescaleHours, type ParsedUnit } from "@/lib/parse-syllabus-md";
 
 export const Route = createFileRoute("/admin/syllabus-units")({
   head: () => portalMeta("Planned Unit Hours"),
