@@ -105,14 +105,29 @@ export function DepartmentOverviewPanel({ d }: { d: DeptOverviewData }) {
               </tr>
             </thead>
             <tbody>
-              {d.faculty_details.map((f) => (
-                <tr key={f.id} className="border-t">
-                  <td className="px-4 py-3 font-medium">{f.username}</td>
-                  <td className="px-4 py-3 capitalize text-gray-500">{f.role}</td>
-                  <td className="px-4 py-3">{f.department ?? "—"}</td>
-                  <td className="px-4 py-3">{f.load} periods</td>
-                </tr>
-              ))}
+              {d.faculty_details.map((f) => {
+                const displayName = (f.name || f.username || "").toUpperCase();
+                const photo = facultyPhoto(f.name || f.username);
+                return (
+                  <tr key={f.id} className="border-t">
+                    <td className="px-4 py-3 font-medium">
+                      <div className="flex items-center gap-3">
+                        {photo ? (
+                          <img src={photo} alt={displayName} className="w-9 h-9 rounded-full object-cover border" />
+                        ) : (
+                          <span className="w-9 h-9 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-center">
+                            {initialsOf(f.name || f.username)}
+                          </span>
+                        )}
+                        <span>{displayName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 capitalize text-gray-500">{f.role}</td>
+                    <td className="px-4 py-3">{f.department ?? "—"}</td>
+                    <td className="px-4 py-3">{f.load} periods</td>
+                  </tr>
+                );
+              })}
               {d.faculty_details.length === 0 && (
                 <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No faculty found for this department.</td></tr>
               )}
