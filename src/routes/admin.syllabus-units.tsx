@@ -181,12 +181,28 @@ function SyllabusUnitsPage() {
                   <b>{requiredTotal}</b> required · unit hours total <b>{totalPlanned}</b>
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => setImportOpen(true)}
                   className="border border-rose-700 text-rose-700 px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-rose-50"
                 >
-                  <Upload className="w-4 h-4" /> Import from .md
+                  <Upload className="w-4 h-4" /> Import
+                </button>
+                <button
+                  disabled={units.length === 0}
+                  onClick={() => exportUnits(subject, academicYear, units, "json")}
+                  className="border px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-secondary disabled:opacity-50"
+                  title="Download as JSON — re-importable to reuse next year"
+                >
+                  <Download className="w-4 h-4" /> Export JSON
+                </button>
+                <button
+                  disabled={units.length === 0}
+                  onClick={() => exportUnits(subject, academicYear, units, "csv")}
+                  className="border px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-secondary disabled:opacity-50"
+                  title="Download as CSV"
+                >
+                  <Download className="w-4 h-4" /> Export CSV
                 </button>
                 <button
                   onClick={() =>
