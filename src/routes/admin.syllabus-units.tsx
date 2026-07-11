@@ -136,7 +136,7 @@ function SyllabusUnitsPage() {
         </div>
 
         {subject && (
-          <div className="bg-white border rounded p-4 space-y-3">
+          <div id="subject-editor" className="bg-white border rounded p-4 space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <h3 className="font-semibold text-[color:var(--navy)]">
