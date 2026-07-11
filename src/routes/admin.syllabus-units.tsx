@@ -82,6 +82,7 @@ function SyllabusUnitsPage() {
   const subjectPlanned = subject ? (subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0) : 0;
 
   const [editing, setEditing] = useState<Unit | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
