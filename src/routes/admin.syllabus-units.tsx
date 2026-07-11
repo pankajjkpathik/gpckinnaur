@@ -844,7 +844,7 @@ function MdImportModal({
           <input
             ref={fileRef}
             type="file"
-            accept=".md,.markdown,.txt,text/markdown,text/plain"
+            accept=".md,.markdown,.txt,.json,text/markdown,text/plain,application/json"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -857,10 +857,11 @@ function MdImportModal({
             onClick={() => fileRef.current?.click()}
             className="bg-rose-700 text-white px-4 py-2 rounded text-sm font-semibold"
           >
-            Choose .md file
+            Choose .md or .json file
           </button>
           <p className="text-xs text-muted-foreground mt-2">
-            {fileName || "Expected format: ## Unit 1: Title (10 hours), followed by bullet topics."}
+            {fileName ||
+              "Accepts a Markdown syllabus (## Unit 1: Title (10 hours) …) or a previously exported .json to reuse in a new academic year."}
           </p>
         </div>
 
