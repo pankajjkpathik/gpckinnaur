@@ -1238,165 +1238,34 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ─── SYLLABUS COVERAGE ────────────────────────────────────────────────────────
-function SyllabusView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
-  const qc = useQueryClient();
-  const asg = useQuery({
-    queryKey: ["fac-asg", me.id, ay],
-    queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
-  });
-  const list = useQuery({
-    queryKey: ["lessons", ay, me.id],
-    queryFn: () => listLessonPlans({ data: { academic_year: ay, staff_id: me.id } }),
-  });
-  const [asgId, setAsgId] = useState<number | "">("");
-  const [totalUnits, setTotalUnits] = useState("10");
-  const [unitsCovered, setUnitsCovered] = useState("");
-  const [remarks, setRemarks] = useState("");
-  const pctNum = totalUnits && unitsCovered ? Math.round((Number(unitsCovered) / Number(totalUnits)) * 100) : 0;
-  const pct = unitsCovered ? `${pctNum}%` : "";
-  const a = (asg.data ?? []).find((x: any) => x.id === asgId);
-
-  const save = useMutation({
-    mutationFn: () =>
-      upsertLessonPlan({
-        data: {
-          subject_id: a!.subject_id,
-          branch: a!.branch,
-          semester: a!.semester,
-          topic: `Syllabus Coverage: ${unitsCovered}/${totalUnits} units (${pctNum}%)${remarks ? " — " + remarks : ""}`,
-          planned_date: new Date().toISOString().slice(0, 10),
-          actual_date: new Date().toISOString().slice(0, 10),
-          status: "submitted",
-          academic_year: ay,
-        },
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["lessons"] });
-      setUnitsCovered("");
-      setRemarks("");
-    },
-  });
-
-  const records = (list.data ?? []).filter((r: any) => (r.topic ?? "").startsWith("Syllabus Coverage:"));
-
+// ─── SYLLABUS COVERAGE / LESSON PLANS (unified PDF library) ───────────────────
+function SyllabusView({ onBack }: { ay: string; me: any; onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <h1 className="text-2xl font-bold text-gray-800">Syllabus Coverage</h1>
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card>
-          <p className="font-semibold text-gray-800 mb-4">Add New Coverage Record</p>
-          <div className="space-y-3 text-sm">
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Class &amp; Subject</label>
-              <select
-                value={asgId}
-                onChange={(e) => setAsgId(e.target.value ? Number(e.target.value) : "")}
-                className="border rounded w-full px-3 py-2"
-              >
-                <option value="">Select…</option>
-                {(asg.data ?? []).map((x: any) => (
-                  <option key={x.id} value={x.id}>
-                    {x.subjects?.code} · {x.branch}-Sem{x.semester} — {x.subjects?.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">Total Units</label>
-                <input
-                  type="number"
-                  value={totalUnits}
-                  onChange={(e) => setTotalUnits(e.target.value)}
-                  className="border rounded w-full px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">Units Covered</label>
-                <input
-                  type="number"
-                  value={unitsCovered}
-                  onChange={(e) => setUnitsCovered(e.target.value)}
-                  className="border rounded w-full px-3 py-2"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Completion Percentage</label>
-              <input readOnly value={pct} className="border rounded w-full px-3 py-2 bg-gray-50 text-gray-600" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Remarks (Optional)</label>
-              <textarea
-                rows={3}
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Any notes or comments..."
-                className="border rounded w-full px-3 py-2 resize-y"
-              />
-            </div>
-            <button
-              onClick={() => save.mutate()}
-              disabled={!a || !unitsCovered || save.isPending}
-              className="bg-[#7b1f4c] text-white w-full py-2 rounded font-semibold disabled:opacity-50"
-            >
-              {save.isPending ? "Saving…" : "Save"}
-            </button>
-            {save.isSuccess && <p className="text-xs text-green-700">Coverage saved.</p>}
-            {save.error && <p className="text-xs text-rose-700">{(save.error as Error).message}</p>}
-          </div>
-        </Card>
-        <Card>
-          <p className="font-semibold text-gray-800 mb-4">My Coverage Records</p>
-          <div className="border rounded overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Class</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Coverage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">
-                      No records found.
-                    </td>
-                  </tr>
-                )}
-                {records.map((r: any) => (
-                  <tr key={r.id} className="border-t">
-                    <td className="px-4 py-3">{r.subjects?.code}</td>
-                    <td className="px-4 py-3">{r.branch}-Sem{r.semester}</td>
-                    <td className="px-4 py-3">{r.actual_date ?? r.planned_date ?? ""}</td>
-                    <td className="px-4 py-3">{(r.topic ?? "").replace("Syllabus Coverage: ", "")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
+      <p className="text-xs text-gray-500 -mt-2">
+        Track syllabus coverage by uploading lesson-plan PDFs per subject. The same list is visible to students, HOD and Principal.
+      </p>
+      <LessonPlanLibrary docType="lesson_plan" canUpload canDelete />
     </div>
   );
 }
 
-
-// ─── LESSON PLANS ─────────────────────────────────────────────────────────────
 function LessonPlansView({ onBack }: { ay: string; me: any; onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <h1 className="text-2xl font-bold text-gray-800">📘 Manage Lesson Plans</h1>
-      <p className="text-xs text-gray-500 -mt-2">Upload your lesson plan PDFs. Students can download these from their portal.</p>
-      <PdfDocsInline docType="lesson_plan" uploadLabel="Upload New Lesson Plan (PDF)" />
+      <p className="text-xs text-gray-500 -mt-2">
+        Upload your lesson-plan PDFs. Students, HOD and Principal can view and download them.
+      </p>
+      <LessonPlanLibrary docType="lesson_plan" canUpload canDelete />
     </div>
   );
 }
+
+
 
 // ─── EXAM SCHEDULE ────────────────────────────────────────────────────────────
 function ExamScheduleView({ onBack }: { ay: string; me: any; onBack: () => void }) {
