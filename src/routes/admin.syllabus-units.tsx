@@ -269,6 +269,19 @@ function SyllabusUnitsPage() {
             error={save.error?.message}
           />
         )}
+
+        {importOpen && subject && (
+          <MdImportModal
+            subject={subject}
+            academicYear={academicYear}
+            existingUnits={units}
+            onClose={() => setImportOpen(false)}
+            onImported={() => {
+              setImportOpen(false);
+              qc.invalidateQueries({ queryKey: ["syllabus-units", subjectId] });
+            }}
+          />
+        )}
       </div>
     </PortalShell>
   );
