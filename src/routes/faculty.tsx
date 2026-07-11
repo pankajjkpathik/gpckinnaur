@@ -1249,7 +1249,7 @@ function SyllabusView({ ay, onBack }: { ay: string; me: any; onBack: () => void 
       <p className="text-xs text-gray-500 -mt-2">
         Record each lecture you deliver (date · unit · topic). Coverage % is computed from delivered vs planned syllabus hours and is visible to students, HOD and Principal.
       </p>
-      <SyllabusCoverage mode="faculty" academicYear={ay} />
+      <SyllabusCoverage mode="faculty" academicYear={ay} scope={{ staff_id: me?.id }} />
     </div>
   );
 }
