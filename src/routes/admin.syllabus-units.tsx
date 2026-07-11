@@ -724,11 +724,37 @@ function MdImportModal({
 
   function handleFile(f: File) {
     setFileName(f.name);
+    const isJson = /\.json$/i.test(f.name) || f.type === "application/json";
     const reader = new FileReader();
     reader.onload = () => {
       const txt = String(reader.result ?? "");
       setRaw(txt);
-      const p = parseSyllabusMarkdown(txt);
+      let p: ParsedUnit[] = [];
+      if (isJson) {
+        try {
+          const obj = JSON.parse(txt);
+          const arr = Array.isArray(obj) ? obj : obj?.units;
+          if (Array.isArray(arr)) {
+            p = arr
+              .map((u: any, i: number) => ({
+                unit_no: Number(u.unit_no ?? u.unitNo ?? i + 1),
+                title: String(u.title ?? "").slice(0, 200),
+                hours: Number(u.hours ?? 0),
+                topics: Array.isArray(u.topics)
+                  ? u.topics.map((t: any) => String(t))
+                  : String(u.topics ?? "")
+                      .split(/[,;\n]/)
+                      .map((s: string) => s.trim())
+                      .filter(Boolean),
+              }))
+              .sort((a, b) => a.unit_no - b.unit_no);
+          }
+        } catch {
+          p = [];
+        }
+      } else {
+        p = parseSyllabusMarkdown(txt);
+      }
       setParsed(p);
       setOriginalParsed(p.map((u) => ({ ...u })));
     };
