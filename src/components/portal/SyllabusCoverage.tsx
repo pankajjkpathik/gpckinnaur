@@ -266,8 +266,8 @@ function FacultyEntryPanel({
   const chosen = subjects.find((s: any) => `${s.subject_id}|${s.branch}|${s.semester}` === key);
 
   const units = useQuery({
-    queryKey: ["cov-units", chosen?.subject_id],
-    queryFn: () => coverageUnits({ data: { subject_id: chosen!.subject_id } }),
+    queryKey: ["cov-units", chosen?.subject_id, academicYear],
+    queryFn: () => coverageUnits({ data: { subject_id: chosen!.subject_id, academic_year: academicYear } as any }),
     enabled: !!chosen,
   });
 
