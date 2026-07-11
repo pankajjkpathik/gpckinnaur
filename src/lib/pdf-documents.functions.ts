@@ -95,3 +95,44 @@ export const pdfDocDelete = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ─── Cross-portal read access (staff, student, parent) ─────────────────────────
+export const pdfDocListShared = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z
+      .object({
+        doc_type: z.enum(["calendar", "syllabus", "lesson_plan", "exam_schedule"]),
+        branch: z.string().optional().nullable(),
+        semester: z.number().int().min(1).max(8).optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireAnyPortal();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
+      .from("pdf_documents")
+      .select("id, doc_type, title, branch, semester, file_name, created_at, staff_users:uploaded_by(username,name)")
+      .eq("doc_type", data.doc_type)
+      .order("created_at", { ascending: false });
+    if (data.branch) q = q.or(`branch.eq.${data.branch},branch.is.null`);
+    if (typeof data.semester === "number") q = q.or(`semester.eq.${data.semester},semester.is.null`);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const pdfDocDownloadShared = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireAnyPortal();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: doc, error } = await supabaseAdmin
+      .from("pdf_documents")
+      .select("title, file_name, file_b64, doc_type")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error || !doc) throw new Error("Document not found");
+    return { file_name: doc.file_name, file_b64: doc.file_b64, title: doc.title };
+  });
+
