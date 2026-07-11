@@ -1792,6 +1792,85 @@ export type Database = {
           },
         ]
       }
+      weekly_lesson_plans: {
+        Row: {
+          academic_year: string
+          branch: string
+          created_at: string
+          id: number
+          learning_outcomes: string | null
+          notes: string | null
+          periods: number
+          semester: number
+          staff_id: number
+          subject_id: number
+          teaching_method: string | null
+          topics: string
+          unit_id: number | null
+          unit_no: number | null
+          updated_at: string
+          week_no: number
+        }
+        Insert: {
+          academic_year: string
+          branch: string
+          created_at?: string
+          id?: number
+          learning_outcomes?: string | null
+          notes?: string | null
+          periods?: number
+          semester: number
+          staff_id: number
+          subject_id: number
+          teaching_method?: string | null
+          topics?: string
+          unit_id?: number | null
+          unit_no?: number | null
+          updated_at?: string
+          week_no: number
+        }
+        Update: {
+          academic_year?: string
+          branch?: string
+          created_at?: string
+          id?: number
+          learning_outcomes?: string | null
+          notes?: string | null
+          periods?: number
+          semester?: number
+          staff_id?: number
+          subject_id?: number
+          teaching_method?: string | null
+          topics?: string
+          unit_id?: number | null
+          unit_no?: number | null
+          updated_at?: string
+          week_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_lesson_plans_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_lesson_plans_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_lesson_plans_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
