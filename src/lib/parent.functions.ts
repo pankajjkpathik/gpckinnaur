@@ -1,11 +1,46 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getCookie, useSession } from "@tanstack/react-start/server";
+import { getCookie, getRequestIP, useSession } from "@tanstack/react-start/server";
 import { z } from "zod";
 import {
   getParentSessionSecretIssue,
   parentSessionConfig,
   type ParentSession,
 } from "./sessions";
+
+// Best-effort audit writer. Never throws — we don't want log failures to
+// block or leak information about login flow.
+async function logParentAuth(
+  action: "parent_login_success" | "parent_login_failure" | "parent_logout",
+  opts: {
+    studentId?: number | null;
+    enrollmentInput?: string | null;
+    reason?: string;
+    resolvedEnrollment?: string | null;
+  },
+) {
+  try {
+    const ip = (() => {
+      try { return getRequestIP({ xForwardedFor: true }) ?? null; } catch { return null; }
+    })();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("audit_log").insert({
+      actor_type: "parent",
+      actor_id: opts.studentId ?? null,
+      action,
+      entity: "parent_users",
+      entity_id: opts.studentId != null ? String(opts.studentId) : null,
+      details: {
+        enrollment_input: opts.enrollmentInput ?? null,
+        resolved_enrollment: opts.resolvedEnrollment ?? null,
+        reason: opts.reason ?? null,
+      },
+      ip,
+    });
+  } catch (e) {
+    console.error("[audit] parent auth log failed", e);
+  }
+}
+
 
 // Every parent-facing server fn MUST go through this guard. It:
 //  1. requires a signed parent session cookie
