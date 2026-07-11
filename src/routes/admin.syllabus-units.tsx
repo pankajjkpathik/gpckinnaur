@@ -79,7 +79,13 @@ function SyllabusUnitsPage() {
   );
   const units: Unit[] = (unitsQ.data as any) ?? [];
   const totalPlanned = units.reduce((a, u) => a + (Number(u.hours) || 0), 0);
+  const WEEKS = 14;
+  const requiredTotal = subject
+    ? ((subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0)) * WEEKS
+    : 0;
   const subjectPlanned = subject ? (subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0) : 0;
+  const hoursDiff = totalPlanned - requiredTotal;
+  const hoursValid = subject != null && units.length > 0 && hoursDiff === 0;
 
   const [editing, setEditing] = useState<Unit | null>(null);
   const [importOpen, setImportOpen] = useState(false);
