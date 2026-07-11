@@ -17,6 +17,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
+import { facultyPhoto } from "@/lib/faculty-photos";
+import { initialsOf } from "@/lib/portal-identity";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { hodRoles, hasRole } from "@/lib/roles";
 import {
