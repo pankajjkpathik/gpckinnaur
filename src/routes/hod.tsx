@@ -88,7 +88,7 @@ function HodPortal() {
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
   const isViewer = me.role !== "hod";
-  const branch = (me.department || "").toLowerCase();
+  const branch = deptToBranch(me.department);
   const deptLabel = me.department || "Department";
 
   return (
