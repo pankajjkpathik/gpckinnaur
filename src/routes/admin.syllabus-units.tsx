@@ -849,8 +849,9 @@ function MdImportModal({
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
           <button
-            disabled={busy || view.length === 0}
+            disabled={busy || view.length === 0 || (target > 0 && total !== target)}
             onClick={doImport}
+            title={target > 0 && total !== target ? `Total ${total} must equal ${target}` : ""}
             className="px-4 py-1.5 bg-rose-700 text-white rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
           >
             <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} unit(s)`}
