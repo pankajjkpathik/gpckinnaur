@@ -38,6 +38,7 @@ import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
 import { BarStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { deptToBranch } from "@/lib/branch";
+import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 
 export const Route = createFileRoute("/hod")({
   head: () => portalMeta("HOD Portal"),
