@@ -59,6 +59,7 @@ import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminReportTemplatesRouteImport } from './routes/admin.report-templates'
 import { Route as AdminPeriodsRouteImport } from './routes/admin.periods'
+import { Route as AdminParentAccountsRouteImport } from './routes/admin.parent-accounts'
 import { Route as AdminGradingRouteImport } from './routes/admin.grading'
 import { Route as AdminFacultyRouteImport } from './routes/admin.faculty'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
@@ -315,6 +316,11 @@ const AdminPeriodsRoute = AdminPeriodsRouteImport.update({
   path: '/periods',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminParentAccountsRoute = AdminParentAccountsRouteImport.update({
+  id: '/parent-accounts',
+  path: '/parent-accounts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminGradingRoute = AdminGradingRouteImport.update({
   id: '/grading',
   path: '/grading',
@@ -379,6 +385,7 @@ export interface FileRoutesByFullPath {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/faculty': typeof AdminFacultyRoute
   '/admin/grading': typeof AdminGradingRoute
+  '/admin/parent-accounts': typeof AdminParentAccountsRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -435,6 +442,7 @@ export interface FileRoutesByTo {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/faculty': typeof AdminFacultyRoute
   '/admin/grading': typeof AdminGradingRoute
+  '/admin/parent-accounts': typeof AdminParentAccountsRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -493,6 +501,7 @@ export interface FileRoutesById {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/faculty': typeof AdminFacultyRoute
   '/admin/grading': typeof AdminGradingRoute
+  '/admin/parent-accounts': typeof AdminParentAccountsRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -552,6 +561,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/faculty'
     | '/admin/grading'
+    | '/admin/parent-accounts'
     | '/admin/periods'
     | '/admin/report-templates'
     | '/admin/students'
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/faculty'
     | '/admin/grading'
+    | '/admin/parent-accounts'
     | '/admin/periods'
     | '/admin/report-templates'
     | '/admin/students'
@@ -665,6 +676,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/faculty'
     | '/admin/grading'
+    | '/admin/parent-accounts'
     | '/admin/periods'
     | '/admin/report-templates'
     | '/admin/students'
@@ -1082,6 +1094,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPeriodsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/parent-accounts': {
+      id: '/admin/parent-accounts'
+      path: '/parent-accounts'
+      fullPath: '/admin/parent-accounts'
+      preLoaderRoute: typeof AdminParentAccountsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/grading': {
       id: '/admin/grading'
       path: '/grading'
@@ -1126,6 +1145,7 @@ interface AdminRouteChildren {
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminFacultyRoute: typeof AdminFacultyRoute
   AdminGradingRoute: typeof AdminGradingRoute
+  AdminParentAccountsRoute: typeof AdminParentAccountsRoute
   AdminPeriodsRoute: typeof AdminPeriodsRoute
   AdminReportTemplatesRoute: typeof AdminReportTemplatesRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
@@ -1142,6 +1162,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCalendarRoute: AdminCalendarRoute,
   AdminFacultyRoute: AdminFacultyRoute,
   AdminGradingRoute: AdminGradingRoute,
+  AdminParentAccountsRoute: AdminParentAccountsRoute,
   AdminPeriodsRoute: AdminPeriodsRoute,
   AdminReportTemplatesRoute: AdminReportTemplatesRoute,
   AdminStudentsRoute: AdminStudentsRoute,
