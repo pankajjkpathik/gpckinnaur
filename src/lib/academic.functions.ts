@@ -611,6 +611,7 @@ export const bulkImportSyllabus = createServerFn({ method: "POST" })
             subject_code: String(raw.subject_code ?? raw.code ?? raw.Code ?? "").trim(),
             branch: String(raw.branch ?? raw.Branch ?? "").trim().toLowerCase(),
             semester: Number(raw.semester ?? raw.Semester ?? 0),
+            academic_year: String(raw.academic_year ?? raw["Academic Year"] ?? "").trim(),
             unit_no: Number(raw.unit_no ?? raw.Unit ?? raw.unit ?? 0),
             title: String(raw.title ?? raw.Title ?? "").trim(),
             hours: Number(raw.hours ?? raw.Hours ?? 0),
@@ -640,14 +641,21 @@ export const bulkImportSyllabus = createServerFn({ method: "POST" })
         errors.push({ row: i + 2, error: `Subject not found: ${r.subject_code} (${r.branch} sem ${r.semester})` });
         return;
       }
-      payload.push({ subject_id: id, unit_no: r.unit_no, title: r.title, hours: r.hours, topics: r.topics });
+      payload.push({
+        subject_id: id,
+        academic_year: r.academic_year,
+        unit_no: r.unit_no,
+        title: r.title,
+        hours: r.hours,
+        topics: r.topics,
+      });
     });
 
     let inserted = 0;
     if (payload.length > 0) {
       const { error, count } = await supabaseAdmin
         .from("syllabus_units")
-        .upsert(payload, { onConflict: "subject_id,unit_no", count: "exact" });
+        .upsert(payload, { onConflict: "subject_id,academic_year,unit_no", count: "exact" });
       if (error) throw new Error(error.message);
       inserted = count ?? payload.length;
     }
