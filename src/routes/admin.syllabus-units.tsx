@@ -764,6 +764,18 @@ function MdImportModal({
               </span>
             </div>
 
+            {target > 0 && (
+              total === target ? (
+                <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
+                  ✓ Total {total} matches required L+P×14 ({target}).
+                </div>
+              ) : (
+                <div className="mt-2 rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
+                  ✗ Total {total} ≠ required {target}. Enable "Rescale hours" above or adjust unit hours before importing.
+                </div>
+              )
+            )}
+
             <div className="mt-3 border rounded overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-secondary">
