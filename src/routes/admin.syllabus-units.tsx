@@ -314,12 +314,16 @@ function SyllabusUnitsPage() {
 
 function UnitModal({
   initial,
+  requiredTotal,
+  otherUnitsHours,
   onClose,
   onSave,
   pending,
   error,
 }: {
   initial: Unit;
+  requiredTotal: number;
+  otherUnitsHours: number;
   onClose: () => void;
   onSave: (u: Unit) => void;
   pending: boolean;
