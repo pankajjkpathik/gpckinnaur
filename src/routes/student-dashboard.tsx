@@ -45,6 +45,7 @@ import {
 } from "@/lib/assignments.functions";
 import { studentParentStatus, studentSetParentPassword } from "@/lib/parent.functions";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
+import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/student-dashboard")({
