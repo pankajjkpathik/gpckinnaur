@@ -244,7 +244,7 @@ export const hodDepartmentOverview = createServerFn({ method: "GET" })
     const { departmentAliases } = await import("./branch");
     const { data: faculty } = await supabaseAdmin
       .from("staff_users")
-      .select("id, username, department, role")
+      .select("id, username, name, department, role")
       .in("department", departmentAliases(branch))
       .in("role", ["faculty", "hod"]);
     const facultyIds = (faculty ?? []).map((f: any) => f.id);
@@ -260,7 +260,7 @@ export const hodDepartmentOverview = createServerFn({ method: "GET" })
       loadByStaff.set(r.staff_id, (loadByStaff.get(r.staff_id) ?? 0) + 1);
     });
     const facultyWorkload = (faculty ?? []).map((f: any) => ({
-      label: f.username,
+      label: f.name || f.username,
       value: loadByStaff.get(f.id) ?? 0,
     }));
 
