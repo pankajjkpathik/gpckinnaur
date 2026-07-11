@@ -37,6 +37,62 @@ function currentAY(): string {
   return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
 }
 
+function downloadBlob(filename: string, mime: string, content: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function csvEscape(v: unknown): string {
+  const s = v == null ? "" : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function exportUnits(
+  subject: any,
+  academicYear: string,
+  units: Unit[],
+  format: "json" | "csv",
+) {
+  const safe = (s: string) => s.replace(/[^a-z0-9\-]+/gi, "_");
+  const base = `syllabus-units_${safe(subject.code)}_${academicYear}`;
+  if (format === "json") {
+    const payload = {
+      schema: "syllabus-units.v1",
+      exported_at: new Date().toISOString(),
+      subject: {
+        code: subject.code,
+        name: subject.name,
+        branch: subject.branch,
+        semester: subject.semester,
+        lecture_hours: subject.lecture_hours ?? 0,
+        practical_hours: subject.practical_hours ?? 0,
+      },
+      academic_year: academicYear,
+      units: units.map((u) => ({
+        unit_no: u.unit_no,
+        title: u.title,
+        hours: u.hours,
+        topics: u.topics ?? [],
+      })),
+    };
+    downloadBlob(`${base}.json`, "application/json", JSON.stringify(payload, null, 2));
+    return;
+  }
+  const rows = [
+    ["Unit No", "Title", "Hours", "Topics"],
+    ...units.map((u) => [u.unit_no, u.title, u.hours, (u.topics ?? []).join(" | ")]),
+  ];
+  const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+  downloadBlob(`${base}.csv`, "text/csv;charset=utf-8", csv);
+}
+
 function SyllabusUnitsPage() {
   const nav = useNavigate();
   const qc = useQueryClient();
