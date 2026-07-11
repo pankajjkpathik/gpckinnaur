@@ -667,6 +667,12 @@ function MdImportModal({
 
   async function doImport() {
     if (view.length === 0) return;
+    if (target > 0 && total !== target) {
+      setErr(
+        `Total unit hours (${total}) must equal required L+P×14 (${target}). Enable "Rescale hours" or adjust unit hours before importing.`,
+      );
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
