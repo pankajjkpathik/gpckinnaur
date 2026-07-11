@@ -1675,9 +1675,11 @@ export type Database = {
       }
       syllabus_units: {
         Row: {
+          academic_year: string
           created_at: string
           hours: number
           id: number
+          semester: number | null
           subject_id: number
           title: string
           topics: Json
@@ -1685,9 +1687,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academic_year: string
           created_at?: string
           hours?: number
           id?: number
+          semester?: number | null
           subject_id: number
           title: string
           topics?: Json
@@ -1695,9 +1699,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academic_year?: string
           created_at?: string
           hours?: number
           id?: number
+          semester?: number | null
           subject_id?: number
           title?: string
           topics?: Json
