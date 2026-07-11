@@ -225,31 +225,6 @@ function SyllabusUnitsPage() {
                 </div>
               )
             )}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setImportOpen(true)}
-                  className="border border-rose-700 text-rose-700 px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-rose-50"
-                >
-                  <Upload className="w-4 h-4" /> Import from .md
-                </button>
-                <button
-                  onClick={() =>
-                    setEditing({
-                      subject_id: subject.id,
-                      academic_year: academicYear,
-                      semester: null,
-                      unit_no: (units.at(-1)?.unit_no ?? 0) + 1,
-                      title: "",
-                      topics: [],
-                      hours: 0,
-                    })
-                  }
-                  className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1"
-                >
-                  <Plus className="w-4 h-4" /> Add Unit
-                </button>
-              </div>
-            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
