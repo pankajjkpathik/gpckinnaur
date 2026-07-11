@@ -24,6 +24,7 @@ import { listPeriods, listTimetable } from "@/lib/academic.functions";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
+import { QuickCard } from "@/components/portal/QuickCard";
 import {
   listParentMessages,
   markParentMessageRead,
