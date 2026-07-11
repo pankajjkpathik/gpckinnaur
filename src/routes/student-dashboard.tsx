@@ -869,208 +869,235 @@ function UploadAssignmentView({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ─── DOCUMENTS ────────────────────────────────────────────────────────────────
-function DocumentsView({ onBack }: { onBack: () => void }) {
+// ─── DOCS: Assignments & Exam Schedule (shared table) ────────────────────────
+function DocsListView({
+  onBack,
+  type,
+  title,
+  subtitle,
+}: {
+  onBack: () => void;
+  type: "assignment" | "exam_schedule";
+  title: string;
+  subtitle: string;
+}) {
   const fn = useServerFn(studentDocuments);
-  const ttFn = useServerFn(studentTimetable);
-  const sylFn = useServerFn(studentSyllabus);
-  const [tab, setTab] = useState<"assignment" | "lesson_plan" | "exam_schedule" | "timetable" | "syllabus">(
-    "assignment",
-  );
-  const isDoc = tab === "assignment" || tab === "exam_schedule";
   const { data = [], isLoading } = useQuery({
-    queryKey: ["student-docs", tab],
-    queryFn: () => fn({ data: { type: tab as "assignment" | "exam_schedule" } }),
-    enabled: isDoc,
-  });
-  const { data: tt } = useQuery({
-    queryKey: ["student-tt-docs"],
-    queryFn: () => ttFn(),
-    enabled: tab === "timetable",
-  });
-  const { data: syl = [] } = useQuery({
-    queryKey: ["student-syl-docs"],
-    queryFn: () => sylFn(),
-    enabled: tab === "syllabus",
+    queryKey: ["student-docs", type],
+    queryFn: () => fn({ data: { type } }),
   });
 
-  const tabs = [
-    { key: "assignment" as const, label: "Assignments" },
-    { key: "lesson_plan" as const, label: "Lesson Plans" },
-    { key: "exam_schedule" as const, label: "Exam Schedules" },
-    { key: "timetable" as const, label: "Timetable" },
-    { key: "syllabus" as const, label: "Syllabus" },
-  ];
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">{title}</h1>
+        <p className="text-xs text-gray-400 mb-4">{subtitle}</p>
 
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data as any[]).map((d: any) => (
+                <tr key={d.id} className="border-t">
+                  <td className="px-4 py-3">{d.subject ?? "—"}</td>
+                  <td className="px-4 py-3">{d.title}</td>
+                  <td className="px-4 py-3">{d.uploaded_at?.slice(0, 10) ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <a
+                      href={d.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
+                    >
+                      <Download className="w-4 h-4" /> Download
+                    </a>
+                  </td>
+                </tr>
+              ))}
+              {!isLoading && (data as any[]).length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                    Nothing in this category yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function AssignmentDocsView({ onBack }: { onBack: () => void }) {
+  return (
+    <DocsListView
+      onBack={onBack}
+      type="assignment"
+      title="Assignments"
+      subtitle="Assignment sheets shared by your faculty."
+    />
+  );
+}
+
+function ExamScheduleView({ onBack }: { onBack: () => void }) {
+  return (
+    <DocsListView
+      onBack={onBack}
+      type="exam_schedule"
+      title="Exam Schedule"
+      subtitle="Datesheets published for your class."
+    />
+  );
+}
+
+// ─── LESSON PLANS ─────────────────────────────────────────────────────────────
+function LessonPlansView({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <LessonPlanLibrary
+          docType="lesson_plan"
+          title="Lesson Plans"
+          subtitle="PDFs uploaded by your faculty."
+        />
+      </Card>
+    </div>
+  );
+}
+
+// ─── TIMETABLE ────────────────────────────────────────────────────────────────
+function TimetableView({ onBack }: { onBack: () => void }) {
+  const ttFn = useServerFn(studentTimetable);
+  const { data: tt } = useQuery({ queryKey: ["student-tt"], queryFn: () => ttFn() });
   const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Documents</h1>
-        <p className="text-xs text-gray-400 mb-4">
-          A central repository for all important documents shared by your faculty.
-        </p>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Timetable</h1>
+        <p className="text-xs text-gray-400 mb-4">Your weekly class schedule.</p>
 
-        <div className="flex flex-wrap gap-1 border-b mb-4">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${tab === t.key ? "border-[#7b1f4c] text-[#7b1f4c]" : "border-transparent text-gray-400"}`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {isDoc && (
-          <div className="border rounded overflow-hidden">
-            <table className="w-full text-sm">
+        <div className="border rounded overflow-x-auto">
+          {!tt ? (
+            <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
+          ) : (tt.entries as any[]).length === 0 ? (
+            <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
+          ) : (
+            <table className="w-full text-sm min-w-[720px]">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
+                  <th className="text-left px-3 py-2 text-gray-500">Day</th>
+                  {(tt.periods as any[]).map((p) => (
+                    <th key={p.period_no} className="text-left px-3 py-2 text-gray-500">
+                      P{p.period_no}
+                      <div className="text-[10px] text-gray-400 font-normal">
+                        {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {(data as any[]).map((d: any) => (
-                  <tr key={d.id} className="border-t">
-                    <td className="px-4 py-3">{d.subject ?? "—"}</td>
-                    <td className="px-4 py-3">{d.title}</td>
-                    <td className="px-4 py-3">{d.uploaded_at?.slice(0, 10) ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <a
-                        href={d.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
-                      >
-                        <Download className="w-4 h-4" /> Download
-                      </a>
-                    </td>
+                {[1, 2, 3, 4, 5, 6].map((d) => (
+                  <tr key={d} className="border-t align-top">
+                    <td className="px-3 py-2 font-medium text-gray-700">{DAYS[d]}</td>
+                    {(tt.periods as any[]).map((p) => {
+                      const slots = (tt.entries as any[]).filter(
+                        (e) => e.day_of_week === d && e.period_no === p.period_no,
+                      );
+                      return (
+                        <td key={p.period_no} className="px-3 py-2">
+                          {slots.length === 0 ? (
+                            <span className="text-gray-300">—</span>
+                          ) : (
+                            slots.map((s, i) => (
+                              <div key={i} className="mb-1 last:mb-0">
+                                <div className="font-semibold text-gray-800">
+                                  {s.subjects?.code ?? "—"}
+                                </div>
+                                <div className="text-[11px] text-gray-500">{s.subjects?.name}</div>
+                                <div className="text-[11px] text-gray-500">
+                                  {s.staff_users?.username ? `@${s.staff_users.username}` : ""}
+                                  {s.room ? ` · ${s.room}` : ""}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
-                {!isLoading && (data as any[]).length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
-                      No documents in this category yet.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
-          </div>
-        )}
-
-        {tab === "lesson_plan" && <LessonPlanLibrary docType="lesson_plan" title="Lesson Plans" subtitle="PDFs uploaded by your faculty." />}
-
-
-
-        {tab === "timetable" && (
-          <div className="border rounded overflow-x-auto">
-            {!tt ? (
-              <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
-            ) : (tt.entries as any[]).length === 0 ? (
-              <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
-            ) : (
-              <table className="w-full text-sm min-w-[720px]">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left px-3 py-2 text-gray-500">Day</th>
-                    {(tt.periods as any[]).map((p) => (
-                      <th key={p.period_no} className="text-left px-3 py-2 text-gray-500">
-                        P{p.period_no}
-                        <div className="text-[10px] text-gray-400 font-normal">
-                          {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[1, 2, 3, 4, 5, 6].map((d) => (
-                    <tr key={d} className="border-t align-top">
-                      <td className="px-3 py-2 font-medium text-gray-700">{DAYS[d]}</td>
-                      {(tt.periods as any[]).map((p) => {
-                        const slots = (tt.entries as any[]).filter(
-                          (e) => e.day_of_week === d && e.period_no === p.period_no,
-                        );
-                        return (
-                          <td key={p.period_no} className="px-3 py-2">
-                            {slots.length === 0 ? (
-                              <span className="text-gray-300">—</span>
-                            ) : (
-                              slots.map((s, i) => (
-                                <div key={i} className="mb-1 last:mb-0">
-                                  <div className="font-semibold text-gray-800">
-                                    {s.subjects?.code ?? "—"}
-                                  </div>
-                                  <div className="text-[11px] text-gray-500">{s.subjects?.name}</div>
-                                  <div className="text-[11px] text-gray-500">
-                                    {s.staff_users?.username ? `@${s.staff_users.username}` : ""}
-                                    {s.room ? ` · ${s.room}` : ""}
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
-
-        {tab === "syllabus" && (
-          <div className="space-y-4">
-            <SyllabusCoverage
-              mode="view"
-              academicYear={(() => {
-                const d = new Date();
-                const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
-                return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
-              })()}
-              title="Syllabus Coverage"
-              subtitle="Delivered vs planned hours for each of your subjects."
-            />
-            <div className="border rounded overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2 font-semibold text-gray-700 text-sm">Syllabus units</div>
-              {(syl as any[]).length === 0 ? (
-                <p className="p-6 text-center text-sm text-gray-400">No syllabus available for your class yet.</p>
-              ) : (
-                <div className="divide-y">
-                  {(syl as any[]).map((s: any) => (
-                    <div key={s.id} className="p-4">
-                      <p className="font-medium text-gray-800 text-sm mb-1">{s.code} — {s.name}</p>
-                      {(s.units ?? []).length === 0 ? (
-                        <p className="text-xs text-gray-400">No units added.</p>
-                      ) : (
-                        <ul className="text-xs text-gray-600 space-y-1">
-                          {s.units.map((u: any) => (
-                            <li key={u.unit_no}>
-                              <span className="font-medium text-gray-700">Unit {u.unit_no}:</span> {u.title}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </Card>
     </div>
   );
 }
+
+// ─── SYLLABUS COVERAGE ────────────────────────────────────────────────────────
+function SyllabusView({ onBack }: { onBack: () => void }) {
+  const sylFn = useServerFn(studentSyllabus);
+  const { data: syl = [] } = useQuery({ queryKey: ["student-syl"], queryFn: () => sylFn() });
+  const academicYear = (() => {
+    const d = new Date();
+    const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+    return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
+  })();
+
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <Card>
+        <SyllabusCoverage
+          mode="view"
+          academicYear={academicYear}
+          title="Syllabus Coverage"
+          subtitle="Delivered vs planned hours for each of your subjects."
+        />
+        <div className="border rounded overflow-hidden mt-6">
+          <div className="bg-gray-50 px-4 py-2 font-semibold text-gray-700 text-sm">Syllabus units</div>
+          {(syl as any[]).length === 0 ? (
+            <p className="p-6 text-center text-sm text-gray-400">No syllabus available for your class yet.</p>
+          ) : (
+            <div className="divide-y">
+              {(syl as any[]).map((s: any) => (
+                <div key={s.id} className="p-4">
+                  <p className="font-medium text-gray-800 text-sm mb-1">{s.code} — {s.name}</p>
+                  {(s.units ?? []).length === 0 ? (
+                    <p className="text-xs text-gray-400">No units added.</p>
+                  ) : (
+                    <ul className="text-xs text-gray-600 space-y-1">
+                      {s.units.map((u: any) => (
+                        <li key={u.unit_no}>
+                          <span className="font-medium text-gray-700">Unit {u.unit_no}:</span> {u.title}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 
 // ─── FEES PAYMENT ─────────────────────────────────────────────────────────────
 function FeesView({ onBack }: { onBack: () => void }) {
