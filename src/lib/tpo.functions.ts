@@ -355,7 +355,7 @@ export const hodDepartmentOverview = createServerFn({ method: "GET" })
       attendance_by_semester: attendanceBySem,
       faculty_workload: facultyWorkload,
       faculty_details: (faculty ?? []).map((f: any) => ({
-        id: f.id, username: f.username, role: f.role, department: f.department,
+        id: f.id, username: f.username, name: f.name ?? null, role: f.role, department: f.department,
         load: loadByStaff.get(f.id) ?? 0,
       })),
       syllabus_coverage: syllabusCoverage,
