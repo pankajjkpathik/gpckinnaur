@@ -49,6 +49,7 @@ function SyllabusUnitsPage() {
   const [branch, setBranch] = useState("");
   const [sem, setSem] = useState<number | "">("");
   const [subjectId, setSubjectId] = useState<number | "">("");
+  const [academicYear, setAcademicYear] = useState<string>(currentAY());
 
   const subjectsQ = useQuery({
     queryKey: ["subjects", branch, sem],
