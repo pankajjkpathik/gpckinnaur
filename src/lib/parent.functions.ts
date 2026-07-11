@@ -309,3 +309,17 @@ export const parentFees = createServerFn({ method: "GET" }).handler(async () => 
     .order("id", { ascending: false });
   return data ?? [];
 });
+
+// Institution-wide notices. Gated by requireParent() so the endpoint isn't
+// callable without a valid parent session, even though notices themselves
+// are broadcast to the whole college.
+export const parentNotices = createServerFn({ method: "GET" }).handler(async () => {
+  await requireParent();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("notices")
+    .select("id, title, content, date, category, link")
+    .order("date", { ascending: false })
+    .limit(100);
+  return data ?? [];
+});

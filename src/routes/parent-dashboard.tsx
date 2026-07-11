@@ -8,6 +8,7 @@ import {
   Shield,
   DollarSign,
   LogOut,
+  Megaphone,
 } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
 import {
@@ -18,6 +19,7 @@ import {
   parentBoardMarks,
   parentDisciplinary,
   parentFees,
+  parentNotices,
 } from "@/lib/parent.functions";
 import { pageMeta } from "@/lib/seo";
 
@@ -31,12 +33,12 @@ export const Route = createFileRoute("/parent-dashboard")({
   component: ParentDashboard,
 });
 
-type Tab = "attendance" | "marks" | "board" | "disciplinary" | "fees";
+type Tab = "notices" | "attendance" | "marks" | "board" | "disciplinary" | "fees";
 
 function ParentDashboard() {
   const nav = useNavigate();
   const { data: me, isLoading } = useQuery({ queryKey: ["parent-me"], queryFn: () => parentMe() });
-  const [tab, setTab] = useState<Tab>("attendance");
+  const [tab, setTab] = useState<Tab>("notices");
   useEffect(() => {
     if (!isLoading && !me) nav({ to: "/parent-login" });
   }, [isLoading, me, nav]);
@@ -56,11 +58,12 @@ function ParentDashboard() {
   }
 
   const tabs: { key: Tab; label: string; icon: any; color: string }[] = [
+    { key: "notices", label: "Notices", icon: Megaphone, color: "bg-sky-600" },
     { key: "attendance", label: "Attendance", icon: ClipboardCheck, color: "bg-emerald-600" },
-    { key: "marks", label: "Marks", icon: FileSpreadsheet, color: "bg-amber-500" },
+    { key: "marks", label: "Results", icon: FileSpreadsheet, color: "bg-amber-500" },
     { key: "board", label: "Board Marks", icon: GraduationCap, color: "bg-indigo-600" },
-    { key: "disciplinary", label: "Disciplinary Actions", icon: Shield, color: "bg-rose-600" },
-    { key: "fees", label: "Fees Payment", icon: DollarSign, color: "bg-teal-600" },
+    { key: "disciplinary", label: "Disciplinary", icon: Shield, color: "bg-rose-600" },
+    { key: "fees", label: "Fees", icon: DollarSign, color: "bg-teal-600" },
   ];
 
   return (
@@ -103,7 +106,7 @@ function ParentDashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -123,6 +126,7 @@ function ParentDashboard() {
         </div>
 
         <div className="bg-white border rounded-lg p-5">
+          {tab === "notices" && <NoticesTab />}
           {tab === "attendance" && <AttTab />}
           {tab === "marks" && <MarksTab />}
           {tab === "board" && <BoardTab />}
@@ -279,6 +283,53 @@ function FeesTab() {
       <Link to="/" className="inline-block bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2.5 rounded font-semibold text-sm">
         Go to Fees Payment Portal →
       </Link>
+    </div>
+  );
+}
+
+function NoticesTab() {
+  const q = useQuery({ queryKey: ["parent-notices"], queryFn: () => parentNotices() });
+  const rows = q.data ?? [];
+  const fmt = (d: string) => {
+    try { return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
+    catch { return d; }
+  };
+  const badge = (c?: string | null) => {
+    const map: Record<string, string> = {
+      exam: "bg-indigo-100 text-indigo-800",
+      event: "bg-amber-100 text-amber-800",
+      holiday: "bg-rose-100 text-rose-800",
+      academic: "bg-emerald-100 text-emerald-800",
+    };
+    const cls = (c && map[c.toLowerCase()]) || "bg-sky-100 text-sky-800";
+    return <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${cls}`}>{c || "notice"}</span>;
+  };
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-gray-800 mb-4">📣 College Notices</h2>
+      {q.isLoading && <p className="text-sm text-gray-400">Loading…</p>}
+      {!q.isLoading && rows.length === 0 && (
+        <p className="text-sm text-gray-500 bg-gray-50 border rounded p-4">No notices posted yet.</p>
+      )}
+      <ul className="space-y-3">
+        {rows.map((n: any) => (
+          <li key={n.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-800">{n.title}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{fmt(n.date)}</p>
+              </div>
+              {badge(n.category)}
+            </div>
+            {n.content && <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{n.content}</p>}
+            {n.link && (
+              <a href={n.link} target="_blank" rel="noreferrer" className="text-xs text-sky-700 hover:underline mt-2 inline-block">
+                View attachment →
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
