@@ -16,8 +16,8 @@ async function requireParent(): Promise<ParentSession> {
 
 // ─── LOGIN ───────────────────────────────────────────────────────────────────
 // Parents sign in with their ward's enrollment number prefixed by "p-"
-// (e.g. p-250824009024) and the standard password "Welcome@123".
-const PARENT_STANDARD_PASSWORD = "Welcome@123";
+// (e.g. p-250824009024) and the password the student set for them via
+// studentSetParentPassword. There is NO shared/universal password.
 
 export const parentLogin = createServerFn({ method: "POST" })
   .inputValidator((d) =>
@@ -31,7 +31,6 @@ export const parentLogin = createServerFn({ method: "POST" })
     if (stripped === raw) {
       throw new Error('Enrollment must be prefixed with "p-" (e.g. p-250824009024).');
     }
-    if (data.password !== PARENT_STANDARD_PASSWORD) throw new Error("Invalid credentials");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: student } = await supabaseAdmin
       .from("students")
@@ -39,6 +38,26 @@ export const parentLogin = createServerFn({ method: "POST" })
       .eq("enrollment_no", stripped.toUpperCase())
       .maybeSingle();
     if (!student || !student.is_active) throw new Error("Invalid credentials");
+
+    const { data: pu } = await supabaseAdmin
+      .from("parent_users")
+      .select("password_hash, is_active")
+      .eq("student_id", student.id)
+      .maybeSingle();
+    if (!pu?.password_hash || !pu.is_active) {
+      throw new Error(
+        "Parent access has not been set up yet. Ask your ward to set a parent password from their student portal.",
+      );
+    }
+    const bcrypt = (await import("bcryptjs")).default;
+    const ok = await bcrypt.compare(data.password, pu.password_hash);
+    if (!ok) throw new Error("Invalid credentials");
+
+    await supabaseAdmin
+      .from("parent_users")
+      .update({ last_login: new Date().toISOString() })
+      .eq("student_id", student.id);
+
     const session = await useSession<ParentSession>(parentSessionConfig);
     await session.update({
       studentId: student.id,
