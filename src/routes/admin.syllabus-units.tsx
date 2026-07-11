@@ -281,6 +281,10 @@ function UnitModal({
   const [title, setTitle] = useState(initial.title);
   const [hours, setHours] = useState<number>(initial.hours);
   const [topicsText, setTopicsText] = useState((initial.topics ?? []).join("\n"));
+  const [ay, setAy] = useState<string>(initial.academic_year);
+  const [semOverride, setSemOverride] = useState<string>(
+    initial.semester != null ? String(initial.semester) : "",
+  );
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -295,6 +299,8 @@ function UnitModal({
             onSave({
               id: initial.id,
               subject_id: initial.subject_id,
+              academic_year: ay,
+              semester: semOverride ? Number(semOverride) : null,
               unit_no: unitNo,
               title,
               hours,
@@ -304,6 +310,27 @@ function UnitModal({
           className="space-y-3"
         >
           <div className="grid grid-cols-3 gap-2">
+            <label className="text-xs text-muted-foreground">
+              Academic Year
+              <input
+                required value={ay} onChange={(e) => setAy(e.target.value)}
+                placeholder="2025-26" pattern="\d{4}-\d{2}"
+                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
+              />
+            </label>
+            <label className="text-xs text-muted-foreground">
+              Semester override
+              <select
+                value={semOverride}
+                onChange={(e) => setSemOverride(e.target.value)}
+                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 bg-white"
+              >
+                <option value="">Use subject's semester</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                  <option key={s} value={s}>Sem {s}</option>
+                ))}
+              </select>
+            </label>
             <label className="text-xs text-muted-foreground">
               Unit No
               <input
