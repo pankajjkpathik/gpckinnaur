@@ -278,24 +278,16 @@ function HomeView({ year, onNav }: { year: string; onNav: (v: View) => void }) {
       <h1 className="text-2xl font-bold text-gray-800">Welcome, Principal</h1>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
-          <button
+          <QuickCard
             key={c.view}
+            icon={c.icon}
+            label={c.label}
+            desc={c.desc}
+            color={c.color}
+            border={c.border}
+            badge={c.badge}
             onClick={() => onNav(c.view)}
-            className={`relative flex items-center gap-4 p-4 bg-white rounded border-t-4 ${c.border} shadow-sm hover:shadow-md transition-shadow text-left w-full`}
-          >
-            <span className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${c.color}`}>
-              <c.icon className="w-6 h-6 text-white" />
-            </span>
-            <span>
-              <p className="font-semibold text-gray-800 text-sm">{c.label}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{c.desc}</p>
-            </span>
-            {c.badge ? (
-              <span className="absolute top-2 right-2 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                {c.badge}
-              </span>
-            ) : null}
-          </button>
+          />
         ))}
       </div>
     </div>
