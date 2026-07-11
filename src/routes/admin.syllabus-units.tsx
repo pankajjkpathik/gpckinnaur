@@ -82,6 +82,18 @@ function SyllabusUnitsPage() {
           unit hours (falling back to the subject's L+P hours if no units are defined).
         </p>
 
+        <ReconciliationPanel
+          onJump={(row) => {
+            setBranch(row.branch);
+            setSem(row.semester);
+            setSubjectId(row.id);
+            setTimeout(() => {
+              document.getElementById("subject-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 50);
+          }}
+        />
+
+
         <div className="flex flex-wrap gap-2 items-center bg-white border rounded p-3">
           <select
             value={branch}
