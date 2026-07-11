@@ -58,11 +58,12 @@ function ParentDashboard() {
   }
 
   const tabs: { key: Tab; label: string; icon: any; color: string }[] = [
+    { key: "notices", label: "Notices", icon: Megaphone, color: "bg-sky-600" },
     { key: "attendance", label: "Attendance", icon: ClipboardCheck, color: "bg-emerald-600" },
-    { key: "marks", label: "Marks", icon: FileSpreadsheet, color: "bg-amber-500" },
+    { key: "marks", label: "Results", icon: FileSpreadsheet, color: "bg-amber-500" },
     { key: "board", label: "Board Marks", icon: GraduationCap, color: "bg-indigo-600" },
-    { key: "disciplinary", label: "Disciplinary Actions", icon: Shield, color: "bg-rose-600" },
-    { key: "fees", label: "Fees Payment", icon: DollarSign, color: "bg-teal-600" },
+    { key: "disciplinary", label: "Disciplinary", icon: Shield, color: "bg-rose-600" },
+    { key: "fees", label: "Fees", icon: DollarSign, color: "bg-teal-600" },
   ];
 
   return (
