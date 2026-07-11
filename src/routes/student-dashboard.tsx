@@ -317,19 +317,15 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
-          <button
+          <QuickCard
             key={c.view}
+            icon={c.icon}
+            label={c.label}
+            desc={c.desc}
+            color={c.color}
+            border={c.border}
             onClick={() => onNav(c.view)}
-            className={`flex items-center gap-4 p-4 bg-white rounded border-t-4 ${c.border} shadow-sm hover:shadow-md transition-shadow text-left w-full`}
-          >
-            <span className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${c.color}`}>
-              <c.icon className="w-6 h-6 text-white" />
-            </span>
-            <span>
-              <p className="font-semibold text-gray-800 text-sm">{c.label}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{c.desc}</p>
-            </span>
-          </button>
+          />
         ))}
       </div>
     </div>
