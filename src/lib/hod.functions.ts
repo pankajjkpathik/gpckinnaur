@@ -144,9 +144,10 @@ const yearReTT = /^\d{4}-\d{2}$/;
 
 async function assertOwnBranch(branch: string) {
   const me = await requireRole(hodRoles);
-  const dept = (me.department || "").toLowerCase();
+  const { deptToBranch } = await import("./branch");
+  const myBranch = deptToBranch(me.department);
   // super_admin / principal may edit any branch; HOD only their own.
-  if (me.role === "hod" && dept !== branch.toLowerCase()) {
+  if (me.role === "hod" && myBranch !== branch.toLowerCase()) {
     throw new Error("You may only edit your own department's timetable.");
   }
   return me;

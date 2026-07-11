@@ -35,6 +35,7 @@ import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
 import { BarStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
+import { deptToBranch } from "@/lib/branch";
 
 export const Route = createFileRoute("/hod")({
   head: () => portalMeta("HOD Portal"),
@@ -87,7 +88,7 @@ function HodPortal() {
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
   const isViewer = me.role !== "hod";
-  const branch = (me.department || "").toLowerCase();
+  const branch = deptToBranch(me.department);
   const deptLabel = me.department || "Department";
 
   return (

@@ -241,10 +241,11 @@ export const hodDepartmentOverview = createServerFn({ method: "GET" })
     }
 
     // ---- 3. Faculty of the department + workload (periods/week from timetable) ----
+    const { departmentAliases } = await import("./branch");
     const { data: faculty } = await supabaseAdmin
       .from("staff_users")
       .select("id, username, department, role")
-      .eq("department", branch)
+      .in("department", departmentAliases(branch))
       .in("role", ["faculty", "hod"]);
     const facultyIds = (faculty ?? []).map((f: any) => f.id);
 
