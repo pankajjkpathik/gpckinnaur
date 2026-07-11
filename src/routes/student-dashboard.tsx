@@ -924,6 +924,10 @@ function DocumentsView({ onBack }: { onBack: () => void }) {
           </div>
         )}
 
+        {tab === "lesson_plan" && <LessonPlanLibrary docType="lesson_plan" title="Lesson Plans" subtitle="PDFs uploaded by your faculty." />}
+
+
+
         {tab === "timetable" && (
           <div className="border rounded overflow-x-auto">
             {!tt ? (
