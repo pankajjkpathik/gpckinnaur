@@ -198,10 +198,11 @@ export const coverageSummary = createServerFn({ method: "GET" })
     const subjIds = subjects.map((s: any) => s.id);
     if (subjIds.length === 0) return [];
 
-    // 2. total planned hours per subject
+    // 2. total planned hours per subject (scoped to the requested academic year)
     const { data: units } = await supabaseAdmin
       .from("syllabus_units")
       .select("subject_id, hours")
+      .eq("academic_year", data.academic_year)
       .in("subject_id", subjIds);
     const plannedBySubj = new Map<number, number>();
     (units ?? []).forEach((u: any) => {
