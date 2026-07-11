@@ -640,19 +640,15 @@ function MdImportModal({
   const [fileName, setFileName] = useState<string>("");
   const [raw, setRaw] = useState<string>("");
   const [parsed, setParsed] = useState<ParsedUnit[]>([]);
-  const [rescale, setRescale] = useState(true);
+  const [originalParsed, setOriginalParsed] = useState<ParsedUnit[]>([]);
   const [overwrite, setOverwrite] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [progress, setProgress] = useState<string>("");
 
   const target = (subject.lecture_hours ?? 0) * 14 + (subject.practical_hours ?? 0) * 14;
-
-  const view = useMemo(
-    () => (rescale && target > 0 ? rescaleHours(parsed, target) : parsed),
-    [parsed, rescale, target],
-  );
-  const total = view.reduce((s, u) => s + (u.hours || 0), 0);
+  const total = parsed.reduce((s, u) => s + (Number(u.hours) || 0), 0);
+  const view = parsed;
 
   function handleFile(f: File) {
     setFileName(f.name);
@@ -660,9 +656,31 @@ function MdImportModal({
     reader.onload = () => {
       const txt = String(reader.result ?? "");
       setRaw(txt);
-      setParsed(parseSyllabusMarkdown(txt));
+      const p = parseSyllabusMarkdown(txt);
+      setParsed(p);
+      setOriginalParsed(p.map((u) => ({ ...u })));
     };
     reader.readAsText(f);
+  }
+
+  function autoDistribute() {
+    if (target > 0 && parsed.length > 0) {
+      setParsed(rescaleHours(parsed, target));
+    }
+  }
+
+  function resetHours() {
+    setParsed((cur) =>
+      cur.map((u, i) => ({ ...u, hours: originalParsed[i]?.hours ?? u.hours })),
+    );
+  }
+
+  function bump(i: number, delta: number) {
+    setParsed((cur) => {
+      const next = [...cur];
+      next[i] = { ...next[i], hours: Math.max(0, (Number(next[i].hours) || 0) + delta) };
+      return next;
+    });
   }
 
   async function doImport() {
