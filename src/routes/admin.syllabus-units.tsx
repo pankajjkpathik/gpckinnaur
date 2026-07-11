@@ -79,7 +79,13 @@ function SyllabusUnitsPage() {
   );
   const units: Unit[] = (unitsQ.data as any) ?? [];
   const totalPlanned = units.reduce((a, u) => a + (Number(u.hours) || 0), 0);
+  const WEEKS = 14;
+  const requiredTotal = subject
+    ? ((subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0)) * WEEKS
+    : 0;
   const subjectPlanned = subject ? (subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0) : 0;
+  const hoursDiff = totalPlanned - requiredTotal;
+  const hoursValid = subject != null && units.length > 0 && hoursDiff === 0;
 
   const [editing, setEditing] = useState<Unit | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -170,13 +176,9 @@ function SyllabusUnitsPage() {
                   <span className="text-xs font-normal text-muted-foreground">· AY {academicYear}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Subject L+P hours: <b>{subjectPlanned}</b> · Sum of unit hours ({academicYear}): <b>{totalPlanned}</b>
-                  {totalPlanned !== subjectPlanned && totalPlanned > 0 && (
-                    <span className="text-amber-600"> · mismatch — coverage uses unit hours ({totalPlanned})</span>
-                  )}
-                  {totalPlanned === 0 && (
-                    <span className="text-amber-600"> · no units yet for {academicYear} — coverage falls back to L+P ({subjectPlanned})</span>
-                  )}
+                  L {subject.lecture_hours ?? 0} + P {subject.practical_hours ?? 0} ={" "}
+                  <b>{subjectPlanned}</b>/week × <b>{WEEKS}</b> weeks ={" "}
+                  <b>{requiredTotal}</b> required · unit hours total <b>{totalPlanned}</b>
                 </p>
               </div>
               <div className="flex gap-2">
@@ -204,6 +206,25 @@ function SyllabusUnitsPage() {
                 </button>
               </div>
             </div>
+
+            {requiredTotal > 0 && (
+              hoursValid ? (
+                <div className="rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
+                  ✓ Unit hours match required total ({requiredTotal}).
+                </div>
+              ) : units.length === 0 ? (
+                <div className="rounded border border-amber-200 bg-amber-50 text-amber-800 text-xs px-3 py-2">
+                  No units defined for {academicYear}. Add units totalling <b>{requiredTotal}</b> hours (coverage falls back to L+P until then).
+                </div>
+              ) : (
+                <div className="rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
+                  ✗ Unit hours total <b>{totalPlanned}</b>, but <b>{requiredTotal}</b> required.{" "}
+                  {hoursDiff > 0
+                    ? <>Remove <b>{hoursDiff}</b> hour(s) from one or more units.</>
+                    : <>Add <b>{Math.abs(hoursDiff)}</b> more hour(s) across units.</>}
+                </div>
+              )
+            )}
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -263,6 +284,10 @@ function SyllabusUnitsPage() {
         {editing && (
           <UnitModal
             initial={editing}
+            requiredTotal={requiredTotal}
+            otherUnitsHours={
+              totalPlanned - (editing.id ? (units.find((u) => u.id === editing.id)?.hours ?? 0) : 0)
+            }
             onClose={() => setEditing(null)}
             onSave={(u) => save.mutate(u, { onSuccess: () => setEditing(null) })}
             pending={save.isPending}
@@ -289,12 +314,16 @@ function SyllabusUnitsPage() {
 
 function UnitModal({
   initial,
+  requiredTotal,
+  otherUnitsHours,
   onClose,
   onSave,
   pending,
   error,
 }: {
   initial: Unit;
+  requiredTotal: number;
+  otherUnitsHours: number;
   onClose: () => void;
   onSave: (u: Unit) => void;
   pending: boolean;
@@ -385,6 +414,35 @@ function UnitModal({
               rows={5} className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 font-mono"
             />
           </label>
+
+          {requiredTotal > 0 && (() => {
+            const projected = otherUnitsHours + (Number(hours) || 0);
+            const remaining = requiredTotal - otherUnitsHours;
+            const overshoot = projected - requiredTotal;
+            const ok = projected === requiredTotal;
+            return (
+              <div
+                className={`text-xs rounded border px-3 py-2 ${
+                  ok
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    : overshoot > 0
+                      ? "border-rose-200 bg-rose-50 text-rose-800"
+                      : "border-amber-200 bg-amber-50 text-amber-800"
+                }`}
+              >
+                Required <b>{requiredTotal}</b> · other units <b>{otherUnitsHours}</b> · this unit{" "}
+                <b>{Number(hours) || 0}</b> · total <b>{projected}</b>
+                {ok && " ✓"}
+                {!ok && overshoot > 0 && (
+                  <> — <b>{overshoot}</b> over. Reduce this unit to <b>{Math.max(0, remaining)}</b>.</>
+                )}
+                {!ok && overshoot < 0 && (
+                  <> — needs <b>{Math.abs(overshoot)}</b> more (set this unit to <b>{remaining}</b> to match).</>
+                )}
+              </div>
+            );
+          })()}
+
           {error && <p className="text-xs text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
@@ -609,6 +667,12 @@ function MdImportModal({
 
   async function doImport() {
     if (view.length === 0) return;
+    if (target > 0 && total !== target) {
+      setErr(
+        `Total unit hours (${total}) must equal required L+P×14 (${target}). Enable "Rescale hours" or adjust unit hours before importing.`,
+      );
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -700,6 +764,18 @@ function MdImportModal({
               </span>
             </div>
 
+            {target > 0 && (
+              total === target ? (
+                <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
+                  ✓ Total {total} matches required L+P×14 ({target}).
+                </div>
+              ) : (
+                <div className="mt-2 rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
+                  ✗ Total {total} ≠ required {target}. Enable "Rescale hours" above or adjust unit hours before importing.
+                </div>
+              )
+            )}
+
             <div className="mt-3 border rounded overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-secondary">
@@ -773,8 +849,9 @@ function MdImportModal({
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
           <button
-            disabled={busy || view.length === 0}
+            disabled={busy || view.length === 0 || (target > 0 && total !== target)}
             onClick={doImport}
+            title={target > 0 && total !== target ? `Total ${total} must equal ${target}` : ""}
             className="px-4 py-1.5 bg-rose-700 text-white rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
           >
             <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} unit(s)`}
