@@ -893,7 +893,7 @@ function SyllabusMonitor(props: { year: string }) {
       <p className="text-xs text-muted-foreground">
         Lectures delivered per subject across the institute. The same view is available in HOD and Student portals.
       </p>
-      <SyllabusCoverage mode="view" academicYear={props.year} title="Institute-wide Syllabus Coverage" />
+      <SyllabusCoverage mode="view" academicYear={props.year} filters="principal" title="Institute-wide Syllabus Coverage" />
     </div>
   );
 }
