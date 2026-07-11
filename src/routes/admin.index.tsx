@@ -269,6 +269,14 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       action: "/admin-users",
     },
     {
+      icon: Users,
+      label: "Parent Accounts",
+      desc: "Reset parent portal logins",
+      color: "bg-emerald-700",
+      border: "border-emerald-700",
+      action: "/admin/parent-accounts",
+    },
+    {
       icon: BookMarked,
       label: "Audit Log",
       desc: "Review system activity",
