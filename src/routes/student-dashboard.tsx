@@ -187,7 +187,11 @@ function StudentDashboard() {
         {view === "semester-reports" && <SemesterReportsView me={me} onBack={() => setView("home")} />}
         {view === "parent-access" && <ParentAccessView onBack={() => setView("home")} />}
         {view === "upload" && <UploadAssignmentView onBack={() => setView("home")} />}
-        {view === "documents" && <DocumentsView onBack={() => setView("home")} />}
+        {view === "assignments-docs" && <AssignmentDocsView onBack={() => setView("home")} />}
+        {view === "lesson-plans" && <LessonPlansView onBack={() => setView("home")} />}
+        {view === "exam-schedule" && <ExamScheduleView onBack={() => setView("home")} />}
+        {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
+        {view === "syllabus" && <SyllabusView onBack={() => setView("home")} />}
         {view === "fees" && <FeesView onBack={() => setView("home")} />}
         {view === "faculty" && <FacultyView onBack={() => setView("home")} />}
         {view === "disciplinary" && <DisciplinaryView onBack={() => setView("home")} />}
