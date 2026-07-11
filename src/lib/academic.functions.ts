@@ -585,6 +585,7 @@ const syllabusRowSchema = z.object({
   subject_code: z.string().min(1),
   branch: z.string().min(1),
   semester: z.number().int().min(1).max(8),
+  academic_year: z.string().regex(yearRe),
   unit_no: z.number().int().min(1).max(20),
   title: z.string().min(1).max(200),
   hours: z.number().int().min(0).default(0),
