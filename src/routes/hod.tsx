@@ -490,7 +490,7 @@ function SyllabusProgressView({ branch, ay, onBack }: { branch: string; ay: stri
       <p className="text-xs text-gray-400 -mt-1">
         Lectures delivered per subject in your department. Same view is shown to students and the Principal.
       </p>
-      <SyllabusCoverage mode="view" academicYear={ay} scope={{ branch: defaultBranch }} />
+      <SyllabusCoverage mode="view" academicYear={ay} scope={{ branch: defaultBranch }} filters="hod" />
     </div>
   );
 }
