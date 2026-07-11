@@ -8,35 +8,61 @@ import {
   coverageAddLecture,
   coverageDeleteLecture,
   coverageSummary,
+  coverageFacultyOptions,
 } from "@/lib/coverage.functions";
 
 type Mode = "faculty" | "view";
+
+const BRANCHES = [
+  { code: "civil", label: "Civil Engineering" },
+  { code: "mechanical", label: "Mechanical Engineering" },
+  { code: "applied_science", label: "Applied Sciences" },
+];
+const SEMESTERS = [1, 2, 3, 4, 5, 6];
 
 export function SyllabusCoverage({
   mode,
   academicYear,
   scope,
+  filters,
   title = "Syllabus Coverage",
   subtitle,
 }: {
   mode: Mode;
   academicYear: string;
   scope?: { branch?: string; semester?: number; staff_id?: number };
+  /** "hod" locks branch, allows semester + faculty filters. "principal" allows all three. */
+  filters?: "hod" | "principal";
   title?: string;
   subtitle?: string;
 }) {
   const qc = useQueryClient();
 
-  // ── Summary (both modes) ──
+  // ── Local filter state (only used when filters prop set) ──
+  const [branchF, setBranchF] = useState<string>(scope?.branch ?? "");
+  const [semF, setSemF] = useState<number | "">(scope?.semester ?? "");
+  const [staffF, setStaffF] = useState<number | "">("");
+
+  const effBranch = filters === "principal" ? (branchF || null) : (scope?.branch ?? null);
+  const effSemester = filters ? (semF === "" ? null : Number(semF)) : (scope?.semester ?? null);
+  const effStaff = filters ? (staffF === "" ? null : Number(staffF)) : (scope?.staff_id ?? null);
+
+  const facultyOpts = useQuery({
+    queryKey: ["cov-faculty-opts", effBranch ?? ""],
+    queryFn: () => coverageFacultyOptions({ data: { branch: effBranch ?? null } }),
+    enabled: !!filters,
+  });
+
+  // ── Summary ──
   const summary = useQuery({
-    queryKey: ["cov-summary", academicYear, scope?.branch ?? "", scope?.semester ?? 0, scope?.staff_id ?? 0],
+    queryKey: ["cov-summary", academicYear, effBranch ?? "", effSemester ?? 0, effStaff ?? 0],
     queryFn: () =>
       coverageSummary({
         data: {
           academic_year: academicYear,
-          branch: scope?.branch ?? null,
-          semester: scope?.semester ?? null,
-          staff_id: scope?.staff_id ?? null,
+          branch: effBranch,
+          semester: effSemester,
+          staff_id: effStaff,
         },
       }),
   });
@@ -72,6 +98,65 @@ export function SyllabusCoverage({
             <p className="text-2xl font-bold text-[#7b1f4c]">{overall}%</p>
           </div>
         </div>
+
+        {filters && (
+          <div className="mt-4 flex flex-wrap gap-2 text-sm">
+            {filters === "principal" && (
+              <select
+                value={branchF}
+                onChange={(e) => setBranchF(e.target.value)}
+                className="border rounded px-2 py-1.5"
+              >
+                <option value="">All branches</option>
+                {BRANCHES.map((b) => (
+                  <option key={b.code} value={b.label}>{b.label}</option>
+                ))}
+              </select>
+            )}
+            {filters === "hod" && scope?.branch && (
+              <span className="border rounded px-2 py-1.5 bg-gray-50 text-gray-600 text-xs">
+                Branch: {scope.branch}
+              </span>
+            )}
+            <select
+              value={semF}
+              onChange={(e) => setSemF(e.target.value === "" ? "" : Number(e.target.value))}
+              className="border rounded px-2 py-1.5"
+            >
+              <option value="">All semesters</option>
+              {SEMESTERS.map((s) => (
+                <option key={s} value={s}>Sem {s}</option>
+              ))}
+            </select>
+            <select
+              value={staffF}
+              onChange={(e) => setStaffF(e.target.value === "" ? "" : Number(e.target.value))}
+              className="border rounded px-2 py-1.5 min-w-[180px]"
+            >
+              <option value="">All faculty</option>
+              {(facultyOpts.data ?? []).map((f: any) => (
+                <option key={f.id} value={f.id}>{f.name || f.username}</option>
+              ))}
+            </select>
+            {(branchF || semF !== "" || staffF !== "") && filters === "principal" && (
+              <button
+                onClick={() => { setBranchF(""); setSemF(""); setStaffF(""); }}
+                className="text-xs text-gray-500 underline"
+              >
+                Reset
+              </button>
+            )}
+            {(semF !== "" || staffF !== "") && filters === "hod" && (
+              <button
+                onClick={() => { setSemF(""); setStaffF(""); }}
+                className="text-xs text-gray-500 underline"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        )}
+
 
         <div className="mt-4 border rounded overflow-hidden">
           <table className="w-full text-sm">
