@@ -93,6 +93,7 @@ function SyllabusUnitsPage() {
         </p>
 
         <ReconciliationPanel
+          academicYear={academicYear}
           onJump={(row) => {
             setBranch(row.branch);
             setSem(row.semester);
@@ -102,6 +103,8 @@ function SyllabusUnitsPage() {
             }, 50);
           }}
         />
+
+
 
 
         <div className="flex flex-wrap gap-2 items-center bg-white border rounded p-3">
