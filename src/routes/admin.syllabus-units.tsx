@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Save, X, Upload, FileText } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, X, Upload, FileText, Download } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
