@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, Briefcase, Crown, Users, GraduationCap, ClipboardList } from "lucide-react";
 import { staffLogin, staffMe } from "@/lib/auth.functions";
-import { adminPortalRoles } from "@/lib/roles";
+
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/staff-login")({
@@ -35,7 +35,8 @@ function StaffLoginPage() {
   useEffect(() => {
     staffMe().then((s) => {
       if (!s?.id) return;
-      if (adminPortalRoles.includes(s.role as any)) window.location.href = "/admin";
+      if (s.role === "super_admin") window.location.href = "/admin";
+      else if (s.role === "clerk") window.location.href = "/clerk";
       else navigate({ to: "/staff-dashboard" });
     }).catch(() => {});
   }, [navigate]);

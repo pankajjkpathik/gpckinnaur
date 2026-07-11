@@ -3,12 +3,12 @@ import type { StaffSession } from "./sessions";
 
 export type StaffRole = StaffSession["role"];
 
-// admin_staff handles system configuration (timetable, syllabus, calendar, master data).
-// super_admin can do everything.
-export const adminRoles: StaffRole[] = ["super_admin", "admin_staff"];
+// Admin console access is restricted to super_admin, principal, and hod.
+// super_admin can do everything; principal & hod manage academic/system config.
+export const adminRoles: StaffRole[] = ["super_admin", "principal", "hod"];
 export const clerkRoles: StaffRole[] = ["super_admin", "clerk"];
 // Roles permitted in the hidden /admin-login console.
-export const adminPortalRoles: StaffRole[] = ["super_admin", "admin_staff", "clerk"];
+export const adminPortalRoles: StaffRole[] = ["super_admin", "principal", "hod", "clerk"];
 // Roles permitted in the public /staff-login page.
 export const publicStaffRoles: StaffRole[] = ["principal", "hod", "faculty", "tpo"];
 export const hodRoles: StaffRole[] = ["super_admin", "principal", "hod"];
