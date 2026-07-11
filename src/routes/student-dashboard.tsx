@@ -238,6 +238,46 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
 
 
     {
+      icon: NotebookPen,
+      label: "Lesson Plans",
+      desc: "PDFs uploaded by your faculty",
+      color: "bg-rose-600",
+      border: "border-rose-600",
+      view: "lesson-plans",
+    },
+    {
+      icon: BookMarked,
+      label: "Syllabus Coverage",
+      desc: "Delivered vs planned units",
+      color: "bg-emerald-600",
+      border: "border-emerald-600",
+      view: "syllabus",
+    },
+    {
+      icon: Calendar,
+      label: "Timetable",
+      desc: "Your weekly class schedule",
+      color: "bg-indigo-600",
+      border: "border-indigo-600",
+      view: "timetable",
+    },
+    {
+      icon: CalendarClock,
+      label: "Exam Schedule",
+      desc: "Upcoming exam datesheets",
+      color: "bg-amber-600",
+      border: "border-amber-600",
+      view: "exam-schedule",
+    },
+    {
+      icon: BookOpen,
+      label: "Assignments",
+      desc: "Assignment sheets from faculty",
+      color: "bg-cyan-600",
+      border: "border-cyan-600",
+      view: "assignments-docs",
+    },
+    {
       icon: Upload,
       label: "Upload Assignment",
       desc: "Submit your completed work",
@@ -246,19 +286,11 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       view: "upload",
     },
     {
-      icon: BookOpen,
-      label: "Documents",
-      desc: "Access shared documents",
-      color: "bg-cyan-500",
-      border: "border-cyan-500",
-      view: "documents",
-    },
-    {
       icon: DollarSign,
       label: "Fees Payment",
       desc: "Check and pay your fees",
-      color: "bg-gray-400",
-      border: "border-gray-400",
+      color: "bg-slate-500",
+      border: "border-slate-500",
       view: "fees",
     },
     {
