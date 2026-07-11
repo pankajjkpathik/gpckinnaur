@@ -90,7 +90,7 @@ function ParentLogin() {
           </button>
         </form>
         <p className="text-[11px] text-gray-400 text-center mt-6">
-          Access is enabled by default for every active student. Use enrollment prefix <b>p-</b> and password <b>Welcome@123</b>.
+          Your ward must set a parent password from their student portal before you can sign in.
         </p>
 
       </div>
