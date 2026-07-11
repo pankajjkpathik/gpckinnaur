@@ -8,6 +8,7 @@ import {
   Shield,
   DollarSign,
   LogOut,
+  Megaphone,
 } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
 import {
@@ -18,6 +19,7 @@ import {
   parentBoardMarks,
   parentDisciplinary,
   parentFees,
+  parentNotices,
 } from "@/lib/parent.functions";
 import { pageMeta } from "@/lib/seo";
 
@@ -31,7 +33,7 @@ export const Route = createFileRoute("/parent-dashboard")({
   component: ParentDashboard,
 });
 
-type Tab = "attendance" | "marks" | "board" | "disciplinary" | "fees";
+type Tab = "notices" | "attendance" | "marks" | "board" | "disciplinary" | "fees";
 
 function ParentDashboard() {
   const nav = useNavigate();
