@@ -768,28 +768,44 @@ function MdImportModal({
 
         {parsed.length > 0 && (
           <>
-            <div className="mt-4 flex flex-wrap gap-4 items-center text-sm">
-              <label className="inline-flex items-center gap-1">
-                <input type="checkbox" checked={rescale} onChange={(e) => setRescale(e.target.checked)} />
-                Rescale hours to L+P×14 ({target})
-              </label>
-              <label className="inline-flex items-center gap-1">
+            <div className="mt-4 flex flex-wrap gap-2 items-center text-sm">
+              <button
+                type="button"
+                onClick={autoDistribute}
+                disabled={target <= 0}
+                className="border border-rose-700 text-rose-700 px-3 py-1.5 rounded text-xs font-semibold hover:bg-rose-50 disabled:opacity-50"
+              >
+                Auto-distribute to {target || "—"}
+              </button>
+              <button
+                type="button"
+                onClick={resetHours}
+                className="border px-3 py-1.5 rounded text-xs hover:bg-secondary"
+              >
+                Reset to parsed
+              </button>
+              <label className="inline-flex items-center gap-1 ml-2">
                 <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
                 Overwrite existing {existingUnits.length} unit(s)
               </label>
-              <span className="ml-auto text-xs text-muted-foreground">
-                Parsed <b>{view.length}</b> units · total <b>{total}</b> hrs
+              <span
+                className={`ml-auto text-xs font-semibold ${
+                  target > 0 && total !== target ? "text-rose-700" : "text-emerald-700"
+                }`}
+              >
+                {view.length} units · {total} / {target || "—"} hrs
+                {target > 0 && total !== target && ` (Δ ${total - target > 0 ? "+" : ""}${total - target})`}
               </span>
             </div>
 
             {target > 0 && (
               total === target ? (
                 <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
-                  ✓ Total {total} matches required L+P×14 ({target}).
+                  ✓ Total {total} matches required L+P×14 ({target}). Preview below — edit any hours before saving.
                 </div>
               ) : (
                 <div className="mt-2 rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
-                  ✗ Total {total} ≠ required {target}. Enable "Rescale hours" above or adjust unit hours before importing.
+                  ✗ Total {total} ≠ required {target}. Click <b>Auto-distribute</b> or adjust unit hours with the +/- buttons below.
                 </div>
               )
             )}
@@ -801,55 +817,96 @@ function MdImportModal({
                     <th className="text-left px-2 py-1.5 w-14">Unit</th>
                     <th className="text-left px-2 py-1.5">Title</th>
                     <th className="text-left px-2 py-1.5">Topics</th>
-                    <th className="text-right px-2 py-1.5 w-16">Hrs</th>
+                    <th className="text-center px-2 py-1.5 w-36">Hours (adjust)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {view.map((u, i) => (
-                    <tr key={i} className="border-t align-top">
-                      <td className="px-2 py-1.5 font-semibold">{u.unit_no}</td>
-                      <td className="px-2 py-1.5">
-                        <input
-                          value={u.title}
-                          onChange={(e) => {
-                            const next = [...parsed];
-                            next[i] = { ...next[i], title: e.target.value };
-                            setParsed(next);
-                          }}
-                          className="w-full border rounded px-1.5 py-1 text-sm"
-                        />
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-muted-foreground">
-                        <textarea
-                          rows={2}
-                          value={u.topics.join("\n")}
-                          onChange={(e) => {
-                            const next = [...parsed];
-                            next[i] = {
-                              ...next[i],
-                              topics: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean),
-                            };
-                            setParsed(next);
-                          }}
-                          className="w-full border rounded px-1.5 py-1 text-xs font-mono"
-                        />
-                      </td>
-                      <td className="px-2 py-1.5 text-right">
-                        <input
-                          type="number"
-                          value={u.hours}
-                          onChange={(e) => {
-                            const next = [...parsed];
-                            next[i] = { ...next[i], hours: Number(e.target.value) || 0 };
-                            setParsed(next);
-                          }}
-                          disabled={rescale}
-                          className="w-14 border rounded px-1 py-0.5 text-sm text-right disabled:bg-secondary/40"
-                        />
-                      </td>
-                    </tr>
-                  ))}
+                  {view.map((u, i) => {
+                    const orig = originalParsed[i]?.hours ?? u.hours;
+                    const diff = (Number(u.hours) || 0) - orig;
+                    return (
+                      <tr key={i} className="border-t align-top">
+                        <td className="px-2 py-1.5 font-semibold">{u.unit_no}</td>
+                        <td className="px-2 py-1.5">
+                          <input
+                            value={u.title}
+                            onChange={(e) => {
+                              const next = [...parsed];
+                              next[i] = { ...next[i], title: e.target.value };
+                              setParsed(next);
+                            }}
+                            className="w-full border rounded px-1.5 py-1 text-sm"
+                          />
+                        </td>
+                        <td className="px-2 py-1.5 text-xs text-muted-foreground">
+                          <textarea
+                            rows={2}
+                            value={u.topics.join("\n")}
+                            onChange={(e) => {
+                              const next = [...parsed];
+                              next[i] = {
+                                ...next[i],
+                                topics: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean),
+                              };
+                              setParsed(next);
+                            }}
+                            className="w-full border rounded px-1.5 py-1 text-xs font-mono"
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => bump(i, -1)}
+                              className="w-6 h-6 border rounded text-sm hover:bg-secondary"
+                              aria-label="Decrease hours"
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              min={0}
+                              max={200}
+                              value={u.hours}
+                              onChange={(e) => {
+                                const next = [...parsed];
+                                next[i] = { ...next[i], hours: Number(e.target.value) || 0 };
+                                setParsed(next);
+                              }}
+                              className="w-14 border rounded px-1 py-0.5 text-sm text-center"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => bump(i, 1)}
+                              className="w-6 h-6 border rounded text-sm hover:bg-secondary"
+                              aria-label="Increase hours"
+                            >
+                              +
+                            </button>
+                          </div>
+                          {diff !== 0 && (
+                            <div
+                              className={`text-[10px] text-center mt-0.5 ${
+                                diff > 0 ? "text-emerald-700" : "text-amber-700"
+                              }`}
+                            >
+                              {diff > 0 ? `+${diff}` : diff} vs parsed ({orig})
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
+                <tfoot>
+                  <tr className="border-t bg-secondary/40 font-semibold">
+                    <td colSpan={3} className="px-2 py-1.5 text-right">Total</td>
+                    <td className={`px-2 py-1.5 text-center ${target > 0 && total !== target ? "text-rose-700" : ""}`}>
+                      {total}
+                      {target > 0 && ` / ${target}`}
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </>
