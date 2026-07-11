@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Save, X, Upload, FileText } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, X, Upload, FileText, Download } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
@@ -35,6 +35,62 @@ function currentAY(): string {
   const y = d.getFullYear();
   const start = d.getMonth() >= 6 ? y : y - 1; // July onwards = new AY
   return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+}
+
+function downloadBlob(filename: string, mime: string, content: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function csvEscape(v: unknown): string {
+  const s = v == null ? "" : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function exportUnits(
+  subject: any,
+  academicYear: string,
+  units: Unit[],
+  format: "json" | "csv",
+) {
+  const safe = (s: string) => s.replace(/[^a-z0-9\-]+/gi, "_");
+  const base = `syllabus-units_${safe(subject.code)}_${academicYear}`;
+  if (format === "json") {
+    const payload = {
+      schema: "syllabus-units.v1",
+      exported_at: new Date().toISOString(),
+      subject: {
+        code: subject.code,
+        name: subject.name,
+        branch: subject.branch,
+        semester: subject.semester,
+        lecture_hours: subject.lecture_hours ?? 0,
+        practical_hours: subject.practical_hours ?? 0,
+      },
+      academic_year: academicYear,
+      units: units.map((u) => ({
+        unit_no: u.unit_no,
+        title: u.title,
+        hours: u.hours,
+        topics: u.topics ?? [],
+      })),
+    };
+    downloadBlob(`${base}.json`, "application/json", JSON.stringify(payload, null, 2));
+    return;
+  }
+  const rows = [
+    ["Unit No", "Title", "Hours", "Topics"],
+    ...units.map((u) => [u.unit_no, u.title, u.hours, (u.topics ?? []).join(" | ")]),
+  ];
+  const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+  downloadBlob(`${base}.csv`, "text/csv;charset=utf-8", csv);
 }
 
 function SyllabusUnitsPage() {
@@ -181,12 +237,28 @@ function SyllabusUnitsPage() {
                   <b>{requiredTotal}</b> required · unit hours total <b>{totalPlanned}</b>
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => setImportOpen(true)}
                   className="border border-rose-700 text-rose-700 px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-rose-50"
                 >
-                  <Upload className="w-4 h-4" /> Import from .md
+                  <Upload className="w-4 h-4" /> Import
+                </button>
+                <button
+                  disabled={units.length === 0}
+                  onClick={() => exportUnits(subject, academicYear, units, "json")}
+                  className="border px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-secondary disabled:opacity-50"
+                  title="Download as JSON — re-importable to reuse next year"
+                >
+                  <Download className="w-4 h-4" /> Export JSON
+                </button>
+                <button
+                  disabled={units.length === 0}
+                  onClick={() => exportUnits(subject, academicYear, units, "csv")}
+                  className="border px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-secondary disabled:opacity-50"
+                  title="Download as CSV"
+                >
+                  <Download className="w-4 h-4" /> Export CSV
                 </button>
                 <button
                   onClick={() =>
@@ -652,11 +724,37 @@ function MdImportModal({
 
   function handleFile(f: File) {
     setFileName(f.name);
+    const isJson = /\.json$/i.test(f.name) || f.type === "application/json";
     const reader = new FileReader();
     reader.onload = () => {
       const txt = String(reader.result ?? "");
       setRaw(txt);
-      const p = parseSyllabusMarkdown(txt);
+      let p: ParsedUnit[] = [];
+      if (isJson) {
+        try {
+          const obj = JSON.parse(txt);
+          const arr = Array.isArray(obj) ? obj : obj?.units;
+          if (Array.isArray(arr)) {
+            p = arr
+              .map((u: any, i: number) => ({
+                unit_no: Number(u.unit_no ?? u.unitNo ?? i + 1),
+                title: String(u.title ?? "").slice(0, 200),
+                hours: Number(u.hours ?? 0),
+                topics: Array.isArray(u.topics)
+                  ? u.topics.map((t: any) => String(t))
+                  : String(u.topics ?? "")
+                      .split(/[,;\n]/)
+                      .map((s: string) => s.trim())
+                      .filter(Boolean),
+              }))
+              .sort((a, b) => a.unit_no - b.unit_no);
+          }
+        } catch {
+          p = [];
+        }
+      } else {
+        p = parseSyllabusMarkdown(txt);
+      }
       setParsed(p);
       setOriginalParsed(p.map((u) => ({ ...u })));
     };
@@ -746,7 +844,7 @@ function MdImportModal({
           <input
             ref={fileRef}
             type="file"
-            accept=".md,.markdown,.txt,text/markdown,text/plain"
+            accept=".md,.markdown,.txt,.json,text/markdown,text/plain,application/json"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -759,10 +857,11 @@ function MdImportModal({
             onClick={() => fileRef.current?.click()}
             className="bg-rose-700 text-white px-4 py-2 rounded text-sm font-semibold"
           >
-            Choose .md file
+            Choose .md or .json file
           </button>
           <p className="text-xs text-muted-foreground mt-2">
-            {fileName || "Expected format: ## Unit 1: Title (10 hours), followed by bullet topics."}
+            {fileName ||
+              "Accepts a Markdown syllabus (## Unit 1: Title (10 hours) …) or a previously exported .json to reuse in a new academic year."}
           </p>
         </div>
 
