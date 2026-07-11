@@ -391,22 +391,30 @@ type ReconRow = {
   status: "no_units" | "mismatch" | "match";
 };
 
-function ReconciliationPanel({ onJump }: { onJump: (row: ReconRow) => void }) {
+function ReconciliationPanel({
+  academicYear,
+  onJump,
+}: {
+  academicYear: string;
+  onJump: (row: ReconRow) => void;
+}) {
   const [open, setOpen] = useState(true);
   const [branch, setBranch] = useState("");
   const [sem, setSem] = useState<number | "">("");
   const [includeMatched, setIncludeMatched] = useState(false);
 
   const q = useQuery({
-    queryKey: ["syllabus-recon", branch, sem, includeMatched],
+    queryKey: ["syllabus-recon", branch, sem, includeMatched, academicYear],
     queryFn: () =>
       syllabusUnitReconciliation({
         data: {
           branch: branch || undefined,
           semester: sem || undefined,
+          academic_year: academicYear,
           include_matched: includeMatched,
         } as any,
       }),
+    enabled: !!academicYear,
   });
 
   const rows = (q.data ?? []) as ReconRow[];
