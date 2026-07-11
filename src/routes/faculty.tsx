@@ -23,6 +23,7 @@ import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { PdfDocsInline } from "@/components/portal/PdfDocsInline";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
+import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { facultyRoles, hasRole } from "@/lib/roles";
 import logoAsset from "@/assets/logo.png.asset.json";
 import hpAsset from "@/assets/hp.png.asset.json";
