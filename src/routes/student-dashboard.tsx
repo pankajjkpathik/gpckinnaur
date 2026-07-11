@@ -989,35 +989,41 @@ function DocumentsView({ onBack }: { onBack: () => void }) {
 
         {tab === "syllabus" && (
           <div className="space-y-4">
-            {(syl as any[]).length === 0 ? (
-              <p className="p-6 text-center text-sm text-gray-400 border rounded">
-                No syllabus available for your class yet.
-              </p>
-            ) : (
-              (syl as any[]).map((s: any) => (
-                <div key={s.id} className="border rounded overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-2 font-semibold text-gray-700">
-                    {s.code} — {s.name}
-                  </div>
-                  {(s.units ?? []).length === 0 ? (
-                    <p className="px-4 py-3 text-sm text-gray-400">No units added.</p>
-                  ) : (
-                    <ul className="divide-y">
-                      {s.units.map((u: any) => (
-                        <li key={u.unit_no} className="px-4 py-3">
-                          <p className="text-sm font-medium text-gray-800">
-                            Unit {u.unit_no}: {u.title}
-                          </p>
-                          {u.topics && (
-                            <p className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{u.topics}</p>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+            <SyllabusCoverage
+              mode="view"
+              academicYear={(() => {
+                const d = new Date();
+                const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+                return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
+              })()}
+              title="Syllabus Coverage"
+              subtitle="Delivered vs planned hours for each of your subjects."
+            />
+            <div className="border rounded overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 font-semibold text-gray-700 text-sm">Syllabus units</div>
+              {(syl as any[]).length === 0 ? (
+                <p className="p-6 text-center text-sm text-gray-400">No syllabus available for your class yet.</p>
+              ) : (
+                <div className="divide-y">
+                  {(syl as any[]).map((s: any) => (
+                    <div key={s.id} className="p-4">
+                      <p className="font-medium text-gray-800 text-sm mb-1">{s.code} — {s.name}</p>
+                      {(s.units ?? []).length === 0 ? (
+                        <p className="text-xs text-gray-400">No units added.</p>
+                      ) : (
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {s.units.map((u: any) => (
+                            <li key={u.unit_no}>
+                              <span className="font-medium text-gray-700">Unit {u.unit_no}:</span> {u.title}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))
-            )}
+              )}
+            </div>
           </div>
         )}
       </Card>
