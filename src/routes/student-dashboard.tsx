@@ -18,6 +18,9 @@ import {
   MessageCircle,
   ClipboardCheck,
   FileSpreadsheet,
+  Calendar,
+  CalendarClock,
+  NotebookPen,
 } from "lucide-react";
 import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { listMaterials } from "@/lib/materials.functions";
