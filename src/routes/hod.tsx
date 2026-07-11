@@ -35,6 +35,7 @@ import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
 import { BarStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
+import { deptToBranch } from "@/lib/branch";
 
 export const Route = createFileRoute("/hod")({
   head: () => portalMeta("HOD Portal"),
