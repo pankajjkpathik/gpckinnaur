@@ -22,6 +22,7 @@ import {
 import { listPlacements, hodDepartmentOverview } from "@/lib/tpo.functions";
 import { listPeriods, listTimetable } from "@/lib/academic.functions";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
+import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import {
   listParentMessages,
   markParentMessageRead,
