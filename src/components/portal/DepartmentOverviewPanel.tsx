@@ -1,5 +1,7 @@
 import { GraduationCap, Users, Briefcase, TrendingUp } from "lucide-react";
 import { BarStats } from "@/components/portal/Charts";
+import { facultyPhoto } from "@/lib/faculty-photos";
+import { initialsOf } from "@/lib/portal-identity";
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`bg-white border rounded-lg shadow-sm p-5 ${className}`}>{children}</div>;
@@ -30,7 +32,7 @@ export type DeptOverviewData = {
   class_test_performance: { label: string; value: number }[];
   house_test_performance: { label: string; value: number }[];
   placements_by_company: { label: string; value: number }[];
-  faculty_details: { id: number; username: string; role: string; department: string | null; load: number }[];
+  faculty_details: { id: number; username: string; name?: string | null; role: string; department: string | null; load: number }[];
 };
 
 /** The exact same Department Overview body used in both HOD and Principal portals. */
@@ -103,14 +105,29 @@ export function DepartmentOverviewPanel({ d }: { d: DeptOverviewData }) {
               </tr>
             </thead>
             <tbody>
-              {d.faculty_details.map((f) => (
-                <tr key={f.id} className="border-t">
-                  <td className="px-4 py-3 font-medium">{f.username}</td>
-                  <td className="px-4 py-3 capitalize text-gray-500">{f.role}</td>
-                  <td className="px-4 py-3">{f.department ?? "—"}</td>
-                  <td className="px-4 py-3">{f.load} periods</td>
-                </tr>
-              ))}
+              {d.faculty_details.map((f) => {
+                const displayName = (f.name || f.username || "").toUpperCase();
+                const photo = facultyPhoto(f.name || f.username);
+                return (
+                  <tr key={f.id} className="border-t">
+                    <td className="px-4 py-3 font-medium">
+                      <div className="flex items-center gap-3">
+                        {photo ? (
+                          <img src={photo} alt={displayName} className="w-9 h-9 rounded-full object-cover border" />
+                        ) : (
+                          <span className="w-9 h-9 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-center">
+                            {initialsOf(f.name || f.username)}
+                          </span>
+                        )}
+                        <span>{displayName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 capitalize text-gray-500">{f.role}</td>
+                    <td className="px-4 py-3">{f.department ?? "—"}</td>
+                    <td className="px-4 py-3">{f.load} periods</td>
+                  </tr>
+                );
+              })}
               {d.faculty_details.length === 0 && (
                 <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No faculty found for this department.</td></tr>
               )}
