@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Save, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, X, Upload, FileText } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
@@ -12,6 +12,7 @@ import {
   deleteSyllabusUnit,
   syllabusUnitReconciliation,
 } from "@/lib/academic.functions";
+import { parseSyllabusMarkdown, rescaleHours, type ParsedUnit } from "@/lib/parse-syllabus-md";
 
 export const Route = createFileRoute("/admin/syllabus-units")({
   head: () => portalMeta("Planned Unit Hours"),
@@ -81,6 +82,7 @@ function SyllabusUnitsPage() {
   const subjectPlanned = subject ? (subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0) : 0;
 
   const [editing, setEditing] = useState<Unit | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
@@ -177,22 +179,30 @@ function SyllabusUnitsPage() {
                   )}
                 </p>
               </div>
-              <button
-                onClick={() =>
-                  setEditing({
-                    subject_id: subject.id,
-                    academic_year: academicYear,
-                    semester: null,
-                    unit_no: (units.at(-1)?.unit_no ?? 0) + 1,
-                    title: "",
-                    topics: [],
-                    hours: 0,
-                  })
-                }
-                className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" /> Add Unit
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setImportOpen(true)}
+                  className="border border-rose-700 text-rose-700 px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1 hover:bg-rose-50"
+                >
+                  <Upload className="w-4 h-4" /> Import from .md
+                </button>
+                <button
+                  onClick={() =>
+                    setEditing({
+                      subject_id: subject.id,
+                      academic_year: academicYear,
+                      semester: null,
+                      unit_no: (units.at(-1)?.unit_no ?? 0) + 1,
+                      title: "",
+                      topics: [],
+                      hours: 0,
+                    })
+                  }
+                  className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" /> Add Unit
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -257,6 +267,19 @@ function SyllabusUnitsPage() {
             onSave={(u) => save.mutate(u, { onSuccess: () => setEditing(null) })}
             pending={save.isPending}
             error={save.error?.message}
+          />
+        )}
+
+        {importOpen && subject && (
+          <MdImportModal
+            subject={subject}
+            academicYear={academicYear}
+            existingUnits={units}
+            onClose={() => setImportOpen(false)}
+            onImported={() => {
+              setImportOpen(false);
+              qc.invalidateQueries({ queryKey: ["syllabus-units", subjectId] });
+            }}
           />
         )}
       </div>
@@ -541,4 +564,225 @@ function ReconciliationPanel({
     </div>
   );
 }
+
+function MdImportModal({
+  subject,
+  academicYear,
+  existingUnits,
+  onClose,
+  onImported,
+}: {
+  subject: any;
+  academicYear: string;
+  existingUnits: Unit[];
+  onClose: () => void;
+  onImported: () => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string>("");
+  const [raw, setRaw] = useState<string>("");
+  const [parsed, setParsed] = useState<ParsedUnit[]>([]);
+  const [rescale, setRescale] = useState(true);
+  const [overwrite, setOverwrite] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string>("");
+
+  const target = (subject.lecture_hours ?? 0) * 14 + (subject.practical_hours ?? 0) * 14;
+
+  const view = useMemo(
+    () => (rescale && target > 0 ? rescaleHours(parsed, target) : parsed),
+    [parsed, rescale, target],
+  );
+  const total = view.reduce((s, u) => s + (u.hours || 0), 0);
+
+  function handleFile(f: File) {
+    setFileName(f.name);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const txt = String(reader.result ?? "");
+      setRaw(txt);
+      setParsed(parseSyllabusMarkdown(txt));
+    };
+    reader.readAsText(f);
+  }
+
+  async function doImport() {
+    if (view.length === 0) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      if (overwrite) {
+        setProgress("Removing existing units…");
+        for (const u of existingUnits) {
+          if (u.id) await deleteSyllabusUnit({ data: { id: u.id } });
+        }
+      }
+      let i = 0;
+      for (const u of view) {
+        i++;
+        setProgress(`Importing unit ${i} of ${view.length}…`);
+        await upsertSyllabusUnit({
+          data: {
+            subject_id: subject.id,
+            academic_year: academicYear,
+            semester: null,
+            unit_no: u.unit_no,
+            title: u.title.slice(0, 200),
+            topics: u.topics.slice(0, 200),
+            hours: Math.max(0, Math.round(u.hours)),
+          } as any,
+        });
+      }
+      onImported();
+    } catch (e: any) {
+      setErr(e?.message ?? "Import failed");
+    } finally {
+      setBusy(false);
+      setProgress("");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-lg max-w-3xl w-full p-5 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="font-bold text-[color:var(--navy)]">Import Syllabus from Markdown</h3>
+            <p className="text-xs text-muted-foreground">
+              {subject.code} · {subject.name} · AY {academicYear} · target hours{" "}
+              <b>{target || "—"}</b>
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-secondary rounded"><X className="w-4 h-4" /></button>
+        </div>
+
+        <div className="border-2 border-dashed rounded p-6 text-center bg-secondary/30">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".md,.markdown,.txt,text/markdown,text/plain"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+            }}
+          />
+          <FileText className="w-8 h-8 mx-auto text-rose-700 mb-2" />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="bg-rose-700 text-white px-4 py-2 rounded text-sm font-semibold"
+          >
+            Choose .md file
+          </button>
+          <p className="text-xs text-muted-foreground mt-2">
+            {fileName || "Expected format: ## Unit 1: Title (10 hours), followed by bullet topics."}
+          </p>
+        </div>
+
+        {parsed.length > 0 && (
+          <>
+            <div className="mt-4 flex flex-wrap gap-4 items-center text-sm">
+              <label className="inline-flex items-center gap-1">
+                <input type="checkbox" checked={rescale} onChange={(e) => setRescale(e.target.checked)} />
+                Rescale hours to L+P×14 ({target})
+              </label>
+              <label className="inline-flex items-center gap-1">
+                <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
+                Overwrite existing {existingUnits.length} unit(s)
+              </label>
+              <span className="ml-auto text-xs text-muted-foreground">
+                Parsed <b>{view.length}</b> units · total <b>{total}</b> hrs
+              </span>
+            </div>
+
+            <div className="mt-3 border rounded overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-secondary">
+                  <tr>
+                    <th className="text-left px-2 py-1.5 w-14">Unit</th>
+                    <th className="text-left px-2 py-1.5">Title</th>
+                    <th className="text-left px-2 py-1.5">Topics</th>
+                    <th className="text-right px-2 py-1.5 w-16">Hrs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {view.map((u, i) => (
+                    <tr key={i} className="border-t align-top">
+                      <td className="px-2 py-1.5 font-semibold">{u.unit_no}</td>
+                      <td className="px-2 py-1.5">
+                        <input
+                          value={u.title}
+                          onChange={(e) => {
+                            const next = [...parsed];
+                            next[i] = { ...next[i], title: e.target.value };
+                            setParsed(next);
+                          }}
+                          className="w-full border rounded px-1.5 py-1 text-sm"
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 text-xs text-muted-foreground">
+                        <textarea
+                          rows={2}
+                          value={u.topics.join("\n")}
+                          onChange={(e) => {
+                            const next = [...parsed];
+                            next[i] = {
+                              ...next[i],
+                              topics: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean),
+                            };
+                            setParsed(next);
+                          }}
+                          className="w-full border rounded px-1.5 py-1 text-xs font-mono"
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 text-right">
+                        <input
+                          type="number"
+                          value={u.hours}
+                          onChange={(e) => {
+                            const next = [...parsed];
+                            next[i] = { ...next[i], hours: Number(e.target.value) || 0 };
+                            setParsed(next);
+                          }}
+                          disabled={rescale}
+                          className="w-14 border rounded px-1 py-0.5 text-sm text-right disabled:bg-secondary/40"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {parsed.length === 0 && raw && (
+          <p className="text-xs text-amber-700 mt-3">
+            No units detected. Make sure headings start with "Unit 1", "## Unit II", etc.
+          </p>
+        )}
+
+        {err && <p className="text-xs text-destructive mt-3">{err}</p>}
+        {progress && <p className="text-xs text-muted-foreground mt-2">{progress}</p>}
+
+        <div className="flex justify-end gap-2 mt-4">
+          <button onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
+          <button
+            disabled={busy || view.length === 0}
+            onClick={doImport}
+            className="px-4 py-1.5 bg-rose-700 text-white rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} unit(s)`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
