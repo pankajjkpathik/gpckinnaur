@@ -22,6 +22,7 @@ import {
 import { listPlacements, hodDepartmentOverview } from "@/lib/tpo.functions";
 import { listPeriods, listTimetable } from "@/lib/academic.functions";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
+import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import {
   listParentMessages,
   markParentMessageRead,
@@ -885,82 +886,17 @@ function ResultsMonitor({ year }: { year: string }) {
   );
 }
 
-function SyllabusMonitor({ year }: { year: string }) {
-  const fn = useServerFn(syllabusCompliance);
-  const { data = [] } = useQuery({
-    queryKey: ["syllabus-comp", year],
-    queryFn: () => fn({ data: { academic_year: year } }),
-  });
-
-  function dl(fmt: "pdf" | "xlsx" | "csv") {
-    exportRows({
-      filename: `syllabus-compliance-${year}`,
-      title: `Syllabus Compliance ${year}`,
-      columns: [
-        { key: "code", label: "Code" },
-        { key: "name", label: "Subject" },
-        { key: "branch", label: "Branch" },
-        { key: "semester", label: "Sem" },
-        { key: "units", label: "Units" },
-        { key: "avg_coverage", label: "Avg %" },
-        { key: "approved_pct", label: "Approved %" },
-      ],
-      rows: data as any[],
-      format: fmt,
-    });
-  }
-
+function SyllabusMonitor(_props: { year: string }) {
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        {(["pdf", "xlsx", "csv"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => dl(f)}
-            className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-secondary bg-white"
-          >
-            <Download className="w-3 h-3" /> {f.toUpperCase()}
-          </button>
-        ))}
-      </div>
-      <div className="bg-white border rounded overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-[color:var(--navy)] text-white">
-            <tr>
-              <th className="px-3 py-2 text-left">Code</th>
-              <th className="px-3 py-2 text-left">Subject</th>
-              <th className="px-3 py-2 text-left">Branch</th>
-              <th className="px-3 py-2 text-left">Sem</th>
-              <th className="px-3 py-2 text-right">Units</th>
-              <th className="px-3 py-2 text-right">Avg Coverage</th>
-              <th className="px-3 py-2 text-right">Approved</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {(data as any[]).map((r) => (
-              <tr key={r.subject_id} className={r.avg_coverage < 50 ? "bg-rose-50" : ""}>
-                <td className="px-3 py-2 font-medium">{r.code}</td>
-                <td className="px-3 py-2">{r.name}</td>
-                <td className="px-3 py-2 capitalize">{r.branch}</td>
-                <td className="px-3 py-2">{r.semester}</td>
-                <td className="px-3 py-2 text-right">{r.units}</td>
-                <td className="px-3 py-2 text-right">{r.avg_coverage}%</td>
-                <td className="px-3 py-2 text-right">{r.approved_pct}%</td>
-              </tr>
-            ))}
-            {data.length === 0 && (
-              <tr>
-                <td colSpan={7} className="text-center py-6 text-muted-foreground">
-                  No lesson plans recorded for this academic year.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        Lesson-plan PDFs uploaded by faculty. The same view is available in the HOD and Student portals.
+      </p>
+      <LessonPlanLibrary docType="lesson_plan" title="Institute-wide Lesson Plans" subtitle="Filter by branch/semester to review syllabus coverage." />
     </div>
   );
 }
+
 
 function Circulars() {
   const qc = useQueryClient();

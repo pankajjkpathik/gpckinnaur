@@ -44,6 +44,7 @@ import {
   studentMyDisciplinary,
 } from "@/lib/assignments.functions";
 import { studentParentStatus, studentSetParentPassword } from "@/lib/parent.functions";
+import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/student-dashboard")({
@@ -834,10 +835,10 @@ function DocumentsView({ onBack }: { onBack: () => void }) {
   const [tab, setTab] = useState<"assignment" | "lesson_plan" | "exam_schedule" | "timetable" | "syllabus">(
     "assignment",
   );
-  const isDoc = tab === "assignment" || tab === "lesson_plan" || tab === "exam_schedule";
+  const isDoc = tab === "assignment" || tab === "exam_schedule";
   const { data = [], isLoading } = useQuery({
     queryKey: ["student-docs", tab],
-    queryFn: () => fn({ data: { type: tab as "assignment" | "lesson_plan" | "exam_schedule" } }),
+    queryFn: () => fn({ data: { type: tab as "assignment" | "exam_schedule" } }),
     enabled: isDoc,
   });
   const { data: tt } = useQuery({
@@ -922,6 +923,10 @@ function DocumentsView({ onBack }: { onBack: () => void }) {
             </table>
           </div>
         )}
+
+        {tab === "lesson_plan" && <LessonPlanLibrary docType="lesson_plan" title="Lesson Plans" subtitle="PDFs uploaded by your faculty." />}
+
+
 
         {tab === "timetable" && (
           <div className="border rounded overflow-x-auto">

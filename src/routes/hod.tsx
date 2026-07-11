@@ -38,6 +38,7 @@ import { exportPDF, exportExcel, exportCSV } from "@/lib/report-export";
 import { BarStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { deptToBranch } from "@/lib/branch";
+import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 
 export const Route = createFileRoute("/hod")({
   head: () => portalMeta("HOD Portal"),
@@ -475,58 +476,24 @@ function SessionalReportsView({ ay, onBack }: { ay: string; onBack: () => void }
   );
 }
 
-// ─── SYLLABUS PROGRESS ────────────────────────────────────────────────────────
-function SyllabusProgressView({ branch, ay, onBack }: { branch: string; ay: string; onBack: () => void }) {
-  const q = useQuery({
-    queryKey: ["hod-overview", branch, ay],
-    queryFn: () => hodDepartmentOverview({ data: { branch, academic_year: ay } }),
-  });
-  const coverage = q.data?.syllabus_coverage ?? [];
-
+// ─── SYLLABUS PROGRESS (unified PDF library) ─────────────────────────────────
+function SyllabusProgressView({ branch, onBack }: { branch: string; ay: string; onBack: () => void }) {
+  const defaultBranch =
+    branch === "civil" ? "Civil Engineering" :
+    branch === "mechanical" ? "Mechanical Engineering" :
+    branch === "applied_science" ? "Applied Sciences" : undefined;
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Syllabus Progress</h1>
-        <p className="text-xs text-gray-400 mb-4">Track lesson plan completion across subjects.</p>
-        {coverage.length > 0 ? (
-          <>
-            <BarStats data={coverage} color="#10b981" />
-            <div className="border rounded overflow-hidden mt-4">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">Progress</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {coverage.map((s: any) => (
-                    <tr key={s.label} className="border-t">
-                      <td className="px-4 py-3 font-mono text-xs">{s.label}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 max-w-[200px] h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#7b1f4c]" style={{ width: `${s.value}%` }} />
-                          </div>
-                          <span className="text-xs">{s.value}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
-          <p className="text-sm text-gray-400 text-center py-8">
-            {q.isLoading ? "Loading…" : "No syllabus units configured for this department yet."}
-          </p>
-        )}
-      </Card>
+      <h1 className="text-xl font-bold text-gray-800">Syllabus Progress</h1>
+      <p className="text-xs text-gray-400 -mt-1">
+        Lesson-plan PDFs uploaded by faculty. Same view is shown to students and the Principal.
+      </p>
+      <LessonPlanLibrary docType="lesson_plan" defaultBranch={defaultBranch} title="Lesson Plans" subtitle="Uploaded by faculty in your department." />
     </div>
   );
 }
+
 
 // ─── BRANCH TIMETABLE (HOD edits own branch only) ─────────────────────────────
 function TimetableView({
