@@ -43,8 +43,8 @@ function ParentLogin() {
           <Users className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <span>
             Sign in with your ward's <b>Enrollment Number</b> prefixed by <b>p-</b>
-            &nbsp;(e.g. <code>p-250824009024</code>). Standard password is{" "}
-            <b>Welcome@123</b>.
+            &nbsp;(e.g. <code>p-250824009024</code>) and the password your ward set for you
+            from their student portal.
           </span>
         </div>
         <form
