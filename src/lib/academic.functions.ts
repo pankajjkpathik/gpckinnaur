@@ -167,6 +167,64 @@ export const listSyllabus = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
+export const syllabusUnitReconciliation = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({
+      branch: z.string().optional(),
+      semester: z.number().int().optional(),
+      include_matched: z.boolean().default(false),
+    }).parse(d ?? {}),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let sq = supabaseAdmin
+      .from("subjects")
+      .select("id,code,name,branch,semester,lecture_hours,practical_hours")
+      .order("branch").order("semester").order("code");
+    if (data.branch) sq = sq.eq("branch", data.branch);
+    if (data.semester) sq = sq.eq("semester", data.semester);
+    const { data: subjects, error: se } = await sq;
+    if (se) throw new Error(se.message);
+
+    const ids = (subjects ?? []).map((s: any) => s.id);
+    let unitsBySubject = new Map<number, { count: number; hours: number }>();
+    if (ids.length) {
+      const { data: units, error: ue } = await supabaseAdmin
+        .from("syllabus_units")
+        .select("subject_id,hours")
+        .in("subject_id", ids);
+      if (ue) throw new Error(ue.message);
+      for (const u of units ?? []) {
+        const cur = unitsBySubject.get(u.subject_id as number) ?? { count: 0, hours: 0 };
+        cur.count += 1;
+        cur.hours += Number(u.hours) || 0;
+        unitsBySubject.set(u.subject_id as number, cur);
+      }
+    }
+
+    const rows = (subjects ?? []).map((s: any) => {
+      const lp = (s.lecture_hours ?? 0) + (s.practical_hours ?? 0);
+      const agg = unitsBySubject.get(s.id) ?? { count: 0, hours: 0 };
+      const status: "no_units" | "mismatch" | "match" =
+        agg.count === 0 ? "no_units" : agg.hours === lp ? "match" : "mismatch";
+      return {
+        id: s.id,
+        code: s.code,
+        name: s.name,
+        branch: s.branch,
+        semester: s.semester,
+        lp_hours: lp,
+        unit_count: agg.count,
+        unit_hours: agg.hours,
+        diff: agg.hours - lp,
+        status,
+      };
+    });
+
+    return data.include_matched ? rows : rows.filter((r) => r.status !== "match");
+  });
+
 export const upsertSyllabusUnit = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
