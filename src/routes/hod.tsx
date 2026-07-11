@@ -39,6 +39,7 @@ import { BarStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { deptToBranch } from "@/lib/branch";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
+import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 
 export const Route = createFileRoute("/hod")({
   head: () => portalMeta("HOD Portal"),
@@ -476,20 +477,20 @@ function SessionalReportsView({ ay, onBack }: { ay: string; onBack: () => void }
   );
 }
 
-// ─── SYLLABUS PROGRESS (unified PDF library) ─────────────────────────────────
-function SyllabusProgressView({ branch, onBack }: { branch: string; ay: string; onBack: () => void }) {
+// ─── SYLLABUS PROGRESS (date-wise lecture log + coverage %) ──────────────────
+function SyllabusProgressView({ branch, ay, onBack }: { branch: string; ay: string; onBack: () => void }) {
   const defaultBranch =
     branch === "civil" ? "Civil Engineering" :
     branch === "mechanical" ? "Mechanical Engineering" :
-    branch === "applied_science" ? "Applied Sciences" : undefined;
+    branch === "applied_science" ? "Applied Sciences" : branch;
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <h1 className="text-xl font-bold text-gray-800">Syllabus Progress</h1>
       <p className="text-xs text-gray-400 -mt-1">
-        Lesson-plan PDFs uploaded by faculty. Same view is shown to students and the Principal.
+        Lectures delivered per subject in your department. Same view is shown to students and the Principal.
       </p>
-      <LessonPlanLibrary docType="lesson_plan" defaultBranch={defaultBranch} title="Lesson Plans" subtitle="Uploaded by faculty in your department." />
+      <SyllabusCoverage mode="view" academicYear={ay} scope={{ branch: defaultBranch }} />
     </div>
   );
 }

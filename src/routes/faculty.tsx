@@ -23,6 +23,7 @@ import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { PdfDocsInline } from "@/components/portal/PdfDocsInline";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
+import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { facultyRoles, hasRole } from "@/lib/roles";
 import logoAsset from "@/assets/logo.png.asset.json";
 import hpAsset from "@/assets/hp.png.asset.json";
@@ -1239,16 +1240,16 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
   );
 }
 
-// ─── SYLLABUS COVERAGE / LESSON PLANS (unified PDF library) ───────────────────
-function SyllabusView({ onBack }: { ay: string; me: any; onBack: () => void }) {
+// ─── SYLLABUS COVERAGE (date-wise lecture log + coverage %) ──────────────────
+function SyllabusView({ ay, onBack }: { ay: string; me: any; onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <h1 className="text-2xl font-bold text-gray-800">Syllabus Coverage</h1>
       <p className="text-xs text-gray-500 -mt-2">
-        Track syllabus coverage by uploading lesson-plan PDFs per subject. The same list is visible to students, HOD and Principal.
+        Record each lecture you deliver (date · unit · topic). Coverage % is computed from delivered vs planned syllabus hours and is visible to students, HOD and Principal.
       </p>
-      <LessonPlanLibrary docType="lesson_plan" canUpload canDelete />
+      <SyllabusCoverage mode="faculty" academicYear={ay} />
     </div>
   );
 }
