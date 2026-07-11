@@ -58,9 +58,9 @@ function SyllabusUnitsPage() {
   });
 
   const unitsQ = useQuery({
-    queryKey: ["syllabus-units", subjectId],
-    queryFn: () => listSyllabus({ data: { subject_id: Number(subjectId) } }),
-    enabled: !!subjectId,
+    queryKey: ["syllabus-units", subjectId, academicYear],
+    queryFn: () => listSyllabus({ data: { subject_id: Number(subjectId), academic_year: academicYear } as any }),
+    enabled: !!subjectId && !!academicYear,
   });
 
   const save = useMutation({
