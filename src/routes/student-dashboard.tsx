@@ -49,7 +49,9 @@ import {
 import { studentParentStatus, studentSetParentPassword } from "@/lib/parent.functions";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
+import { QuickCard } from "@/components/portal/QuickCard";
 import logoAsset from "@/assets/logo.png.asset.json";
+
 
 export const Route = createFileRoute("/student-dashboard")({
   head: () => ({
