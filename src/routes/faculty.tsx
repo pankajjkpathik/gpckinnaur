@@ -25,6 +25,7 @@ import { QuickCard } from "@/components/portal/QuickCard";
 import { PdfDocsInline } from "@/components/portal/PdfDocsInline";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
+import { WeeklyPlanGenerator } from "@/components/portal/WeeklyPlanGenerator";
 import { facultyRoles, hasRole } from "@/lib/roles";
 import logoAsset from "@/assets/logo.png.asset.json";
 import hpAsset from "@/assets/hp.png.asset.json";
