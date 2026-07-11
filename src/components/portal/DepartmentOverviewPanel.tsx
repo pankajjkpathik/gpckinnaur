@@ -1,5 +1,7 @@
 import { GraduationCap, Users, Briefcase, TrendingUp } from "lucide-react";
 import { BarStats } from "@/components/portal/Charts";
+import { facultyPhoto } from "@/lib/faculty-photos";
+import { initialsOf } from "@/lib/portal-identity";
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`bg-white border rounded-lg shadow-sm p-5 ${className}`}>{children}</div>;
