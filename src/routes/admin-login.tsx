@@ -18,18 +18,22 @@ function AdminLoginPage() {
   const [show, setShow] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const landingFor = (role: string) => (role === "clerk" ? "/clerk" : "/admin");
+
   useEffect(() => {
     staffMe().then((s) => {
-      if (s?.id && adminPortalRoles.includes(s.role as any)) window.location.href = "/admin";
+      if (s?.id && adminPortalRoles.includes(s.role as any)) {
+        window.location.href = landingFor(s.role as string);
+      }
     }).catch(() => {});
   }, []);
 
   const m = useMutation({
     mutationFn: (d: { username: string; password: string }) =>
       staffLogin({ data: { ...d, allowedRoles: adminPortalRoles as unknown as string[] } }),
-    onSuccess: () => (window.location.href = "/admin"),
+    onSuccess: (s: any) => (window.location.href = landingFor(s?.role as string)),
     onError: (e: any) => setErr(e?.message?.includes("not permitted")
-      ? "This account does not have admin/clerk access."
+      ? "Only Super-Admin, Principal, HOD, and Clerk accounts can sign in here."
       : "Invalid username or password"),
   });
 
