@@ -32,7 +32,7 @@ export type DeptOverviewData = {
   class_test_performance: { label: string; value: number }[];
   house_test_performance: { label: string; value: number }[];
   placements_by_company: { label: string; value: number }[];
-  faculty_details: { id: number; username: string; role: string; department: string | null; load: number }[];
+  faculty_details: { id: number; username: string; name?: string | null; role: string; department: string | null; load: number }[];
 };
 
 /** The exact same Department Overview body used in both HOD and Principal portals. */
