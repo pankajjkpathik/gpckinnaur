@@ -39,6 +39,7 @@ import { BarStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { deptToBranch } from "@/lib/branch";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
+import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 
 export const Route = createFileRoute("/hod")({
   head: () => portalMeta("HOD Portal"),
