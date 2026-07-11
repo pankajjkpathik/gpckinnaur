@@ -21,11 +21,20 @@ export const Route = createFileRoute("/admin/syllabus-units")({
 type Unit = {
   id?: number;
   subject_id: number;
+  academic_year: string;
+  semester?: number | null;
   unit_no: number;
   title: string;
   topics: string[];
   hours: number;
 };
+
+function currentAY(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const start = d.getMonth() >= 6 ? y : y - 1; // July onwards = new AY
+  return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+}
 
 function SyllabusUnitsPage() {
   const nav = useNavigate();
