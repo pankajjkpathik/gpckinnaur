@@ -108,6 +108,17 @@ function SyllabusUnitsPage() {
 
 
         <div className="flex flex-wrap gap-2 items-center bg-white border rounded p-3">
+          <label className="text-xs text-muted-foreground inline-flex items-center gap-1">
+            AY
+            <input
+              value={academicYear}
+              onChange={(e) => setAcademicYear(e.target.value)}
+              placeholder="2025-26"
+              pattern="\d{4}-\d{2}"
+              title="Format: YYYY-YY (e.g. 2025-26)"
+              className="border rounded px-2 py-1.5 text-sm w-24"
+            />
+          </label>
           <select
             value={branch}
             onChange={(e) => {
