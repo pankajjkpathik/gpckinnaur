@@ -166,6 +166,19 @@ export const coverageSummary = createServerFn({ method: "GET" })
     const semester = auth.scope?.semester ?? data.semester ?? null;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Faculty scoping: when staff_id filter is set, restrict subject list to
+    // the (subject, branch, semester) tuples that faculty is actually assigned.
+    let scopedTuples: Set<string> | null = null;
+    if (data.staff_id) {
+      const { data: fa } = await supabaseAdmin
+        .from("faculty_assignments")
+        .select("subject_id, branch, semester")
+        .eq("staff_id", data.staff_id)
+        .eq("academic_year", data.academic_year);
+      scopedTuples = new Set((fa ?? []).map((r: any) => `${r.subject_id}|${r.branch}|${r.semester}`));
+      if (scopedTuples.size === 0) return [];
+    }
+
     // 1. subjects in scope
     let subjQ = supabaseAdmin
       .from("subjects")
@@ -175,12 +188,17 @@ export const coverageSummary = createServerFn({ method: "GET" })
       .order("code");
     if (branch) subjQ = subjQ.eq("branch", branch);
     if (semester) subjQ = subjQ.eq("semester", semester);
-    const { data: subjects, error: sErr } = await subjQ;
+    const { data: subjectsRaw, error: sErr } = await subjQ;
     if (sErr) throw new Error(sErr.message);
-    const subjIds = (subjects ?? []).map((s: any) => s.id);
+
+    // If staff filter set, keep only subjects the faculty teaches in matching branch/sem
+    const subjects = scopedTuples
+      ? (subjectsRaw ?? []).filter((s: any) => scopedTuples!.has(`${s.id}|${s.branch}|${s.semester}`))
+      : (subjectsRaw ?? []);
+    const subjIds = subjects.map((s: any) => s.id);
     if (subjIds.length === 0) return [];
 
-    // 2. total planned hours per subject (sum of syllabus_units.hours)
+    // 2. total planned hours per subject
     const { data: units } = await supabaseAdmin
       .from("syllabus_units")
       .select("subject_id, hours")
@@ -217,7 +235,7 @@ export const coverageSummary = createServerFn({ method: "GET" })
       }
     });
 
-    return (subjects ?? []).map((s: any) => {
+    return subjects.map((s: any) => {
       const planned = plannedBySubj.get(s.id) ?? (s.lecture_hours || 0) + (s.practical_hours || 0);
       const delivered = deliveredBySubj.get(s.id) ?? 0;
       const pct = planned > 0 ? Math.min(100, Math.round((delivered / planned) * 100)) : 0;
@@ -235,3 +253,25 @@ export const coverageSummary = createServerFn({ method: "GET" })
       };
     });
   });
+
+// ─── Faculty roster (for HOD/Principal filter dropdown) ──────────────────────
+export const coverageFacultyOptions = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ branch: z.string().optional().nullable() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireStaff();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { branchToDept } = await import("./branch");
+    let q = supabaseAdmin
+      .from("staff_users")
+      .select("id, username, name, department, role")
+      .in("role", ["faculty", "hod", "principal", "super_admin"])
+      .order("name");
+    if (data.branch) {
+      const dept = branchToDept(data.branch);
+      q = q.in("department", [dept, data.branch]);
+    }
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
