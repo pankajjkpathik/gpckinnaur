@@ -414,6 +414,35 @@ function UnitModal({
               rows={5} className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 font-mono"
             />
           </label>
+
+          {requiredTotal > 0 && (() => {
+            const projected = otherUnitsHours + (Number(hours) || 0);
+            const remaining = requiredTotal - otherUnitsHours;
+            const overshoot = projected - requiredTotal;
+            const ok = projected === requiredTotal;
+            return (
+              <div
+                className={`text-xs rounded border px-3 py-2 ${
+                  ok
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    : overshoot > 0
+                      ? "border-rose-200 bg-rose-50 text-rose-800"
+                      : "border-amber-200 bg-amber-50 text-amber-800"
+                }`}
+              >
+                Required <b>{requiredTotal}</b> · other units <b>{otherUnitsHours}</b> · this unit{" "}
+                <b>{Number(hours) || 0}</b> · total <b>{projected}</b>
+                {ok && " ✓"}
+                {!ok && overshoot > 0 && (
+                  <> — <b>{overshoot}</b> over. Reduce this unit to <b>{Math.max(0, remaining)}</b>.</>
+                )}
+                {!ok && overshoot < 0 && (
+                  <> — needs <b>{Math.abs(overshoot)}</b> more (set this unit to <b>{remaining}</b> to match).</>
+                )}
+              </div>
+            );
+          })()}
+
           {error && <p className="text-xs text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
