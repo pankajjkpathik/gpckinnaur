@@ -431,7 +431,7 @@ function ReconciliationPanel({
         <div>
           <h3 className="font-semibold text-[color:var(--navy)]">Unit Hours Reconciliation</h3>
           <p className="text-xs text-muted-foreground">
-            Subjects whose sum of unit hours doesn't match L+P{" "}
+            AY <b>{academicYear}</b> · subjects whose sum of unit hours doesn't match L+P{" "}
             {q.data && (
               <span className="ml-1">
                 · <b className="text-amber-700">{mismatches}</b> mismatched ·{" "}
