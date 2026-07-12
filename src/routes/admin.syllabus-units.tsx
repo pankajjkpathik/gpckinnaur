@@ -404,8 +404,45 @@ function SyllabusUnitsPage() {
               </table>
             </div>
 
+            {units.length > 0 && (
+              <div className="mt-3 rounded-lg border bg-white shadow-sm overflow-hidden">
+                <div className="px-3 py-2 bg-secondary/60 border-b text-xs font-semibold text-[color:var(--navy)] uppercase tracking-wide">
+                  Required total vs Current total <span className="font-normal normal-case text-muted-foreground">· live</span>
+                </div>
+                <div className="grid grid-cols-3 divide-x text-sm">
+                  {[
+                    { label: "Theory", cur: totalPlannedLecture, req: requiredLecture, diff: lectureDiff },
+                    { label: "Practical", cur: totalPlannedPractical, req: requiredPractical, diff: practicalDiff },
+                    { label: "Total", cur: totalPlanned, req: requiredTotal, diff: totalPlanned - requiredTotal },
+                  ].map((r) => {
+                    const ok = r.diff === 0;
+                    const short = r.diff < 0;
+                    return (
+                      <div key={r.label} className="p-3">
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{r.label}</div>
+                        <div className="mt-1 flex items-baseline gap-1.5">
+                          <span className={`text-lg font-bold tabular-nums ${ok ? "text-emerald-700" : "text-rose-700"}`}>
+                            {r.cur}
+                          </span>
+                          <span className="text-muted-foreground text-sm tabular-nums">/ {r.req}</span>
+                        </div>
+                        <div className={`mt-0.5 text-xs font-medium ${ok ? "text-emerald-700" : "text-rose-700"}`}>
+                          {ok
+                            ? "✓ matches required"
+                            : short
+                              ? `▼ short by ${Math.abs(r.diff)} hr${Math.abs(r.diff) === 1 ? "" : "s"}`
+                              : `▲ over by ${r.diff} hr${r.diff === 1 ? "" : "s"}`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
+
 
         {editing && (
           <UnitModal
