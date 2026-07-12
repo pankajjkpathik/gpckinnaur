@@ -250,6 +250,7 @@ export const saveMarks = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, academic_year: data.academic_year });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const rows = data.entries.map((e) => ({
       student_id: e.student_id,
