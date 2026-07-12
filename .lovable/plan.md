@@ -34,13 +34,13 @@ Replace the current "cards grid → back button" flow with a persistent sidebar.
 - Hiding the branch/semester filter dropdowns for students (they only need their own class).
 - If nothing exists for the student's class, still show the empty-state row (unchanged).
 
-### 4. Syllabus Coverage — only student's own subjects
+### 3. Syllabus Coverage — only student's own subjects
 
 `coverageSummary` already forces student scope server-side, but the UI still shows the `filters` selectors (empty). Fix:
 - Pass explicit `scope={{ branch: me.branch, semester: me.semester }}` and no `filters` prop so the UI table hides the filter row entirely.
 - Below the coverage table, keep the "Syllabus units" list from `studentSyllabus` (already class-scoped).
 
-### 5. Timetable → same visual as HOD/Principal
+### 4. Timetable → same visual as HOD/Principal
 
 Replace the ad-hoc table in `TimetableView` with the shared `<TimetableGrid>` component (read-only):
 - Fetch periods via `listPeriods()` (already exposed).
@@ -50,6 +50,6 @@ Replace the ad-hoc table in `TimetableView` with the shared `<TimetableGrid>` co
 
 ### Files touched
 
-- `src/routes/student-dashboard.tsx` — sidebar shell, 5 view rewrites.
-- `src/lib/student.functions.ts` — add `studentSessionalReport` (mid + final) delegating to the same aggregation used by HOD.
+- `src/routes/student-dashboard.tsx` — sidebar shell, 4 view rewrites.
 - No schema changes, no other routes touched.
+
