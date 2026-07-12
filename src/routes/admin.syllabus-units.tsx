@@ -400,9 +400,19 @@ function SyllabusUnitsPage() {
         {editing && (
           <UnitModal
             initial={editing}
-            requiredTotal={requiredTotal}
-            otherUnitsHours={
-              totalPlanned - (editing.id ? (units.find((u) => u.id === editing.id)?.hours ?? 0) : 0)
+            requiredLecture={requiredLecture}
+            requiredPractical={requiredPractical}
+            otherUnitsLecture={
+              totalPlannedLecture -
+              (editing.id
+                ? (units.find((u) => u.id === editing.id)?.lecture_hours ?? 0)
+                : 0)
+            }
+            otherUnitsPractical={
+              totalPlannedPractical -
+              (editing.id
+                ? (units.find((u) => u.id === editing.id)?.practical_hours ?? 0)
+                : 0)
             }
             onClose={() => setEditing(null)}
             onSave={(u) => save.mutate(u, { onSuccess: () => setEditing(null) })}
@@ -410,6 +420,7 @@ function SyllabusUnitsPage() {
             error={save.error?.message}
           />
         )}
+
 
         {importOpen && subject && (
           <MdImportModal
