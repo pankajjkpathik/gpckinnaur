@@ -12,7 +12,7 @@ import {
   deleteSyllabusUnit,
   syllabusUnitReconciliation,
 } from "@/lib/academic.functions";
-import { parseSyllabusMarkdown, rescaleHours, type ParsedUnit } from "@/lib/parse-syllabus-md";
+import { parseSyllabusMarkdown, rescaleField, type ParsedUnit } from "@/lib/parse-syllabus-md";
 
 export const Route = createFileRoute("/admin/syllabus-units")({
   head: () => portalMeta("Planned Unit Hours"),
@@ -28,7 +28,10 @@ type Unit = {
   title: string;
   topics: string[];
   hours: number;
+  lecture_hours: number;
+  practical_hours: number;
 };
+
 
 function currentAY(): string {
   const d = new Date();
@@ -64,7 +67,7 @@ function exportUnits(
   const base = `syllabus-units_${safe(subject.code)}_${academicYear}`;
   if (format === "json") {
     const payload = {
-      schema: "syllabus-units.v1",
+      schema: "syllabus-units.v2",
       exported_at: new Date().toISOString(),
       subject: {
         code: subject.code,
@@ -78,6 +81,8 @@ function exportUnits(
       units: units.map((u) => ({
         unit_no: u.unit_no,
         title: u.title,
+        lecture_hours: u.lecture_hours,
+        practical_hours: u.practical_hours,
         hours: u.hours,
         topics: u.topics ?? [],
       })),
@@ -86,12 +91,20 @@ function exportUnits(
     return;
   }
   const rows = [
-    ["Unit No", "Title", "Hours", "Topics"],
-    ...units.map((u) => [u.unit_no, u.title, u.hours, (u.topics ?? []).join(" | ")]),
+    ["Unit No", "Title", "Theory Hours", "Practical Hours", "Total Hours", "Topics"],
+    ...units.map((u) => [
+      u.unit_no,
+      u.title,
+      u.lecture_hours,
+      u.practical_hours,
+      u.hours,
+      (u.topics ?? []).join(" | "),
+    ]),
   ];
   const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
   downloadBlob(`${base}.csv`, "text/csv;charset=utf-8", csv);
 }
+
 
 function SyllabusUnitsPage() {
   const nav = useNavigate();
@@ -133,15 +146,27 @@ function SyllabusUnitsPage() {
     () => (subjectsQ.data ?? []).find((s: any) => s.id === Number(subjectId)),
     [subjectsQ.data, subjectId],
   );
-  const units: Unit[] = (unitsQ.data as any) ?? [];
-  const totalPlanned = units.reduce((a, u) => a + (Number(u.hours) || 0), 0);
+  const units: Unit[] = ((unitsQ.data as any) ?? []).map((u: any) => ({
+    ...u,
+    lecture_hours: Number(u.lecture_hours) || 0,
+    practical_hours: Number(u.practical_hours) || 0,
+    hours: Number(u.hours) || 0,
+  }));
+  const totalPlannedLecture = units.reduce((a, u) => a + (Number(u.lecture_hours) || 0), 0);
+  const totalPlannedPractical = units.reduce((a, u) => a + (Number(u.practical_hours) || 0), 0);
+  const totalPlanned = totalPlannedLecture + totalPlannedPractical;
   const WEEKS = 14;
-  const requiredTotal = subject
-    ? ((subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0)) * WEEKS
-    : 0;
-  const subjectPlanned = subject ? (subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0) : 0;
-  const hoursDiff = totalPlanned - requiredTotal;
-  const hoursValid = subject != null && units.length > 0 && hoursDiff === 0;
+  const subjectL = subject?.lecture_hours ?? 0;
+  const subjectP = subject?.practical_hours ?? 0;
+  const requiredLecture = subjectL * WEEKS;
+  const requiredPractical = subjectP * WEEKS;
+  const requiredTotal = requiredLecture + requiredPractical;
+  const subjectPlanned = subjectL + subjectP;
+  const lectureDiff = totalPlannedLecture - requiredLecture;
+  const practicalDiff = totalPlannedPractical - requiredPractical;
+  const hoursValid =
+    subject != null && units.length > 0 && lectureDiff === 0 && practicalDiff === 0;
+
 
   const [editing, setEditing] = useState<Unit | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -232,10 +257,11 @@ function SyllabusUnitsPage() {
                   <span className="text-xs font-normal text-muted-foreground">· AY {academicYear}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  L {subject.lecture_hours ?? 0} + P {subject.practical_hours ?? 0} ={" "}
-                  <b>{subjectPlanned}</b>/week × <b>{WEEKS}</b> weeks ={" "}
-                  <b>{requiredTotal}</b> required · unit hours total <b>{totalPlanned}</b>
+                  L {subjectL} × {WEEKS} = <b>{requiredLecture}</b> theory ·
+                  {" "}P {subjectP} × {WEEKS} = <b>{requiredPractical}</b> practical ·
+                  {" "}planned <b>{totalPlannedLecture}</b> theory / <b>{totalPlannedPractical}</b> practical
                 </p>
+
               </div>
               <div className="flex gap-2 flex-wrap">
                 <button
@@ -270,8 +296,11 @@ function SyllabusUnitsPage() {
                       title: "",
                       topics: [],
                       hours: 0,
+                      lecture_hours: 0,
+                      practical_hours: 0,
                     })
                   }
+
                   className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1"
                 >
                   <Plus className="w-4 h-4" /> Add Unit
@@ -282,18 +311,32 @@ function SyllabusUnitsPage() {
             {requiredTotal > 0 && (
               hoursValid ? (
                 <div className="rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
-                  ✓ Unit hours match required total ({requiredTotal}).
+                  ✓ Theory <b>{totalPlannedLecture}</b>/{requiredLecture} and Practical{" "}
+                  <b>{totalPlannedPractical}</b>/{requiredPractical} both match.
                 </div>
               ) : units.length === 0 ? (
                 <div className="rounded border border-amber-200 bg-amber-50 text-amber-800 text-xs px-3 py-2">
-                  No units defined for {academicYear}. Add units totalling <b>{requiredTotal}</b> hours (coverage falls back to L+P until then).
+                  No units defined for {academicYear}. Add units totalling{" "}
+                  <b>{requiredLecture}</b> theory + <b>{requiredPractical}</b> practical hours.
                 </div>
               ) : (
-                <div className="rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
-                  ✗ Unit hours total <b>{totalPlanned}</b>, but <b>{requiredTotal}</b> required.{" "}
-                  {hoursDiff > 0
-                    ? <>Remove <b>{hoursDiff}</b> hour(s) from one or more units.</>
-                    : <>Add <b>{Math.abs(hoursDiff)}</b> more hour(s) across units.</>}
+                <div className="rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2 space-y-1">
+                  {lectureDiff !== 0 && (
+                    <div>
+                      ✗ <b>Theory</b>: planned <b>{totalPlannedLecture}</b>, required <b>{requiredLecture}</b>.{" "}
+                      {lectureDiff > 0
+                        ? <>Remove <b>{lectureDiff}</b> theory hour(s).</>
+                        : <>Add <b>{Math.abs(lectureDiff)}</b> more theory hour(s).</>}
+                    </div>
+                  )}
+                  {practicalDiff !== 0 && (
+                    <div>
+                      ✗ <b>Practical</b>: planned <b>{totalPlannedPractical}</b>, required <b>{requiredPractical}</b>.{" "}
+                      {practicalDiff > 0
+                        ? <>Remove <b>{practicalDiff}</b> practical hour(s).</>
+                        : <>Add <b>{Math.abs(practicalDiff)}</b> more practical hour(s).</>}
+                    </div>
+                  )}
                 </div>
               )
             )}
@@ -305,7 +348,9 @@ function SyllabusUnitsPage() {
                     <th className="text-left px-2 py-2 w-16">Unit</th>
                     <th className="text-left px-2 py-2">Title</th>
                     <th className="text-left px-2 py-2">Topics</th>
-                    <th className="text-right px-2 py-2 w-24">Hours</th>
+                    <th className="text-right px-2 py-2 w-20">Theory</th>
+                    <th className="text-right px-2 py-2 w-20">Practical</th>
+                    <th className="text-right px-2 py-2 w-16">Total</th>
                     <th className="w-24"></th>
                   </tr>
                 </thead>
@@ -317,7 +362,9 @@ function SyllabusUnitsPage() {
                       <td className="px-2 py-2 text-xs text-muted-foreground">
                         {(u.topics ?? []).join(", ") || "—"}
                       </td>
-                      <td className="px-2 py-2 text-right">{u.hours}</td>
+                      <td className="px-2 py-2 text-right">{u.lecture_hours}</td>
+                      <td className="px-2 py-2 text-right">{u.practical_hours}</td>
+                      <td className="px-2 py-2 text-right font-semibold">{u.hours}</td>
                       <td className="px-2 py-2 flex gap-1 justify-end">
                         <button onClick={() => setEditing({ ...u, topics: u.topics ?? [] })} className="p-1.5 hover:bg-secondary rounded">
                           <Pencil className="w-4 h-4" />
@@ -333,7 +380,7 @@ function SyllabusUnitsPage() {
                   ))}
                   {units.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="text-center py-6 text-muted-foreground">
+                      <td colSpan={7} className="text-center py-6 text-muted-foreground">
                         No units defined yet.
                       </td>
                     </tr>
@@ -343,6 +390,12 @@ function SyllabusUnitsPage() {
                   <tfoot>
                     <tr className="border-t bg-secondary/40 font-semibold">
                       <td colSpan={3} className="px-2 py-2 text-right">Total planned</td>
+                      <td className={`px-2 py-2 text-right ${lectureDiff !== 0 ? "text-rose-700" : ""}`}>
+                        {totalPlannedLecture}/{requiredLecture}
+                      </td>
+                      <td className={`px-2 py-2 text-right ${practicalDiff !== 0 ? "text-rose-700" : ""}`}>
+                        {totalPlannedPractical}/{requiredPractical}
+                      </td>
                       <td className="px-2 py-2 text-right">{totalPlanned}</td>
                       <td></td>
                     </tr>
@@ -350,15 +403,26 @@ function SyllabusUnitsPage() {
                 )}
               </table>
             </div>
+
           </div>
         )}
 
         {editing && (
           <UnitModal
             initial={editing}
-            requiredTotal={requiredTotal}
-            otherUnitsHours={
-              totalPlanned - (editing.id ? (units.find((u) => u.id === editing.id)?.hours ?? 0) : 0)
+            requiredLecture={requiredLecture}
+            requiredPractical={requiredPractical}
+            otherUnitsLecture={
+              totalPlannedLecture -
+              (editing.id
+                ? (units.find((u) => u.id === editing.id)?.lecture_hours ?? 0)
+                : 0)
+            }
+            otherUnitsPractical={
+              totalPlannedPractical -
+              (editing.id
+                ? (units.find((u) => u.id === editing.id)?.practical_hours ?? 0)
+                : 0)
             }
             onClose={() => setEditing(null)}
             onSave={(u) => save.mutate(u, { onSuccess: () => setEditing(null) })}
@@ -366,6 +430,7 @@ function SyllabusUnitsPage() {
             error={save.error?.message}
           />
         )}
+
 
         {importOpen && subject && (
           <MdImportModal
@@ -386,16 +451,20 @@ function SyllabusUnitsPage() {
 
 function UnitModal({
   initial,
-  requiredTotal,
-  otherUnitsHours,
+  requiredLecture,
+  requiredPractical,
+  otherUnitsLecture,
+  otherUnitsPractical,
   onClose,
   onSave,
   pending,
   error,
 }: {
   initial: Unit;
-  requiredTotal: number;
-  otherUnitsHours: number;
+  requiredLecture: number;
+  requiredPractical: number;
+  otherUnitsLecture: number;
+  otherUnitsPractical: number;
   onClose: () => void;
   onSave: (u: Unit) => void;
   pending: boolean;
@@ -403,12 +472,16 @@ function UnitModal({
 }) {
   const [unitNo, setUnitNo] = useState<number>(initial.unit_no);
   const [title, setTitle] = useState(initial.title);
-  const [hours, setHours] = useState<number>(initial.hours);
+  const [lectureHours, setLectureHours] = useState<number>(initial.lecture_hours ?? 0);
+  const [practicalHours, setPracticalHours] = useState<number>(initial.practical_hours ?? 0);
   const [topicsText, setTopicsText] = useState((initial.topics ?? []).join("\n"));
   const [ay, setAy] = useState<string>(initial.academic_year);
   const [semOverride, setSemOverride] = useState<string>(
     initial.semester != null ? String(initial.semester) : "",
   );
+
+  const lectureDisabled = requiredLecture === 0;
+  const practicalDisabled = requiredPractical === 0;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -420,6 +493,8 @@ function UnitModal({
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            const lh = lectureDisabled ? 0 : lectureHours;
+            const ph = practicalDisabled ? 0 : practicalHours;
             onSave({
               id: initial.id,
               subject_id: initial.subject_id,
@@ -427,7 +502,9 @@ function UnitModal({
               semester: semOverride ? Number(semOverride) : null,
               unit_no: unitNo,
               title,
-              hours,
+              lecture_hours: lh,
+              practical_hours: ph,
+              hours: lh + ph,
               topics: topicsText.split("\n").map((t) => t.trim()).filter(Boolean),
             });
           }}
@@ -463,12 +540,26 @@ function UnitModal({
                 className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
               />
             </label>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
             <label className="text-xs text-muted-foreground">
-              Planned Hours
+              Theory hours {requiredLecture > 0 && <span className="text-[10px]">(target {requiredLecture})</span>}
               <input
-                type="number" min={0} max={200} required value={hours}
-                onChange={(e) => setHours(Number(e.target.value) || 0)}
-                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
+                type="number" min={0} max={200}
+                disabled={lectureDisabled}
+                value={lectureHours}
+                onChange={(e) => setLectureHours(Number(e.target.value) || 0)}
+                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 disabled:bg-secondary/50"
+              />
+            </label>
+            <label className="text-xs text-muted-foreground">
+              Practical hours {requiredPractical > 0 && <span className="text-[10px]">(target {requiredPractical})</span>}
+              <input
+                type="number" min={0} max={200}
+                disabled={practicalDisabled}
+                value={practicalHours}
+                onChange={(e) => setPracticalHours(Number(e.target.value) || 0)}
+                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 disabled:bg-secondary/50"
               />
             </label>
           </div>
@@ -487,33 +578,41 @@ function UnitModal({
             />
           </label>
 
-          {requiredTotal > 0 && (() => {
-            const projected = otherUnitsHours + (Number(hours) || 0);
-            const remaining = requiredTotal - otherUnitsHours;
-            const overshoot = projected - requiredTotal;
-            const ok = projected === requiredTotal;
+          {(requiredLecture > 0 || requiredPractical > 0) && (() => {
+            const rows: { label: string; req: number; other: number; val: number }[] = [];
+            if (requiredLecture > 0)
+              rows.push({ label: "Theory", req: requiredLecture, other: otherUnitsLecture, val: lectureHours });
+            if (requiredPractical > 0)
+              rows.push({ label: "Practical", req: requiredPractical, other: otherUnitsPractical, val: practicalHours });
+            const allOk = rows.every((r) => r.other + (Number(r.val) || 0) === r.req);
             return (
               <div
-                className={`text-xs rounded border px-3 py-2 ${
-                  ok
+                className={`text-xs rounded border px-3 py-2 space-y-0.5 ${
+                  allOk
                     ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : overshoot > 0
-                      ? "border-rose-200 bg-rose-50 text-rose-800"
-                      : "border-amber-200 bg-amber-50 text-amber-800"
+                    : "border-amber-200 bg-amber-50 text-amber-800"
                 }`}
               >
-                Required <b>{requiredTotal}</b> · other units <b>{otherUnitsHours}</b> · this unit{" "}
-                <b>{Number(hours) || 0}</b> · total <b>{projected}</b>
-                {ok && " ✓"}
-                {!ok && overshoot > 0 && (
-                  <> — <b>{overshoot}</b> over. Reduce this unit to <b>{Math.max(0, remaining)}</b>.</>
-                )}
-                {!ok && overshoot < 0 && (
-                  <> — needs <b>{Math.abs(overshoot)}</b> more (set this unit to <b>{remaining}</b> to match).</>
-                )}
+                {rows.map((r) => {
+                  const projected = r.other + (Number(r.val) || 0);
+                  const remaining = r.req - r.other;
+                  const overshoot = projected - r.req;
+                  return (
+                    <div key={r.label}>
+                      <b>{r.label}</b>: required {r.req} · others {r.other} · this {Number(r.val) || 0} · total{" "}
+                      <b>{projected}</b>
+                      {overshoot === 0
+                        ? " ✓"
+                        : overshoot > 0
+                          ? ` — ${overshoot} over (set this to ${Math.max(0, r.req - r.other)})`
+                          : ` — needs ${Math.abs(overshoot)} more (set this to ${r.req - r.other})`}
+                    </div>
+                  );
+                })}
               </div>
             );
           })()}
+
 
           {error && <p className="text-xs text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
@@ -538,11 +637,18 @@ type ReconRow = {
   branch: string;
   semester: number;
   lp_hours: number;
+  required_lecture_hours: number;
+  required_practical_hours: number;
   unit_count: number;
   unit_hours: number;
+  unit_lecture_hours: number;
+  unit_practical_hours: number;
+  lecture_diff: number;
+  practical_diff: number;
   diff: number;
   status: "no_units" | "mismatch" | "match";
 };
+
 
 function ReconciliationPanel({
   academicYear,
@@ -634,11 +740,11 @@ function ReconciliationPanel({
               <thead className="bg-secondary">
                 <tr>
                   <th className="text-left px-2 py-2">Subject</th>
-                  <th className="text-left px-2 py-2 w-32">Branch / Sem</th>
-                  <th className="text-right px-2 py-2 w-20">L+P</th>
-                  <th className="text-right px-2 py-2 w-20">Units</th>
-                  <th className="text-right px-2 py-2 w-24">Unit hrs</th>
-                  <th className="text-right px-2 py-2 w-20">Diff</th>
+                  <th className="text-left px-2 py-2 w-28">Branch / Sem</th>
+                  <th className="text-right px-2 py-2 w-24">Theory (unit / req)</th>
+                  <th className="text-right px-2 py-2 w-20">ΔT</th>
+                  <th className="text-right px-2 py-2 w-24">Practical (unit / req)</th>
+                  <th className="text-right px-2 py-2 w-20">ΔP</th>
                   <th className="text-left px-2 py-2 w-28">Status</th>
                   <th className="w-20"></th>
                 </tr>
@@ -659,11 +765,17 @@ function ReconciliationPanel({
                       <div className="text-xs text-muted-foreground">{r.name}</div>
                     </td>
                     <td className="px-2 py-1.5 text-xs">{r.branch} · S{r.semester}</td>
-                    <td className="px-2 py-1.5 text-right">{r.lp_hours}</td>
-                    <td className="px-2 py-1.5 text-right">{r.unit_count}</td>
-                    <td className="px-2 py-1.5 text-right">{r.unit_hours}</td>
-                    <td className={`px-2 py-1.5 text-right ${r.diff !== 0 ? "text-amber-700 font-semibold" : ""}`}>
-                      {r.status === "no_units" ? "—" : (r.diff > 0 ? `+${r.diff}` : r.diff)}
+                    <td className="px-2 py-1.5 text-right">
+                      {r.unit_lecture_hours} / {r.required_lecture_hours}
+                    </td>
+                    <td className={`px-2 py-1.5 text-right ${r.lecture_diff !== 0 ? "text-amber-700 font-semibold" : ""}`}>
+                      {r.status === "no_units" ? "—" : (r.lecture_diff > 0 ? `+${r.lecture_diff}` : r.lecture_diff)}
+                    </td>
+                    <td className="px-2 py-1.5 text-right">
+                      {r.unit_practical_hours} / {r.required_practical_hours}
+                    </td>
+                    <td className={`px-2 py-1.5 text-right ${r.practical_diff !== 0 ? "text-amber-700 font-semibold" : ""}`}>
+                      {r.status === "no_units" ? "—" : (r.practical_diff > 0 ? `+${r.practical_diff}` : r.practical_diff)}
                     </td>
                     <td className="px-2 py-1.5">
                       {r.status === "mismatch" && (
@@ -695,6 +807,7 @@ function ReconciliationPanel({
   );
 }
 
+
 function MdImportModal({
   subject,
   academicYear,
@@ -718,8 +831,16 @@ function MdImportModal({
   const [err, setErr] = useState<string | null>(null);
   const [progress, setProgress] = useState<string>("");
 
-  const target = (subject.lecture_hours ?? 0) * 14 + (subject.practical_hours ?? 0) * 14;
-  const total = parsed.reduce((s, u) => s + (Number(u.hours) || 0), 0);
+  const WEEKS = 14;
+  const targetLecture = (subject.lecture_hours ?? 0) * WEEKS;
+  const targetPractical = (subject.practical_hours ?? 0) * WEEKS;
+  const target = targetLecture + targetPractical;
+  const totalLecture = parsed.reduce((s, u) => s + (Number(u.lecture_hours) || 0), 0);
+  const totalPractical = parsed.reduce((s, u) => s + (Number(u.practical_hours) || 0), 0);
+  const total = totalLecture + totalPractical;
+  const lectureOk = targetLecture === totalLecture;
+  const practicalOk = targetPractical === totalPractical;
+  const allOk = lectureOk && practicalOk;
   const view = parsed;
 
   function handleFile(f: File) {
@@ -736,17 +857,27 @@ function MdImportModal({
           const arr = Array.isArray(obj) ? obj : obj?.units;
           if (Array.isArray(arr)) {
             p = arr
-              .map((u: any, i: number) => ({
-                unit_no: Number(u.unit_no ?? u.unitNo ?? i + 1),
-                title: String(u.title ?? "").slice(0, 200),
-                hours: Number(u.hours ?? 0),
-                topics: Array.isArray(u.topics)
-                  ? u.topics.map((t: any) => String(t))
-                  : String(u.topics ?? "")
-                      .split(/[,;\n]/)
-                      .map((s: string) => s.trim())
-                      .filter(Boolean),
-              }))
+              .map((u: any, i: number) => {
+                const lh = Number(u.lecture_hours ?? u.lectureHours ?? 0);
+                const ph = Number(u.practical_hours ?? u.practicalHours ?? 0);
+                const legacy = Number(u.hours ?? 0);
+                // v1 fallback: put legacy hours into lecture_hours
+                const lecture = lh || ph ? lh : legacy;
+                const practical = ph;
+                return {
+                  unit_no: Number(u.unit_no ?? u.unitNo ?? i + 1),
+                  title: String(u.title ?? "").slice(0, 200),
+                  lecture_hours: lecture,
+                  practical_hours: practical,
+                  hours: lecture + practical,
+                  topics: Array.isArray(u.topics)
+                    ? u.topics.map((t: any) => String(t))
+                    : String(u.topics ?? "")
+                        .split(/[,;\n]/)
+                        .map((s: string) => s.trim())
+                        .filter(Boolean),
+                };
+              })
               .sort((a, b) => a.unit_no - b.unit_no);
           }
         } catch {
@@ -762,30 +893,59 @@ function MdImportModal({
   }
 
   function autoDistribute() {
-    if (target > 0 && parsed.length > 0) {
-      setParsed(rescaleHours(parsed, target));
-    }
+    if (parsed.length === 0) return;
+    let next = parsed;
+    if (targetLecture > 0) next = rescaleField(next, targetLecture, "lecture_hours");
+    if (targetPractical > 0) next = rescaleField(next, targetPractical, "practical_hours");
+    setParsed(
+      next.map((u) => ({
+        ...u,
+        hours: (Number(u.lecture_hours) || 0) + (Number(u.practical_hours) || 0),
+      })),
+    );
   }
 
   function resetHours() {
     setParsed((cur) =>
-      cur.map((u, i) => ({ ...u, hours: originalParsed[i]?.hours ?? u.hours })),
+      cur.map((u, i) => {
+        const o = originalParsed[i];
+        if (!o) return u;
+        return {
+          ...u,
+          lecture_hours: o.lecture_hours,
+          practical_hours: o.practical_hours,
+          hours: o.lecture_hours + o.practical_hours,
+        };
+      }),
     );
   }
 
-  function bump(i: number, delta: number) {
+  function bump(i: number, field: "lecture_hours" | "practical_hours", delta: number) {
     setParsed((cur) => {
       const next = [...cur];
-      next[i] = { ...next[i], hours: Math.max(0, (Number(next[i].hours) || 0) + delta) };
+      const v = Math.max(0, (Number(next[i][field]) || 0) + delta);
+      next[i] = { ...next[i], [field]: v };
+      next[i].hours =
+        (Number(next[i].lecture_hours) || 0) + (Number(next[i].practical_hours) || 0);
+      return next;
+    });
+  }
+
+  function setField(i: number, field: "lecture_hours" | "practical_hours", v: number) {
+    setParsed((cur) => {
+      const next = [...cur];
+      next[i] = { ...next[i], [field]: Math.max(0, v) };
+      next[i].hours =
+        (Number(next[i].lecture_hours) || 0) + (Number(next[i].practical_hours) || 0);
       return next;
     });
   }
 
   async function doImport() {
     if (view.length === 0) return;
-    if (target > 0 && total !== target) {
+    if (!allOk) {
       setErr(
-        `Total unit hours (${total}) must equal required L+P×14 (${target}). Click "Auto-distribute" or adjust unit hours in the preview below.`,
+        `Theory ${totalLecture}/${targetLecture} and Practical ${totalPractical}/${targetPractical} must both match. Click "Auto-distribute" or adjust with +/- controls.`,
       );
       return;
     }
@@ -810,7 +970,8 @@ function MdImportModal({
             unit_no: u.unit_no,
             title: u.title.slice(0, 200),
             topics: u.topics.slice(0, 200),
-            hours: Math.max(0, Math.round(u.hours)),
+            lecture_hours: Math.max(0, Math.round(u.lecture_hours)),
+            practical_hours: Math.max(0, Math.round(u.practical_hours)),
           } as any,
         });
       }
@@ -822,6 +983,7 @@ function MdImportModal({
       setProgress("");
     }
   }
+
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -874,7 +1036,7 @@ function MdImportModal({
                 disabled={target <= 0}
                 className="border border-rose-700 text-rose-700 px-3 py-1.5 rounded text-xs font-semibold hover:bg-rose-50 disabled:opacity-50"
               >
-                Auto-distribute to {target || "—"}
+                Auto-distribute (T {targetLecture || "—"} / P {targetPractical || "—"})
               </button>
               <button
                 type="button"
@@ -888,23 +1050,33 @@ function MdImportModal({
                 Overwrite existing {existingUnits.length} unit(s)
               </label>
               <span
-                className={`ml-auto text-xs font-semibold ${
-                  target > 0 && total !== target ? "text-rose-700" : "text-emerald-700"
-                }`}
+                className={`ml-auto text-xs font-semibold ${allOk ? "text-emerald-700" : "text-rose-700"}`}
               >
-                {view.length} units · {total} / {target || "—"} hrs
-                {target > 0 && total !== target && ` (Δ ${total - target > 0 ? "+" : ""}${total - target})`}
+                {view.length} units · T {totalLecture}/{targetLecture || "—"} · P{" "}
+                {totalPractical}/{targetPractical || "—"}
               </span>
             </div>
 
             {target > 0 && (
-              total === target ? (
+              allOk ? (
                 <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
-                  ✓ Total {total} matches required L+P×14 ({target}). Preview below — edit any hours before saving.
+                  ✓ Theory and Practical totals both match. Preview below — edit before saving.
                 </div>
               ) : (
-                <div className="mt-2 rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
-                  ✗ Total {total} ≠ required {target}. Click <b>Auto-distribute</b> or adjust unit hours with the +/- buttons below.
+                <div className="mt-2 rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2 space-y-0.5">
+                  {!lectureOk && (
+                    <div>
+                      ✗ Theory {totalLecture} ≠ required {targetLecture}
+                      {" "}(Δ {totalLecture - targetLecture > 0 ? "+" : ""}{totalLecture - targetLecture})
+                    </div>
+                  )}
+                  {!practicalOk && (
+                    <div>
+                      ✗ Practical {totalPractical} ≠ required {targetPractical}
+                      {" "}(Δ {totalPractical - targetPractical > 0 ? "+" : ""}{totalPractical - targetPractical})
+                    </div>
+                  )}
+                  <div className="opacity-80">Click <b>Auto-distribute</b> or adjust with the +/- controls.</div>
                 </div>
               )
             )}
@@ -916,93 +1088,91 @@ function MdImportModal({
                     <th className="text-left px-2 py-1.5 w-14">Unit</th>
                     <th className="text-left px-2 py-1.5">Title</th>
                     <th className="text-left px-2 py-1.5">Topics</th>
-                    <th className="text-center px-2 py-1.5 w-36">Hours (adjust)</th>
+                    <th className="text-center px-2 py-1.5 w-32">Theory</th>
+                    <th className="text-center px-2 py-1.5 w-32">Practical</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {view.map((u, i) => {
-                    const orig = originalParsed[i]?.hours ?? u.hours;
-                    const diff = (Number(u.hours) || 0) - orig;
-                    return (
-                      <tr key={i} className="border-t align-top">
-                        <td className="px-2 py-1.5 font-semibold">{u.unit_no}</td>
-                        <td className="px-2 py-1.5">
-                          <input
-                            value={u.title}
-                            onChange={(e) => {
-                              const next = [...parsed];
-                              next[i] = { ...next[i], title: e.target.value };
-                              setParsed(next);
-                            }}
-                            className="w-full border rounded px-1.5 py-1 text-sm"
-                          />
-                        </td>
-                        <td className="px-2 py-1.5 text-xs text-muted-foreground">
-                          <textarea
-                            rows={2}
-                            value={u.topics.join("\n")}
-                            onChange={(e) => {
-                              const next = [...parsed];
-                              next[i] = {
-                                ...next[i],
-                                topics: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean),
-                              };
-                              setParsed(next);
-                            }}
-                            className="w-full border rounded px-1.5 py-1 text-xs font-mono"
-                          />
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => bump(i, -1)}
-                              className="w-6 h-6 border rounded text-sm hover:bg-secondary"
-                              aria-label="Decrease hours"
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              min={0}
-                              max={200}
-                              value={u.hours}
-                              onChange={(e) => {
-                                const next = [...parsed];
-                                next[i] = { ...next[i], hours: Number(e.target.value) || 0 };
-                                setParsed(next);
-                              }}
-                              className="w-14 border rounded px-1 py-0.5 text-sm text-center"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => bump(i, 1)}
-                              className="w-6 h-6 border rounded text-sm hover:bg-secondary"
-                              aria-label="Increase hours"
-                            >
-                              +
-                            </button>
-                          </div>
-                          {diff !== 0 && (
-                            <div
-                              className={`text-[10px] text-center mt-0.5 ${
-                                diff > 0 ? "text-emerald-700" : "text-amber-700"
-                              }`}
-                            >
-                              {diff > 0 ? `+${diff}` : diff} vs parsed ({orig})
+                  {view.map((u, i) => (
+                    <tr key={i} className="border-t align-top">
+                      <td className="px-2 py-1.5 font-semibold">{u.unit_no}</td>
+                      <td className="px-2 py-1.5">
+                        <input
+                          value={u.title}
+                          onChange={(e) => {
+                            const next = [...parsed];
+                            next[i] = { ...next[i], title: e.target.value };
+                            setParsed(next);
+                          }}
+                          className="w-full border rounded px-1.5 py-1 text-sm"
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 text-xs text-muted-foreground">
+                        <textarea
+                          rows={2}
+                          value={u.topics.join("\n")}
+                          onChange={(e) => {
+                            const next = [...parsed];
+                            next[i] = {
+                              ...next[i],
+                              topics: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean),
+                            };
+                            setParsed(next);
+                          }}
+                          className="w-full border rounded px-1.5 py-1 text-xs font-mono"
+                        />
+                      </td>
+                      {(["lecture_hours", "practical_hours"] as const).map((field) => {
+                        const disabled =
+                          (field === "lecture_hours" && targetLecture === 0) ||
+                          (field === "practical_hours" && targetPractical === 0);
+                        return (
+                          <td key={field} className="px-2 py-1.5">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => bump(i, field, -1)}
+                                className="w-6 h-6 border rounded text-sm hover:bg-secondary disabled:opacity-40"
+                                aria-label={`Decrease ${field}`}
+                              >
+                                −
+                              </button>
+                              <input
+                                type="number"
+                                min={0}
+                                max={200}
+                                disabled={disabled}
+                                value={u[field]}
+                                onChange={(e) => setField(i, field, Number(e.target.value) || 0)}
+                                className="w-14 border rounded px-1 py-0.5 text-sm text-center disabled:bg-secondary/50"
+                              />
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => bump(i, field, 1)}
+                                className="w-6 h-6 border rounded text-sm hover:bg-secondary disabled:opacity-40"
+                                aria-label={`Increase ${field}`}
+                              >
+                                +
+                              </button>
                             </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
                 </tbody>
                 <tfoot>
                   <tr className="border-t bg-secondary/40 font-semibold">
                     <td colSpan={3} className="px-2 py-1.5 text-right">Total</td>
-                    <td className={`px-2 py-1.5 text-center ${target > 0 && total !== target ? "text-rose-700" : ""}`}>
-                      {total}
-                      {target > 0 && ` / ${target}`}
+                    <td className={`px-2 py-1.5 text-center ${!lectureOk ? "text-rose-700" : ""}`}>
+                      {totalLecture}
+                      {targetLecture > 0 && ` / ${targetLecture}`}
+                    </td>
+                    <td className={`px-2 py-1.5 text-center ${!practicalOk ? "text-rose-700" : ""}`}>
+                      {totalPractical}
+                      {targetPractical > 0 && ` / ${targetPractical}`}
                     </td>
                   </tr>
                 </tfoot>
@@ -1023,14 +1193,15 @@ function MdImportModal({
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
           <button
-            disabled={busy || view.length === 0 || (target > 0 && total !== target)}
+            disabled={busy || view.length === 0 || (target > 0 && !allOk)}
             onClick={doImport}
-            title={target > 0 && total !== target ? `Total ${total} must equal ${target}` : ""}
+            title={!allOk ? `Theory ${totalLecture}/${targetLecture} · Practical ${totalPractical}/${targetPractical} must match` : ""}
             className="px-4 py-1.5 bg-rose-700 text-white rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
           >
             <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} unit(s)`}
           </button>
         </div>
+
       </div>
     </div>
   );

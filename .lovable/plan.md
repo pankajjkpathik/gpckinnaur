@@ -1,46 +1,54 @@
-## 1. Parent Portal (under Student Portal)
-- New migration: `parent_users(student_id PK/FK, password_hash, created_at, last_login)`. Login = student IR (Enrollment No.); password set by the student.
-- Student portal: add "Parent Access" page → set/reset parent password.
-- New routes: `/parent-login`, `/parent-dashboard` with tabs: **Attendance**, **Marks**, **Board Marks**, **Disciplinary Actions**, **Fees Payment** (read-only views of existing student data).
-- Session cookie `parent_session` (mirrors staff/student session pattern).
+## Goal
 
-## 2. Bulk-upload sample for students
-- Add a downloadable `students-sample.xlsx` template button on `admin.students.tsx` (and clerk bulk-upload) with columns: enrollment_no, name, father_name, mother_name, dob, gender, category, branch, semester, batch_year, phone, email, address, admission_date.
+Track **theory (lecture) hours** and **practical hours** as two independent quantities per unit, with independent validation:
 
-## 3. Faculty "Generate Reports" — 6 official reports
-Add under `staff-reports.tsx` (or new `/staff-reports/*` sub-routes). Each generates a print-ready HTML page (browser print → PDF), auto-populated from attendance/marks tables:
+- Σ theory hours across units = **L × 14**
+- Σ practical hours across units = **P × 14**
 
-| Report | Source | Format |
-|---|---|---|
-| Individual Subject Register | attendance filtered by class+subject, daily grid | Roll × Date table |
-| Cumulative Consolidated Register | attendance grouped by student × subject | Class matrix |
-| Subject Sessional Report (S-1) | marks (CT1, CT2, Assignment, Attendance) for one subject | S-1 proforma from `s1s2.pdf` |
-| End-Semester Sessional Report (S-2) | marks across all subjects | S-2 consolidated proforma |
-| Monthly Attendance Register | attendance for month, all subjects | Theory%, Practical%, Overall% (no fine) |
-| Final Attendance Report | attendance + house test + athletics/cultural weightage + fine (₹5/period absent) | Matches `sem4.pdf` layout |
+No more combined L+P total. A subject with 3L + 2P must have 42 lecture-hours **and** 28 practical-hours planned separately.
 
-Selectors: branch, semester, month/session; "Print" button on each.
+## Changes
 
-## 4. Marks entry restructure (`faculty.tsx` marks section)
-- Primary selector = **Subject name** (not exam type).
-- Table columns: Roll No. · Name · Class Test 1 · Class Test 2 · House Test · Assignment 1 · Assignment 2.
-- One row per student with all 5 exam-type inputs inline; saves to `marks` table with existing `exam_type` enum extended.
+### 1. Database (migration)
 
-## 5. Lesson Plans — PDF (not syllabus coverage)
-- Replace syllabus-coverage UI in Manage Lesson Plans with PDF upload + list (reuse `PdfDocsPage` with `docType='lesson_plan'`). Faculty upload PDF per subject; students/HOD/Principal can view/download.
+Add two columns to `public.syllabus_units`:
 
-## 6. Fix Exam Schedule upload
-- `admin.calendar.tsx` (or wherever `docType='exam_schedule'` lives): the "Upload Schedule" button currently no-ops. Wire it to `pdfDocuments.upload` server fn; refresh list on success.
+- `lecture_hours integer NOT NULL DEFAULT 0`
+- `practical_hours integer NOT NULL DEFAULT 0`
 
-## 7. Student portal cleanup
-- "Upload Assignment" tab: fetch **pending** assignments (assignments where `due_date >= today` and no submission for this student) — show list with Upload button.
-- Remove standalone "My Assignments" card from student dashboard.
-- Documents tab: enforce PDF only + explicit Download button on each row.
+Backfill existing rows: copy `hours` into `lecture_hours` for theory-only subjects (P=0), into `practical_hours` for lab-only subjects (L=0), and split proportionally for mixed subjects. Keep the old `hours` column as a generated/legacy total for now so nothing else breaks.
 
-## Technical notes
-- Add `app_role` extension in a migration for `parent`; no auth.users linkage (parents use enrollment_no + password like students).
-- Marks `exam_type` enum: add `class_test_1`, `class_test_2`, `house_test`, `assignment_1`, `assignment_2` (keep old for compat).
-- All new tables get `GRANT` + RLS as per project rules.
-- Reports render as `<div className="print:...">` pages, use existing `report-export.ts` helpers.
+### 2. Server functions (`src/lib/academic.functions.ts`)
 
-Approve to proceed.
+- `upsertSyllabusUnit` — accept `lecture_hours` and `practical_hours` (both required, ≥0); derive `hours = lecture_hours + practical_hours` on write.
+- `syllabusUnitReconciliation` — return both `lecture_hours_sum` / `practical_hours_sum` and separate diffs vs `L×14` and `P×14`; a subject is "mismatch" if either side is off.
+- Coverage functions that read `hours` keep working (still populated), but a follow-up can switch them to the split fields.
+
+### 3. Admin UI (`src/routes/admin.syllabus-units.tsx`)
+
+- **Unit table**: replace the single "Hours" column with two columns — "Theory hrs" and "Practical hrs" — plus a small combined subtotal.
+- **Header summary**: show two required totals and two live totals:
+  `Theory 40 / 42 required · Practical 28 / 28 required ✓`.
+- **Validation banner**: green only when both match; otherwise show which side is off and by how much.
+- **Add/Edit unit modal**: two number inputs (Theory / Practical), each with its own remaining-hours helper. Disable the theory input if `L=0`, practical input if `P=0`.
+- **Reconciliation panel**: two diff columns (Theory Δ, Practical Δ), status "Mismatch" if either side is off.
+
+### 4. Markdown / JSON import (`MdImportModal` + `parse-syllabus-md.ts`)
+
+- Extend parser to recognise `(10 hours theory)`, `(4 hours practical)`, `Theory: 8`, `Practical: 4`. Unlabelled hours fall into theory (backward compatible).
+- Preview table shows theory + practical columns with −/+ controls per side.
+- `Auto-distribute` runs `rescaleHours` twice — once for the theory total (target `L×14`), once for practical (target `P×14`).
+- JSON export/import schema bumps to `syllabus-units.v2` with `lecture_hours` / `practical_hours` per unit. v1 files still import (values go into `lecture_hours`).
+
+### 5. Weekly plan generator
+
+`generateWeeklyPlan` currently sums lecture+practical per week. Keep behaviour but derive `periods_per_week` from `subject.lecture_hours + subject.practical_hours` as today — no functional change needed this turn; the split just makes future L/P-separate scheduling possible.
+
+## Out of scope
+
+- Splitting weekly lesson plans into separate theory/practical rows.
+- Re-computing historical coverage percentages with the new split.
+
+## Approval
+
+This touches the DB schema and every place that reads unit hours. Approving this plan will trigger the migration first, then the code edits after the types file regenerates.

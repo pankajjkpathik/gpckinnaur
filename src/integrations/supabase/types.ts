@@ -1679,6 +1679,8 @@ export type Database = {
           created_at: string
           hours: number
           id: number
+          lecture_hours: number
+          practical_hours: number
           semester: number | null
           subject_id: number
           title: string
@@ -1691,6 +1693,8 @@ export type Database = {
           created_at?: string
           hours?: number
           id?: number
+          lecture_hours?: number
+          practical_hours?: number
           semester?: number | null
           subject_id: number
           title: string
@@ -1703,6 +1707,8 @@ export type Database = {
           created_at?: string
           hours?: number
           id?: number
+          lecture_hours?: number
+          practical_hours?: number
           semester?: number | null
           subject_id?: number
           title?: string
