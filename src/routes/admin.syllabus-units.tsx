@@ -637,11 +637,18 @@ type ReconRow = {
   branch: string;
   semester: number;
   lp_hours: number;
+  required_lecture_hours: number;
+  required_practical_hours: number;
   unit_count: number;
   unit_hours: number;
+  unit_lecture_hours: number;
+  unit_practical_hours: number;
+  lecture_diff: number;
+  practical_diff: number;
   diff: number;
   status: "no_units" | "mismatch" | "match";
 };
+
 
 function ReconciliationPanel({
   academicYear,
