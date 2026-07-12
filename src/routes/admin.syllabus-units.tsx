@@ -311,38 +311,12 @@ function SyllabusUnitsPage() {
               </div>
             </div>
 
-            {requiredTotal > 0 && (
-              hoursValid ? (
-                <div className="rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
-                  ✓ Theory <b>{totalPlannedLecture}</b>/{requiredLecture} and Practical{" "}
-                  <b>{totalPlannedPractical}</b>/{requiredPractical} both match.
-                </div>
-              ) : units.length === 0 ? (
-                <div className="rounded border border-amber-200 bg-amber-50 text-amber-800 text-xs px-3 py-2">
-                  No units defined for {academicYear}. Add units totalling{" "}
-                  <b>{requiredLecture}</b> theory + <b>{requiredPractical}</b> practical hours.
-                </div>
-              ) : (
-                <div className="rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2 space-y-1">
-                  {lectureDiff !== 0 && (
-                    <div>
-                      ✗ <b>Theory</b>: planned <b>{totalPlannedLecture}</b>, required <b>{requiredLecture}</b>.{" "}
-                      {lectureDiff > 0
-                        ? <>Remove <b>{lectureDiff}</b> theory hour(s).</>
-                        : <>Add <b>{Math.abs(lectureDiff)}</b> more theory hour(s).</>}
-                    </div>
-                  )}
-                  {practicalDiff !== 0 && (
-                    <div>
-                      ✗ <b>Practical</b>: planned <b>{totalPlannedPractical}</b>, required <b>{requiredPractical}</b>.{" "}
-                      {practicalDiff > 0
-                        ? <>Remove <b>{practicalDiff}</b> practical hour(s).</>
-                        : <>Add <b>{Math.abs(practicalDiff)}</b> more practical hour(s).</>}
-                    </div>
-                  )}
-                </div>
-              )
+            {units.length === 0 && (
+              <div className="rounded border border-amber-200 bg-amber-50 text-amber-800 text-xs px-3 py-2">
+                No {isLabSubject ? "practicals" : "units"} defined for {academicYear}. Use <b>Import</b> to load them from the syllabus .md file, or <b>Add Unit</b> manually.
+              </div>
             )}
+
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
