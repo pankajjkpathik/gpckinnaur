@@ -1201,7 +1201,9 @@ function MdImportModal({
 
         {parsed.length === 0 && raw && (
           <p className="text-xs text-amber-700 mt-3">
-            No units detected. Make sure headings start with "Unit 1", "## Unit II", etc.
+            {isLab
+              ? "No practicals detected. Make sure the file has a heading like \"List of Practicals\" or \"Experiments\" followed by a numbered list."
+              : "No units detected. Make sure headings start with \"Unit 1\", \"## Unit II\", etc."}
           </p>
         )}
 
