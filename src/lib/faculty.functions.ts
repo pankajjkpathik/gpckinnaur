@@ -46,6 +46,29 @@ async function assertSubjectAccess(
   }
 }
 
+// Class-level access (for reports spanning multiple subjects). Requires the
+// caller to have at least one faculty_assignments row for that branch/semester.
+async function assertClassAccess(
+  me: StaffSession,
+  args: { branch: string; semester: number; academic_year?: string },
+) {
+  const held = [me.role, ...(me.extraRoles ?? [])];
+  if (held.some((r) => ["super_admin", "principal", "hod"].includes(r as string))) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  let q = supabaseAdmin
+    .from("faculty_assignments")
+    .select("id")
+    .eq("staff_id", me.id)
+    .eq("branch", args.branch)
+    .eq("semester", args.semester)
+    .limit(1);
+  if (args.academic_year) q = q.eq("academic_year", args.academic_year);
+  const { data } = await q;
+  if (!data || data.length === 0) {
+    throw new Error("Forbidden: you are not assigned to teach this class.");
+  }
+}
+
 // ============ DASHBOARD ============
 
 export const facultyDashboard = createServerFn({ method: "GET" })
