@@ -322,12 +322,12 @@ function SyllabusUnitsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-secondary">
                   <tr>
-                    <th className="text-left px-2 py-2 w-16">Unit</th>
-                    <th className="text-left px-2 py-2">Title</th>
-                    <th className="text-left px-2 py-2">Topics</th>
-                    <th className="text-right px-2 py-2 w-20">Theory</th>
-                    <th className="text-right px-2 py-2 w-20">Practical</th>
-                    <th className="text-right px-2 py-2 w-16">Total</th>
+                    <th className="text-left px-2 py-2 w-16">{isLabSubject ? "#" : "Unit"}</th>
+                    <th className="text-left px-2 py-2">{isLabSubject ? "Practical" : "Title"}</th>
+                    <th className="text-left px-2 py-2">{isLabSubject ? "Notes" : "Topics"}</th>
+                    {!isLabSubject && <th className="text-right px-2 py-2 w-20">Theory</th>}
+                    {!isLabSubject && <th className="text-right px-2 py-2 w-20">Practical</th>}
+                    {!isLabSubject && <th className="text-right px-2 py-2 w-16">Hours</th>}
                     <th className="w-24"></th>
                   </tr>
                 </thead>
@@ -339,9 +339,9 @@ function SyllabusUnitsPage() {
                       <td className="px-2 py-2 text-xs text-muted-foreground">
                         {(u.topics ?? []).join(", ") || "—"}
                       </td>
-                      <td className="px-2 py-2 text-right">{u.lecture_hours}</td>
-                      <td className="px-2 py-2 text-right">{u.practical_hours}</td>
-                      <td className="px-2 py-2 text-right font-semibold">{u.hours}</td>
+                      {!isLabSubject && <td className="px-2 py-2 text-right">{u.lecture_hours}</td>}
+                      {!isLabSubject && <td className="px-2 py-2 text-right">{u.practical_hours}</td>}
+                      {!isLabSubject && <td className="px-2 py-2 text-right font-semibold">{u.hours}</td>}
                       <td className="px-2 py-2 flex gap-1 justify-end">
                         <button onClick={() => setEditing({ ...u, topics: u.topics ?? [] })} className="p-1.5 hover:bg-secondary rounded">
                           <Pencil className="w-4 h-4" />
@@ -357,23 +357,27 @@ function SyllabusUnitsPage() {
                   ))}
                   {units.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="text-center py-6 text-muted-foreground">
-                        No units defined yet.
+                      <td colSpan={isLabSubject ? 4 : 7} className="text-center py-6 text-muted-foreground">
+                        No {isLabSubject ? "practicals" : "units"} defined yet.
                       </td>
                     </tr>
                   )}
                 </tbody>
-                {units.length > 0 && (
+                {units.length > 0 && !isLabSubject && (
                   <tfoot>
                     <tr className="border-t bg-secondary/40 font-semibold">
-                      <td colSpan={3} className="px-2 py-2 text-right">Total planned</td>
-                      <td className={`px-2 py-2 text-right ${lectureDiff !== 0 ? "text-rose-700" : ""}`}>
-                        {totalPlannedLecture}/{requiredLecture}
-                      </td>
-                      <td className={`px-2 py-2 text-right ${practicalDiff !== 0 ? "text-rose-700" : ""}`}>
-                        {totalPlannedPractical}/{requiredPractical}
-                      </td>
+                      <td colSpan={3} className="px-2 py-2 text-right">Total</td>
+                      <td className="px-2 py-2 text-right">{totalPlannedLecture}</td>
+                      <td className="px-2 py-2 text-right">{totalPlannedPractical}</td>
                       <td className="px-2 py-2 text-right">{totalPlanned}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                )}
+                {units.length > 0 && isLabSubject && (
+                  <tfoot>
+                    <tr className="border-t bg-secondary/40 font-semibold">
+                      <td colSpan={3} className="px-2 py-2 text-right">Total practicals: {units.length}</td>
                       <td></td>
                     </tr>
                   </tfoot>
@@ -381,41 +385,6 @@ function SyllabusUnitsPage() {
               </table>
             </div>
 
-            {units.length > 0 && (
-              <div className="mt-3 rounded-lg border bg-white shadow-sm overflow-hidden">
-                <div className="px-3 py-2 bg-secondary/60 border-b text-xs font-semibold text-[color:var(--navy)] uppercase tracking-wide">
-                  Required total vs Current total <span className="font-normal normal-case text-muted-foreground">· live</span>
-                </div>
-                <div className="grid grid-cols-3 divide-x text-sm">
-                  {[
-                    { label: "Theory", cur: totalPlannedLecture, req: requiredLecture, diff: lectureDiff },
-                    { label: "Practical", cur: totalPlannedPractical, req: requiredPractical, diff: practicalDiff },
-                    { label: "Total", cur: totalPlanned, req: requiredTotal, diff: totalPlanned - requiredTotal },
-                  ].map((r) => {
-                    const ok = r.diff === 0;
-                    const short = r.diff < 0;
-                    return (
-                      <div key={r.label} className="p-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{r.label}</div>
-                        <div className="mt-1 flex items-baseline gap-1.5">
-                          <span className={`text-lg font-bold tabular-nums ${ok ? "text-emerald-700" : "text-rose-700"}`}>
-                            {r.cur}
-                          </span>
-                          <span className="text-muted-foreground text-sm tabular-nums">/ {r.req}</span>
-                        </div>
-                        <div className={`mt-0.5 text-xs font-medium ${ok ? "text-emerald-700" : "text-rose-700"}`}>
-                          {ok
-                            ? "✓ matches required"
-                            : short
-                              ? `▼ short by ${Math.abs(r.diff)} hr${Math.abs(r.diff) === 1 ? "" : "s"}`
-                              : `▲ over by ${r.diff} hr${r.diff === 1 ? "" : "s"}`}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
           </div>
         )}
