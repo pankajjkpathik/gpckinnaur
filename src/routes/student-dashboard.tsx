@@ -776,17 +776,44 @@ function DocsListView({
 
 function AssignmentDocsView({ onBack }: { onBack: () => void }) {
   void onBack;
+  const qc = useQueryClient();
   const fn = useServerFn(studentListAssignments);
+  const mySubsFn = useServerFn(studentMySubmissions);
+  const submitFn = useServerFn(studentSubmitAssignment);
   const { data = [], isLoading } = useQuery({
     queryKey: ["student-assignments-list"],
     queryFn: () => fn(),
   });
+  const { data: mySubs = [] } = useQuery({
+    queryKey: ["student-my-subs"],
+    queryFn: () => mySubsFn(),
+  });
+  const subMap = new Map<number, any>();
+  (mySubs as any[]).forEach((s) => subMap.set(s.assignment_id, s));
+
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [fileUrl, setFileUrl] = useState("");
+  const [comments, setComments] = useState("");
+
+  const submit = useMutation({
+    mutationFn: (assignment_id: number) =>
+      submitFn({ data: { assignment_id, file_url: fileUrl, comments: comments || null } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["student-my-subs"] });
+      setOpenId(null);
+      setFileUrl("");
+      setComments("");
+    },
+  });
+
   const rows = data as any[];
+  const today = new Date().toISOString().slice(0, 10);
+
   return (
     <div className="space-y-4">
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Assignments</h1>
-        <p className="text-xs text-gray-400 mb-4">Assignments shared by your faculty for your class.</p>
+        <p className="text-xs text-gray-400 mb-4">Download the assignment brief and upload your submission below.</p>
         <div className="border rounded overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
@@ -795,36 +822,104 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">File</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Submission</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((a: any) => (
-                <tr key={a.id} className="border-t">
-                  <td className="px-4 py-3">{a.subjects?.name || a.subject_name || "—"}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium">{a.title}</p>
-                    {a.description && <p className="text-xs text-gray-500 mt-0.5">{a.description}</p>}
-                  </td>
-                  <td className="px-4 py-3">{a.due_date ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    {a.file_url ? (
-                      <a
-                        href={a.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
-                      >
-                        <Download className="w-4 h-4" /> Download
-                      </a>
-                    ) : (
-                      <span className="text-xs text-gray-400">No file</span>
+              {rows.map((a: any) => {
+                const sub = subMap.get(a.id);
+                const overdue = a.due_date && a.due_date < today;
+                return (
+                  <React.Fragment key={a.id}>
+                    <tr className="border-t">
+                      <td className="px-4 py-3">{a.subjects?.name || a.subject_name || "—"}</td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium">{a.title}</p>
+                        {a.description && <p className="text-xs text-gray-500 mt-0.5">{a.description}</p>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {a.due_date ?? "—"}
+                        {overdue && !sub && <span className="ml-1 text-[10px] text-rose-600 font-semibold">OVERDUE</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {a.file_url ? (
+                          <a
+                            href={a.file_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
+                          >
+                            <Download className="w-4 h-4" /> Download
+                          </a>
+                        ) : (
+                          <span className="text-xs text-gray-400">No file</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {sub ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-emerald-700 font-semibold">✓ Submitted</span>
+                            {sub.file_url && (
+                              <a href={sub.file_url} target="_blank" rel="noreferrer" className="text-xs text-emerald-700 underline">
+                                View
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setOpenId(openId === a.id ? null : a.id);
+                              setFileUrl("");
+                              setComments("");
+                            }}
+                            className="inline-flex items-center gap-2 bg-[#7b1f4c] text-white rounded px-3 py-1.5 text-xs font-semibold"
+                          >
+                            <Upload className="w-3.5 h-3.5" /> {openId === a.id ? "Cancel" : "Upload"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {openId === a.id && !sub && (
+                      <tr className="bg-gray-50 border-t">
+                        <td colSpan={5} className="px-4 py-3">
+                          <div className="space-y-2 max-w-2xl">
+                            <div>
+                              <label className="text-xs text-gray-600 mb-1 block">Submission File URL (PDF)</label>
+                              <input
+                                value={fileUrl}
+                                onChange={(e) => setFileUrl(e.target.value)}
+                                placeholder="https://…/my-submission.pdf"
+                                className="border rounded w-full px-3 py-2 text-sm"
+                              />
+                              <p className="text-[11px] text-gray-400 mt-1">Upload your PDF to Drive/storage and paste the shareable link.</p>
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-600 mb-1 block">Comments (Optional)</label>
+                              <textarea
+                                value={comments}
+                                onChange={(e) => setComments(e.target.value)}
+                                rows={2}
+                                className="border rounded w-full px-3 py-2 text-sm resize-y"
+                              />
+                            </div>
+                            <button
+                              onClick={() => submit.mutate(a.id)}
+                              disabled={!fileUrl || submit.isPending}
+                              className="bg-[#7b1f4c] text-white px-4 py-2 rounded font-semibold text-sm inline-flex items-center gap-2 disabled:opacity-50"
+                            >
+                              <Upload className="w-4 h-4" /> {submit.isPending ? "Submitting…" : "Submit"}
+                            </button>
+                            {submit.error && <p className="text-xs text-rose-700">{(submit.error as Error).message}</p>}
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                  </td>
-                </tr>
-              ))}
+                  </React.Fragment>
+                );
+              })}
               {!isLoading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
                     No assignments posted for your class yet.
                   </td>
                 </tr>
