@@ -842,6 +842,11 @@ function MdImportModal({
   const practicalOk = targetPractical === totalPractical;
   const allOk = lectureOk && practicalOk;
   const view = parsed;
+  const isLab =
+    ((subject.practical_hours ?? 0) > 0 && (subject.lecture_hours ?? 0) === 0) ||
+    /\b(lab|laboratory|practical|workshop)\b/i.test(
+      `${subject.name ?? ""} ${subject.code ?? ""}`,
+    );
 
   function handleFile(f: File) {
     setFileName(f.name);
