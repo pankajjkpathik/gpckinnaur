@@ -573,15 +573,10 @@ function MdImportModal({
   const [progress, setProgress] = useState<string>("");
 
   const WEEKS = 14;
-  const targetLecture = (subject.lecture_hours ?? 0) * WEEKS;
-  const targetPractical = (subject.practical_hours ?? 0) * WEEKS;
-  const target = targetLecture + targetPractical;
+  const referenceLecture = (subject.lecture_hours ?? 0) * WEEKS;
+  const referencePractical = (subject.practical_hours ?? 0) * WEEKS;
   const totalLecture = parsed.reduce((s, u) => s + (Number(u.lecture_hours) || 0), 0);
   const totalPractical = parsed.reduce((s, u) => s + (Number(u.practical_hours) || 0), 0);
-  const total = totalLecture + totalPractical;
-  const lectureOk = targetLecture === totalLecture;
-  const practicalOk = targetPractical === totalPractical;
-  const allOk = lectureOk && practicalOk;
   const view = parsed;
   const isLab =
     ((subject.practical_hours ?? 0) > 0 && (subject.lecture_hours ?? 0) === 0) ||
