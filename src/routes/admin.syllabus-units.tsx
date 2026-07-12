@@ -11,7 +11,7 @@ import {
   upsertSyllabusUnit,
   deleteSyllabusUnit,
 } from "@/lib/academic.functions";
-import { parseSyllabusMarkdown, parsePracticalList, rescaleField, type ParsedUnit } from "@/lib/parse-syllabus-md";
+import { parseSyllabusMarkdown, parsePracticalList, type ParsedUnit } from "@/lib/parse-syllabus-md";
 
 export const Route = createFileRoute("/admin/syllabus-units")({
   head: () => portalMeta("Planned Unit Hours"),
