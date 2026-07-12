@@ -585,7 +585,7 @@ function UnitModal({
               >
                 {rows.map((r) => {
                   const projected = r.other + (Number(r.val) || 0);
-                  const remaining = r.req - r.over;
+                  const remaining = r.req - r.other;
                   const overshoot = projected - r.req;
                   return (
                     <div key={r.label}>
