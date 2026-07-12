@@ -46,6 +46,29 @@ async function assertSubjectAccess(
   }
 }
 
+// Class-level access (for reports spanning multiple subjects). Requires the
+// caller to have at least one faculty_assignments row for that branch/semester.
+async function assertClassAccess(
+  me: StaffSession,
+  args: { branch: string; semester: number; academic_year?: string },
+) {
+  const held = [me.role, ...(me.extraRoles ?? [])];
+  if (held.some((r) => ["super_admin", "principal", "hod"].includes(r as string))) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  let q = supabaseAdmin
+    .from("faculty_assignments")
+    .select("id")
+    .eq("staff_id", me.id)
+    .eq("branch", args.branch)
+    .eq("semester", args.semester)
+    .limit(1);
+  if (args.academic_year) q = q.eq("academic_year", args.academic_year);
+  const { data } = await q;
+  if (!data || data.length === 0) {
+    throw new Error("Forbidden: you are not assigned to teach this class.");
+  }
+}
+
 // ============ DASHBOARD ============
 
 export const facultyDashboard = createServerFn({ method: "GET" })
@@ -122,7 +145,8 @@ export const getAttendance = createServerFn({ method: "GET" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: students } = await supabaseAdmin
       .from("students")
@@ -199,7 +223,8 @@ export const getMarks = createServerFn({ method: "GET" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester, academic_year: data.academic_year });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: students } = await supabaseAdmin
       .from("students")
@@ -490,7 +515,9 @@ export const attendanceReport = createServerFn({ method: "GET" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    if (data.subject_id) await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester });
+    else await assertClassAccess(me, { branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: students } = await supabaseAdmin
       .from("students")
@@ -534,7 +561,8 @@ export const marksReport = createServerFn({ method: "GET" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester, academic_year: data.academic_year });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: students } = await supabaseAdmin
       .from("students")
@@ -585,7 +613,8 @@ export const individualSubjectRegister = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subj } = await supabaseAdmin.from("subjects").select("code, name").eq("id", data.subject_id).maybeSingle();
@@ -629,7 +658,8 @@ export const cumulativeConsolidatedRegister = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertClassAccess(me, { branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subs } = await supabaseAdmin
@@ -683,7 +713,8 @@ export const subjectSessionalReport = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester, academic_year: data.academic_year });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subj } = await supabaseAdmin.from("subjects").select("code, name, credits, kind").eq("id", data.subject_id).maybeSingle();
@@ -787,7 +818,8 @@ export const endSemSessionalReport = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertClassAccess(me, { branch: data.branch, semester: data.semester, academic_year: data.academic_year });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subs } = await supabaseAdmin
@@ -834,7 +866,8 @@ export const monthlyAttendanceRegister = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertClassAccess(me, { branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subs } = await supabaseAdmin
@@ -902,7 +935,8 @@ export const finalAttendanceReport = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertClassAccess(me, { branch: data.branch, semester: data.semester, academic_year: data.academic_year });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subs } = await supabaseAdmin
