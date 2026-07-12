@@ -67,7 +67,7 @@ function exportUnits(
   const base = `syllabus-units_${safe(subject.code)}_${academicYear}`;
   if (format === "json") {
     const payload = {
-      schema: "syllabus-units.v1",
+      schema: "syllabus-units.v2",
       exported_at: new Date().toISOString(),
       subject: {
         code: subject.code,
@@ -81,6 +81,8 @@ function exportUnits(
       units: units.map((u) => ({
         unit_no: u.unit_no,
         title: u.title,
+        lecture_hours: u.lecture_hours,
+        practical_hours: u.practical_hours,
         hours: u.hours,
         topics: u.topics ?? [],
       })),
@@ -89,12 +91,20 @@ function exportUnits(
     return;
   }
   const rows = [
-    ["Unit No", "Title", "Hours", "Topics"],
-    ...units.map((u) => [u.unit_no, u.title, u.hours, (u.topics ?? []).join(" | ")]),
+    ["Unit No", "Title", "Theory Hours", "Practical Hours", "Total Hours", "Topics"],
+    ...units.map((u) => [
+      u.unit_no,
+      u.title,
+      u.lecture_hours,
+      u.practical_hours,
+      u.hours,
+      (u.topics ?? []).join(" | "),
+    ]),
   ];
   const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
   downloadBlob(`${base}.csv`, "text/csv;charset=utf-8", csv);
 }
+
 
 function SyllabusUnitsPage() {
   const nav = useNavigate();
