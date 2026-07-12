@@ -158,14 +158,14 @@ function SyllabusUnitsPage() {
   const WEEKS = 14;
   const subjectL = subject?.lecture_hours ?? 0;
   const subjectP = subject?.practical_hours ?? 0;
-  const requiredLecture = subjectL * WEEKS;
-  const requiredPractical = subjectP * WEEKS;
-  const requiredTotal = requiredLecture + requiredPractical;
-  const subjectPlanned = subjectL + subjectP;
-  const lectureDiff = totalPlannedLecture - requiredLecture;
-  const practicalDiff = totalPlannedPractical - requiredPractical;
-  const hoursValid =
-    subject != null && units.length > 0 && lectureDiff === 0 && practicalDiff === 0;
+  const referenceLecture = subjectL * WEEKS;
+  const referencePractical = subjectP * WEEKS;
+  const isLabSubject =
+    subject != null &&
+    ((subjectP > 0 && subjectL === 0) ||
+      /\b(lab|laboratory|practical|workshop)\b/i.test(
+        `${subject?.name ?? ""} ${subject?.code ?? ""}`,
+      ));
 
 
   const [editing, setEditing] = useState<Unit | null>(null);
