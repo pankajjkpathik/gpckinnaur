@@ -47,7 +47,7 @@ import {
   studentMyFees,
   studentMyDisciplinary,
 } from "@/lib/assignments.functions";
-import { studentParentStatus, studentSetParentPassword } from "@/lib/parent.functions";
+
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
