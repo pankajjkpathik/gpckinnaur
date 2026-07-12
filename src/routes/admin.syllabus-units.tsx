@@ -639,19 +639,6 @@ function MdImportModal({
     reader.readAsText(f);
   }
 
-  function autoDistribute() {
-    if (parsed.length === 0) return;
-    let next = parsed;
-    if (targetLecture > 0) next = rescaleField(next, targetLecture, "lecture_hours");
-    if (targetPractical > 0) next = rescaleField(next, targetPractical, "practical_hours");
-    setParsed(
-      next.map((u) => ({
-        ...u,
-        hours: (Number(u.lecture_hours) || 0) + (Number(u.practical_hours) || 0),
-      })),
-    );
-  }
-
   function resetHours() {
     setParsed((cur) =>
       cur.map((u, i) => {
