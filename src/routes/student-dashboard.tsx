@@ -775,24 +775,83 @@ function DocsListView({
 }
 
 function AssignmentDocsView({ onBack }: { onBack: () => void }) {
+  void onBack;
+  const fn = useServerFn(studentListAssignments);
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["student-assignments-list"],
+    queryFn: () => fn(),
+  });
+  const rows = data as any[];
   return (
-    <DocsListView
-      onBack={onBack}
-      type="assignment"
-      title="Assignments"
-      subtitle="Assignment sheets shared by your faculty."
-    />
+    <div className="space-y-4">
+      <Card>
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Assignments</h1>
+        <p className="text-xs text-gray-400 mb-4">Assignments shared by your faculty for your class.</p>
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Subject</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">File</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((a: any) => (
+                <tr key={a.id} className="border-t">
+                  <td className="px-4 py-3">{a.subjects?.name || a.subject_name || "—"}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium">{a.title}</p>
+                    {a.description && <p className="text-xs text-gray-500 mt-0.5">{a.description}</p>}
+                  </td>
+                  <td className="px-4 py-3">{a.due_date ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {a.file_url ? (
+                      <a
+                        href={a.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
+                      >
+                        <Download className="w-4 h-4" /> Download
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-400">No file</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {!isLoading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                    No assignments posted for your class yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
   );
 }
 
-function ExamScheduleView({ onBack }: { onBack: () => void }) {
+function ExamScheduleView({ me, onBack }: { me: any; onBack: () => void }) {
+  void onBack;
   return (
-    <DocsListView
-      onBack={onBack}
-      type="exam_schedule"
-      title="Exam Schedule"
-      subtitle="Datesheets published for your class."
-    />
+    <div className="space-y-4">
+      <Card>
+        <LessonPlanLibrary
+          docType="exam_schedule"
+          defaultBranch={branchToDept(me.branch)}
+          defaultSemester={me.semester}
+          lockFilters
+          title="Exam Schedule"
+          subtitle={`Datesheets uploaded by your faculty — ${branchToDept(me.branch)} · Semester ${me.semester}.`}
+        />
+      </Card>
+    </div>
   );
 }
 
