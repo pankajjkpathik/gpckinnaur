@@ -254,7 +254,7 @@ function StudentDashboard() {
                 {view === "upload" && <UploadAssignmentView onBack={goHome} />}
                 {view === "assignments-docs" && <AssignmentDocsView onBack={goHome} />}
                 {view === "lesson-plans" && <LessonPlansView me={me} onBack={goHome} />}
-                {view === "exam-schedule" && <ExamScheduleView onBack={goHome} />}
+                {view === "exam-schedule" && <ExamScheduleView me={me} onBack={goHome} />}
                 {view === "timetable" && <TimetableView me={me} onBack={goHome} />}
                 {view === "syllabus" && <SyllabusView me={me} onBack={goHome} />}
                 {view === "fees" && <FeesView onBack={goHome} />}
