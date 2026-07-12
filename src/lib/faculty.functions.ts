@@ -658,7 +658,8 @@ export const cumulativeConsolidatedRegister = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertClassAccess(me, { branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subs } = await supabaseAdmin
