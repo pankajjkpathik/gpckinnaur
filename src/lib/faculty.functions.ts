@@ -164,6 +164,7 @@ export const submitAttendance = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const today = new Date().toISOString().slice(0, 10);
     const locked = data.date !== today; // lock if not today
