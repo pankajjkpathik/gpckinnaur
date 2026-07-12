@@ -12,7 +12,7 @@ import {
   deleteSyllabusUnit,
   syllabusUnitReconciliation,
 } from "@/lib/academic.functions";
-import { parseSyllabusMarkdown, rescaleField, type ParsedUnit } from "@/lib/parse-syllabus-md";
+import { parseSyllabusMarkdown, parsePracticalList, rescaleField, type ParsedUnit } from "@/lib/parse-syllabus-md";
 
 export const Route = createFileRoute("/admin/syllabus-units")({
   head: () => portalMeta("Planned Unit Hours"),
@@ -842,6 +842,11 @@ function MdImportModal({
   const practicalOk = targetPractical === totalPractical;
   const allOk = lectureOk && practicalOk;
   const view = parsed;
+  const isLab =
+    ((subject.practical_hours ?? 0) > 0 && (subject.lecture_hours ?? 0) === 0) ||
+    /\b(lab|laboratory|practical|workshop)\b/i.test(
+      `${subject.name ?? ""} ${subject.code ?? ""}`,
+    );
 
   function handleFile(f: File) {
     setFileName(f.name);
@@ -884,7 +889,13 @@ function MdImportModal({
           p = [];
         }
       } else {
-        p = parseSyllabusMarkdown(txt);
+        p = [];
+        // For lab subjects (practical-only, or name/code mentions "Lab"),
+        // derive the "List of Practicals" from the .md instead of units.
+        if (isLab) {
+          p = parsePracticalList(txt);
+        }
+        if (p.length === 0) p = parseSyllabusMarkdown(txt);
       }
       setParsed(p);
       setOriginalParsed(p.map((u) => ({ ...u })));
@@ -1023,8 +1034,15 @@ function MdImportModal({
           </button>
           <p className="text-xs text-muted-foreground mt-2">
             {fileName ||
-              "Accepts a Markdown syllabus (## Unit 1: Title (10 hours) …) or a previously exported .json to reuse in a new academic year."}
+              (isLab
+                ? "Lab subject detected — paste a Markdown syllabus containing a 'List of Practicals' (numbered experiments) or a previously exported .json."
+                : "Accepts a Markdown syllabus (## Unit 1: Title (10 hours) …) or a previously exported .json to reuse in a new academic year.")}
           </p>
+          {isLab && (
+            <p className="text-[11px] text-rose-700 mt-1 font-medium">
+              This is a Lab subject — practicals are imported from the “List of Practicals” section, not from Unit headings.
+            </p>
+          )}
         </div>
 
         {parsed.length > 0 && (
@@ -1085,9 +1103,9 @@ function MdImportModal({
               <table className="w-full text-sm">
                 <thead className="bg-secondary">
                   <tr>
-                    <th className="text-left px-2 py-1.5 w-14">Unit</th>
-                    <th className="text-left px-2 py-1.5">Title</th>
-                    <th className="text-left px-2 py-1.5">Topics</th>
+                    <th className="text-left px-2 py-1.5 w-14">{isLab ? "#" : "Unit"}</th>
+                    <th className="text-left px-2 py-1.5">{isLab ? "Practical" : "Title"}</th>
+                    <th className="text-left px-2 py-1.5">{isLab ? "Notes" : "Topics"}</th>
                     <th className="text-center px-2 py-1.5 w-32">Theory</th>
                     <th className="text-center px-2 py-1.5 w-32">Practical</th>
                   </tr>
@@ -1183,7 +1201,9 @@ function MdImportModal({
 
         {parsed.length === 0 && raw && (
           <p className="text-xs text-amber-700 mt-3">
-            No units detected. Make sure headings start with "Unit 1", "## Unit II", etc.
+            {isLab
+              ? "No practicals detected. Make sure the file has a heading like \"List of Practicals\" or \"Experiments\" followed by a numbered list."
+              : "No units detected. Make sure headings start with \"Unit 1\", \"## Unit II\", etc."}
           </p>
         )}
 
@@ -1198,7 +1218,7 @@ function MdImportModal({
             title={!allOk ? `Theory ${totalLecture}/${targetLecture} · Practical ${totalPractical}/${targetPractical} must match` : ""}
             className="px-4 py-1.5 bg-rose-700 text-white rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
           >
-            <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} unit(s)`}
+            <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} ${isLab ? "practical(s)" : "unit(s)"}`}
           </button>
         </div>
 
