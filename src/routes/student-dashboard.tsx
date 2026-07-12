@@ -152,7 +152,6 @@ function StudentDashboard() {
     { icon: DollarSign, label: "Fees Payment", view: "fees" },
     { icon: Users, label: "My Faculty", view: "faculty" },
     { icon: Shield, label: "Disciplinary Actions", view: "disciplinary" },
-    { icon: Users, label: "Parent Access", view: "parent-access" },
   ];
 
 
