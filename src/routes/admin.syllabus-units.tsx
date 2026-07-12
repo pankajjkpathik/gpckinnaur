@@ -441,16 +441,20 @@ function SyllabusUnitsPage() {
 
 function UnitModal({
   initial,
-  requiredTotal,
-  otherUnitsHours,
+  requiredLecture,
+  requiredPractical,
+  otherUnitsLecture,
+  otherUnitsPractical,
   onClose,
   onSave,
   pending,
   error,
 }: {
   initial: Unit;
-  requiredTotal: number;
-  otherUnitsHours: number;
+  requiredLecture: number;
+  requiredPractical: number;
+  otherUnitsLecture: number;
+  otherUnitsPractical: number;
   onClose: () => void;
   onSave: (u: Unit) => void;
   pending: boolean;
@@ -458,12 +462,16 @@ function UnitModal({
 }) {
   const [unitNo, setUnitNo] = useState<number>(initial.unit_no);
   const [title, setTitle] = useState(initial.title);
-  const [hours, setHours] = useState<number>(initial.hours);
+  const [lectureHours, setLectureHours] = useState<number>(initial.lecture_hours ?? 0);
+  const [practicalHours, setPracticalHours] = useState<number>(initial.practical_hours ?? 0);
   const [topicsText, setTopicsText] = useState((initial.topics ?? []).join("\n"));
   const [ay, setAy] = useState<string>(initial.academic_year);
   const [semOverride, setSemOverride] = useState<string>(
     initial.semester != null ? String(initial.semester) : "",
   );
+
+  const lectureDisabled = requiredLecture === 0;
+  const practicalDisabled = requiredPractical === 0;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -475,6 +483,8 @@ function UnitModal({
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            const lh = lectureDisabled ? 0 : lectureHours;
+            const ph = practicalDisabled ? 0 : practicalHours;
             onSave({
               id: initial.id,
               subject_id: initial.subject_id,
@@ -482,7 +492,9 @@ function UnitModal({
               semester: semOverride ? Number(semOverride) : null,
               unit_no: unitNo,
               title,
-              hours,
+              lecture_hours: lh,
+              practical_hours: ph,
+              hours: lh + ph,
               topics: topicsText.split("\n").map((t) => t.trim()).filter(Boolean),
             });
           }}
@@ -518,12 +530,26 @@ function UnitModal({
                 className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
               />
             </label>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
             <label className="text-xs text-muted-foreground">
-              Planned Hours
+              Theory hours {requiredLecture > 0 && <span className="text-[10px]">(target {requiredLecture})</span>}
               <input
-                type="number" min={0} max={200} required value={hours}
-                onChange={(e) => setHours(Number(e.target.value) || 0)}
-                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
+                type="number" min={0} max={200}
+                disabled={lectureDisabled}
+                value={lectureHours}
+                onChange={(e) => setLectureHours(Number(e.target.value) || 0)}
+                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 disabled:bg-secondary/50"
+              />
+            </label>
+            <label className="text-xs text-muted-foreground">
+              Practical hours {requiredPractical > 0 && <span className="text-[10px]">(target {requiredPractical})</span>}
+              <input
+                type="number" min={0} max={200}
+                disabled={practicalDisabled}
+                value={practicalHours}
+                onChange={(e) => setPracticalHours(Number(e.target.value) || 0)}
+                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 disabled:bg-secondary/50"
               />
             </label>
           </div>
@@ -542,33 +568,41 @@ function UnitModal({
             />
           </label>
 
-          {requiredTotal > 0 && (() => {
-            const projected = otherUnitsHours + (Number(hours) || 0);
-            const remaining = requiredTotal - otherUnitsHours;
-            const overshoot = projected - requiredTotal;
-            const ok = projected === requiredTotal;
+          {(requiredLecture > 0 || requiredPractical > 0) && (() => {
+            const rows: { label: string; req: number; other: number; val: number }[] = [];
+            if (requiredLecture > 0)
+              rows.push({ label: "Theory", req: requiredLecture, other: otherUnitsLecture, val: lectureHours });
+            if (requiredPractical > 0)
+              rows.push({ label: "Practical", req: requiredPractical, other: otherUnitsPractical, val: practicalHours });
+            const allOk = rows.every((r) => r.other + (Number(r.val) || 0) === r.req);
             return (
               <div
-                className={`text-xs rounded border px-3 py-2 ${
-                  ok
+                className={`text-xs rounded border px-3 py-2 space-y-0.5 ${
+                  allOk
                     ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : overshoot > 0
-                      ? "border-rose-200 bg-rose-50 text-rose-800"
-                      : "border-amber-200 bg-amber-50 text-amber-800"
+                    : "border-amber-200 bg-amber-50 text-amber-800"
                 }`}
               >
-                Required <b>{requiredTotal}</b> · other units <b>{otherUnitsHours}</b> · this unit{" "}
-                <b>{Number(hours) || 0}</b> · total <b>{projected}</b>
-                {ok && " ✓"}
-                {!ok && overshoot > 0 && (
-                  <> — <b>{overshoot}</b> over. Reduce this unit to <b>{Math.max(0, remaining)}</b>.</>
-                )}
-                {!ok && overshoot < 0 && (
-                  <> — needs <b>{Math.abs(overshoot)}</b> more (set this unit to <b>{remaining}</b> to match).</>
-                )}
+                {rows.map((r) => {
+                  const projected = r.other + (Number(r.val) || 0);
+                  const remaining = r.req - r.over;
+                  const overshoot = projected - r.req;
+                  return (
+                    <div key={r.label}>
+                      <b>{r.label}</b>: required {r.req} · others {r.other} · this {Number(r.val) || 0} · total{" "}
+                      <b>{projected}</b>
+                      {overshoot === 0
+                        ? " ✓"
+                        : overshoot > 0
+                          ? ` — ${overshoot} over (set this to ${Math.max(0, r.req - r.other)})`
+                          : ` — needs ${Math.abs(overshoot)} more (set this to ${r.req - r.other})`}
+                    </div>
+                  );
+                })}
               </div>
             );
           })()}
+
 
           {error && <p className="text-xs text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
