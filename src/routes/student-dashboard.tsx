@@ -139,10 +139,28 @@ function StudentDashboard() {
     .join("")
     .toUpperCase();
 
+  const NAV: { icon: any; label: string; view: View }[] = [
+    { icon: GraduationCap, label: "Home", view: "home" },
+    { icon: ClipboardCheck, label: "My Attendance", view: "attendance" },
+    { icon: FileSpreadsheet, label: "My Marks", view: "marks" },
+    { icon: GraduationCap, label: "My Results", view: "results" },
+    { icon: FileText, label: "Semester Reports", view: "semester-reports" },
+    { icon: NotebookPen, label: "Lesson Plans", view: "lesson-plans" },
+    { icon: BookMarked, label: "Syllabus Coverage", view: "syllabus" },
+    { icon: Calendar, label: "Timetable", view: "timetable" },
+    { icon: CalendarClock, label: "Exam Schedule", view: "exam-schedule" },
+    { icon: BookOpen, label: "Assignments", view: "assignments-docs" },
+    { icon: Upload, label: "Upload Assignment", view: "upload" },
+    { icon: DollarSign, label: "Fees Payment", view: "fees" },
+    { icon: Users, label: "My Faculty", view: "faculty" },
+    { icon: Shield, label: "Disciplinary Actions", view: "disciplinary" },
+    { icon: Users, label: "Parent Access", view: "parent-access" },
+  ];
+
   return (
     <div className="min-h-screen bg-[#f7f7fb]">
       <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <img
               src={logoAsset.url}
@@ -182,154 +200,106 @@ function StudentDashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        {view === "home" && <HomeView me={me} onNav={setView} />}
-        {view === "attendance" && <AttendanceView onBack={() => setView("home")} />}
-        {view === "marks" && <MarksView onBack={() => setView("home")} />}
-        {view === "results" && <ResultsView me={me} onBack={() => setView("home")} />}
-        {view === "semester-reports" && <SemesterReportsView me={me} onBack={() => setView("home")} />}
-        {view === "parent-access" && <ParentAccessView onBack={() => setView("home")} />}
-        {view === "upload" && <UploadAssignmentView onBack={() => setView("home")} />}
-        {view === "assignments-docs" && <AssignmentDocsView onBack={() => setView("home")} />}
-        {view === "lesson-plans" && <LessonPlansView onBack={() => setView("home")} />}
-        {view === "exam-schedule" && <ExamScheduleView onBack={() => setView("home")} />}
-        {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
-        {view === "syllabus" && <SyllabusView onBack={() => setView("home")} />}
-        {view === "fees" && <FeesView onBack={() => setView("home")} />}
-        {view === "faculty" && <FacultyView onBack={() => setView("home")} />}
-        {view === "disciplinary" && <DisciplinaryView onBack={() => setView("home")} />}
+      <div className="flex">
+        {/* LHS sidebar */}
+        <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
+          <nav className="py-3">
+            {NAV.map((item) => {
+              const active = view === item.view;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => setView(item.view)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left border-l-4 transition ${
+                    active
+                      ? "border-[#7b1f4c] bg-[#7b1f4c]/5 text-[#7b1f4c] font-semibold"
+                      : "border-transparent text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Mobile nav */}
+        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
+          {NAV.map((item) => {
+            const active = view === item.view;
+            return (
+              <button
+                key={item.view}
+                onClick={() => setView(item.view)}
+                className={`px-3 py-2 text-xs ${
+                  active ? "border-b-2 border-[#7b1f4c] text-[#7b1f4c] font-semibold" : "text-gray-600"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* RHS output */}
+        <main className="flex-1 min-w-0 p-4 md:p-6">
+          {view === "home" && <HomeView me={me} />}
+          {view === "attendance" && <AttendanceView />}
+          {view === "marks" && <MarksView />}
+          {view === "results" && <ResultsView me={me} />}
+          {view === "semester-reports" && <SemesterReportsView me={me} />}
+          {view === "parent-access" && <ParentAccessView />}
+          {view === "upload" && <UploadAssignmentView />}
+          {view === "assignments-docs" && <AssignmentDocsView />}
+          {view === "lesson-plans" && <LessonPlansView me={me} />}
+          {view === "exam-schedule" && <ExamScheduleView />}
+          {view === "timetable" && <TimetableView me={me} />}
+          {view === "syllabus" && <SyllabusView me={me} />}
+          {view === "fees" && <FeesView />}
+          {view === "faculty" && <FacultyView />}
+          {view === "disciplinary" && <DisciplinaryView />}
+        </main>
       </div>
     </div>
   );
 }
 
-// ─── HOME ─────────────────────────────────────────────────────────────────────
-function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
-  const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View }[] = [
-    {
-      icon: ClipboardCheck,
-      label: "My Attendance",
-      desc: "View your attendance record",
-      color: "bg-[#7b1f4c]",
-      border: "border-[#7b1f4c]",
-      view: "attendance",
-    },
-    {
-      icon: FileSpreadsheet,
-      label: "My Marks",
-      desc: "Check your internal marks",
-      color: "bg-orange-500",
-      border: "border-orange-500",
-      view: "marks",
-    },
-    {
-      icon: GraduationCap,
-      label: "My Results",
-      desc: "View your board results",
-      color: "bg-gray-500",
-      border: "border-gray-500",
-      view: "results",
-    },
-    {
-      icon: FileText,
-      label: "Semester Reports",
-      desc: "Download progress reports",
-      color: "bg-green-600",
-      border: "border-green-600",
-      view: "semester-reports",
-    },
-
-
-    {
-      icon: NotebookPen,
-      label: "Lesson Plans",
-      desc: "PDFs uploaded by your faculty",
-      color: "bg-rose-600",
-      border: "border-rose-600",
-      view: "lesson-plans",
-    },
-    {
-      icon: BookMarked,
-      label: "Syllabus Coverage",
-      desc: "Delivered vs planned units",
-      color: "bg-emerald-600",
-      border: "border-emerald-600",
-      view: "syllabus",
-    },
-    {
-      icon: Calendar,
-      label: "Timetable",
-      desc: "Your weekly class schedule",
-      color: "bg-indigo-600",
-      border: "border-indigo-600",
-      view: "timetable",
-    },
-    {
-      icon: CalendarClock,
-      label: "Exam Schedule",
-      desc: "Upcoming exam datesheets",
-      color: "bg-amber-600",
-      border: "border-amber-600",
-      view: "exam-schedule",
-    },
-    {
-      icon: BookOpen,
-      label: "Assignments",
-      desc: "Assignment sheets from faculty",
-      color: "bg-cyan-600",
-      border: "border-cyan-600",
-      view: "assignments-docs",
-    },
-    {
-      icon: Upload,
-      label: "Upload Assignment",
-      desc: "Submit your completed work",
-      color: "bg-purple-600",
-      border: "border-purple-600",
-      view: "upload",
-    },
-    {
-      icon: DollarSign,
-      label: "Fees Payment",
-      desc: "Check and pay your fees",
-      color: "bg-slate-500",
-      border: "border-slate-500",
-      view: "fees",
-    },
-    {
-      icon: Users,
-      label: "My Faculty",
-      desc: "Contact your teachers",
-      color: "bg-[#7b1f4c]",
-      border: "border-[#7b1f4c]",
-      view: "faculty",
-    },
-    {
-      icon: Shield,
-      label: "Disciplinary Actions",
-      desc: "View any official notices",
-      color: "bg-orange-500",
-      border: "border-orange-500",
-      view: "disciplinary",
-    },
-  ];
-
+// ─── HOME (summary) ───────────────────────────────────────────────────────────
+function HomeView({ me }: { me: any }) {
+  const dashFn = useServerFn(studentDashboard);
+  const { data } = useQuery({ queryKey: ["student-dash"], queryFn: () => dashFn() });
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, {me.name ? me.name.toUpperCase() : "STUDENT"}</h1>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((c) => (
-          <QuickCard
-            key={c.view}
-            icon={c.icon}
-            label={c.label}
-            desc={c.desc}
-            color={c.color}
-            border={c.border}
-            onClick={() => onNav(c.view)}
-          />
-        ))}
+    <div className="space-y-5">
+      <h1 className="text-2xl font-bold text-gray-800">
+        Welcome, {me.name ? me.name.toUpperCase() : "STUDENT"}
+      </h1>
+      <p className="text-sm text-gray-500 -mt-3">
+        Choose an option from the left panel to view your details.
+      </p>
+      <div className="grid sm:grid-cols-3 gap-4">
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Overall Attendance</p>
+          <p className="text-3xl font-bold text-[#7b1f4c] mt-1">
+            {data ? `${data.attendance_pct}%` : "—"}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {data ? `${data.present_periods} / ${data.total_periods} periods` : ""}
+          </p>
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Today's Classes</p>
+          <p className="text-3xl font-bold text-gray-800 mt-1">
+            {data?.today_periods?.length ?? 0}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">{data?.today_date}</p>
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Pending Leaves</p>
+          <p className="text-3xl font-bold text-amber-600 mt-1">{data?.pending_leaves ?? 0}</p>
+          <p className="text-xs text-gray-500 mt-1">Applications awaiting approval</p>
+        </Card>
       </div>
     </div>
   );
