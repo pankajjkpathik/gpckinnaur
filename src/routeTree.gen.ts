@@ -25,6 +25,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrincipalRouteImport } from './routes/principal'
 import { Route as ParentLoginRouteImport } from './routes/parent-login'
 import { Route as ParentDashboardRouteImport } from './routes/parent-dashboard'
+import { Route as ParentChangePasswordRouteImport } from './routes/parent-change-password'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MandatoryDisclosureRouteImport } from './routes/mandatory-disclosure'
 import { Route as HptsbAffiliationRouteImport } from './routes/hptsb-affiliation'
@@ -144,6 +145,11 @@ const ParentLoginRoute = ParentLoginRouteImport.update({
 const ParentDashboardRoute = ParentDashboardRouteImport.update({
   id: '/parent-dashboard',
   path: '/parent-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParentChangePasswordRoute = ParentChangePasswordRouteImport.update({
+  id: '/parent-change-password',
+  path: '/parent-change-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MessagesRoute = MessagesRouteImport.update({
@@ -364,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/messages': typeof MessagesRoute
+  '/parent-change-password': typeof ParentChangePasswordRoute
   '/parent-dashboard': typeof ParentDashboardRoute
   '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
@@ -421,6 +428,7 @@ export interface FileRoutesByTo {
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/messages': typeof MessagesRoute
+  '/parent-change-password': typeof ParentChangePasswordRoute
   '/parent-dashboard': typeof ParentDashboardRoute
   '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
@@ -480,6 +488,7 @@ export interface FileRoutesById {
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
   '/mandatory-disclosure': typeof MandatoryDisclosureRoute
   '/messages': typeof MessagesRoute
+  '/parent-change-password': typeof ParentChangePasswordRoute
   '/parent-dashboard': typeof ParentDashboardRoute
   '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
@@ -540,6 +549,7 @@ export interface FileRouteTypes {
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
     | '/messages'
+    | '/parent-change-password'
     | '/parent-dashboard'
     | '/parent-login'
     | '/principal'
@@ -597,6 +607,7 @@ export interface FileRouteTypes {
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
     | '/messages'
+    | '/parent-change-password'
     | '/parent-dashboard'
     | '/parent-login'
     | '/principal'
@@ -655,6 +666,7 @@ export interface FileRouteTypes {
     | '/hptsb-affiliation'
     | '/mandatory-disclosure'
     | '/messages'
+    | '/parent-change-password'
     | '/parent-dashboard'
     | '/parent-login'
     | '/principal'
@@ -714,6 +726,7 @@ export interface RootRouteChildren {
   HptsbAffiliationRoute: typeof HptsbAffiliationRoute
   MandatoryDisclosureRoute: typeof MandatoryDisclosureRoute
   MessagesRoute: typeof MessagesRoute
+  ParentChangePasswordRoute: typeof ParentChangePasswordRoute
   ParentDashboardRoute: typeof ParentDashboardRoute
   ParentLoginRoute: typeof ParentLoginRoute
   PrincipalRoute: typeof PrincipalRoute
@@ -854,6 +867,13 @@ declare module '@tanstack/react-router' {
       path: '/parent-dashboard'
       fullPath: '/parent-dashboard'
       preLoaderRoute: typeof ParentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent-change-password': {
+      id: '/parent-change-password'
+      path: '/parent-change-password'
+      fullPath: '/parent-change-password'
+      preLoaderRoute: typeof ParentChangePasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/messages': {
@@ -1192,6 +1212,7 @@ const rootRouteChildren: RootRouteChildren = {
   HptsbAffiliationRoute: HptsbAffiliationRoute,
   MandatoryDisclosureRoute: MandatoryDisclosureRoute,
   MessagesRoute: MessagesRoute,
+  ParentChangePasswordRoute: ParentChangePasswordRoute,
   ParentDashboardRoute: ParentDashboardRoute,
   ParentLoginRoute: ParentLoginRoute,
   PrincipalRoute: PrincipalRoute,

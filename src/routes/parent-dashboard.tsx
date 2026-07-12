@@ -81,6 +81,9 @@ function ParentDashboard() {
             <Link to="/messages" className="hidden sm:inline px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
               Messages
             </Link>
+            <Link to="/parent-change-password" className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
+              Change Password
+            </Link>
             <button onClick={logout} className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600 inline-flex items-center gap-1">
               <LogOut className="w-3.5 h-3.5" /> Logout
             </button>
