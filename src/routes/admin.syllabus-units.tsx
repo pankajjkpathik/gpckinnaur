@@ -690,12 +690,6 @@ function MdImportModal({
 
   async function doImport() {
     if (view.length === 0) return;
-    if (!allOk) {
-      setErr(
-        `Theory ${totalLecture}/${targetLecture} and Practical ${totalPractical}/${targetPractical} must both match. Click "Auto-distribute" or adjust with +/- controls.`,
-      );
-      return;
-    }
     setBusy(true);
     setErr(null);
     try {
@@ -708,7 +702,7 @@ function MdImportModal({
       let i = 0;
       for (const u of view) {
         i++;
-        setProgress(`Importing unit ${i} of ${view.length}…`);
+        setProgress(`Importing ${isLab ? "practical" : "unit"} ${i} of ${view.length}…`);
         await upsertSyllabusUnit({
           data: {
             subject_id: subject.id,
@@ -740,10 +734,17 @@ function MdImportModal({
       >
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="font-bold text-[color:var(--navy)]">Import Syllabus from Markdown</h3>
+            <h3 className="font-bold text-[color:var(--navy)]">
+              Import {isLab ? "List of Practicals" : "Syllabus Units"} from Markdown
+            </h3>
             <p className="text-xs text-muted-foreground">
-              {subject.code} · {subject.name} · AY {academicYear} · target hours{" "}
-              <b>{target || "—"}</b>
+              {subject.code} · {subject.name} · AY {academicYear}
+              {!isLab && (
+                <>
+                  {" "}· reference L×14 = <b>{referenceLecture}</b> theory, P×14 ={" "}
+                  <b>{referencePractical}</b> practical periods
+                </>
+              )}
             </p>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-secondary rounded"><X className="w-4 h-4" /></button>
@@ -771,12 +772,12 @@ function MdImportModal({
           <p className="text-xs text-muted-foreground mt-2">
             {fileName ||
               (isLab
-                ? "Lab subject detected — paste a Markdown syllabus containing a 'List of Practicals' (numbered experiments) or a previously exported .json."
-                : "Accepts a Markdown syllabus (## Unit 1: Title (10 hours) …) or a previously exported .json to reuse in a new academic year.")}
+                ? "Lab subject detected — paste a Markdown syllabus containing a 'List of Practicals' (numbered experiments)."
+                : "Accepts a Markdown syllabus (## Unit 1: Title (10 hours) …). Unit hours are imported exactly as written in the syllabus.")}
           </p>
           {isLab && (
             <p className="text-[11px] text-rose-700 mt-1 font-medium">
-              This is a Lab subject — practicals are imported from the “List of Practicals” section, not from Unit headings.
+              Lab subject — practicals are imported from the “List of Practicals” section. Coverage is measured by practicals completed ÷ total practicals.
             </p>
           )}
         </div>
@@ -786,54 +787,20 @@ function MdImportModal({
             <div className="mt-4 flex flex-wrap gap-2 items-center text-sm">
               <button
                 type="button"
-                onClick={autoDistribute}
-                disabled={target <= 0}
-                className="border border-rose-700 text-rose-700 px-3 py-1.5 rounded text-xs font-semibold hover:bg-rose-50 disabled:opacity-50"
-              >
-                Auto-distribute (T {targetLecture || "—"} / P {targetPractical || "—"})
-              </button>
-              <button
-                type="button"
                 onClick={resetHours}
                 className="border px-3 py-1.5 rounded text-xs hover:bg-secondary"
               >
-                Reset to parsed
+                Reset to parsed values
               </button>
               <label className="inline-flex items-center gap-1 ml-2">
                 <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
-                Overwrite existing {existingUnits.length} unit(s)
+                Overwrite existing {existingUnits.length} {isLab ? "practical(s)" : "unit(s)"}
               </label>
-              <span
-                className={`ml-auto text-xs font-semibold ${allOk ? "text-emerald-700" : "text-rose-700"}`}
-              >
-                {view.length} units · T {totalLecture}/{targetLecture || "—"} · P{" "}
-                {totalPractical}/{targetPractical || "—"}
+              <span className="ml-auto text-xs font-semibold text-muted-foreground">
+                {view.length} {isLab ? "practical(s)" : "unit(s)"}
+                {!isLab && <> · T {totalLecture} · P {totalPractical}</>}
               </span>
             </div>
-
-            {target > 0 && (
-              allOk ? (
-                <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
-                  ✓ Theory and Practical totals both match. Preview below — edit before saving.
-                </div>
-              ) : (
-                <div className="mt-2 rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2 space-y-0.5">
-                  {!lectureOk && (
-                    <div>
-                      ✗ Theory {totalLecture} ≠ required {targetLecture}
-                      {" "}(Δ {totalLecture - targetLecture > 0 ? "+" : ""}{totalLecture - targetLecture})
-                    </div>
-                  )}
-                  {!practicalOk && (
-                    <div>
-                      ✗ Practical {totalPractical} ≠ required {targetPractical}
-                      {" "}(Δ {totalPractical - targetPractical > 0 ? "+" : ""}{totalPractical - targetPractical})
-                    </div>
-                  )}
-                  <div className="opacity-80">Click <b>Auto-distribute</b> or adjust with the +/- controls.</div>
-                </div>
-              )
-            )}
 
             <div className="mt-3 border rounded overflow-x-auto">
               <table className="w-full text-sm">
@@ -842,8 +809,8 @@ function MdImportModal({
                     <th className="text-left px-2 py-1.5 w-14">{isLab ? "#" : "Unit"}</th>
                     <th className="text-left px-2 py-1.5">{isLab ? "Practical" : "Title"}</th>
                     <th className="text-left px-2 py-1.5">{isLab ? "Notes" : "Topics"}</th>
-                    <th className="text-center px-2 py-1.5 w-32">Theory</th>
-                    <th className="text-center px-2 py-1.5 w-32">Practical</th>
+                    {!isLab && <th className="text-center px-2 py-1.5 w-32">Theory</th>}
+                    {!isLab && <th className="text-center px-2 py-1.5 w-32">Practical</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -876,60 +843,48 @@ function MdImportModal({
                           className="w-full border rounded px-1.5 py-1 text-xs font-mono"
                         />
                       </td>
-                      {(["lecture_hours", "practical_hours"] as const).map((field) => {
-                        const disabled =
-                          (field === "lecture_hours" && targetLecture === 0) ||
-                          (field === "practical_hours" && targetPractical === 0);
-                        return (
-                          <td key={field} className="px-2 py-1.5">
-                            <div className="flex items-center justify-center gap-1">
-                              <button
-                                type="button"
-                                disabled={disabled}
-                                onClick={() => bump(i, field, -1)}
-                                className="w-6 h-6 border rounded text-sm hover:bg-secondary disabled:opacity-40"
-                                aria-label={`Decrease ${field}`}
-                              >
-                                −
-                              </button>
-                              <input
-                                type="number"
-                                min={0}
-                                max={200}
-                                disabled={disabled}
-                                value={u[field]}
-                                onChange={(e) => setField(i, field, Number(e.target.value) || 0)}
-                                className="w-14 border rounded px-1 py-0.5 text-sm text-center disabled:bg-secondary/50"
-                              />
-                              <button
-                                type="button"
-                                disabled={disabled}
-                                onClick={() => bump(i, field, 1)}
-                                className="w-6 h-6 border rounded text-sm hover:bg-secondary disabled:opacity-40"
-                                aria-label={`Increase ${field}`}
-                              >
-                                +
-                              </button>
-                            </div>
-                          </td>
-                        );
-                      })}
+                      {!isLab && (["lecture_hours", "practical_hours"] as const).map((field) => (
+                        <td key={field} className="px-2 py-1.5">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => bump(i, field, -1)}
+                              className="w-6 h-6 border rounded text-sm hover:bg-secondary"
+                              aria-label={`Decrease ${field}`}
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              min={0}
+                              max={200}
+                              value={u[field]}
+                              onChange={(e) => setField(i, field, Number(e.target.value) || 0)}
+                              className="w-14 border rounded px-1 py-0.5 text-sm text-center"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => bump(i, field, 1)}
+                              className="w-6 h-6 border rounded text-sm hover:bg-secondary"
+                              aria-label={`Increase ${field}`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
-                <tfoot>
-                  <tr className="border-t bg-secondary/40 font-semibold">
-                    <td colSpan={3} className="px-2 py-1.5 text-right">Total</td>
-                    <td className={`px-2 py-1.5 text-center ${!lectureOk ? "text-rose-700" : ""}`}>
-                      {totalLecture}
-                      {targetLecture > 0 && ` / ${targetLecture}`}
-                    </td>
-                    <td className={`px-2 py-1.5 text-center ${!practicalOk ? "text-rose-700" : ""}`}>
-                      {totalPractical}
-                      {targetPractical > 0 && ` / ${targetPractical}`}
-                    </td>
-                  </tr>
-                </tfoot>
+                {!isLab && (
+                  <tfoot>
+                    <tr className="border-t bg-secondary/40 font-semibold">
+                      <td colSpan={3} className="px-2 py-1.5 text-right">Total</td>
+                      <td className="px-2 py-1.5 text-center">{totalLecture}</td>
+                      <td className="px-2 py-1.5 text-center">{totalPractical}</td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </>
@@ -949,9 +904,8 @@ function MdImportModal({
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
           <button
-            disabled={busy || view.length === 0 || (target > 0 && !allOk)}
+            disabled={busy || view.length === 0}
             onClick={doImport}
-            title={!allOk ? `Theory ${totalLecture}/${targetLecture} · Practical ${totalPractical}/${targetPractical} must match` : ""}
             className="px-4 py-1.5 bg-rose-700 text-white rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
           >
             <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} ${isLab ? "practical(s)" : "unit(s)"}`}
@@ -962,5 +916,6 @@ function MdImportModal({
     </div>
   );
 }
+
 
 
