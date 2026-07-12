@@ -807,8 +807,16 @@ function MdImportModal({
   const [err, setErr] = useState<string | null>(null);
   const [progress, setProgress] = useState<string>("");
 
-  const target = (subject.lecture_hours ?? 0) * 14 + (subject.practical_hours ?? 0) * 14;
-  const total = parsed.reduce((s, u) => s + (Number(u.hours) || 0), 0);
+  const WEEKS = 14;
+  const targetLecture = (subject.lecture_hours ?? 0) * WEEKS;
+  const targetPractical = (subject.practical_hours ?? 0) * WEEKS;
+  const target = targetLecture + targetPractical;
+  const totalLecture = parsed.reduce((s, u) => s + (Number(u.lecture_hours) || 0), 0);
+  const totalPractical = parsed.reduce((s, u) => s + (Number(u.practical_hours) || 0), 0);
+  const total = totalLecture + totalPractical;
+  const lectureOk = targetLecture === totalLecture;
+  const practicalOk = targetPractical === totalPractical;
+  const allOk = lectureOk && practicalOk;
   const view = parsed;
 
   function handleFile(f: File) {
@@ -825,17 +833,27 @@ function MdImportModal({
           const arr = Array.isArray(obj) ? obj : obj?.units;
           if (Array.isArray(arr)) {
             p = arr
-              .map((u: any, i: number) => ({
-                unit_no: Number(u.unit_no ?? u.unitNo ?? i + 1),
-                title: String(u.title ?? "").slice(0, 200),
-                hours: Number(u.hours ?? 0),
-                topics: Array.isArray(u.topics)
-                  ? u.topics.map((t: any) => String(t))
-                  : String(u.topics ?? "")
-                      .split(/[,;\n]/)
-                      .map((s: string) => s.trim())
-                      .filter(Boolean),
-              }))
+              .map((u: any, i: number) => {
+                const lh = Number(u.lecture_hours ?? u.lectureHours ?? 0);
+                const ph = Number(u.practical_hours ?? u.practicalHours ?? 0);
+                const legacy = Number(u.hours ?? 0);
+                // v1 fallback: put legacy hours into lecture_hours
+                const lecture = lh || ph ? lh : legacy;
+                const practical = ph;
+                return {
+                  unit_no: Number(u.unit_no ?? u.unitNo ?? i + 1),
+                  title: String(u.title ?? "").slice(0, 200),
+                  lecture_hours: lecture,
+                  practical_hours: practical,
+                  hours: lecture + practical,
+                  topics: Array.isArray(u.topics)
+                    ? u.topics.map((t: any) => String(t))
+                    : String(u.topics ?? "")
+                        .split(/[,;\n]/)
+                        .map((s: string) => s.trim())
+                        .filter(Boolean),
+                };
+              })
               .sort((a, b) => a.unit_no - b.unit_no);
           }
         } catch {
@@ -851,30 +869,59 @@ function MdImportModal({
   }
 
   function autoDistribute() {
-    if (target > 0 && parsed.length > 0) {
-      setParsed(rescaleHours(parsed, target));
-    }
+    if (parsed.length === 0) return;
+    let next = parsed;
+    if (targetLecture > 0) next = rescaleField(next, targetLecture, "lecture_hours");
+    if (targetPractical > 0) next = rescaleField(next, targetPractical, "practical_hours");
+    setParsed(
+      next.map((u) => ({
+        ...u,
+        hours: (Number(u.lecture_hours) || 0) + (Number(u.practical_hours) || 0),
+      })),
+    );
   }
 
   function resetHours() {
     setParsed((cur) =>
-      cur.map((u, i) => ({ ...u, hours: originalParsed[i]?.hours ?? u.hours })),
+      cur.map((u, i) => {
+        const o = originalParsed[i];
+        if (!o) return u;
+        return {
+          ...u,
+          lecture_hours: o.lecture_hours,
+          practical_hours: o.practical_hours,
+          hours: o.lecture_hours + o.practical_hours,
+        };
+      }),
     );
   }
 
-  function bump(i: number, delta: number) {
+  function bump(i: number, field: "lecture_hours" | "practical_hours", delta: number) {
     setParsed((cur) => {
       const next = [...cur];
-      next[i] = { ...next[i], hours: Math.max(0, (Number(next[i].hours) || 0) + delta) };
+      const v = Math.max(0, (Number(next[i][field]) || 0) + delta);
+      next[i] = { ...next[i], [field]: v };
+      next[i].hours =
+        (Number(next[i].lecture_hours) || 0) + (Number(next[i].practical_hours) || 0);
+      return next;
+    });
+  }
+
+  function setField(i: number, field: "lecture_hours" | "practical_hours", v: number) {
+    setParsed((cur) => {
+      const next = [...cur];
+      next[i] = { ...next[i], [field]: Math.max(0, v) };
+      next[i].hours =
+        (Number(next[i].lecture_hours) || 0) + (Number(next[i].practical_hours) || 0);
       return next;
     });
   }
 
   async function doImport() {
     if (view.length === 0) return;
-    if (target > 0 && total !== target) {
+    if (!allOk) {
       setErr(
-        `Total unit hours (${total}) must equal required L+P×14 (${target}). Click "Auto-distribute" or adjust unit hours in the preview below.`,
+        `Theory ${totalLecture}/${targetLecture} and Practical ${totalPractical}/${targetPractical} must both match. Click "Auto-distribute" or adjust with +/- controls.`,
       );
       return;
     }
@@ -899,7 +946,8 @@ function MdImportModal({
             unit_no: u.unit_no,
             title: u.title.slice(0, 200),
             topics: u.topics.slice(0, 200),
-            hours: Math.max(0, Math.round(u.hours)),
+            lecture_hours: Math.max(0, Math.round(u.lecture_hours)),
+            practical_hours: Math.max(0, Math.round(u.practical_hours)),
           } as any,
         });
       }
@@ -911,6 +959,7 @@ function MdImportModal({
       setProgress("");
     }
   }
+
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
