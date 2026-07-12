@@ -28,7 +28,10 @@ type Unit = {
   title: string;
   topics: string[];
   hours: number;
+  lecture_hours: number;
+  practical_hours: number;
 };
+
 
 function currentAY(): string {
   const d = new Date();
