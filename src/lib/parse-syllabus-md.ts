@@ -84,17 +84,38 @@ export function parseSyllabusMarkdown(md: string): ParsedUnit[] {
         commit();
         let title = (m[2] || "").trim();
         let hours = 0;
+        let lecture_hours = 0;
+        let practical_hours = 0;
         const h = title.match(HOURS_INLINE_RE);
         if (h) {
           hours = Number(h[1]);
           title = title.replace(HOURS_INLINE_RE, "").trim();
         }
         title = title.replace(/^[:.\-–—\s]+/, "").replace(/[:.\-–—\s]+$/, "").trim();
-        cur = { unit_no: n, title: title || `Unit ${n}`, hours, topics: [] };
+        cur = {
+          unit_no: n,
+          title: title || `Unit ${n}`,
+          hours,
+          lecture_hours,
+          practical_hours,
+          topics: [],
+        };
         continue;
       }
     }
     if (!cur) continue;
+
+    // Explicit theory / practical labels take precedence.
+    const th = line.match(/^\s*(?:theory|lecture|lect)\s*[:=\-]\s*(\d{1,3})\b/i);
+    if (th) {
+      cur.lecture_hours = Number(th[1]);
+      continue;
+    }
+    const pr = line.match(/^\s*(?:practical|lab|prac)\s*[:=\-]\s*(\d{1,3})\b/i);
+    if (pr) {
+      cur.practical_hours = Number(pr[1]);
+      continue;
+    }
 
     const hl = line.match(HOURS_LABEL_RE);
     if (hl) {
@@ -108,9 +129,7 @@ export function parseSyllabusMarkdown(md: string): ParsedUnit[] {
 
     const trimmed = line.trim();
     if (!trimmed) continue;
-    // Skip generic label lines
     if (/^(topics?|contents?|sub[-\s]?topics?|syllabus)\s*[:\-]?\s*$/i.test(trimmed)) continue;
-    // Skip markdown table separators
     if (/^[|\-:\s]+$/.test(trimmed)) continue;
 
     const bulletMatch = /^\s*([-*+•]|\d+[\.\)]|\([a-z0-9]+\))\s+/i.test(line);
@@ -118,7 +137,6 @@ export function parseSyllabusMarkdown(md: string): ParsedUnit[] {
       const t = stripBullet(line);
       if (t) cur.topics.push(...splitInline(t));
     } else {
-      // Non-bullet paragraph line: split on commas/semicolons if it looks like a list
       if (/[,;]/.test(trimmed) && trimmed.length < 300) {
         cur.topics.push(...splitInline(trimmed));
       } else if (trimmed.length < 200 && !/^#{1,6}\s/.test(trimmed)) {
@@ -128,30 +146,48 @@ export function parseSyllabusMarkdown(md: string): ParsedUnit[] {
   }
   commit();
 
-  // Sort by unit_no and ensure unique
   units.sort((a, b) => a.unit_no - b.unit_no);
+  // If nothing set explicit lecture/practical, treat parsed `hours` as lecture by default.
+  for (const u of units) {
+    if (u.lecture_hours === 0 && u.practical_hours === 0 && u.hours > 0) {
+      u.lecture_hours = u.hours;
+    }
+    u.hours = u.lecture_hours + u.practical_hours;
+  }
   return units;
 }
 
-// Rescale unit hours proportionally so they sum to `target`.
-export function rescaleHours(units: ParsedUnit[], target: number): ParsedUnit[] {
-  if (target <= 0 || units.length === 0) return units;
-  const total = units.reduce((s, u) => s + (u.hours || 0), 0);
+// Rescale a numeric field (`hours`, `lecture_hours`, `practical_hours`) proportionally
+// so its sum across units equals `target`.
+export function rescaleField<K extends "hours" | "lecture_hours" | "practical_hours">(
+  units: ParsedUnit[],
+  target: number,
+  field: K,
+): ParsedUnit[] {
+  if (target < 0 || units.length === 0) return units;
+  const total = units.reduce((s, u) => s + (Number(u[field]) || 0), 0);
   if (total <= 0) {
-    // even split
     const base = Math.floor(target / units.length);
     const rem = target - base * units.length;
-    return units.map((u, i) => ({ ...u, hours: base + (i < rem ? 1 : 0) }));
+    return units.map((u, i) => ({ ...u, [field]: base + (i < rem ? 1 : 0) }));
   }
-  const scaled = units.map((u) => ({ ...u, hours: (u.hours * target) / total }));
-  const floored = scaled.map((u) => ({ ...u, hours: Math.floor(u.hours) }));
-  let diff = target - floored.reduce((s, u) => s + u.hours, 0);
-  // distribute leftover to units with largest fractional parts
+  const scaled = units.map((u) => ({
+    ...u,
+    __v: (Number(u[field]) * target) / total,
+  }));
+  const floored = scaled.map((u) => ({ ...u, [field]: Math.floor(u.__v) }));
+  let diff = target - floored.reduce((s, u) => s + (u[field] as number), 0);
   const order = scaled
-    .map((u, i) => ({ i, frac: u.hours - Math.floor(u.hours) }))
+    .map((u, i) => ({ i, frac: u.__v - Math.floor(u.__v) }))
     .sort((a, b) => b.frac - a.frac);
   for (let k = 0; k < order.length && diff > 0; k++, diff--) {
-    floored[order[k].i].hours += 1;
+    (floored[order[k].i][field] as number) += 1;
   }
-  return floored;
+  return floored.map(({ __v: _v, ...rest }) => rest as ParsedUnit);
 }
+
+// Back-compat wrapper: rescale the legacy `hours` field.
+export function rescaleHours(units: ParsedUnit[], target: number): ParsedUnit[] {
+  return rescaleField(units, target, "hours");
+}
+
