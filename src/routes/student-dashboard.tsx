@@ -251,7 +251,6 @@ function StudentDashboard() {
                 {view === "attendance" && <AttendanceView onBack={goHome} />}
                 {view === "marks" && <MarksView onBack={goHome} />}
                 {view === "results" && <ResultsView me={me} onBack={goHome} />}
-                {view === "parent-access" && <ParentAccessView onBack={goHome} />}
                 {view === "upload" && <UploadAssignmentView onBack={goHome} />}
                 {view === "assignments-docs" && <AssignmentDocsView onBack={goHome} />}
                 {view === "lesson-plans" && <LessonPlansView me={me} onBack={goHome} />}
