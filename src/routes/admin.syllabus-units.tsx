@@ -136,15 +136,27 @@ function SyllabusUnitsPage() {
     () => (subjectsQ.data ?? []).find((s: any) => s.id === Number(subjectId)),
     [subjectsQ.data, subjectId],
   );
-  const units: Unit[] = (unitsQ.data as any) ?? [];
-  const totalPlanned = units.reduce((a, u) => a + (Number(u.hours) || 0), 0);
+  const units: Unit[] = ((unitsQ.data as any) ?? []).map((u: any) => ({
+    ...u,
+    lecture_hours: Number(u.lecture_hours) || 0,
+    practical_hours: Number(u.practical_hours) || 0,
+    hours: Number(u.hours) || 0,
+  }));
+  const totalPlannedLecture = units.reduce((a, u) => a + (Number(u.lecture_hours) || 0), 0);
+  const totalPlannedPractical = units.reduce((a, u) => a + (Number(u.practical_hours) || 0), 0);
+  const totalPlanned = totalPlannedLecture + totalPlannedPractical;
   const WEEKS = 14;
-  const requiredTotal = subject
-    ? ((subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0)) * WEEKS
-    : 0;
-  const subjectPlanned = subject ? (subject.lecture_hours ?? 0) + (subject.practical_hours ?? 0) : 0;
-  const hoursDiff = totalPlanned - requiredTotal;
-  const hoursValid = subject != null && units.length > 0 && hoursDiff === 0;
+  const subjectL = subject?.lecture_hours ?? 0;
+  const subjectP = subject?.practical_hours ?? 0;
+  const requiredLecture = subjectL * WEEKS;
+  const requiredPractical = subjectP * WEEKS;
+  const requiredTotal = requiredLecture + requiredPractical;
+  const subjectPlanned = subjectL + subjectP;
+  const lectureDiff = totalPlannedLecture - requiredLecture;
+  const practicalDiff = totalPlannedPractical - requiredPractical;
+  const hoursValid =
+    subject != null && units.length > 0 && lectureDiff === 0 && practicalDiff === 0;
+
 
   const [editing, setEditing] = useState<Unit | null>(null);
   const [importOpen, setImportOpen] = useState(false);
