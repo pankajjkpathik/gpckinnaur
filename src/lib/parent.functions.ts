@@ -196,6 +196,37 @@ export const parentMe = createServerFn({ method: "GET" }).handler(async () => {
   return { ...s.data, student: st ?? null };
 });
 
+// Parent: change own password from the parent portal profile.
+export const parentChangePassword = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(6).max(60),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const me = await requireParent();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const bcrypt = (await import("bcryptjs")).default;
+    const { data: pu } = await supabaseAdmin
+      .from("parent_users")
+      .select("password_hash")
+      .eq("student_id", me.studentId)
+      .maybeSingle();
+    if (!pu?.password_hash) throw new Error("Account not found");
+    const ok = await bcrypt.compare(data.currentPassword, pu.password_hash);
+    if (!ok) throw new Error("Current password is incorrect");
+    const hash = await bcrypt.hash(data.newPassword, 12);
+    const { error } = await supabaseAdmin
+      .from("parent_users")
+      .update({ password_hash: hash, updated_at: new Date().toISOString() })
+      .eq("student_id", me.studentId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ─── STUDENT-SIDE: set / reset parent password ───────────────────────────────
 export const studentSetParentPassword = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ newPassword: z.string().min(6).max(60) }).parse(d))
