@@ -56,6 +56,24 @@ const facultyProfileSchema = z.object({
   date_of_retirement: optDate,
 });
 
+// Guards role/extra_roles escalation. A caller can only assign roles at or
+// below their own privilege tier (super_admin > principal > hod > everyone
+// else). Prevents an HOD or Principal from silently granting themselves
+// Principal- or Super-Admin-level access via extra_roles.
+type ManageableRole = "faculty" | "hod" | "principal" | "tpo" | "admin_staff" | "clerk" | "super_admin";
+function assertRoleAssignmentAllowed(
+  callerRole: string,
+  targets: (ManageableRole | undefined)[],
+) {
+  const wanted = new Set(targets.filter(Boolean) as ManageableRole[]);
+  if (callerRole === "super_admin") return;
+  if (wanted.has("super_admin")) throw new Error("Only super admin can assign super_admin");
+  if (wanted.has("principal")) throw new Error("Only super admin can assign principal");
+  if (callerRole === "principal") return;
+  // HOD (and anyone below) cannot promote to HOD.
+  if (wanted.has("hod")) throw new Error("Only principal or super admin can assign HOD");
+}
+
 export const facultyCreate = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     facultyProfileSchema
@@ -69,8 +87,7 @@ export const facultyCreate = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await requireAdmin();
-    if (data.role === "principal" && me.role !== "super_admin")
-      throw new Error("Only super admin can create a principal");
+    assertRoleAssignmentAllowed(me.role, [data.role, ...(data.extra_roles ?? [])] as ManageableRole[]);
     const bcrypt = (await import("bcryptjs")).default;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const hash = await bcrypt.hash(data.password, 12);
@@ -99,8 +116,11 @@ export const facultyUpdate = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const me = await requireAdmin();
     const { id, ...patch } = data;
-    if (patch.role === "principal" && me.role !== "super_admin")
-      throw new Error("Only super admin can assign principal");
+    assertRoleAssignmentAllowed(me.role, [patch.role, ...(patch.extra_roles ?? [])] as ManageableRole[]);
+    // Extra guard: nobody may edit their own role/extra_roles (blocks self-escalation).
+    if (id === me.id && (patch.role !== undefined || patch.extra_roles !== undefined)) {
+      throw new Error("You cannot change your own role or additional roles.");
+    }
     if (patch.username) (patch as any).username = patch.username.toLowerCase();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("staff_users").update(patch).eq("id", id);

@@ -2,8 +2,49 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { facultyRoles, hodRoles } from "./roles";
 import { requireRole, requireStaff } from "./roles.server";
+import type { StaffSession } from "./sessions";
 
 const yearRe = /^\d{4}-\d{2}$/;
+
+// Ensure the caller is actually the teacher of (subject, branch, semester).
+// Bypass for super_admin / principal / hod — they oversee everyone.
+async function assertSubjectAccess(
+  me: StaffSession,
+  args: { subject_id: number; branch?: string; semester?: number; academic_year?: string },
+) {
+  const held = [me.role, ...(me.extraRoles ?? [])];
+  if (held.some((r) => ["super_admin", "principal", "hod"].includes(r as string))) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  let branch = args.branch;
+  let semester = args.semester;
+  if (!branch || !semester) {
+    const { data: subj } = await supabaseAdmin
+      .from("subjects")
+      .select("branch, semester")
+      .eq("id", args.subject_id)
+      .maybeSingle();
+    branch = branch ?? subj?.branch ?? undefined;
+    semester = semester ?? subj?.semester ?? undefined;
+  }
+  if (!branch || !semester) {
+    throw new Error("Forbidden: subject scope not resolvable.");
+  }
+
+  let q = supabaseAdmin
+    .from("faculty_assignments")
+    .select("id")
+    .eq("staff_id", me.id)
+    .eq("subject_id", args.subject_id)
+    .eq("branch", branch)
+    .eq("semester", semester)
+    .limit(1);
+  if (args.academic_year) q = q.eq("academic_year", args.academic_year);
+  const { data } = await q;
+  if (!data || data.length === 0) {
+    throw new Error("Forbidden: you are not assigned to teach this class/subject.");
+  }
+}
 
 // ============ DASHBOARD ============
 
@@ -123,6 +164,7 @@ export const submitAttendance = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const today = new Date().toISOString().slice(0, 10);
     const locked = data.date !== today; // lock if not today
@@ -208,6 +250,7 @@ export const saveMarks = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, academic_year: data.academic_year });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const rows = data.entries.map((e) => ({
       student_id: e.student_id,

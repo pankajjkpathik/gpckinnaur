@@ -12,8 +12,28 @@ import {
 
 // ---------- STAFF ----------
 
+const staffRoleEnum = z.enum([
+  "super_admin",
+  "principal",
+  "hod",
+  "faculty",
+  "admin_staff",
+  "clerk",
+  "tpo",
+]);
+
 export const staffLogin = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ username: z.string().min(1), password: z.string().min(1) }).parse(d))
+  .inputValidator((d) =>
+    z
+      .object({
+        username: z.string().min(1),
+        password: z.string().min(1),
+        // Login page passes the tab's allowed roles. Enforced server-side so
+        // portals can't be cross-logged (e.g. Principal via Faculty tab).
+        allowedRoles: z.array(staffRoleEnum).min(1).optional(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data }) => {
     const secretIssue = getStaffSessionSecretIssue();
     if (secretIssue) throw new Error(secretIssue);
@@ -28,6 +48,17 @@ export const staffLogin = createServerFn({ method: "POST" })
     if (!row) throw new Error("Invalid credentials");
     const ok = await bcrypt.compare(data.password, row.password_hash);
     if (!ok) throw new Error("Invalid credentials");
+
+    // Portal separation. Held roles = primary + extra_roles. An HOD who also
+    // teaches must have `faculty` in extra_roles to use the Faculty tab.
+    if (data.allowedRoles && data.allowedRoles.length > 0) {
+      const held = [row.role, ...((row.extra_roles ?? []) as string[])];
+      const permitted = held.some((r) => (data.allowedRoles as string[]).includes(r));
+      if (!permitted) {
+        throw new Error("This account is not permitted to sign in from this portal.");
+      }
+    }
+
     await supabaseAdmin.from("staff_users").update({ last_login: new Date().toISOString() }).eq("id", row.id);
     const session = await useSession<StaffSession>(staffSessionConfig);
     await session.update({
