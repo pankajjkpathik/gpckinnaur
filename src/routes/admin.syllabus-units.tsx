@@ -286,8 +286,11 @@ function SyllabusUnitsPage() {
                       title: "",
                       topics: [],
                       hours: 0,
+                      lecture_hours: 0,
+                      practical_hours: 0,
                     })
                   }
+
                   className="bg-rose-700 text-white px-3 py-2 rounded text-sm font-semibold inline-flex items-center gap-1"
                 >
                   <Plus className="w-4 h-4" /> Add Unit
