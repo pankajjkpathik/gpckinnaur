@@ -1012,7 +1012,7 @@ function MdImportModal({
                 disabled={target <= 0}
                 className="border border-rose-700 text-rose-700 px-3 py-1.5 rounded text-xs font-semibold hover:bg-rose-50 disabled:opacity-50"
               >
-                Auto-distribute to {target || "—"}
+                Auto-distribute (T {targetLecture || "—"} / P {targetPractical || "—"})
               </button>
               <button
                 type="button"
@@ -1026,23 +1026,33 @@ function MdImportModal({
                 Overwrite existing {existingUnits.length} unit(s)
               </label>
               <span
-                className={`ml-auto text-xs font-semibold ${
-                  target > 0 && total !== target ? "text-rose-700" : "text-emerald-700"
-                }`}
+                className={`ml-auto text-xs font-semibold ${allOk ? "text-emerald-700" : "text-rose-700"}`}
               >
-                {view.length} units · {total} / {target || "—"} hrs
-                {target > 0 && total !== target && ` (Δ ${total - target > 0 ? "+" : ""}${total - target})`}
+                {view.length} units · T {totalLecture}/{targetLecture || "—"} · P{" "}
+                {totalPractical}/{targetPractical || "—"}
               </span>
             </div>
 
             {target > 0 && (
-              total === target ? (
+              allOk ? (
                 <div className="mt-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
-                  ✓ Total {total} matches required L+P×14 ({target}). Preview below — edit any hours before saving.
+                  ✓ Theory and Practical totals both match. Preview below — edit before saving.
                 </div>
               ) : (
-                <div className="mt-2 rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
-                  ✗ Total {total} ≠ required {target}. Click <b>Auto-distribute</b> or adjust unit hours with the +/- buttons below.
+                <div className="mt-2 rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2 space-y-0.5">
+                  {!lectureOk && (
+                    <div>
+                      ✗ Theory {totalLecture} ≠ required {targetLecture}
+                      {" "}(Δ {totalLecture - targetLecture > 0 ? "+" : ""}{totalLecture - targetLecture})
+                    </div>
+                  )}
+                  {!practicalOk && (
+                    <div>
+                      ✗ Practical {totalPractical} ≠ required {targetPractical}
+                      {" "}(Δ {totalPractical - targetPractical > 0 ? "+" : ""}{totalPractical - targetPractical})
+                    </div>
+                  )}
+                  <div className="opacity-80">Click <b>Auto-distribute</b> or adjust with the +/- controls.</div>
                 </div>
               )
             )}
@@ -1054,93 +1064,91 @@ function MdImportModal({
                     <th className="text-left px-2 py-1.5 w-14">Unit</th>
                     <th className="text-left px-2 py-1.5">Title</th>
                     <th className="text-left px-2 py-1.5">Topics</th>
-                    <th className="text-center px-2 py-1.5 w-36">Hours (adjust)</th>
+                    <th className="text-center px-2 py-1.5 w-32">Theory</th>
+                    <th className="text-center px-2 py-1.5 w-32">Practical</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {view.map((u, i) => {
-                    const orig = originalParsed[i]?.hours ?? u.hours;
-                    const diff = (Number(u.hours) || 0) - orig;
-                    return (
-                      <tr key={i} className="border-t align-top">
-                        <td className="px-2 py-1.5 font-semibold">{u.unit_no}</td>
-                        <td className="px-2 py-1.5">
-                          <input
-                            value={u.title}
-                            onChange={(e) => {
-                              const next = [...parsed];
-                              next[i] = { ...next[i], title: e.target.value };
-                              setParsed(next);
-                            }}
-                            className="w-full border rounded px-1.5 py-1 text-sm"
-                          />
-                        </td>
-                        <td className="px-2 py-1.5 text-xs text-muted-foreground">
-                          <textarea
-                            rows={2}
-                            value={u.topics.join("\n")}
-                            onChange={(e) => {
-                              const next = [...parsed];
-                              next[i] = {
-                                ...next[i],
-                                topics: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean),
-                              };
-                              setParsed(next);
-                            }}
-                            className="w-full border rounded px-1.5 py-1 text-xs font-mono"
-                          />
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => bump(i, -1)}
-                              className="w-6 h-6 border rounded text-sm hover:bg-secondary"
-                              aria-label="Decrease hours"
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              min={0}
-                              max={200}
-                              value={u.hours}
-                              onChange={(e) => {
-                                const next = [...parsed];
-                                next[i] = { ...next[i], hours: Number(e.target.value) || 0 };
-                                setParsed(next);
-                              }}
-                              className="w-14 border rounded px-1 py-0.5 text-sm text-center"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => bump(i, 1)}
-                              className="w-6 h-6 border rounded text-sm hover:bg-secondary"
-                              aria-label="Increase hours"
-                            >
-                              +
-                            </button>
-                          </div>
-                          {diff !== 0 && (
-                            <div
-                              className={`text-[10px] text-center mt-0.5 ${
-                                diff > 0 ? "text-emerald-700" : "text-amber-700"
-                              }`}
-                            >
-                              {diff > 0 ? `+${diff}` : diff} vs parsed ({orig})
+                  {view.map((u, i) => (
+                    <tr key={i} className="border-t align-top">
+                      <td className="px-2 py-1.5 font-semibold">{u.unit_no}</td>
+                      <td className="px-2 py-1.5">
+                        <input
+                          value={u.title}
+                          onChange={(e) => {
+                            const next = [...parsed];
+                            next[i] = { ...next[i], title: e.target.value };
+                            setParsed(next);
+                          }}
+                          className="w-full border rounded px-1.5 py-1 text-sm"
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 text-xs text-muted-foreground">
+                        <textarea
+                          rows={2}
+                          value={u.topics.join("\n")}
+                          onChange={(e) => {
+                            const next = [...parsed];
+                            next[i] = {
+                              ...next[i],
+                              topics: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean),
+                            };
+                            setParsed(next);
+                          }}
+                          className="w-full border rounded px-1.5 py-1 text-xs font-mono"
+                        />
+                      </td>
+                      {(["lecture_hours", "practical_hours"] as const).map((field) => {
+                        const disabled =
+                          (field === "lecture_hours" && targetLecture === 0) ||
+                          (field === "practical_hours" && targetPractical === 0);
+                        return (
+                          <td key={field} className="px-2 py-1.5">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => bump(i, field, -1)}
+                                className="w-6 h-6 border rounded text-sm hover:bg-secondary disabled:opacity-40"
+                                aria-label={`Decrease ${field}`}
+                              >
+                                −
+                              </button>
+                              <input
+                                type="number"
+                                min={0}
+                                max={200}
+                                disabled={disabled}
+                                value={u[field]}
+                                onChange={(e) => setField(i, field, Number(e.target.value) || 0)}
+                                className="w-14 border rounded px-1 py-0.5 text-sm text-center disabled:bg-secondary/50"
+                              />
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => bump(i, field, 1)}
+                                className="w-6 h-6 border rounded text-sm hover:bg-secondary disabled:opacity-40"
+                                aria-label={`Increase ${field}`}
+                              >
+                                +
+                              </button>
                             </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
                 </tbody>
                 <tfoot>
                   <tr className="border-t bg-secondary/40 font-semibold">
                     <td colSpan={3} className="px-2 py-1.5 text-right">Total</td>
-                    <td className={`px-2 py-1.5 text-center ${target > 0 && total !== target ? "text-rose-700" : ""}`}>
-                      {total}
-                      {target > 0 && ` / ${target}`}
+                    <td className={`px-2 py-1.5 text-center ${!lectureOk ? "text-rose-700" : ""}`}>
+                      {totalLecture}
+                      {targetLecture > 0 && ` / ${targetLecture}`}
+                    </td>
+                    <td className={`px-2 py-1.5 text-center ${!practicalOk ? "text-rose-700" : ""}`}>
+                      {totalPractical}
+                      {targetPractical > 0 && ` / ${targetPractical}`}
                     </td>
                   </tr>
                 </tfoot>
@@ -1161,14 +1169,15 @@ function MdImportModal({
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={onClose} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
           <button
-            disabled={busy || view.length === 0 || (target > 0 && total !== target)}
+            disabled={busy || view.length === 0 || (target > 0 && !allOk)}
             onClick={doImport}
-            title={target > 0 && total !== target ? `Total ${total} must equal ${target}` : ""}
+            title={!allOk ? `Theory ${totalLecture}/${targetLecture} · Practical ${totalPractical}/${targetPractical} must match` : ""}
             className="px-4 py-1.5 bg-rose-700 text-white rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
           >
             <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} unit(s)`}
           </button>
         </div>
+
       </div>
     </div>
   );
