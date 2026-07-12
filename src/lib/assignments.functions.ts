@@ -232,6 +232,23 @@ export const facultyGradeSubmission = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Faculty may only grade submissions for assignments they created.
+    // HOD / Principal / Super-Admin bypass.
+    const held = [me.role, ...(me.extraRoles ?? [])];
+    const isPrivileged = held.some((r) => ["super_admin", "principal", "hod"].includes(r as string));
+    if (!isPrivileged) {
+      const { data: sub } = await supabaseAdmin
+        .from("assignment_submissions")
+        .select("assignment_id, assignments(created_by)")
+        .eq("id", data.id)
+        .maybeSingle();
+      const createdBy = (sub as any)?.assignments?.created_by;
+      if (!sub || createdBy !== me.id) {
+        throw new Error("Forbidden: you did not create this assignment.");
+      }
+    }
+
     const { error } = await supabaseAdmin
       .from("assignment_submissions")
       .update({
