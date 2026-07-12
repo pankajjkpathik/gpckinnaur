@@ -27,6 +27,7 @@ export function LessonPlanLibrary({
   canDelete = false,
   defaultBranch,
   defaultSemester,
+  lockFilters = false,
   title = "Lesson Plans",
   subtitle = "PDFs uploaded by faculty. Available to students, HODs and Principal.",
 }: {
@@ -35,6 +36,8 @@ export function LessonPlanLibrary({
   canDelete?: boolean;
   defaultBranch?: string;
   defaultSemester?: number;
+  /** Hide the branch/semester filter dropdowns and force the defaults. */
+  lockFilters?: boolean;
   title?: string;
   subtitle?: string;
 }) {
@@ -42,14 +45,17 @@ export function LessonPlanLibrary({
   const [branch, setBranch] = useState<string>(defaultBranch ?? "");
   const [semester, setSemester] = useState<number | "">(defaultSemester ?? "");
 
+  const effBranch = lockFilters ? (defaultBranch ?? "") : branch;
+  const effSem = lockFilters ? (defaultSemester ?? "") : semester;
+
   const list = useQuery({
-    queryKey: ["lp-lib", docType, branch, semester],
+    queryKey: ["lp-lib", docType, effBranch, effSem],
     queryFn: () =>
       pdfDocListShared({
         data: {
           doc_type: docType,
-          branch: branch || null,
-          semester: semester === "" ? null : Number(semester),
+          branch: effBranch || null,
+          semester: effSem === "" ? null : Number(effSem),
         },
       }),
   });
@@ -87,32 +93,34 @@ export function LessonPlanLibrary({
             <p className="font-semibold text-gray-800">{title}</p>
             <p className="text-xs text-gray-400">{subtitle}</p>
           </div>
-          <div className="flex gap-2 text-sm">
-            <select
-              value={branch}
-              onChange={(e) => setBranch(e.target.value)}
-              className="border rounded px-2 py-1.5"
-            >
-              <option value="">All branches</option>
-              {BRANCHES.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-            <select
-              value={semester}
-              onChange={(e) => setSemester(e.target.value === "" ? "" : Number(e.target.value))}
-              className="border rounded px-2 py-1.5"
-            >
-              <option value="">All semesters</option>
-              {SEMESTERS.map((s) => (
-                <option key={s} value={s}>
-                  Sem {s}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!lockFilters && (
+            <div className="flex gap-2 text-sm">
+              <select
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+                className="border rounded px-2 py-1.5"
+              >
+                <option value="">All branches</option>
+                {BRANCHES.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={semester}
+                onChange={(e) => setSemester(e.target.value === "" ? "" : Number(e.target.value))}
+                className="border rounded px-2 py-1.5"
+              >
+                <option value="">All semesters</option>
+                {SEMESTERS.map((s) => (
+                  <option key={s} value={s}>
+                    Sem {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {summary.length > 0 && (

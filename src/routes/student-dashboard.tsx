@@ -39,6 +39,7 @@ import {
   studentFaculty,
   studentDocuments,
 } from "@/lib/student.functions";
+import { studentSessionalReport } from "@/lib/student.functions";
 import {
   studentListAssignments,
   studentSubmitAssignment,
@@ -49,7 +50,9 @@ import {
 import { studentParentStatus, studentSetParentPassword } from "@/lib/parent.functions";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
-import { QuickCard } from "@/components/portal/QuickCard";
+import { TimetableGrid } from "@/components/portal/TimetableGrid";
+import { listPeriods } from "@/lib/academic.functions";
+import { branchToDept } from "@/lib/branch";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 
@@ -136,10 +139,28 @@ function StudentDashboard() {
     .join("")
     .toUpperCase();
 
+  const NAV: { icon: any; label: string; view: View }[] = [
+    { icon: GraduationCap, label: "Home", view: "home" },
+    { icon: ClipboardCheck, label: "My Attendance", view: "attendance" },
+    { icon: FileSpreadsheet, label: "My Marks", view: "marks" },
+    { icon: GraduationCap, label: "My Results", view: "results" },
+    { icon: FileText, label: "Semester Reports", view: "semester-reports" },
+    { icon: NotebookPen, label: "Lesson Plans", view: "lesson-plans" },
+    { icon: BookMarked, label: "Syllabus Coverage", view: "syllabus" },
+    { icon: Calendar, label: "Timetable", view: "timetable" },
+    { icon: CalendarClock, label: "Exam Schedule", view: "exam-schedule" },
+    { icon: BookOpen, label: "Assignments", view: "assignments-docs" },
+    { icon: Upload, label: "Upload Assignment", view: "upload" },
+    { icon: DollarSign, label: "Fees Payment", view: "fees" },
+    { icon: Users, label: "My Faculty", view: "faculty" },
+    { icon: Shield, label: "Disciplinary Actions", view: "disciplinary" },
+    { icon: Users, label: "Parent Access", view: "parent-access" },
+  ];
+
   return (
     <div className="min-h-screen bg-[#f7f7fb]">
       <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <img
               src={logoAsset.url}
@@ -179,154 +200,113 @@ function StudentDashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        {view === "home" && <HomeView me={me} onNav={setView} />}
-        {view === "attendance" && <AttendanceView onBack={() => setView("home")} />}
-        {view === "marks" && <MarksView onBack={() => setView("home")} />}
-        {view === "results" && <ResultsView me={me} onBack={() => setView("home")} />}
-        {view === "semester-reports" && <SemesterReportsView me={me} onBack={() => setView("home")} />}
-        {view === "parent-access" && <ParentAccessView onBack={() => setView("home")} />}
-        {view === "upload" && <UploadAssignmentView onBack={() => setView("home")} />}
-        {view === "assignments-docs" && <AssignmentDocsView onBack={() => setView("home")} />}
-        {view === "lesson-plans" && <LessonPlansView onBack={() => setView("home")} />}
-        {view === "exam-schedule" && <ExamScheduleView onBack={() => setView("home")} />}
-        {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
-        {view === "syllabus" && <SyllabusView onBack={() => setView("home")} />}
-        {view === "fees" && <FeesView onBack={() => setView("home")} />}
-        {view === "faculty" && <FacultyView onBack={() => setView("home")} />}
-        {view === "disciplinary" && <DisciplinaryView onBack={() => setView("home")} />}
+      <div className="flex">
+        {/* LHS sidebar */}
+        <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
+          <nav className="py-3">
+            {NAV.map((item) => {
+              const active = view === item.view;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => setView(item.view)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left border-l-4 transition ${
+                    active
+                      ? "border-[#7b1f4c] bg-[#7b1f4c]/5 text-[#7b1f4c] font-semibold"
+                      : "border-transparent text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Mobile nav */}
+        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
+          {NAV.map((item) => {
+            const active = view === item.view;
+            return (
+              <button
+                key={item.view}
+                onClick={() => setView(item.view)}
+                className={`px-3 py-2 text-xs ${
+                  active ? "border-b-2 border-[#7b1f4c] text-[#7b1f4c] font-semibold" : "text-gray-600"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* RHS output */}
+        <main className="flex-1 min-w-0 p-4 md:p-6">
+          {(() => {
+            const goHome = () => setView("home");
+            return (
+              <>
+                {view === "home" && <HomeView me={me} />}
+                {view === "attendance" && <AttendanceView onBack={goHome} />}
+                {view === "marks" && <MarksView onBack={goHome} />}
+                {view === "results" && <ResultsView me={me} onBack={goHome} />}
+                {view === "semester-reports" && <SemesterReportsView me={me} onBack={goHome} />}
+                {view === "parent-access" && <ParentAccessView onBack={goHome} />}
+                {view === "upload" && <UploadAssignmentView onBack={goHome} />}
+                {view === "assignments-docs" && <AssignmentDocsView onBack={goHome} />}
+                {view === "lesson-plans" && <LessonPlansView me={me} onBack={goHome} />}
+                {view === "exam-schedule" && <ExamScheduleView onBack={goHome} />}
+                {view === "timetable" && <TimetableView me={me} onBack={goHome} />}
+                {view === "syllabus" && <SyllabusView me={me} onBack={goHome} />}
+                {view === "fees" && <FeesView onBack={goHome} />}
+                {view === "faculty" && <FacultyView onBack={goHome} />}
+                {view === "disciplinary" && <DisciplinaryView onBack={goHome} />}
+              </>
+            );
+          })()}
+        </main>
       </div>
     </div>
   );
 }
 
-// ─── HOME ─────────────────────────────────────────────────────────────────────
-function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
-  const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View }[] = [
-    {
-      icon: ClipboardCheck,
-      label: "My Attendance",
-      desc: "View your attendance record",
-      color: "bg-[#7b1f4c]",
-      border: "border-[#7b1f4c]",
-      view: "attendance",
-    },
-    {
-      icon: FileSpreadsheet,
-      label: "My Marks",
-      desc: "Check your internal marks",
-      color: "bg-orange-500",
-      border: "border-orange-500",
-      view: "marks",
-    },
-    {
-      icon: GraduationCap,
-      label: "My Results",
-      desc: "View your board results",
-      color: "bg-gray-500",
-      border: "border-gray-500",
-      view: "results",
-    },
-    {
-      icon: FileText,
-      label: "Semester Reports",
-      desc: "Download progress reports",
-      color: "bg-green-600",
-      border: "border-green-600",
-      view: "semester-reports",
-    },
-
-
-    {
-      icon: NotebookPen,
-      label: "Lesson Plans",
-      desc: "PDFs uploaded by your faculty",
-      color: "bg-rose-600",
-      border: "border-rose-600",
-      view: "lesson-plans",
-    },
-    {
-      icon: BookMarked,
-      label: "Syllabus Coverage",
-      desc: "Delivered vs planned units",
-      color: "bg-emerald-600",
-      border: "border-emerald-600",
-      view: "syllabus",
-    },
-    {
-      icon: Calendar,
-      label: "Timetable",
-      desc: "Your weekly class schedule",
-      color: "bg-indigo-600",
-      border: "border-indigo-600",
-      view: "timetable",
-    },
-    {
-      icon: CalendarClock,
-      label: "Exam Schedule",
-      desc: "Upcoming exam datesheets",
-      color: "bg-amber-600",
-      border: "border-amber-600",
-      view: "exam-schedule",
-    },
-    {
-      icon: BookOpen,
-      label: "Assignments",
-      desc: "Assignment sheets from faculty",
-      color: "bg-cyan-600",
-      border: "border-cyan-600",
-      view: "assignments-docs",
-    },
-    {
-      icon: Upload,
-      label: "Upload Assignment",
-      desc: "Submit your completed work",
-      color: "bg-purple-600",
-      border: "border-purple-600",
-      view: "upload",
-    },
-    {
-      icon: DollarSign,
-      label: "Fees Payment",
-      desc: "Check and pay your fees",
-      color: "bg-slate-500",
-      border: "border-slate-500",
-      view: "fees",
-    },
-    {
-      icon: Users,
-      label: "My Faculty",
-      desc: "Contact your teachers",
-      color: "bg-[#7b1f4c]",
-      border: "border-[#7b1f4c]",
-      view: "faculty",
-    },
-    {
-      icon: Shield,
-      label: "Disciplinary Actions",
-      desc: "View any official notices",
-      color: "bg-orange-500",
-      border: "border-orange-500",
-      view: "disciplinary",
-    },
-  ];
-
+// ─── HOME (summary) ───────────────────────────────────────────────────────────
+function HomeView({ me }: { me: any }) {
+  const dashFn = useServerFn(studentDashboard);
+  const { data } = useQuery({ queryKey: ["student-dash"], queryFn: () => dashFn() });
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, {me.name ? me.name.toUpperCase() : "STUDENT"}</h1>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((c) => (
-          <QuickCard
-            key={c.view}
-            icon={c.icon}
-            label={c.label}
-            desc={c.desc}
-            color={c.color}
-            border={c.border}
-            onClick={() => onNav(c.view)}
-          />
-        ))}
+    <div className="space-y-5">
+      <h1 className="text-2xl font-bold text-gray-800">
+        Welcome, {me.name ? me.name.toUpperCase() : "STUDENT"}
+      </h1>
+      <p className="text-sm text-gray-500 -mt-3">
+        Choose an option from the left panel to view your details.
+      </p>
+      <div className="grid sm:grid-cols-3 gap-4">
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Overall Attendance</p>
+          <p className="text-3xl font-bold text-[#7b1f4c] mt-1">
+            {data ? `${data.attendance_pct}%` : "—"}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {data ? `${data.present_periods} / ${data.total_periods} periods` : ""}
+          </p>
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Today's Classes</p>
+          <p className="text-3xl font-bold text-gray-800 mt-1">
+            {data?.today_periods?.length ?? 0}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">{data?.today_date}</p>
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Pending Leaves</p>
+          <p className="text-3xl font-bold text-amber-600 mt-1">{data?.pending_leaves ?? 0}</p>
+          <p className="text-xs text-gray-500 mt-1">Applications awaiting approval</p>
+        </Card>
       </div>
     </div>
   );
@@ -346,7 +326,7 @@ function AttendanceView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">My Attendance</h1>
         <p className="text-xs text-gray-400 mb-6">
@@ -415,7 +395,7 @@ function MarksView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">My Marks</h1>
         <p className="text-xs text-gray-400 mb-4">
@@ -527,7 +507,7 @@ function ResultsView({ me, onBack }: { me: any; onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <div className="bg-[#7b1f4c] text-white rounded-lg px-5 py-4 flex items-center gap-2">
         <GraduationCap className="w-5 h-5" />
         <h1 className="text-lg font-bold">Student's Result</h1>
@@ -610,53 +590,103 @@ function ResultsView({ me, onBack }: { me: any; onBack: () => void }) {
 
 // ─── SEMESTER REPORTS ─────────────────────────────────────────────────────────
 function SemesterReportsView({ me, onBack }: { me: any; onBack: () => void }) {
-  const fn = useServerFn(studentMarks);
-  const { data = [] } = useQuery({ queryKey: ["student-marks-all"], queryFn: () => fn({ data: {} }) });
+  void onBack;
+  const [tab, setTab] = useState<"mid_sessional" | "final_sessional">("mid_sessional");
+  const fn = useServerFn(studentSessionalReport);
+  const { data, isLoading } = useQuery({
+    queryKey: ["student-sess-report", tab],
+    queryFn: () => fn({ data: { exam_type: tab } }),
+  });
 
-  const groups = useMemo(() => {
-    const g = new Map<string, any[]>();
-    (data as any[]).forEach((r) => {
-      const k = `${r.academic_year || "—"} · ${r.exam_type}`;
-      if (!g.has(k)) g.set(k, []);
-      g.get(k)!.push(r);
-    });
-    return Array.from(g.entries());
-  }, [data]);
+  const subjects = (data?.subjects ?? []) as any[];
+  const students = (data?.students ?? []) as any[];
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Semester Reports</h1>
-        <p className="text-xs text-gray-400 mb-4">Download your consolidated progress reports.</p>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Semester Reports</h1>
+            <p className="text-xs text-gray-400">
+              Class-wide sessional report — read-only. Your class: {me.branch} · Semester {me.semester}.
+            </p>
+          </div>
+          <button
+            onClick={() => window.print()}
+            className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5 hover:bg-gray-50"
+          >
+            <Printer className="w-4 h-4" /> Print
+          </button>
+        </div>
 
-        {groups.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">No reports available yet.</p>
+        <div className="flex border rounded overflow-hidden mb-4 text-sm max-w-md">
+          {[
+            { k: "mid_sessional", label: "Mid Sessional" },
+            { k: "final_sessional", label: "Final Sessional" },
+          ].map((t) => (
+            <button
+              key={t.k}
+              onClick={() => setTab(t.k as any)}
+              className={`flex-1 py-2 font-medium ${
+                tab === t.k ? "bg-[#7b1f4c] text-white" : "bg-gray-50 text-gray-600"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {isLoading ? (
+          <p className="text-sm text-gray-400 text-center py-6">Loading…</p>
+        ) : students.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">No students in your class yet.</p>
         ) : (
-          <div className="space-y-3">
-            {groups.map(([label, rows]) => {
-              const total = rows.reduce((s, r) => s + Number(r.max_marks || 0), 0);
-              const got = rows.reduce((s, r) => s + Number(r.obtained || 0), 0);
-              const pct = total ? Math.round((got / total) * 1000) / 10 : 0;
-              return (
-                <div key={label} className="border rounded p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold capitalize">{label.replace(/_/g, " ")}</p>
-                    <p className="text-xs text-gray-400">
-                      {rows.length} subjects · {got}/{total} ({pct}%)
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => window.print()}
-                    className="inline-flex items-center gap-2 border rounded px-4 py-2 text-sm hover:bg-gray-50"
+          <div className="border rounded overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Roll No.</th>
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Student</th>
+                  {subjects.map((s: any) => (
+                    <th key={s.id} className="text-center px-3 py-2 text-gray-500 font-medium">
+                      {s.code}
+                    </th>
+                  ))}
+                  <th className="text-center px-3 py-2 text-gray-500 font-medium">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((st: any) => (
+                  <tr
+                    key={st.id}
+                    className={`border-t ${st.id === me.id ? "bg-[#7b1f4c]/5" : ""}`}
                   >
-                    <Download className="w-4 h-4" /> Download
-                  </button>
-                </div>
-              );
-            })}
+                    <td className="px-3 py-2 text-xs text-gray-600">{st.enrollment_no}</td>
+                    <td className="px-3 py-2 font-medium text-gray-800">{st.name}</td>
+                    {st.per_subject.map((p: any) => (
+                      <td key={p.subject_id} className="px-3 py-2 text-center">
+                        {p.obtained == null ? (
+                          <span className="text-gray-300">—</span>
+                        ) : (
+                          <span>
+                            {p.obtained}
+                            <span className="text-gray-400">/{p.max}</span>
+                          </span>
+                        )}
+                      </td>
+                    ))}
+                    <td className="px-3 py-2 text-center font-semibold text-[#7b1f4c]">
+                      {st.total_max ? `${st.total}/${st.total_max}` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
+        <p className="text-[11px] text-gray-400 mt-3">
+          Only marks approved by the HOD are shown. This report is view-only.
+        </p>
       </Card>
     </div>
   );
@@ -683,7 +713,7 @@ function ParentAccessView({ onBack }: { onBack: () => void }) {
   });
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">👨‍👩‍👧 Parent Access</h1>
         <p className="text-xs text-gray-500 mb-5">
@@ -781,7 +811,7 @@ function UploadAssignmentView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Upload Assignment</h1>
         <p className="text-xs text-gray-400 mb-4">Submit your completed assignment files directly to your faculty.</p>
@@ -889,7 +919,7 @@ function DocsListView({
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">{title}</h1>
         <p className="text-xs text-gray-400 mb-4">{subtitle}</p>
@@ -960,15 +990,18 @@ function ExamScheduleView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── LESSON PLANS ─────────────────────────────────────────────────────────────
-function LessonPlansView({ onBack }: { onBack: () => void }) {
+function LessonPlansView({ me, onBack }: { me: any; onBack: () => void }) {
+  void onBack;
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <Card>
         <LessonPlanLibrary
           docType="lesson_plan"
+          defaultBranch={branchToDept(me.branch)}
+          defaultSemester={me.semester}
+          lockFilters
           title="Lesson Plans"
-          subtitle="PDFs uploaded by your faculty."
+          subtitle={`PDFs uploaded by your faculty — ${branchToDept(me.branch)} · Semester ${me.semester}.`}
         />
       </Card>
     </div>
@@ -976,80 +1009,55 @@ function LessonPlansView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── TIMETABLE ────────────────────────────────────────────────────────────────
-function TimetableView({ onBack }: { onBack: () => void }) {
+function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
+  void onBack;
   const ttFn = useServerFn(studentTimetable);
+  const periodsFn = useServerFn(listPeriods);
   const { data: tt } = useQuery({ queryKey: ["student-tt"], queryFn: () => ttFn() });
-  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const { data: periods = [] } = useQuery({
+    queryKey: ["periods-master"],
+    queryFn: () => periodsFn(),
+  });
+
+  const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Timetable</h1>
-        <p className="text-xs text-gray-400 mb-4">Your weekly class schedule.</p>
-
-        <div className="border rounded overflow-x-auto">
-          {!tt ? (
-            <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
-          ) : (tt.entries as any[]).length === 0 ? (
-            <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
-          ) : (
-            <table className="w-full text-sm min-w-[720px]">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-3 py-2 text-gray-500">Day</th>
-                  {(tt.periods as any[]).map((p) => (
-                    <th key={p.period_no} className="text-left px-3 py-2 text-gray-500">
-                      P{p.period_no}
-                      <div className="text-[10px] text-gray-400 font-normal">
-                        {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[1, 2, 3, 4, 5, 6].map((d) => (
-                  <tr key={d} className="border-t align-top">
-                    <td className="px-3 py-2 font-medium text-gray-700">{DAYS[d]}</td>
-                    {(tt.periods as any[]).map((p) => {
-                      const slots = (tt.entries as any[]).filter(
-                        (e) => e.day_of_week === d && e.period_no === p.period_no,
-                      );
-                      return (
-                        <td key={p.period_no} className="px-3 py-2">
-                          {slots.length === 0 ? (
-                            <span className="text-gray-300">—</span>
-                          ) : (
-                            slots.map((s, i) => (
-                              <div key={i} className="mb-1 last:mb-0">
-                                <div className="font-semibold text-gray-800">
-                                  {s.subjects?.code ?? "—"}
-                                </div>
-                                <div className="text-[11px] text-gray-500">{s.subjects?.name}</div>
-                                <div className="text-[11px] text-gray-500">
-                                  {s.staff_users?.username ? `@${s.staff_users.username}` : ""}
-                                  {s.room ? ` · ${s.room}` : ""}
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-3 print:hidden">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
+            <p className="text-xs text-gray-400">Your weekly class schedule.</p>
+          </div>
+          <button
+            onClick={() => window.print()}
+            className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
+          >
+            🖨️ Print
+          </button>
         </div>
+
+        {!tt || (periods as any[]).length === 0 ? (
+          <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
+        ) : (tt.entries as any[]).length === 0 ? (
+          <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
+        ) : (
+          <TimetableGrid
+            periods={periods as any}
+            slots={(tt.entries as any[]) as any}
+            editable={false}
+            institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
+            classLine={`${branchToDept(me.branch)} - ${ORD[me.semester] ?? me.semester} Semester`}
+          />
+        )}
       </Card>
     </div>
   );
 }
 
 // ─── SYLLABUS COVERAGE ────────────────────────────────────────────────────────
-function SyllabusView({ onBack }: { onBack: () => void }) {
+function SyllabusView({ me, onBack }: { me: any; onBack: () => void }) {
+  void onBack;
   const sylFn = useServerFn(studentSyllabus);
   const { data: syl = [] } = useQuery({ queryKey: ["student-syl"], queryFn: () => sylFn() });
   const academicYear = (() => {
@@ -1060,13 +1068,13 @@ function SyllabusView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <Card>
         <SyllabusCoverage
           mode="view"
           academicYear={academicYear}
+          scope={{ branch: me.branch, semester: me.semester }}
           title="Syllabus Coverage"
-          subtitle="Delivered vs planned hours for each of your subjects."
+          subtitle={`Delivered vs planned hours — ${branchToDept(me.branch)} · Semester ${me.semester}.`}
         />
         <div className="border rounded overflow-hidden mt-6">
           <div className="bg-gray-50 px-4 py-2 font-semibold text-gray-700 text-sm">Syllabus units</div>
@@ -1118,7 +1126,7 @@ function FeesView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <div className="flex items-start justify-between mb-1">
           <h1 className="text-xl font-bold text-gray-800">Fees Payment</h1>
@@ -1217,7 +1225,7 @@ function FacultyView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">My Faculty</h1>
         <p className="text-xs text-gray-400 mb-5">A quick way to contact the faculty members who teach you.</p>
@@ -1268,7 +1276,7 @@ function DisciplinaryView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Disciplinary Actions</h1>
         <p className="text-xs text-gray-400 mb-4">A record of any official disciplinary actions or notices issued.</p>
