@@ -181,17 +181,8 @@ function SyllabusUnitsPage() {
           unit hours (falling back to the subject's L+P hours if no units are defined).
         </p>
 
-        <ReconciliationPanel
-          academicYear={academicYear}
-          onJump={(row) => {
-            setBranch(row.branch);
-            setSem(row.semester);
-            setSubjectId(row.id);
-            setTimeout(() => {
-              document.getElementById("subject-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }, 50);
-          }}
-        />
+
+
 
 
 
