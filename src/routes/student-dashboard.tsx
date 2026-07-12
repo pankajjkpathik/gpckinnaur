@@ -326,7 +326,7 @@ function AttendanceView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">My Attendance</h1>
         <p className="text-xs text-gray-400 mb-6">
@@ -395,7 +395,7 @@ function MarksView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">My Marks</h1>
         <p className="text-xs text-gray-400 mb-4">
@@ -507,7 +507,7 @@ function ResultsView({ me, onBack }: { me: any; onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <div className="bg-[#7b1f4c] text-white rounded-lg px-5 py-4 flex items-center gap-2">
         <GraduationCap className="w-5 h-5" />
         <h1 className="text-lg font-bold">Student's Result</h1>
@@ -713,7 +713,7 @@ function ParentAccessView({ onBack }: { onBack: () => void }) {
   });
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">👨‍👩‍👧 Parent Access</h1>
         <p className="text-xs text-gray-500 mb-5">
@@ -811,7 +811,7 @@ function UploadAssignmentView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Upload Assignment</h1>
         <p className="text-xs text-gray-400 mb-4">Submit your completed assignment files directly to your faculty.</p>
@@ -919,7 +919,7 @@ function DocsListView({
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">{title}</h1>
         <p className="text-xs text-gray-400 mb-4">{subtitle}</p>
@@ -1126,7 +1126,7 @@ function FeesView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <div className="flex items-start justify-between mb-1">
           <h1 className="text-xl font-bold text-gray-800">Fees Payment</h1>
@@ -1225,7 +1225,7 @@ function FacultyView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">My Faculty</h1>
         <p className="text-xs text-gray-400 mb-5">A quick way to contact the faculty members who teach you.</p>
@@ -1276,7 +1276,7 @@ function DisciplinaryView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
+      
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Disciplinary Actions</h1>
         <p className="text-xs text-gray-400 mb-4">A record of any official disciplinary actions or notices issued.</p>
