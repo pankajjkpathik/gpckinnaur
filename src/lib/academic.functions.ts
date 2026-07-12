@@ -208,27 +208,49 @@ export const syllabusUnitReconciliation = createServerFn({ method: "GET" })
     if (se) throw new Error(se.message);
 
     const ids = (subjects ?? []).map((s: any) => s.id);
-    let unitsBySubject = new Map<number, { count: number; hours: number }>();
+    let unitsBySubject = new Map<
+      number,
+      { count: number; hours: number; lecture: number; practical: number }
+    >();
     if (ids.length) {
       const { data: units, error: ue } = await supabaseAdmin
         .from("syllabus_units")
-        .select("subject_id,hours")
+        .select("subject_id,hours,lecture_hours,practical_hours")
         .eq("academic_year", data.academic_year)
         .in("subject_id", ids);
       if (ue) throw new Error(ue.message);
       for (const u of units ?? []) {
-        const cur = unitsBySubject.get(u.subject_id as number) ?? { count: 0, hours: 0 };
+        const cur = unitsBySubject.get(u.subject_id as number) ?? {
+          count: 0,
+          hours: 0,
+          lecture: 0,
+          practical: 0,
+        };
         cur.count += 1;
         cur.hours += Number(u.hours) || 0;
+        cur.lecture += Number((u as any).lecture_hours) || 0;
+        cur.practical += Number((u as any).practical_hours) || 0;
         unitsBySubject.set(u.subject_id as number, cur);
       }
     }
 
+    const WEEKS = 14;
     const rows = (subjects ?? []).map((s: any) => {
-      const lp = (s.lecture_hours ?? 0) + (s.practical_hours ?? 0);
-      const agg = unitsBySubject.get(s.id) ?? { count: 0, hours: 0 };
+      const lh = s.lecture_hours ?? 0;
+      const ph = s.practical_hours ?? 0;
+      const lp = lh + ph;
+      const reqLecture = lh * WEEKS;
+      const reqPractical = ph * WEEKS;
+      const reqTotal = reqLecture + reqPractical;
+      const agg = unitsBySubject.get(s.id) ?? { count: 0, hours: 0, lecture: 0, practical: 0 };
+      const lectureDiff = agg.lecture - reqLecture;
+      const practicalDiff = agg.practical - reqPractical;
       const status: "no_units" | "mismatch" | "match" =
-        agg.count === 0 ? "no_units" : agg.hours === lp ? "match" : "mismatch";
+        agg.count === 0
+          ? "no_units"
+          : lectureDiff === 0 && practicalDiff === 0
+            ? "match"
+            : "mismatch";
       return {
         id: s.id,
         code: s.code,
@@ -236,9 +258,16 @@ export const syllabusUnitReconciliation = createServerFn({ method: "GET" })
         branch: s.branch,
         semester: s.semester,
         lp_hours: lp,
+        required_lecture_hours: reqLecture,
+        required_practical_hours: reqPractical,
+        required_total_hours: reqTotal,
         unit_count: agg.count,
         unit_hours: agg.hours,
-        diff: agg.hours - lp,
+        unit_lecture_hours: agg.lecture,
+        unit_practical_hours: agg.practical,
+        lecture_diff: lectureDiff,
+        practical_diff: practicalDiff,
+        diff: agg.hours - reqTotal,
         status,
       };
     });
@@ -257,13 +286,18 @@ export const upsertSyllabusUnit = createServerFn({ method: "POST" })
         unit_no: z.number().int().min(1).max(20),
         title: z.string().min(1).max(200),
         topics: z.array(z.string()).default([]),
-        hours: z.number().int().min(0).default(0),
+        lecture_hours: z.number().int().min(0).default(0),
+        practical_hours: z.number().int().min(0).default(0),
+        // legacy: accepted but ignored when lecture/practical are provided
+        hours: z.number().int().min(0).optional(),
       })
       .parse(d),
   )
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const lecture = data.lecture_hours ?? 0;
+    const practical = data.practical_hours ?? 0;
     const payload = {
       subject_id: data.subject_id,
       academic_year: data.academic_year,
@@ -271,7 +305,9 @@ export const upsertSyllabusUnit = createServerFn({ method: "POST" })
       unit_no: data.unit_no,
       title: data.title,
       topics: data.topics,
-      hours: data.hours,
+      lecture_hours: lecture,
+      practical_hours: practical,
+      hours: lecture + practical,
     };
     const { error } = data.id
       ? await supabaseAdmin.from("syllabus_units").update(payload).eq("id", data.id)
@@ -279,6 +315,7 @@ export const upsertSyllabusUnit = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 
 export const deleteSyllabusUnit = createServerFn({ method: "POST" })
