@@ -191,3 +191,51 @@ export function rescaleHours(units: ParsedUnit[], target: number): ParsedUnit[] 
   return rescaleField(units, target, "hours");
 }
 
+// Heading that introduces a practical/experiment/program list in a lab syllabus.
+// Matches e.g. "List of Practicals", "## Practicals", "List of Experiments",
+// "Lab Exercises", "List of Programs", "Practical List".
+const PRACTICAL_SECTION_RE =
+  /^\s*#{0,6}\s*(?:list\s+of\s+)?(?:practical|experiment|program|programme|lab(?:oratory)?\s+(?:exercise|experiment|work|practical))s?\s*[:\-–—]?\s*$/i;
+
+// A section-ending heading that signals the practical list has ended.
+const NEW_SECTION_RE = /^\s*#{1,6}\s+\S|^\s*unit\s*[-\s]?\s*[ivx\d]/i;
+
+// Parse a lab-syllabus Markdown that lists individual practicals/experiments
+// instead of units. Each numbered / bulleted item becomes its own row so the
+// admin can assign practical hours per experiment.
+export function parsePracticalList(md: string): ParsedUnit[] {
+  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const items: string[] = [];
+  let inSection = false;
+
+  for (const raw of lines) {
+    const line = raw.replace(/\t/g, " ");
+    const trimmed = line.trim();
+    if (!inSection) {
+      if (PRACTICAL_SECTION_RE.test(trimmed)) inSection = true;
+      continue;
+    }
+    if (!trimmed) continue;
+    if (NEW_SECTION_RE.test(line) && !PRACTICAL_SECTION_RE.test(trimmed)) break;
+    if (/^[|\-:\s]+$/.test(trimmed)) continue;
+
+    const isBullet = /^\s*([-*+•]|\d+[\.\)]|\([a-z0-9]+\))\s+/i.test(line);
+    if (isBullet) {
+      const t = stripBullet(line);
+      if (t) items.push(t);
+    } else if (items.length > 0) {
+      items[items.length - 1] = `${items[items.length - 1]} ${trimmed}`.trim();
+    }
+  }
+
+  return items.map((title, i) => ({
+    unit_no: i + 1,
+    title: title.slice(0, 200),
+    hours: 0,
+    lecture_hours: 0,
+    practical_hours: 0,
+    topics: [],
+  }));
+}
+
+
