@@ -1218,7 +1218,7 @@ function MdImportModal({
             title={!allOk ? `Theory ${totalLecture}/${targetLecture} · Practical ${totalPractical}/${targetPractical} must match` : ""}
             className="px-4 py-1.5 bg-rose-700 text-white rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
           >
-            <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} unit(s)`}
+            <Save className="w-4 h-4" /> {busy ? "Importing…" : `Import ${view.length} ${isLab ? "practical(s)" : "unit(s)"}`}
           </button>
         </div>
 
