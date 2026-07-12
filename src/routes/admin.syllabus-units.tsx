@@ -247,10 +247,11 @@ function SyllabusUnitsPage() {
                   <span className="text-xs font-normal text-muted-foreground">· AY {academicYear}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  L {subject.lecture_hours ?? 0} + P {subject.practical_hours ?? 0} ={" "}
-                  <b>{subjectPlanned}</b>/week × <b>{WEEKS}</b> weeks ={" "}
-                  <b>{requiredTotal}</b> required · unit hours total <b>{totalPlanned}</b>
+                  L {subjectL} × {WEEKS} = <b>{requiredLecture}</b> theory ·
+                  {" "}P {subjectP} × {WEEKS} = <b>{requiredPractical}</b> practical ·
+                  {" "}planned <b>{totalPlannedLecture}</b> theory / <b>{totalPlannedPractical}</b> practical
                 </p>
+
               </div>
               <div className="flex gap-2 flex-wrap">
                 <button
