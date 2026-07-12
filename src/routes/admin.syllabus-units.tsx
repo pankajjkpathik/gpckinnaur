@@ -884,7 +884,13 @@ function MdImportModal({
           p = [];
         }
       } else {
-        p = parseSyllabusMarkdown(txt);
+        p = [];
+        // For lab subjects (practical-only, or name/code mentions "Lab"),
+        // derive the "List of Practicals" from the .md instead of units.
+        if (isLab) {
+          p = parsePracticalList(txt);
+        }
+        if (p.length === 0) p = parseSyllabusMarkdown(txt);
       }
       setParsed(p);
       setOriginalParsed(p.map((u) => ({ ...u })));
