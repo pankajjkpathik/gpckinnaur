@@ -613,7 +613,8 @@ export const individualSubjectRegister = createServerFn({ method: "GET" })
     }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subj } = await supabaseAdmin.from("subjects").select("code, name").eq("id", data.subject_id).maybeSingle();
