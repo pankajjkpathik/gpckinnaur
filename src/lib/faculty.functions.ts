@@ -2,8 +2,33 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { facultyRoles, hodRoles } from "./roles";
 import { requireRole, requireStaff } from "./roles.server";
+import type { StaffSession } from "./sessions";
 
 const yearRe = /^\d{4}-\d{2}$/;
+
+// Ensure the caller is actually the teacher of (subject, branch, semester).
+// Bypass for super_admin / principal / hod — they oversee everyone.
+async function assertSubjectAccess(
+  me: StaffSession,
+  args: { subject_id: number; branch: string; semester: number; academic_year?: string },
+) {
+  const held = [me.role, ...(me.extraRoles ?? [])];
+  if (held.some((r) => ["super_admin", "principal", "hod"].includes(r as string))) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  let q = supabaseAdmin
+    .from("faculty_assignments")
+    .select("id")
+    .eq("staff_id", me.id)
+    .eq("subject_id", args.subject_id)
+    .eq("branch", args.branch)
+    .eq("semester", args.semester)
+    .limit(1);
+  if (args.academic_year) q = q.eq("academic_year", args.academic_year);
+  const { data } = await q;
+  if (!data || data.length === 0) {
+    throw new Error("Forbidden: you are not assigned to teach this class/subject.");
+  }
+}
 
 // ============ DASHBOARD ============
 
