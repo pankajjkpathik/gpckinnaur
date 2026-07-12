@@ -108,8 +108,18 @@ export const createAssignment = createServerFn({ method: "POST" })
 export const deleteAssignment = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const held = [me.role, ...(me.extraRoles ?? [])];
+    const isPrivileged = held.some((r) => ["super_admin", "principal", "hod"].includes(r as string));
+    if (!isPrivileged) {
+      const { data: row } = await supabaseAdmin
+        .from("assignments")
+        .select("created_by")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (!row || row.created_by !== me.id) throw new Error("Forbidden");
+    }
     const { error } = await supabaseAdmin.from("assignments").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
