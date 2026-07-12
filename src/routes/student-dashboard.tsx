@@ -590,53 +590,103 @@ function ResultsView({ me, onBack }: { me: any; onBack: () => void }) {
 
 // ─── SEMESTER REPORTS ─────────────────────────────────────────────────────────
 function SemesterReportsView({ me, onBack }: { me: any; onBack: () => void }) {
-  const fn = useServerFn(studentMarks);
-  const { data = [] } = useQuery({ queryKey: ["student-marks-all"], queryFn: () => fn({ data: {} }) });
+  void onBack;
+  const [tab, setTab] = useState<"mid_sessional" | "final_sessional">("mid_sessional");
+  const fn = useServerFn(studentSessionalReport);
+  const { data, isLoading } = useQuery({
+    queryKey: ["student-sess-report", tab],
+    queryFn: () => fn({ data: { exam_type: tab } }),
+  });
 
-  const groups = useMemo(() => {
-    const g = new Map<string, any[]>();
-    (data as any[]).forEach((r) => {
-      const k = `${r.academic_year || "—"} · ${r.exam_type}`;
-      if (!g.has(k)) g.set(k, []);
-      g.get(k)!.push(r);
-    });
-    return Array.from(g.entries());
-  }, [data]);
+  const subjects = (data?.subjects ?? []) as any[];
+  const students = (data?.students ?? []) as any[];
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Semester Reports</h1>
-        <p className="text-xs text-gray-400 mb-4">Download your consolidated progress reports.</p>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Semester Reports</h1>
+            <p className="text-xs text-gray-400">
+              Class-wide sessional report — read-only. Your class: {me.branch} · Semester {me.semester}.
+            </p>
+          </div>
+          <button
+            onClick={() => window.print()}
+            className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5 hover:bg-gray-50"
+          >
+            <Printer className="w-4 h-4" /> Print
+          </button>
+        </div>
 
-        {groups.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">No reports available yet.</p>
+        <div className="flex border rounded overflow-hidden mb-4 text-sm max-w-md">
+          {[
+            { k: "mid_sessional", label: "Mid Sessional" },
+            { k: "final_sessional", label: "Final Sessional" },
+          ].map((t) => (
+            <button
+              key={t.k}
+              onClick={() => setTab(t.k as any)}
+              className={`flex-1 py-2 font-medium ${
+                tab === t.k ? "bg-[#7b1f4c] text-white" : "bg-gray-50 text-gray-600"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {isLoading ? (
+          <p className="text-sm text-gray-400 text-center py-6">Loading…</p>
+        ) : students.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">No students in your class yet.</p>
         ) : (
-          <div className="space-y-3">
-            {groups.map(([label, rows]) => {
-              const total = rows.reduce((s, r) => s + Number(r.max_marks || 0), 0);
-              const got = rows.reduce((s, r) => s + Number(r.obtained || 0), 0);
-              const pct = total ? Math.round((got / total) * 1000) / 10 : 0;
-              return (
-                <div key={label} className="border rounded p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold capitalize">{label.replace(/_/g, " ")}</p>
-                    <p className="text-xs text-gray-400">
-                      {rows.length} subjects · {got}/{total} ({pct}%)
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => window.print()}
-                    className="inline-flex items-center gap-2 border rounded px-4 py-2 text-sm hover:bg-gray-50"
+          <div className="border rounded overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Roll No.</th>
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">Student</th>
+                  {subjects.map((s: any) => (
+                    <th key={s.id} className="text-center px-3 py-2 text-gray-500 font-medium">
+                      {s.code}
+                    </th>
+                  ))}
+                  <th className="text-center px-3 py-2 text-gray-500 font-medium">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((st: any) => (
+                  <tr
+                    key={st.id}
+                    className={`border-t ${st.id === me.id ? "bg-[#7b1f4c]/5" : ""}`}
                   >
-                    <Download className="w-4 h-4" /> Download
-                  </button>
-                </div>
-              );
-            })}
+                    <td className="px-3 py-2 text-xs text-gray-600">{st.enrollment_no}</td>
+                    <td className="px-3 py-2 font-medium text-gray-800">{st.name}</td>
+                    {st.per_subject.map((p: any) => (
+                      <td key={p.subject_id} className="px-3 py-2 text-center">
+                        {p.obtained == null ? (
+                          <span className="text-gray-300">—</span>
+                        ) : (
+                          <span>
+                            {p.obtained}
+                            <span className="text-gray-400">/{p.max}</span>
+                          </span>
+                        )}
+                      </td>
+                    ))}
+                    <td className="px-3 py-2 text-center font-semibold text-[#7b1f4c]">
+                      {st.total_max ? `${st.total}/${st.total_max}` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
+        <p className="text-[11px] text-gray-400 mt-3">
+          Only marks approved by the HOD are shown. This report is view-only.
+        </p>
       </Card>
     </div>
   );
