@@ -10,18 +10,34 @@ const yearRe = /^\d{4}-\d{2}$/;
 // Bypass for super_admin / principal / hod — they oversee everyone.
 async function assertSubjectAccess(
   me: StaffSession,
-  args: { subject_id: number; branch: string; semester: number; academic_year?: string },
+  args: { subject_id: number; branch?: string; semester?: number; academic_year?: string },
 ) {
   const held = [me.role, ...(me.extraRoles ?? [])];
   if (held.some((r) => ["super_admin", "principal", "hod"].includes(r as string))) return;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  let branch = args.branch;
+  let semester = args.semester;
+  if (!branch || !semester) {
+    const { data: subj } = await supabaseAdmin
+      .from("subjects")
+      .select("branch, semester")
+      .eq("id", args.subject_id)
+      .maybeSingle();
+    branch = branch ?? subj?.branch ?? undefined;
+    semester = semester ?? subj?.semester ?? undefined;
+  }
+  if (!branch || !semester) {
+    throw new Error("Forbidden: subject scope not resolvable.");
+  }
+
   let q = supabaseAdmin
     .from("faculty_assignments")
     .select("id")
     .eq("staff_id", me.id)
     .eq("subject_id", args.subject_id)
-    .eq("branch", args.branch)
-    .eq("semester", args.semester)
+    .eq("branch", branch)
+    .eq("semester", semester)
     .limit(1);
   if (args.academic_year) q = q.eq("academic_year", args.academic_year);
   const { data } = await q;
