@@ -10,7 +10,6 @@ import {
   listSyllabus,
   upsertSyllabusUnit,
   deleteSyllabusUnit,
-  syllabusUnitReconciliation,
 } from "@/lib/academic.functions";
 import { parseSyllabusMarkdown, parsePracticalList, rescaleField, type ParsedUnit } from "@/lib/parse-syllabus-md";
 
