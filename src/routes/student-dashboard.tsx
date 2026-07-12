@@ -990,15 +990,18 @@ function ExamScheduleView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── LESSON PLANS ─────────────────────────────────────────────────────────────
-function LessonPlansView({ onBack }: { onBack: () => void }) {
+function LessonPlansView({ me, onBack }: { me: any; onBack: () => void }) {
+  void onBack;
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <Card>
         <LessonPlanLibrary
           docType="lesson_plan"
+          defaultBranch={branchToDept(me.branch)}
+          defaultSemester={me.semester}
+          lockFilters
           title="Lesson Plans"
-          subtitle="PDFs uploaded by your faculty."
+          subtitle={`PDFs uploaded by your faculty — ${branchToDept(me.branch)} · Semester ${me.semester}.`}
         />
       </Card>
     </div>
@@ -1006,80 +1009,55 @@ function LessonPlansView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── TIMETABLE ────────────────────────────────────────────────────────────────
-function TimetableView({ onBack }: { onBack: () => void }) {
+function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
+  void onBack;
   const ttFn = useServerFn(studentTimetable);
+  const periodsFn = useServerFn(listPeriods);
   const { data: tt } = useQuery({ queryKey: ["student-tt"], queryFn: () => ttFn() });
-  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const { data: periods = [] } = useQuery({
+    queryKey: ["periods-master"],
+    queryFn: () => periodsFn(),
+  });
+
+  const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Timetable</h1>
-        <p className="text-xs text-gray-400 mb-4">Your weekly class schedule.</p>
-
-        <div className="border rounded overflow-x-auto">
-          {!tt ? (
-            <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
-          ) : (tt.entries as any[]).length === 0 ? (
-            <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
-          ) : (
-            <table className="w-full text-sm min-w-[720px]">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-3 py-2 text-gray-500">Day</th>
-                  {(tt.periods as any[]).map((p) => (
-                    <th key={p.period_no} className="text-left px-3 py-2 text-gray-500">
-                      P{p.period_no}
-                      <div className="text-[10px] text-gray-400 font-normal">
-                        {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[1, 2, 3, 4, 5, 6].map((d) => (
-                  <tr key={d} className="border-t align-top">
-                    <td className="px-3 py-2 font-medium text-gray-700">{DAYS[d]}</td>
-                    {(tt.periods as any[]).map((p) => {
-                      const slots = (tt.entries as any[]).filter(
-                        (e) => e.day_of_week === d && e.period_no === p.period_no,
-                      );
-                      return (
-                        <td key={p.period_no} className="px-3 py-2">
-                          {slots.length === 0 ? (
-                            <span className="text-gray-300">—</span>
-                          ) : (
-                            slots.map((s, i) => (
-                              <div key={i} className="mb-1 last:mb-0">
-                                <div className="font-semibold text-gray-800">
-                                  {s.subjects?.code ?? "—"}
-                                </div>
-                                <div className="text-[11px] text-gray-500">{s.subjects?.name}</div>
-                                <div className="text-[11px] text-gray-500">
-                                  {s.staff_users?.username ? `@${s.staff_users.username}` : ""}
-                                  {s.room ? ` · ${s.room}` : ""}
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-3 print:hidden">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
+            <p className="text-xs text-gray-400">Your weekly class schedule.</p>
+          </div>
+          <button
+            onClick={() => window.print()}
+            className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
+          >
+            🖨️ Print
+          </button>
         </div>
+
+        {!tt || (periods as any[]).length === 0 ? (
+          <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
+        ) : (tt.entries as any[]).length === 0 ? (
+          <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
+        ) : (
+          <TimetableGrid
+            periods={periods as any}
+            slots={(tt.entries as any[]) as any}
+            editable={false}
+            institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
+            classLine={`${branchToDept(me.branch)} - ${ORD[me.semester] ?? me.semester} Semester`}
+          />
+        )}
       </Card>
     </div>
   );
 }
 
 // ─── SYLLABUS COVERAGE ────────────────────────────────────────────────────────
-function SyllabusView({ onBack }: { onBack: () => void }) {
+function SyllabusView({ me, onBack }: { me: any; onBack: () => void }) {
+  void onBack;
   const sylFn = useServerFn(studentSyllabus);
   const { data: syl = [] } = useQuery({ queryKey: ["student-syl"], queryFn: () => sylFn() });
   const academicYear = (() => {
@@ -1090,13 +1068,13 @@ function SyllabusView({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <Card>
         <SyllabusCoverage
           mode="view"
           academicYear={academicYear}
+          scope={{ branch: me.branch, semester: me.semester }}
           title="Syllabus Coverage"
-          subtitle="Delivered vs planned hours for each of your subjects."
+          subtitle={`Delivered vs planned hours — ${branchToDept(me.branch)} · Semester ${me.semester}.`}
         />
         <div className="border rounded overflow-hidden mt-6">
           <div className="bg-gray-50 px-4 py-2 font-semibold text-gray-700 text-sm">Syllabus units</div>
