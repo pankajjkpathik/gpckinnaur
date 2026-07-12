@@ -1103,9 +1103,9 @@ function MdImportModal({
               <table className="w-full text-sm">
                 <thead className="bg-secondary">
                   <tr>
-                    <th className="text-left px-2 py-1.5 w-14">Unit</th>
-                    <th className="text-left px-2 py-1.5">Title</th>
-                    <th className="text-left px-2 py-1.5">Topics</th>
+                    <th className="text-left px-2 py-1.5 w-14">{isLab ? "#" : "Unit"}</th>
+                    <th className="text-left px-2 py-1.5">{isLab ? "Practical" : "Title"}</th>
+                    <th className="text-left px-2 py-1.5">{isLab ? "Notes" : "Topics"}</th>
                     <th className="text-center px-2 py-1.5 w-32">Theory</th>
                     <th className="text-center px-2 py-1.5 w-32">Practical</th>
                   </tr>
