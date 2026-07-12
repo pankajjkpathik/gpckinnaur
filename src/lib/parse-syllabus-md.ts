@@ -200,37 +200,61 @@ const PRACTICAL_SECTION_RE =
 // A section-ending heading that signals the practical list has ended.
 const NEW_SECTION_RE = /^\s*#{1,6}\s+\S|^\s*unit\s*[-\s]?\s*[ivx\d]/i;
 
+// Matches an individual practical line like:
+//   "Practical 1: Identify various sizes..."
+//   "Practical-2 - Undertake reciprocal ranging..."
+//   "Practical 10  Apply the relevant..."
+const PRACTICAL_ITEM_RE =
+  /^\s*(?:\*\*)?\s*practical\s*[-\s]?\s*(\d{1,3})\s*(?:\*\*)?\s*[:.\-–—)]?\s*(.+?)\s*$/i;
+
 // Parse a lab-syllabus Markdown that lists individual practicals/experiments
 // instead of units. Each numbered / bulleted item becomes its own row so the
 // admin can assign practical hours per experiment.
 export function parsePracticalList(md: string): ParsedUnit[] {
   const lines = md.replace(/\r\n/g, "\n").split("\n");
-  const items: string[] = [];
+  const items: { title: string }[] = [];
   let inSection = false;
+  let sawExplicitItem = false;
 
   for (const raw of lines) {
     const line = raw.replace(/\t/g, " ");
     const trimmed = line.trim();
+
+    // Highest-priority: explicit "Practical N ..." lines anywhere in the file.
+    const pm = trimmed.match(PRACTICAL_ITEM_RE);
+    if (pm) {
+      const title = pm[2].replace(/\*\*/g, "").trim();
+      if (title) {
+        items.push({ title });
+        sawExplicitItem = true;
+        continue;
+      }
+    }
+
     if (!inSection) {
       if (PRACTICAL_SECTION_RE.test(trimmed)) inSection = true;
       continue;
     }
     if (!trimmed) continue;
-    if (NEW_SECTION_RE.test(line) && !PRACTICAL_SECTION_RE.test(trimmed)) break;
+    if (NEW_SECTION_RE.test(line) && !PRACTICAL_SECTION_RE.test(trimmed)) {
+      inSection = false;
+      continue;
+    }
     if (/^[|\-:\s]+$/.test(trimmed)) continue;
 
     const isBullet = /^\s*([-*+•]|\d+[\.\)]|\([a-z0-9]+\))\s+/i.test(line);
     if (isBullet) {
       const t = stripBullet(line);
-      if (t) items.push(t);
-    } else if (items.length > 0) {
-      items[items.length - 1] = `${items[items.length - 1]} ${trimmed}`.trim();
+      if (t) items.push({ title: t });
+    } else if (items.length > 0 && !sawExplicitItem) {
+      const last = items[items.length - 1];
+      last.title = `${last.title} ${trimmed}`.trim();
     }
   }
 
-  return items.map((title, i) => ({
+  return items.map((it, i) => ({
     unit_no: i + 1,
-    title: title.slice(0, 200),
+    title: it.title.slice(0, 300),
     hours: 0,
     lecture_hours: 0,
     practical_hours: 0,
