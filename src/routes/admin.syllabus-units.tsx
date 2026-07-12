@@ -1034,8 +1034,15 @@ function MdImportModal({
           </button>
           <p className="text-xs text-muted-foreground mt-2">
             {fileName ||
-              "Accepts a Markdown syllabus (## Unit 1: Title (10 hours) …) or a previously exported .json to reuse in a new academic year."}
+              (isLab
+                ? "Lab subject detected — paste a Markdown syllabus containing a 'List of Practicals' (numbered experiments) or a previously exported .json."
+                : "Accepts a Markdown syllabus (## Unit 1: Title (10 hours) …) or a previously exported .json to reuse in a new academic year.")}
           </p>
+          {isLab && (
+            <p className="text-[11px] text-rose-700 mt-1 font-medium">
+              This is a Lab subject — practicals are imported from the “List of Practicals” section, not from Unit headings.
+            </p>
+          )}
         </div>
 
         {parsed.length > 0 && (
