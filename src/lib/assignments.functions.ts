@@ -61,6 +61,34 @@ export const createAssignment = createServerFn({ method: "POST" })
     const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { id, ...rest } = data;
+
+    // Faculty can only create/edit assignments for classes they actually teach.
+    // HOD / Principal / Super-Admin bypass.
+    const held = [me.role, ...(me.extraRoles ?? [])];
+    const isPrivileged = held.some((r) => ["super_admin", "principal", "hod"].includes(r as string));
+    if (!isPrivileged && data.subject_id) {
+      const { data: fa } = await supabaseAdmin
+        .from("faculty_assignments")
+        .select("id")
+        .eq("staff_id", me.id)
+        .eq("subject_id", data.subject_id)
+        .eq("branch", data.branch)
+        .eq("semester", data.semester)
+        .limit(1);
+      if (!fa || fa.length === 0) {
+        throw new Error("Forbidden: you are not assigned to teach this subject/class.");
+      }
+    }
+    // On edit, faculty may only edit their own assignments.
+    if (!isPrivileged && id) {
+      const { data: row } = await supabaseAdmin
+        .from("assignments")
+        .select("created_by")
+        .eq("id", id)
+        .maybeSingle();
+      if (!row || row.created_by !== me.id) throw new Error("Forbidden");
+    }
+
     const payload = {
       ...rest,
       description: data.description || null,
