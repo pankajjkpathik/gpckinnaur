@@ -83,8 +83,7 @@ type View =
   | "syllabus"
   | "fees"
   | "faculty"
-  | "disciplinary"
-  | "parent-access";
+  | "disciplinary";
 
 
 const EXAM_TABS = [
