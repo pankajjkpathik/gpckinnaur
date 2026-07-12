@@ -115,7 +115,7 @@ export const pdfDocListShared = createServerFn({ method: "GET" })
       .select("id, doc_type, title, branch, semester, file_name, created_at, staff_users:uploaded_by(username,name)")
       .eq("doc_type", data.doc_type)
       .order("created_at", { ascending: false });
-    if (data.branch) q = q.or(`branch.eq.${data.branch},branch.is.null`);
+    if (data.branch) q = q.or(`branch.eq."${data.branch}",branch.is.null`);
     if (typeof data.semester === "number") q = q.or(`semester.eq.${data.semester},semester.is.null`);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
