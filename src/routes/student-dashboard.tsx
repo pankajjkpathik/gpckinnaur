@@ -51,7 +51,7 @@ import { studentParentStatus, studentSetParentPassword } from "@/lib/parent.func
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
-import { listPeriods } from "@/lib/timetable.functions";
+import { listPeriods } from "@/lib/academic.functions";
 import { branchToDept } from "@/lib/branch";
 import logoAsset from "@/assets/logo.png.asset.json";
 
