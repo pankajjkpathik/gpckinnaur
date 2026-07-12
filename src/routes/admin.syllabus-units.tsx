@@ -257,10 +257,13 @@ function SyllabusUnitsPage() {
                   <span className="text-xs font-normal text-muted-foreground">· AY {academicYear}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  L {subjectL} × {WEEKS} = <b>{requiredLecture}</b> theory ·
-                  {" "}P {subjectP} × {WEEKS} = <b>{requiredPractical}</b> practical ·
-                  {" "}planned <b>{totalPlannedLecture}</b> theory / <b>{totalPlannedPractical}</b> practical
+                  {isLabSubject ? (
+                    <>Lab subject · P {subjectP}/week × {WEEKS} = <b>{referencePractical}</b> practical periods per semester (reference). Coverage is measured by practicals completed ÷ total practicals.</>
+                  ) : (
+                    <>L {subjectL}/week × {WEEKS} = <b>{referenceLecture}</b> theory periods · P {subjectP}/week × {WEEKS} = <b>{referencePractical}</b> practical periods (reference only). Unit hours are taken as-is from the syllabus.</>
+                  )}
                 </p>
+
 
               </div>
               <div className="flex gap-2 flex-wrap">
