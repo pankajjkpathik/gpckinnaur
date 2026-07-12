@@ -145,7 +145,8 @@ export const getAttendance = createServerFn({ method: "GET" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: students } = await supabaseAdmin
       .from("students")
