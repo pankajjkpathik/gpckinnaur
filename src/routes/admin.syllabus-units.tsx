@@ -301,18 +301,32 @@ function SyllabusUnitsPage() {
             {requiredTotal > 0 && (
               hoursValid ? (
                 <div className="rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs px-3 py-2">
-                  ✓ Unit hours match required total ({requiredTotal}).
+                  ✓ Theory <b>{totalPlannedLecture}</b>/{requiredLecture} and Practical{" "}
+                  <b>{totalPlannedPractical}</b>/{requiredPractical} both match.
                 </div>
               ) : units.length === 0 ? (
                 <div className="rounded border border-amber-200 bg-amber-50 text-amber-800 text-xs px-3 py-2">
-                  No units defined for {academicYear}. Add units totalling <b>{requiredTotal}</b> hours (coverage falls back to L+P until then).
+                  No units defined for {academicYear}. Add units totalling{" "}
+                  <b>{requiredLecture}</b> theory + <b>{requiredPractical}</b> practical hours.
                 </div>
               ) : (
-                <div className="rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2">
-                  ✗ Unit hours total <b>{totalPlanned}</b>, but <b>{requiredTotal}</b> required.{" "}
-                  {hoursDiff > 0
-                    ? <>Remove <b>{hoursDiff}</b> hour(s) from one or more units.</>
-                    : <>Add <b>{Math.abs(hoursDiff)}</b> more hour(s) across units.</>}
+                <div className="rounded border border-rose-200 bg-rose-50 text-rose-800 text-xs px-3 py-2 space-y-1">
+                  {lectureDiff !== 0 && (
+                    <div>
+                      ✗ <b>Theory</b>: planned <b>{totalPlannedLecture}</b>, required <b>{requiredLecture}</b>.{" "}
+                      {lectureDiff > 0
+                        ? <>Remove <b>{lectureDiff}</b> theory hour(s).</>
+                        : <>Add <b>{Math.abs(lectureDiff)}</b> more theory hour(s).</>}
+                    </div>
+                  )}
+                  {practicalDiff !== 0 && (
+                    <div>
+                      ✗ <b>Practical</b>: planned <b>{totalPlannedPractical}</b>, required <b>{requiredPractical}</b>.{" "}
+                      {practicalDiff > 0
+                        ? <>Remove <b>{practicalDiff}</b> practical hour(s).</>
+                        : <>Add <b>{Math.abs(practicalDiff)}</b> more practical hour(s).</>}
+                    </div>
+                  )}
                 </div>
               )
             )}
@@ -324,7 +338,9 @@ function SyllabusUnitsPage() {
                     <th className="text-left px-2 py-2 w-16">Unit</th>
                     <th className="text-left px-2 py-2">Title</th>
                     <th className="text-left px-2 py-2">Topics</th>
-                    <th className="text-right px-2 py-2 w-24">Hours</th>
+                    <th className="text-right px-2 py-2 w-20">Theory</th>
+                    <th className="text-right px-2 py-2 w-20">Practical</th>
+                    <th className="text-right px-2 py-2 w-16">Total</th>
                     <th className="w-24"></th>
                   </tr>
                 </thead>
@@ -336,7 +352,9 @@ function SyllabusUnitsPage() {
                       <td className="px-2 py-2 text-xs text-muted-foreground">
                         {(u.topics ?? []).join(", ") || "—"}
                       </td>
-                      <td className="px-2 py-2 text-right">{u.hours}</td>
+                      <td className="px-2 py-2 text-right">{u.lecture_hours}</td>
+                      <td className="px-2 py-2 text-right">{u.practical_hours}</td>
+                      <td className="px-2 py-2 text-right font-semibold">{u.hours}</td>
                       <td className="px-2 py-2 flex gap-1 justify-end">
                         <button onClick={() => setEditing({ ...u, topics: u.topics ?? [] })} className="p-1.5 hover:bg-secondary rounded">
                           <Pencil className="w-4 h-4" />
@@ -352,7 +370,7 @@ function SyllabusUnitsPage() {
                   ))}
                   {units.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="text-center py-6 text-muted-foreground">
+                      <td colSpan={7} className="text-center py-6 text-muted-foreground">
                         No units defined yet.
                       </td>
                     </tr>
@@ -362,6 +380,12 @@ function SyllabusUnitsPage() {
                   <tfoot>
                     <tr className="border-t bg-secondary/40 font-semibold">
                       <td colSpan={3} className="px-2 py-2 text-right">Total planned</td>
+                      <td className={`px-2 py-2 text-right ${lectureDiff !== 0 ? "text-rose-700" : ""}`}>
+                        {totalPlannedLecture}/{requiredLecture}
+                      </td>
+                      <td className={`px-2 py-2 text-right ${practicalDiff !== 0 ? "text-rose-700" : ""}`}>
+                        {totalPlannedPractical}/{requiredPractical}
+                      </td>
                       <td className="px-2 py-2 text-right">{totalPlanned}</td>
                       <td></td>
                     </tr>
@@ -369,6 +393,7 @@ function SyllabusUnitsPage() {
                 )}
               </table>
             </div>
+
           </div>
         )}
 
