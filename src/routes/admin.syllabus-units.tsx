@@ -421,20 +421,14 @@ function SyllabusUnitsPage() {
 
 function UnitModal({
   initial,
-  requiredLecture,
-  requiredPractical,
-  otherUnitsLecture,
-  otherUnitsPractical,
+  isLab,
   onClose,
   onSave,
   pending,
   error,
 }: {
   initial: Unit;
-  requiredLecture: number;
-  requiredPractical: number;
-  otherUnitsLecture: number;
-  otherUnitsPractical: number;
+  isLab: boolean;
   onClose: () => void;
   onSave: (u: Unit) => void;
   pending: boolean;
@@ -450,21 +444,20 @@ function UnitModal({
     initial.semester != null ? String(initial.semester) : "",
   );
 
-  const lectureDisabled = requiredLecture === 0;
-  const practicalDisabled = requiredPractical === 0;
-
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-lg max-w-xl w-full p-5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-[color:var(--navy)]">{initial.id ? "Edit" : "Add"} Unit</h3>
+          <h3 className="font-bold text-[color:var(--navy)]">
+            {initial.id ? "Edit" : "Add"} {isLab ? "Practical" : "Unit"}
+          </h3>
           <button onClick={onClose} className="p-1 hover:bg-secondary rounded"><X className="w-4 h-4" /></button>
         </div>
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            const lh = lectureDisabled ? 0 : lectureHours;
-            const ph = practicalDisabled ? 0 : practicalHours;
+            const lh = isLab ? 0 : lectureHours;
+            const ph = isLab ? 0 : practicalHours;
             onSave({
               id: initial.id,
               subject_id: initial.subject_id,
@@ -503,86 +496,50 @@ function UnitModal({
               </select>
             </label>
             <label className="text-xs text-muted-foreground">
-              Unit No
+              {isLab ? "#" : "Unit No"}
               <input
-                type="number" min={1} max={20} required value={unitNo}
+                type="number" min={1} max={50} required value={unitNo}
                 onChange={(e) => setUnitNo(Number(e.target.value) || 1)}
                 className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
               />
             </label>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs text-muted-foreground">
-              Theory hours {requiredLecture > 0 && <span className="text-[10px]">(target {requiredLecture})</span>}
-              <input
-                type="number" min={0} max={200}
-                disabled={lectureDisabled}
-                value={lectureHours}
-                onChange={(e) => setLectureHours(Number(e.target.value) || 0)}
-                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 disabled:bg-secondary/50"
-              />
-            </label>
-            <label className="text-xs text-muted-foreground">
-              Practical hours {requiredPractical > 0 && <span className="text-[10px]">(target {requiredPractical})</span>}
-              <input
-                type="number" min={0} max={200}
-                disabled={practicalDisabled}
-                value={practicalHours}
-                onChange={(e) => setPracticalHours(Number(e.target.value) || 0)}
-                className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 disabled:bg-secondary/50"
-              />
-            </label>
-          </div>
+          {!isLab && (
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs text-muted-foreground">
+                Theory hours (as per syllabus)
+                <input
+                  type="number" min={0} max={200}
+                  value={lectureHours}
+                  onChange={(e) => setLectureHours(Number(e.target.value) || 0)}
+                  className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
+                />
+              </label>
+              <label className="text-xs text-muted-foreground">
+                Practical hours (as per syllabus)
+                <input
+                  type="number" min={0} max={200}
+                  value={practicalHours}
+                  onChange={(e) => setPracticalHours(Number(e.target.value) || 0)}
+                  className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
+                />
+              </label>
+            </div>
+          )}
           <label className="text-xs text-muted-foreground block">
-            Title
+            {isLab ? "Practical title" : "Title"}
             <input
               required value={title} onChange={(e) => setTitle(e.target.value)}
               className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
             />
           </label>
           <label className="text-xs text-muted-foreground block">
-            Topics (one per line)
+            {isLab ? "Notes (one per line)" : "Topics (one per line)"}
             <textarea
               value={topicsText} onChange={(e) => setTopicsText(e.target.value)}
               rows={5} className="w-full border rounded px-2 py-1.5 text-sm mt-0.5 font-mono"
             />
           </label>
-
-          {(requiredLecture > 0 || requiredPractical > 0) && (() => {
-            const rows: { label: string; req: number; other: number; val: number }[] = [];
-            if (requiredLecture > 0)
-              rows.push({ label: "Theory", req: requiredLecture, other: otherUnitsLecture, val: lectureHours });
-            if (requiredPractical > 0)
-              rows.push({ label: "Practical", req: requiredPractical, other: otherUnitsPractical, val: practicalHours });
-            const allOk = rows.every((r) => r.other + (Number(r.val) || 0) === r.req);
-            return (
-              <div
-                className={`text-xs rounded border px-3 py-2 space-y-0.5 ${
-                  allOk
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : "border-amber-200 bg-amber-50 text-amber-800"
-                }`}
-              >
-                {rows.map((r) => {
-                  const projected = r.other + (Number(r.val) || 0);
-                  const remaining = r.req - r.other;
-                  const overshoot = projected - r.req;
-                  return (
-                    <div key={r.label}>
-                      <b>{r.label}</b>: required {r.req} · others {r.other} · this {Number(r.val) || 0} · total{" "}
-                      <b>{projected}</b>
-                      {overshoot === 0
-                        ? " ✓"
-                        : overshoot > 0
-                          ? ` — ${overshoot} over (set this to ${Math.max(0, r.req - r.other)})`
-                          : ` — needs ${Math.abs(overshoot)} more (set this to ${r.req - r.other})`}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-
 
           {error && <p className="text-xs text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
@@ -599,6 +556,7 @@ function UnitModal({
     </div>
   );
 }
+
 
 type ReconRow = {
   id: number;
