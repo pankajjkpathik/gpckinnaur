@@ -393,20 +393,7 @@ function SyllabusUnitsPage() {
         {editing && (
           <UnitModal
             initial={editing}
-            requiredLecture={requiredLecture}
-            requiredPractical={requiredPractical}
-            otherUnitsLecture={
-              totalPlannedLecture -
-              (editing.id
-                ? (units.find((u) => u.id === editing.id)?.lecture_hours ?? 0)
-                : 0)
-            }
-            otherUnitsPractical={
-              totalPlannedPractical -
-              (editing.id
-                ? (units.find((u) => u.id === editing.id)?.practical_hours ?? 0)
-                : 0)
-            }
+            isLab={isLabSubject}
             onClose={() => setEditing(null)}
             onSave={(u) => save.mutate(u, { onSuccess: () => setEditing(null) })}
             pending={save.isPending}
