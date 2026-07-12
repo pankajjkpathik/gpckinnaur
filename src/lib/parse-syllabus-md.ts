@@ -9,9 +9,12 @@
 export type ParsedUnit = {
   unit_no: number;
   title: string;
-  hours: number;
+  hours: number; // legacy total = lecture + practical
+  lecture_hours: number;
+  practical_hours: number;
   topics: string[];
 };
+
 
 const ROMAN: Record<string, number> = {
   i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10,
