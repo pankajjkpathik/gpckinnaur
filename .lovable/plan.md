@@ -1,54 +1,64 @@
-## Goal
+## Student Portal Rework
 
-Track **theory (lecture) hours** and **practical hours** as two independent quantities per unit, with independent validation:
+Five changes to `src/routes/student-dashboard.tsx` (+ two small server-function additions).
 
-- Σ theory hours across units = **L × 14**
-- Σ practical hours across units = **P × 14**
+### 1. Two-panel layout (LHS options / RHS output)
 
-No more combined L+P total. A subject with 3L + 2P must have 42 lecture-hours **and** 28 practical-hours planned separately.
+Replace the current "cards grid → back button" flow with a persistent sidebar.
 
-## Changes
+```text
+┌─ Header (logo · profile · logout) ────────────────────────────┐
+├──────────────┬────────────────────────────────────────────────┤
+│ Sidebar      │ Active view                                    │
+│ (sticky)     │                                                │
+│ • Home       │   My Attendance  /  My Marks  /  Timetable…   │
+│ • Attendance │                                                │
+│ • Marks      │   (content changes when a sidebar item is      │
+│ • Results    │    clicked, URL unchanged)                     │
+│ • Semester   │                                                │
+│   Reports    │                                                │
+│ • Lesson     │                                                │
+│   Plans      │                                                │
+│ • Syllabus…  │                                                │
+└──────────────┴────────────────────────────────────────────────┘
+```
 
-### 1. Database (migration)
+- Sidebar shows every card that used to live on the "home" grid, in the same order, with the same icon + color accent.
+- Active item highlighted; collapse toggle for narrow screens (hamburger on mobile).
+- Remove the `BackBtn` from each view — sidebar is always visible.
+- Home view becomes a summary dashboard (welcome + today's periods + attendance stat) rather than a card grid.
 
-Add two columns to `public.syllabus_units`:
+### 2. Semester Reports → Mid-Sessional + Final Sessional of entire class, read-only
 
-- `lecture_hours integer NOT NULL DEFAULT 0`
-- `practical_hours integer NOT NULL DEFAULT 0`
+Rewrite `SemesterReportsView`:
+- Two tabs: **Mid Sessional** and **Final Sessional**.
+- Each tab fetches the class-wide report (all students in the student's own branch + semester) via the same server function the HOD sessional-reports view uses — `subjectSessionalReport` / `endSemSessionalReport`.
+- Need a student-safe wrapper server function `studentSessionalReport` that returns the class report scoped to the caller's own branch + semester and current academic year — no editing, no submit buttons, no branch/semester filters.
+- Render as a plain table (Roll No · Name · per-subject columns · totals). Print button only.
 
-Backfill existing rows: copy `hours` into `lecture_hours` for theory-only subjects (P=0), into `practical_hours` for lab-only subjects (L=0), and split proportionally for mixed subjects. Keep the old `hours` column as a generated/legacy total for now so nothing else breaks.
+### 3. Lesson Plans not showing
 
-### 2. Server functions (`src/lib/academic.functions.ts`)
+`LessonPlanLibrary` reads `pdf_documents` where `doc_type = 'lesson_plan'` via `pdfDocListShared`. Fix by:
+- Passing `defaultBranch={me.branch}` and `defaultSemester={me.semester}` so the list is pre-scoped to the student's class instead of the "All branches / All semesters" default (which sometimes returns 0 rows if uploads exist but the shared endpoint hits an OR-filter edge case).
+- Hiding the branch/semester filter dropdowns for students (they only need their own class).
+- If nothing exists for the student's class, still show the empty-state row (unchanged).
 
-- `upsertSyllabusUnit` — accept `lecture_hours` and `practical_hours` (both required, ≥0); derive `hours = lecture_hours + practical_hours` on write.
-- `syllabusUnitReconciliation` — return both `lecture_hours_sum` / `practical_hours_sum` and separate diffs vs `L×14` and `P×14`; a subject is "mismatch" if either side is off.
-- Coverage functions that read `hours` keep working (still populated), but a follow-up can switch them to the split fields.
+### 4. Syllabus Coverage — only student's own subjects
 
-### 3. Admin UI (`src/routes/admin.syllabus-units.tsx`)
+`coverageSummary` already forces student scope server-side, but the UI still shows the `filters` selectors (empty). Fix:
+- Pass explicit `scope={{ branch: me.branch, semester: me.semester }}` and no `filters` prop so the UI table hides the filter row entirely.
+- Below the coverage table, keep the "Syllabus units" list from `studentSyllabus` (already class-scoped).
 
-- **Unit table**: replace the single "Hours" column with two columns — "Theory hrs" and "Practical hrs" — plus a small combined subtotal.
-- **Header summary**: show two required totals and two live totals:
-  `Theory 40 / 42 required · Practical 28 / 28 required ✓`.
-- **Validation banner**: green only when both match; otherwise show which side is off and by how much.
-- **Add/Edit unit modal**: two number inputs (Theory / Practical), each with its own remaining-hours helper. Disable the theory input if `L=0`, practical input if `P=0`.
-- **Reconciliation panel**: two diff columns (Theory Δ, Practical Δ), status "Mismatch" if either side is off.
+### 5. Timetable → same visual as HOD/Principal
 
-### 4. Markdown / JSON import (`MdImportModal` + `parse-syllabus-md.ts`)
+Replace the ad-hoc table in `TimetableView` with the shared `<TimetableGrid>` component (read-only):
+- Fetch periods via `listPeriods()` (already exposed).
+- Feed the existing `studentTimetable` output as `slots` — the shape (`day_of_week, period_no, subject_id, staff_id, subjects{code,name}, staff_users{username}`) already matches `TTSlot`; add missing optional fields with a small mapper.
+- Pass `institutionLine="Govt. Polytechnic Kinnaur…"` and `classLine="${branchLabel} — ${ord(sem)} Semester"` for parity with HOD.
+- `editable={false}`; no `onSaveSlot`.
 
-- Extend parser to recognise `(10 hours theory)`, `(4 hours practical)`, `Theory: 8`, `Practical: 4`. Unlabelled hours fall into theory (backward compatible).
-- Preview table shows theory + practical columns with −/+ controls per side.
-- `Auto-distribute` runs `rescaleHours` twice — once for the theory total (target `L×14`), once for practical (target `P×14`).
-- JSON export/import schema bumps to `syllabus-units.v2` with `lecture_hours` / `practical_hours` per unit. v1 files still import (values go into `lecture_hours`).
+### Files touched
 
-### 5. Weekly plan generator
-
-`generateWeeklyPlan` currently sums lecture+practical per week. Keep behaviour but derive `periods_per_week` from `subject.lecture_hours + subject.practical_hours` as today — no functional change needed this turn; the split just makes future L/P-separate scheduling possible.
-
-## Out of scope
-
-- Splitting weekly lesson plans into separate theory/practical rows.
-- Re-computing historical coverage percentages with the new split.
-
-## Approval
-
-This touches the DB schema and every place that reads unit hours. Approving this plan will trigger the migration first, then the code edits after the types file regenerates.
+- `src/routes/student-dashboard.tsx` — sidebar shell, 5 view rewrites.
+- `src/lib/student.functions.ts` — add `studentSessionalReport` (mid + final) delegating to the same aggregation used by HOD.
+- No schema changes, no other routes touched.
