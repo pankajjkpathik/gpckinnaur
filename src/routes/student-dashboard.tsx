@@ -245,21 +245,28 @@ function StudentDashboard() {
 
         {/* RHS output */}
         <main className="flex-1 min-w-0 p-4 md:p-6">
-          {view === "home" && <HomeView me={me} />}
-          {view === "attendance" && <AttendanceView />}
-          {view === "marks" && <MarksView />}
-          {view === "results" && <ResultsView me={me} />}
-          {view === "semester-reports" && <SemesterReportsView me={me} />}
-          {view === "parent-access" && <ParentAccessView />}
-          {view === "upload" && <UploadAssignmentView />}
-          {view === "assignments-docs" && <AssignmentDocsView />}
-          {view === "lesson-plans" && <LessonPlansView me={me} />}
-          {view === "exam-schedule" && <ExamScheduleView />}
-          {view === "timetable" && <TimetableView me={me} />}
-          {view === "syllabus" && <SyllabusView me={me} />}
-          {view === "fees" && <FeesView />}
-          {view === "faculty" && <FacultyView />}
-          {view === "disciplinary" && <DisciplinaryView />}
+          {(() => {
+            const goHome = () => setView("home");
+            return (
+              <>
+                {view === "home" && <HomeView me={me} />}
+                {view === "attendance" && <AttendanceView onBack={goHome} />}
+                {view === "marks" && <MarksView onBack={goHome} />}
+                {view === "results" && <ResultsView me={me} onBack={goHome} />}
+                {view === "semester-reports" && <SemesterReportsView me={me} onBack={goHome} />}
+                {view === "parent-access" && <ParentAccessView onBack={goHome} />}
+                {view === "upload" && <UploadAssignmentView onBack={goHome} />}
+                {view === "assignments-docs" && <AssignmentDocsView onBack={goHome} />}
+                {view === "lesson-plans" && <LessonPlansView me={me} onBack={goHome} />}
+                {view === "exam-schedule" && <ExamScheduleView onBack={goHome} />}
+                {view === "timetable" && <TimetableView me={me} onBack={goHome} />}
+                {view === "syllabus" && <SyllabusView me={me} onBack={goHome} />}
+                {view === "fees" && <FeesView onBack={goHome} />}
+                {view === "faculty" && <FacultyView onBack={goHome} />}
+                {view === "disciplinary" && <DisciplinaryView onBack={goHome} />}
+              </>
+            );
+          })()}
         </main>
       </div>
     </div>
