@@ -740,11 +740,11 @@ function ReconciliationPanel({
               <thead className="bg-secondary">
                 <tr>
                   <th className="text-left px-2 py-2">Subject</th>
-                  <th className="text-left px-2 py-2 w-32">Branch / Sem</th>
-                  <th className="text-right px-2 py-2 w-20">L+P</th>
-                  <th className="text-right px-2 py-2 w-20">Units</th>
-                  <th className="text-right px-2 py-2 w-24">Unit hrs</th>
-                  <th className="text-right px-2 py-2 w-20">Diff</th>
+                  <th className="text-left px-2 py-2 w-28">Branch / Sem</th>
+                  <th className="text-right px-2 py-2 w-24">Theory (unit / req)</th>
+                  <th className="text-right px-2 py-2 w-20">ΔT</th>
+                  <th className="text-right px-2 py-2 w-24">Practical (unit / req)</th>
+                  <th className="text-right px-2 py-2 w-20">ΔP</th>
                   <th className="text-left px-2 py-2 w-28">Status</th>
                   <th className="w-20"></th>
                 </tr>
@@ -765,11 +765,17 @@ function ReconciliationPanel({
                       <div className="text-xs text-muted-foreground">{r.name}</div>
                     </td>
                     <td className="px-2 py-1.5 text-xs">{r.branch} · S{r.semester}</td>
-                    <td className="px-2 py-1.5 text-right">{r.lp_hours}</td>
-                    <td className="px-2 py-1.5 text-right">{r.unit_count}</td>
-                    <td className="px-2 py-1.5 text-right">{r.unit_hours}</td>
-                    <td className={`px-2 py-1.5 text-right ${r.diff !== 0 ? "text-amber-700 font-semibold" : ""}`}>
-                      {r.status === "no_units" ? "—" : (r.diff > 0 ? `+${r.diff}` : r.diff)}
+                    <td className="px-2 py-1.5 text-right">
+                      {r.unit_lecture_hours} / {r.required_lecture_hours}
+                    </td>
+                    <td className={`px-2 py-1.5 text-right ${r.lecture_diff !== 0 ? "text-amber-700 font-semibold" : ""}`}>
+                      {r.status === "no_units" ? "—" : (r.lecture_diff > 0 ? `+${r.lecture_diff}` : r.lecture_diff)}
+                    </td>
+                    <td className="px-2 py-1.5 text-right">
+                      {r.unit_practical_hours} / {r.required_practical_hours}
+                    </td>
+                    <td className={`px-2 py-1.5 text-right ${r.practical_diff !== 0 ? "text-amber-700 font-semibold" : ""}`}>
+                      {r.status === "no_units" ? "—" : (r.practical_diff > 0 ? `+${r.practical_diff}` : r.practical_diff)}
                     </td>
                     <td className="px-2 py-1.5">
                       {r.status === "mismatch" && (
@@ -800,6 +806,7 @@ function ReconciliationPanel({
     </div>
   );
 }
+
 
 function MdImportModal({
   subject,
