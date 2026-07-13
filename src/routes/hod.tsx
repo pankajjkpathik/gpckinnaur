@@ -215,7 +215,7 @@ function HodSidebar({
         <PanelLeftOpen className="w-4 h-4" />
       </button>
       <div className="w-8 border-t border-gray-100 my-1" />
-      {[...HOD_NAV, ...MONITORING_NAV].map((item) => {
+      {[...hodNav, ...monitoringNav].map((item) => {
         const isActive = active === item.view;
         return (
           <button
