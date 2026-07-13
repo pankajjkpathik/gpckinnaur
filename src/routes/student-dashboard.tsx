@@ -340,6 +340,9 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const { data } = useQuery({ queryKey: ["student-dash"], queryFn: () => dashFn() });
   const { data: assignments = [] } = useQuery({ queryKey: ["student-assignments-home"], queryFn: () => assignFn() });
   const { data: fees = [] } = useQuery({ queryKey: ["student-fees-home"], queryFn: () => feesFn() });
+  const { data: mySubs = [] } = useMySubmissions();
+  const subStatus = (aid: number) =>
+    (mySubs as any[]).find((s) => s.assignment_id === aid)?.status ?? null;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
