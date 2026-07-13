@@ -397,7 +397,7 @@ function KpiTile({
 type ActivityRow = {
   id: number;
   action: string;
-  entity: string;
+  entity: string | null;
   entity_id: string | null;
   details: any;
   created_at: string;
