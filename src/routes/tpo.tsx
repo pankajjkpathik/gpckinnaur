@@ -19,7 +19,9 @@ import {
   BellRing,
   CheckCheck,
   Sparkles,
+  Download,
 } from "lucide-react";
+
 import { generateTrainingLetter, generateUndertakings } from "@/lib/training-letter";
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
