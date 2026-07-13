@@ -1312,7 +1312,9 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
         ) : visible.length === 0 ? (
           <div className="text-center py-8 text-gray-400 text-sm">
             <Bell className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            {tab !== "all"
+            {tab === "unread"
+              ? "You're all caught up!"
+              : tab !== "all"
               ? showAll
                 ? `No ${tab === "announcement" ? "announcements" : tab === "deadline" ? "deadlines" : "overdue items"} yet.`
                 : `No unread ${tab === "announcement" ? "announcements" : tab === "deadline" ? "deadlines" : "overdue items"}.`
