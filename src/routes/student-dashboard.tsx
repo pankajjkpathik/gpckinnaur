@@ -20,6 +20,9 @@ import {
   Calendar,
   CalendarClock,
   NotebookPen,
+  Settings,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { listMaterials } from "@/lib/materials.functions";
