@@ -398,6 +398,7 @@ type NotifItem = {
 };
 
 function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
+  const qc = useQueryClient();
   const noticesQ = useQuery({ queryKey: ["fac-notif-notices"], queryFn: () => listNotices(), retry: false });
   const annQ = useQuery({ queryKey: ["fac-notif-ann"], queryFn: () => listAnnouncements(), retry: false });
   const asgQ = useQuery({
@@ -405,6 +406,29 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
     queryFn: () => facultyListAssignmentsCreated({ data: { academic_year: ay } }),
     retry: false,
   });
+  const [liveTick, setLiveTick] = useState(0);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("fac-notif-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
+        qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+        setLiveTick((t) => t + 1);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () => {
+        qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+        setLiveTick((t) => t + 1);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () => {
+        qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+        setLiveTick((t) => t + 1);
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc, ay]);
+
 
   const storageKey = `fac-notif-read:${me.id}`;
   const [readIds, setReadIds] = useState<Set<string>>(() => {
