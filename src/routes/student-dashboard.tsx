@@ -335,6 +335,7 @@ function AssignmentStatusButtons({
 // ─── HOME (summary) ───────────────────────────────────────────────────────────
 function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const [openClass, setOpenClass] = useState<any | null>(null);
+  const [feesOpen, setFeesOpen] = useState(false);
   const dashFn = useServerFn(studentDashboard);
   const assignFn = useServerFn(studentListAssignments);
   const feesFn = useServerFn(studentMyFees);
