@@ -23,7 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import { staffMe, uploadStaffAvatar, staffChangePassword } from "@/lib/auth.functions";
+import { staffMe, uploadStaffAvatar, staffChangePassword, staffUpdateProfile } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { QuickCard } from "@/components/portal/QuickCard";
