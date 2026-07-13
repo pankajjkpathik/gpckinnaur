@@ -830,6 +830,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
               <th className="text-left px-4 py-3 text-gray-400 font-medium">Exam</th>
               <th className="text-left px-4 py-3 text-gray-400 font-medium">Faculty</th>
               <th className="text-left px-4 py-3 text-gray-400 font-medium">#</th>
+              <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
               <th></th>
             </tr>
           </thead>
@@ -845,6 +846,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                 <td className="px-4 py-3 text-xs">{b.exam_type}</td>
                 <td className="px-4 py-3">{b.staff_users?.name || b.staff_users?.username}</td>
                 <td className="px-4 py-3 text-center">{b.count}</td>
+                <td className="px-4 py-3"><ProvenanceBadge row={b} status={status} /></td>
                 <td className="px-4 py-3 text-right">
                   <button onClick={() => setOpen(b)} className="text-xs underline text-indigo-700">
                     {status === "pending" ? "Review" : "View"}
@@ -854,7 +856,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
             ))}
             {q.data && q.data.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                   {status === "pending"
                     ? "No marks pending approval."
                     : status === "approved"
