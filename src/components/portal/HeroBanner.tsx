@@ -100,6 +100,12 @@ export function HeroBanner({
             {role && <span className="text-white/60"> · {role}</span>}
           </p>
           <h1 className={HERO_TYPOGRAPHY.heading}>
+            <span
+              className="inline-flex items-center justify-center align-[-0.15em] mr-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-slate-900 shadow-md ring-1 ring-white/70"
+              aria-hidden
+            >
+              <GreetIcon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" strokeWidth={2.4} />
+            </span>
             {greeting}, <span className={p.nameColor}>{name}</span>{" "}
             <span className="inline-block">{emoji}</span>
           </h1>
