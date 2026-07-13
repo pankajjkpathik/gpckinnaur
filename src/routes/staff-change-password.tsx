@@ -49,9 +49,9 @@ function Page() {
         <form onSubmit={(e) => {
           e.preventDefault();
           setMsg(null);
-          if (pw !== pw2) { setMsg({ kind: "err", text: "Passwords do not match" }); return; }
+          if (pw !== pw2) { setMsg({ kind: "err", text: "Passwords do not match" }); toast.error("Passwords do not match"); return; }
           const err = firstPasswordStrengthError(pw, current);
-          if (err) { setMsg({ kind: "err", text: err }); return; }
+          if (err) { setMsg({ kind: "err", text: err }); toast.error(err); return; }
           m.mutate({ currentPassword: current, newPassword: pw });
         }} className="space-y-3">
           <input value={current} onChange={(e) => setCurrent(e.target.value)} type="password" required placeholder="Current password" className="w-full border rounded px-3 py-2 text-sm" />
