@@ -75,30 +75,43 @@ function QuickCard({
   icon: Icon,
   label,
   desc,
-  color,
-  border,
+  accent,
   onClick,
 }: {
   icon: any;
   label: string;
   desc: string;
-  color: string;
-  border: string;
+  accent: string; // tailwind text color e.g. "text-rose-600"
   onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-4 p-4 bg-white rounded border-t-4 ${border} shadow-sm hover:shadow-md transition-shadow text-left w-full`}
+      className="group relative flex items-start gap-3 p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5 transition-all text-left w-full overflow-hidden"
     >
-      <span className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${color}`}>
-        <Icon className="w-6 h-6 text-white" />
+      <span className={`flex-shrink-0 w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center ${accent} group-hover:scale-110 transition-transform`}>
+        <Icon className="w-5 h-5" />
       </span>
-      <span>
-        <p className="font-semibold text-gray-800 text-sm">{label}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+      <span className="min-w-0 flex-1">
+        <p className="font-semibold text-slate-800 text-sm leading-tight">{label}</p>
+        <p className="text-[11px] text-slate-500 mt-1 leading-snug">{desc}</p>
       </span>
+      <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-slate-300 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
     </button>
+  );
+}
+
+function KpiCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent: string }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm flex items-center gap-3">
+      <span className={`w-11 h-11 rounded-lg flex items-center justify-center ${accent}`}>
+        <Icon className="w-5 h-5" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{label}</p>
+        <p className="text-xl font-bold text-slate-800 leading-tight">{value}</p>
+      </div>
+    </div>
   );
 }
 
@@ -133,197 +146,145 @@ function AdminHub() {
 }
 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
+type CardDef = { icon: any; label: string; desc: string; accent: string; action: View | string };
+
+const GROUPS: { title: string; desc: string; cards: CardDef[] }[] = [
+  {
+    title: "Academic Structure",
+    desc: "Classes, subjects, syllabus and timetable configuration.",
+    cards: [
+      { icon: LayoutGrid, label: "Manage Classes", desc: "Define academic structure", accent: "text-rose-600", action: "classes" },
+      { icon: BookOpen, label: "Manage Subjects", desc: "Create and manage subjects", accent: "text-orange-600", action: "/admin/subjects" },
+      { icon: Calendar, label: "Manage Timetable", desc: "Set weekly schedules", accent: "text-purple-600", action: "/admin/timetable" },
+      { icon: BookMarked, label: "Periods Master", desc: "Define daily period slots", accent: "text-indigo-600", action: "/admin/periods" },
+      { icon: BookMarked, label: "Syllabus", desc: "Upload syllabus PDFs", accent: "text-amber-600", action: "/admin/syllabus" },
+      { icon: BookOpen, label: "Planned Unit Hours", desc: "Set unit hours for coverage %", accent: "text-lime-600", action: "/admin/syllabus-units" },
+      { icon: Calendar, label: "Academic Calendar", desc: "Upload calendar PDFs", accent: "text-sky-600", action: "/admin/calendar" },
+      { icon: BookOpen, label: "Grading Scheme", desc: "Configure grade boundaries", accent: "text-teal-600", action: "/admin/grading" },
+    ],
+  },
+  {
+    title: "People & Accounts",
+    desc: "Manage faculty, students, parents and system users.",
+    cards: [
+      { icon: Users, label: "Manage Faculty", desc: "View and edit faculty members", accent: "text-slate-700", action: "/admin/faculty" },
+      { icon: GraduationCap, label: "Manage Students", desc: "View and edit student records", accent: "text-green-600", action: "/admin/students" },
+      { icon: BookOpen, label: "Faculty Assignments", desc: "Assign subjects to faculty", accent: "text-fuchsia-600", action: "/admin/assignments" },
+      { icon: UserCog, label: "User Management", desc: "Staff & student accounts", accent: "text-slate-700", action: "/admin-users" },
+      { icon: Users, label: "Parent Accounts", desc: "Reset parent portal logins", accent: "text-emerald-700", action: "/admin/parent-accounts" },
+    ],
+  },
+  {
+    title: "Communications & Operations",
+    desc: "Day-to-day operations, notices and parent interactions.",
+    cards: [
+      { icon: Megaphone, label: "Announcements", desc: "Control marquee text", accent: "text-slate-600", action: "announcements" },
+      { icon: CreditCard, label: "Manage Fees", desc: "Handle student fee status", accent: "text-rose-600", action: "fees" },
+      { icon: CalendarCheck, label: "Manage PTM", desc: "Organize parent-teacher meetings", accent: "text-cyan-600", action: "ptm" },
+      { icon: Mail, label: "Parents Messages", desc: "View messages from parents", accent: "text-[#7b1f4c]", action: "messages" },
+    ],
+  },
+  {
+    title: "System & Compliance",
+    desc: "Reports, audit trail and institute-wide settings.",
+    cards: [
+      { icon: Download, label: "Report Templates", desc: "Manage report templates", accent: "text-slate-600", action: "/admin/report-templates" },
+      { icon: ShieldCheck, label: "Audit Log", desc: "Review system activity", accent: "text-stone-600", action: "/admin/audit" },
+      { icon: SettingsIcon, label: "Institute Settings", desc: "Address & logo on official PDFs", accent: "text-neutral-700", action: "/admin/settings" },
+    ],
+  },
+];
+
 function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
-  // One unified card grid. Every destination appears exactly once.
-  // `action` starting with "/" navigates to a route; otherwise switches in-page view.
-  const cards: { icon: any; label: string; desc: string; color: string; border: string; action: View | string }[] = [
-    {
-      icon: LayoutGrid,
-      label: "Manage Classes",
-      desc: "Define academic structure",
-      color: "bg-[#7b1f4c]",
-      border: "border-[#7b1f4c]",
-      action: "classes",
-    },
-    {
-      icon: BookOpen,
-      label: "Manage Subjects",
-      desc: "Create and manage subjects",
-      color: "bg-orange-500",
-      border: "border-orange-500",
-      action: "/admin/subjects",
-    },
-    {
-      icon: Users,
-      label: "Manage Faculty",
-      desc: "View and edit faculty members",
-      color: "bg-gray-500",
-      border: "border-gray-500",
-      action: "/admin/faculty",
-    },
-    {
-      icon: GraduationCap,
-      label: "Manage Students",
-      desc: "View and edit student records",
-      color: "bg-green-600",
-      border: "border-green-600",
-      action: "/admin/students",
-    },
-    {
-      icon: Calendar,
-      label: "Manage Timetable",
-      desc: "Set weekly schedules",
-      color: "bg-purple-600",
-      border: "border-purple-600",
-      action: "/admin/timetable",
-    },
-    {
-      icon: Megaphone,
-      label: "Manage Announcements",
-      desc: "Control marquee text",
-      color: "bg-gray-400",
-      border: "border-gray-400",
-      action: "announcements",
-    },
-    {
-      icon: CreditCard,
-      label: "Manage Fees",
-      desc: "Handle student fee status",
-      color: "bg-rose-600",
-      border: "border-rose-600",
-      action: "fees",
-    },
-    {
-      icon: CalendarCheck,
-      label: "Manage PTM",
-      desc: "Organize parent-teacher meetings",
-      color: "bg-cyan-500",
-      border: "border-cyan-500",
-      action: "ptm",
-    },
-    {
-      icon: Mail,
-      label: "Parents Messages",
-      desc: "View messages from parents",
-      color: "bg-[#4a0e2e]",
-      border: "border-[#4a0e2e]",
-      action: "messages",
-    },
-    {
-      icon: BookMarked,
-      label: "Periods Master",
-      desc: "Define daily period slots",
-      color: "bg-indigo-500",
-      border: "border-indigo-500",
-      action: "/admin/periods",
-    },
-    {
-      icon: BookOpen,
-      label: "Grading Scheme",
-      desc: "Configure grade boundaries",
-      color: "bg-teal-600",
-      border: "border-teal-600",
-      action: "/admin/grading",
-    },
-    {
-      icon: BookMarked,
-      label: "Syllabus",
-      desc: "Upload syllabus PDFs",
-      color: "bg-amber-500",
-      border: "border-amber-500",
-      action: "/admin/syllabus",
-    },
-    {
-      icon: BookOpen,
-      label: "Planned Unit Hours",
-      desc: "Set unit hours for coverage %",
-      color: "bg-lime-600",
-      border: "border-lime-600",
-      action: "/admin/syllabus-units",
-    },
+  const [q, setQ] = useState("");
 
-    {
-      icon: Calendar,
-      label: "Academic Calendar",
-      desc: "Upload calendar PDFs",
-      color: "bg-sky-500",
-      border: "border-sky-500",
-      action: "/admin/calendar",
-    },
-    {
-      icon: BookOpen,
-      label: "Faculty Assignments",
-      desc: "Assign subjects to faculty",
-      color: "bg-fuchsia-600",
-      border: "border-fuchsia-600",
-      action: "/admin/assignments",
-    },
-    {
-      icon: Download,
-      label: "Report Templates",
-      desc: "Manage report templates",
-      color: "bg-slate-500",
-      border: "border-slate-500",
-      action: "/admin/report-templates",
-    },
-    {
-      icon: Users,
-      label: "User Management",
-      desc: "Staff & student accounts",
-      color: "bg-gray-600",
-      border: "border-gray-600",
-      action: "/admin-users",
-    },
-    {
-      icon: Users,
-      label: "Parent Accounts",
-      desc: "Reset parent portal logins",
-      color: "bg-emerald-700",
-      border: "border-emerald-700",
-      action: "/admin/parent-accounts",
-    },
-    {
-      icon: BookMarked,
-      label: "Audit Log",
-      desc: "Review system activity",
-      color: "bg-stone-500",
-      border: "border-stone-500",
-      action: "/admin/audit",
-    },
-    {
-      icon: FileText,
-      label: "Institute Settings",
-      desc: "Address shown on official PDFs",
-      color: "bg-neutral-700",
-      border: "border-neutral-700",
-      action: "/admin/settings",
-    },
-  ];
+  const staffQ = useQuery({ queryKey: ["admin-staff"], queryFn: () => adminListStaff() });
+  const studentsQ = useQuery({ queryKey: ["admin-students-all"], queryFn: () => adminListStudents({ data: {} as any }) });
+  const classesQ = useQuery({ queryKey: ["admin-classes"], queryFn: () => listClasses() });
+  const msgsQ = useQuery({ queryKey: ["admin-parent-msgs"], queryFn: () => listParentMessages() });
 
+  const unreadMsgs = (msgsQ.data ?? []).filter((m: any) => !m.read_at).length;
+
+  const go = (action: string) => {
+    if (action.startsWith("/")) window.location.href = action;
+    else onNav(action as View);
+  };
+
+  const filter = q.trim().toLowerCase();
+  const displayGroups = filter
+    ? GROUPS.map((g) => ({
+        ...g,
+        cards: g.cards.filter(
+          (c) => c.label.toLowerCase().includes(filter) || c.desc.toLowerCase().includes(filter),
+        ),
+      })).filter((g) => g.cards.length > 0)
+    : GROUPS;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, Administrator</h1>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((c) => (
-          <QuickCard
-            key={c.label}
-            icon={c.icon}
-            label={c.label}
-            desc={c.desc}
-            color={c.color}
-            border={c.border}
-            onClick={() => {
-              if ((c.action as string).startsWith("/")) {
-                window.location.href = c.action as string;
-              } else {
-                onNav(c.action as View);
-              }
-            }}
-          />
-        ))}
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#4a0e2e] via-[#7b1f4c] to-[#a83365] text-white p-6 shadow-md">
+        <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+        <div className="absolute -right-16 bottom-0 w-56 h-56 bg-white/5 rounded-full blur-3xl" />
+        <div className="relative flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/70 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Admin Console
+            </p>
+            <h1 className="text-2xl md:text-3xl font-bold mt-1">
+              Welcome back, {(me?.name || me?.username || "Administrator").split(" ")[0]}
+            </h1>
+            <p className="text-sm text-white/80 mt-1">
+              You have full access to configure the institute. Use the tools below to manage every corner of the ERP.
+            </p>
+          </div>
+          <div className="hidden md:flex flex-col items-end text-xs text-white/80">
+            <span>{new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+            <span className="text-white/60 mt-0.5">{me?.department ?? "System-wide"}</span>
+          </div>
+        </div>
       </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard icon={GraduationCap} label="Students" value={studentsQ.data?.length ?? "—"} accent="bg-emerald-100 text-emerald-700" />
+        <KpiCard icon={Users} label="Faculty & Staff" value={staffQ.data?.length ?? "—"} accent="bg-indigo-100 text-indigo-700" />
+        <KpiCard icon={LayoutGrid} label="Classes" value={classesQ.data?.length ?? "—"} accent="bg-amber-100 text-amber-700" />
+        <KpiCard icon={Mail} label="Unread Parent Msgs" value={unreadMsgs} accent="bg-rose-100 text-rose-700" />
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search admin tools (e.g. syllabus, fees, timetable)…"
+          className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#7b1f4c]/30 focus:border-[#7b1f4c]"
+        />
+      </div>
+
+      {/* Grouped cards */}
+      {displayGroups.map((group) => (
+        <section key={group.title} className="space-y-3">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">{group.title}</h2>
+            <span className="text-xs text-slate-500">{group.desc}</span>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {group.cards.map((c) => (
+              <QuickCard key={c.label} icon={c.icon} label={c.label} desc={c.desc} accent={c.accent} onClick={() => go(c.action as string)} />
+            ))}
+          </div>
+        </section>
+      ))}
+
+      {displayGroups.length === 0 && (
+        <div className="text-center py-10 text-sm text-slate-500 bg-white border border-dashed rounded-lg">
+          No admin tools match &ldquo;{q}&rdquo;.
+        </div>
+      )}
     </div>
   );
 }
