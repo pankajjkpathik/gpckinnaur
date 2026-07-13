@@ -188,6 +188,7 @@ function HodSidebar({
   onCloseMobile,
   collapsed,
   onToggleCollapsed,
+  canWrite,
 }: {
   active: View;
   onNav: (v: View) => void;
@@ -195,7 +196,10 @@ function HodSidebar({
   onCloseMobile: () => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  canWrite: boolean;
 }) {
+  const hodNav = HOD_NAV.filter((i) => canWrite || !i.writeOnly);
+  const monitoringNav = MONITORING_NAV.filter((i) => canWrite || !i.writeOnly);
   // Flat icon-only rail shown when the sidebar is collapsed on desktop.
   const collapsedRail = (
     <nav
