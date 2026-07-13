@@ -38,7 +38,7 @@ async function loadLogo(): Promise<string | null> {
   }
 }
 
-function letterhead(doc: jsPDF, logo: string | null) {
+function letterhead(doc: jsPDF, logo: string | null, address: string) {
   const w = doc.internal.pageSize.getWidth();
   if (logo) {
     try { doc.addImage(logo, "PNG", 40, 30, 60, 60); } catch { /* ignore */ }
@@ -50,11 +50,12 @@ function letterhead(doc: jsPDF, logo: string | null) {
   doc.text(INSTITUTE, w / 2, 68, { align: "center" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(INSTITUTE_ADDRESS, w / 2, 84, { align: "center" });
+  doc.text(address, w / 2, 84, { align: "center", maxWidth: w - 80 });
   doc.text(INSTITUTE_PHONE, w / 2, 98, { align: "center" });
   doc.setLineWidth(0.8);
   doc.line(40, 108, w - 40, 108);
 }
+
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "____________";
