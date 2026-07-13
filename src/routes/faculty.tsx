@@ -614,6 +614,7 @@ function computeNotifItems(
       meta: fmtRelative(ts),
       timestamp: ts,
       badge: "Announcement",
+      raw: a,
     });
   }
   for (const n of notices ?? []) {
@@ -625,6 +626,7 @@ function computeNotifItems(
       meta: `${(n as any).category || "general"} · ${fmtRelative(ts)}`,
       timestamp: ts,
       badge: "Notice",
+      raw: n,
     });
   }
   for (const a of asg ?? []) {
@@ -642,8 +644,10 @@ function computeNotifItems(
       meta: `${(a as any).subject_name || (a as any).subjects?.code || "Subject"} · ${(a as any).branch}-Sem${(a as any).semester} · ${rel}`,
       timestamp: due,
       badge: days < 0 ? "Overdue" : "Deadline",
+      raw: a,
     });
   }
+
   out.sort(
     (a, b) => (a.kind === "deadline" ? a.timestamp : -a.timestamp) - (b.kind === "deadline" ? b.timestamp : -b.timestamp),
   );
