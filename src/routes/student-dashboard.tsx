@@ -244,7 +244,7 @@ function StudentDashboard() {
             const goHome = () => setView("home");
             return (
               <>
-                {view === "home" && <HomeView me={me} />}
+                {view === "home" && <HomeView me={me} setView={setView} />}
                 {view === "attendance" && <AttendanceView onBack={goHome} />}
                 {view === "marks" && <MarksView onBack={goHome} />}
                 {view === "results" && <ResultsView me={me} onBack={goHome} />}
