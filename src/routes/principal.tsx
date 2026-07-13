@@ -220,9 +220,9 @@ function PrincipalPortal() {
   useEffect(() => {
     if (meLoading) return;
     if (!me) {
-      nav({ to: "/staff-login" });
+      nav({ to: "/staff-login", replace: true });
     } else if (!hasRole(me, principalRoles)) {
-      nav({ to: "/staff-dashboard" });
+      nav({ to: "/staff-dashboard", replace: true });
     }
   }, [me, meLoading, nav]);
 
