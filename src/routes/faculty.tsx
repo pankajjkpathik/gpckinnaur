@@ -75,6 +75,7 @@ import { listAnnouncements } from "@/lib/admin-extras.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
