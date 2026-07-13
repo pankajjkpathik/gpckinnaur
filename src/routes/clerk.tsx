@@ -615,6 +615,7 @@ function StudentsTab() {
     mutationFn: (d: any) => clerkUpdateStudent({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clerk-students"] });
+      qc.invalidateQueries({ queryKey: ["clerk-activity"] });
       setEditing(null);
     },
   });
