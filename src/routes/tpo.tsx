@@ -6,6 +6,7 @@ import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { tpoRoles, hasRole } from "@/lib/roles";
 import { BarStats } from "@/components/portal/Charts";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import {
   listPlacements,
   upsertPlacement,
