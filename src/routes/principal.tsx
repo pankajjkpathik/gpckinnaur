@@ -129,6 +129,51 @@ function BackBtn({ onClick }: { onClick: () => void }) {
   );
 }
 
+/**
+ * Banner shown at the top of every TPO oversight view under the Principal
+ * portal. Makes it visually obvious that the Principal has read-only access —
+ * all TPO create/edit/delete rights remain with the Training & Placement
+ * Officer. Wrap the entire view body in `<TpoReadOnlyGuard>` to also disable
+ * any interactive controls at the DOM level.
+ */
+function TpoReadOnlyBanner() {
+  return (
+    <div
+      role="note"
+      aria-label="Read-only view"
+      className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+    >
+      <Shield className="w-4 h-4 mt-0.5 shrink-0 text-amber-700" aria-hidden />
+      <p>
+        <span className="font-semibold">Read-only oversight.</span> This view is
+        managed by the Training &amp; Placement Officer. Create, edit and delete
+        actions are unavailable in the Principal portal.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Structural read-only guard for TPO oversight sections. The fieldset
+ * disables any nested `<button>`, `<input>`, `<select>`, `<textarea>` or
+ * `<form>` — a defence-in-depth so a future edit that accidentally drops a
+ * mutation control into these views cannot fire from the Principal side.
+ * Read-only widgets (links, print button, tables, charts) remain fully
+ * usable because they aren't form controls.
+ */
+function TpoReadOnlyGuard({ children }: { children: React.ReactNode }) {
+  return (
+    <fieldset
+      disabled
+      // `disabled` on a fieldset greys out form controls. We keep the visual
+      // treatment neutral so tables/charts read normally.
+      className="contents [&_button:not([data-tpo-allow])]:pointer-events-none [&_button:not([data-tpo-allow])]:cursor-not-allowed"
+    >
+      {children}
+    </fieldset>
+  );
+}
+
 
 const VALID_VIEWS: View[] = [
   "home",
