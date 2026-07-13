@@ -1130,5 +1130,3 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
   );
 }
 
-{/* Facility icons kept for future use */}
-type _Unused = typeof facultyPhoto | typeof initialsOf;
