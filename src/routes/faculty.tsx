@@ -867,6 +867,34 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
           )}
         </div>
       </div>
+      {rtStatus !== "connected" && rtStatus !== "connecting" && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`px-5 py-2 text-xs flex items-center justify-between gap-3 border-b ${
+            rtStatus === "reconnecting"
+              ? "bg-amber-50 text-amber-800 border-amber-200"
+              : "bg-rose-50 text-rose-800 border-rose-200"
+          }`}
+        >
+          <span className="flex items-center gap-2 min-w-0">
+            <AlarmClock className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">
+              {rtStatus === "reconnecting"
+                ? "Reconnecting to live updates — showing the latest fetched data. Auto-refreshing every minute."
+                : "Live updates are offline. We'll keep retrying and refresh in the background every minute."}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={refetchAll}
+            className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded border border-current/20 bg-white/60 hover:bg-white font-semibold"
+          >
+            Refresh now
+          </button>
+        </div>
+      )}
+
       <div className="divide-y max-h-80 overflow-y-auto">
         {loading ? (
           <p className="text-sm text-gray-400 text-center py-6">Loading notifications…</p>
