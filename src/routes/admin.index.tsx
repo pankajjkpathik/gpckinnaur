@@ -20,6 +20,12 @@ import {
   Trash2,
   Plus,
   FileSpreadsheet,
+  Search,
+  Settings as SettingsIcon,
+  ShieldCheck,
+  ClipboardList,
+  UserCog,
+  Sparkles,
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
