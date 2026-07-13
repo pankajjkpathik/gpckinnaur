@@ -52,6 +52,14 @@ const accentToScheme: Record<string, PortalScheme> = {
   amber: "staff",
 };
 
+function dashboardHref(role: string): any {
+  if (role === "principal" || role === "super_admin") return "/principal";
+  if (role === "hod") return "/hod";
+  if (role === "tpo") return "/tpo";
+  if (role === "clerk") return "/clerk";
+  return "/staff-dashboard";
+}
+
 export function PortalShell({
   title,
   subtitle,
