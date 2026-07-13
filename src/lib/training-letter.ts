@@ -4,8 +4,9 @@ import autoTable from "jspdf-autotable";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 const INSTITUTE = "GOVERNMENT POLYTECHNIC, KINNAUR";
-const INSTITUTE_ADDRESS = "Camp at GP Rohru, Distt. Shimla (H.P.)";
+export const DEFAULT_INSTITUTE_ADDRESS = "Camp at GP Rohru, Distt. Shimla (H.P.)";
 const INSTITUTE_PHONE = "Phone: 01786-222206";
+
 
 type TrainingRecord = {
   id: number;
