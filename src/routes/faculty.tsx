@@ -1045,7 +1045,7 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [active, setActive] = useState<NotifItem | null>(null);
-  const [tab, setTab] = useState<"all" | "announcement" | "deadline" | "overdue">("all");
+  const [tab, setTab] = useState<"unread" | "all" | "announcement" | "deadline" | "overdue">("unread");
   const rtStatus = useFacNotifRtStatus();
   const qc = useQueryClient();
   const refetchAll = () => {
@@ -1056,21 +1056,23 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   const now = Date.now();
   const isOverdue = (it: NotifItem) => it.kind === "deadline" && it.timestamp < now;
   const tabCounts = useMemo(() => {
-    let ann = 0, dead = 0, over = 0;
+    let ann = 0, dead = 0, over = 0, un = 0;
     for (const it of items) {
       if (it.kind === "announcement" || it.kind === "notice") ann++;
       if (it.kind === "deadline") dead++;
       if (isOverdue(it)) over++;
+      if (!readIds.has(it.key)) un++;
     }
-    return { all: items.length, announcement: ann, deadline: dead, overdue: over };
-  }, [items, now]);
+    return { unread: un, all: items.length, announcement: ann, deadline: dead, overdue: over };
+  }, [items, now, readIds]);
   const scoped = items.filter((it) => {
     if (tab === "all") return true;
+    if (tab === "unread") return !readIds.has(it.key);
     if (tab === "announcement") return it.kind === "announcement" || it.kind === "notice";
     if (tab === "overdue") return isOverdue(it);
     return it.kind === "deadline";
   });
-  const visible = showAll ? scoped : scoped.filter((i) => !readIds.has(i.key));
+  const visible = tab === "unread" || showAll ? scoped : scoped.filter((i) => !readIds.has(i.key));
 
 
 
