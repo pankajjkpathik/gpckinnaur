@@ -78,13 +78,12 @@ function ParentChangePassword() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600 font-medium mb-1 block">New Password (min 6 chars)</label>
+              <label className="text-xs text-gray-600 font-medium mb-1 block">New Password</label>
               <input
                 type="password"
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 className="border rounded w-full px-3 py-2"
-                minLength={6}
               />
             </div>
             <div>
@@ -96,13 +95,21 @@ function ParentChangePassword() {
                 className="border rounded w-full px-3 py-2"
               />
             </div>
+            <ul className="text-xs space-y-1 bg-gray-50 rounded p-2">
+              {checkPasswordStrength(pw, current).map((c) => (
+                <li key={c.key} className={c.ok ? "text-emerald-700" : "text-gray-500"}>
+                  {c.ok ? "✓" : "○"} {c.label}
+                </li>
+              ))}
+            </ul>
             {err && <p className="text-xs text-rose-700">{err}</p>}
-            {save.isSuccess && <p className="text-xs text-emerald-700">Password updated successfully.</p>}
+            {okMsg && <p className="text-xs text-emerald-700">{okMsg}</p>}
             <button
               onClick={() => {
                 setErr(null);
-                if (pw.length < 6) return setErr("New password must be at least 6 characters.");
                 if (pw !== pw2) return setErr("New passwords do not match.");
+                const s = firstPasswordStrengthError(pw, current);
+                if (s) return setErr(s);
                 save.mutate();
               }}
               disabled={save.isPending || !current || !pw}
