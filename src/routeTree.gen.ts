@@ -31,6 +31,7 @@ import { Route as MandatoryDisclosureRouteImport } from './routes/mandatory-disc
 import { Route as HptsbAffiliationRouteImport } from './routes/hptsb-affiliation'
 import { Route as HodRouteImport } from './routes/hod'
 import { Route as GrievanceRouteImport } from './routes/grievance'
+import { Route as FacultyNotificationSettingsRouteImport } from './routes/faculty-notification-settings'
 import { Route as FacultyRouteImport } from './routes/faculty'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ClerkRouteImport } from './routes/clerk'
@@ -177,6 +178,12 @@ const GrievanceRoute = GrievanceRouteImport.update({
   path: '/grievance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FacultyNotificationSettingsRoute =
+  FacultyNotificationSettingsRouteImport.update({
+    id: '/faculty-notification-settings',
+    path: '/faculty-notification-settings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const FacultyRoute = FacultyRouteImport.update({
   id: '/faculty',
   path: '/faculty',
@@ -365,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
+  '/faculty-notification-settings': typeof FacultyNotificationSettingsRoute
   '/grievance': typeof GrievanceRoute
   '/hod': typeof HodRoute
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
@@ -423,6 +431,7 @@ export interface FileRoutesByTo {
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
+  '/faculty-notification-settings': typeof FacultyNotificationSettingsRoute
   '/grievance': typeof GrievanceRoute
   '/hod': typeof HodRoute
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
@@ -483,6 +492,7 @@ export interface FileRoutesById {
   '/clerk': typeof ClerkRoute
   '/contact': typeof ContactRoute
   '/faculty': typeof FacultyRoute
+  '/faculty-notification-settings': typeof FacultyNotificationSettingsRoute
   '/grievance': typeof GrievanceRoute
   '/hod': typeof HodRoute
   '/hptsb-affiliation': typeof HptsbAffiliationRoute
@@ -544,6 +554,7 @@ export interface FileRouteTypes {
     | '/clerk'
     | '/contact'
     | '/faculty'
+    | '/faculty-notification-settings'
     | '/grievance'
     | '/hod'
     | '/hptsb-affiliation'
@@ -602,6 +613,7 @@ export interface FileRouteTypes {
     | '/clerk'
     | '/contact'
     | '/faculty'
+    | '/faculty-notification-settings'
     | '/grievance'
     | '/hod'
     | '/hptsb-affiliation'
@@ -661,6 +673,7 @@ export interface FileRouteTypes {
     | '/clerk'
     | '/contact'
     | '/faculty'
+    | '/faculty-notification-settings'
     | '/grievance'
     | '/hod'
     | '/hptsb-affiliation'
@@ -721,6 +734,7 @@ export interface RootRouteChildren {
   ClerkRoute: typeof ClerkRoute
   ContactRoute: typeof ContactRoute
   FacultyRoute: typeof FacultyRoute
+  FacultyNotificationSettingsRoute: typeof FacultyNotificationSettingsRoute
   GrievanceRoute: typeof GrievanceRoute
   HodRoute: typeof HodRoute
   HptsbAffiliationRoute: typeof HptsbAffiliationRoute
@@ -909,6 +923,13 @@ declare module '@tanstack/react-router' {
       path: '/grievance'
       fullPath: '/grievance'
       preLoaderRoute: typeof GrievanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty-notification-settings': {
+      id: '/faculty-notification-settings'
+      path: '/faculty-notification-settings'
+      fullPath: '/faculty-notification-settings'
+      preLoaderRoute: typeof FacultyNotificationSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faculty': {
@@ -1207,6 +1228,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClerkRoute: ClerkRoute,
   ContactRoute: ContactRoute,
   FacultyRoute: FacultyRoute,
+  FacultyNotificationSettingsRoute: FacultyNotificationSettingsRoute,
   GrievanceRoute: GrievanceRoute,
   HodRoute: HodRoute,
   HptsbAffiliationRoute: HptsbAffiliationRoute,
