@@ -137,7 +137,15 @@ export function HeroStatTile({ value, label }: { value: ReactNode; label: string
   );
 }
 
-function HeroAvatar({ src, name }: { src?: string | null; name: string }) {
+function HeroAvatar({
+  src,
+  name,
+  fallbackSrc,
+}: {
+  src?: string | null;
+  name: string;
+  fallbackSrc?: string;
+}) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">(
     src ? "loading" : "loaded",
   );
@@ -147,8 +155,10 @@ function HeroAvatar({ src, name }: { src?: string | null; name: string }) {
   }, [src]);
 
   const showImg = src && status !== "error";
-  const showFallback = !src || status === "error";
   const showSkeleton = !!src && status === "loading";
+  const showPlaceholderImg = (!src || status === "error") && !!fallbackSrc;
+  const showInitials = (!src || status === "error") && !fallbackSrc;
+  const errored = status === "error";
 
   return (
     <div className="relative w-16 h-16 sm:w-20 sm:h-20">
@@ -169,11 +179,22 @@ function HeroAvatar({ src, name }: { src?: string | null; name: string }) {
           className="absolute inset-0 rounded-full ring-2 ring-white/40 shadow-lg bg-white/20 animate-pulse"
         />
       )}
-      {showFallback && (
+      {showPlaceholderImg && (
+        <img
+          src={fallbackSrc}
+          alt={errored ? `${name} (photo failed to load)` : `${name} placeholder avatar`}
+          title={errored ? "Profile photo failed to load" : "No profile photo set"}
+          width={80}
+          height={80}
+          loading="lazy"
+          className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-white/40 shadow-lg bg-white/85 p-1"
+        />
+      )}
+      {showInitials && (
         <div
-          role={status === "error" ? "img" : undefined}
-          aria-label={status === "error" ? `${name} (photo failed to load)` : undefined}
-          title={status === "error" ? "Profile photo failed to load" : undefined}
+          role={errored ? "img" : undefined}
+          aria-label={errored ? `${name} (photo failed to load)` : undefined}
+          title={errored ? "Profile photo failed to load" : undefined}
           className="absolute inset-0 rounded-full ring-2 ring-white/40 shadow-lg bg-white/15 backdrop-blur flex items-center justify-center text-white font-bold text-xl sm:text-2xl"
         >
           {initialsOf(name)}
