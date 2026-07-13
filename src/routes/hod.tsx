@@ -19,6 +19,8 @@ import {
   Trash2,
   Plus,
   GraduationCap,
+  Building2,
+  RefreshCw,
 } from "lucide-react";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
 import { HeroBanner } from "@/components/portal/HeroBanner";
@@ -426,23 +428,94 @@ function OverviewView({
     queryFn: () => hodDepartmentOverview({ data: { branch, academic_year: ay } }),
   });
 
-  if (q.isLoading || !q.data) {
-    return (
-      <div>
-        <BackBtn onClick={onBack} />
-        <p className="text-sm text-gray-400">Loading department analytics…</p>
-      </div>
-    );
-  }
+  const isBusy = q.isFetching;
 
   return (
     <div className="space-y-5">
       <BackBtn onClick={onBack} />
-      <h1 className="text-2xl font-bold text-gray-800">Department Overview — {deptLabel}</h1>
-      <DepartmentOverviewPanel d={q.data as any} />
+
+      {/* Polished header card — mirrors Principal's Department Overview chrome */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#065f46] via-[#064e3b] to-[#052e2b] text-white shadow-lg">
+        <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden>
+          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full blur-3xl bg-lime-300" />
+          <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full blur-3xl bg-emerald-400" />
+        </div>
+        <div className="relative p-5 sm:p-6 flex flex-wrap items-start gap-4">
+          <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-lime-200/90">
+              Department Analytics
+            </p>
+            <h1 className="mt-1 text-xl sm:text-2xl font-extrabold leading-tight tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
+              Department Overview
+            </h1>
+            <p className="mt-1.5 text-[13px] sm:text-sm text-white/90 leading-relaxed">
+              Live snapshot of attendance, workload, syllabus progress, and placements for your department.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/25 px-2.5 py-1 text-xs font-semibold backdrop-blur">
+                <Building2 className="w-3.5 h-3.5" />
+                {deptLabel}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/25 px-2.5 py-1 text-xs font-semibold backdrop-blur">
+                <Calendar className="w-3.5 h-3.5" />
+                AY {ay}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => q.refetch()}
+            disabled={isBusy}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-white text-emerald-900 px-3 py-2 text-xs font-semibold shadow-sm hover:bg-emerald-50 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? "animate-spin" : ""}`} />
+            {isBusy ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
+      </div>
+
+      {q.isLoading || !q.data ? (
+        <OverviewSkeleton />
+      ) : (
+        <DepartmentOverviewPanel d={q.data as any} />
+      )}
     </div>
   );
 }
+
+function OverviewSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="h-24 rounded-xl border bg-gradient-to-br from-gray-100 to-gray-50 animate-pulse"
+          />
+        ))}
+      </div>
+      <div className="h-56 rounded-xl border bg-white p-5">
+        <div className="h-4 w-40 bg-gray-100 rounded animate-pulse" />
+        <div className="mt-4 grid grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-32 bg-gradient-to-t from-gray-100 to-gray-50 rounded animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div className="h-60 rounded-xl border bg-white animate-pulse" />
+        <div className="h-60 rounded-xl border bg-white animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
 
 /* ─── MANAGE FACULTY (subject allotment, HOD-scoped) ─────────────────────── */
 function FacultyAllotmentView({
