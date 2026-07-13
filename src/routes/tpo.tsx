@@ -82,6 +82,13 @@ function TpoPortal() {
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
+  const NAV: { icon: any; label: string; view: View }[] = [
+    { icon: GraduationCap, label: "Dashboard", view: "home" },
+    { icon: Briefcase, label: "Placements", view: "placements" },
+    { icon: Factory, label: "Industrial Training", view: "training" },
+    { icon: ClipboardList, label: "Guest Lectures", view: "lectures" },
+  ];
+
   return (
     <PortalShell
       title="Training & Placement Portal"
@@ -89,11 +96,56 @@ function TpoPortal() {
       me={me as any}
       accent="rose"
     >
-      <div className="container mx-auto px-4 py-6">
-        {view === "home" && <HomeView onNav={setView} me={me as any} />}
-        {view === "placements" && <PlacementsView onBack={() => setView("home")} />}
-        {view === "training" && <TrainingView onBack={() => setView("home")} />}
-        {view === "lectures" && <LecturesView onBack={() => setView("home")} />}
+      <div className="flex">
+        {/* LHS sidebar */}
+        <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
+          <nav className="py-3">
+            {NAV.map((item) => {
+              const active = view === item.view;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => setView(item.view)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left border-l-4 transition ${
+                    active
+                      ? "border-cyan-700 bg-cyan-50 text-cyan-800 font-semibold"
+                      : "border-transparent text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate flex-1">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Mobile nav */}
+        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
+          {NAV.map((item) => {
+            const active = view === item.view;
+            return (
+              <button
+                key={item.view}
+                onClick={() => setView(item.view)}
+                className={`px-3 py-2 text-xs ${
+                  active ? "border-b-2 border-cyan-700 text-cyan-800 font-semibold" : "text-gray-600"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* RHS output */}
+        <main className="flex-1 min-w-0 p-4 md:p-6">
+          {view === "home" && <HomeView onNav={setView} me={me as any} />}
+          {view === "placements" && <PlacementsView onBack={() => setView("home")} />}
+          {view === "training" && <TrainingView onBack={() => setView("home")} />}
+          {view === "lectures" && <LecturesView onBack={() => setView("home")} />}
+        </main>
       </div>
     </PortalShell>
   );
