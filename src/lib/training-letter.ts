@@ -201,6 +201,7 @@ export async function generateUndertakings(r: TrainingRecord) {
         "As the training is part of the curriculum and is entirely on my own will, if I join a training organization where a fee is charged for the same, I will not claim any reimbursement of training money paid, if any, and it will be purely at my own expenditure. I will also not claim any TA/DA for the training.",
       ],
       "Signature of Student",
+      logo,
     );
 
     // ── Parent Undertaking ──────────────────────────────
