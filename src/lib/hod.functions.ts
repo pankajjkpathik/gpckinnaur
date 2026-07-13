@@ -221,3 +221,121 @@ export const hodPublishTimetable = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+
+// ============ MARKS GROUPS (pending or approved) — HOD visibility ============
+export const hodMarksGroups = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z
+      .object({
+        academic_year: z.string().regex(yearRe),
+        status: z.enum(["pending", "approved", "returned"]).default("pending"),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(hodRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
+      .from("marks")
+      .select(
+        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, subjects(code,name,branch,semester), staff_users:entered_by(username,name)",
+      )
+      .eq("academic_year", data.academic_year);
+    if (data.status === "approved") q = q.eq("approved_by_hod", true);
+    else if (data.status === "pending") q = q.eq("submitted_to_hod", true).eq("approved_by_hod", false);
+    else if (data.status === "returned")
+      q = q.eq("submitted_to_hod", false).not("returned_remarks", "is", null);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    const groups = new Map<string, any>();
+    (rows ?? []).forEach((r: any) => {
+      const k = `${r.subject_id}|${r.exam_type}|${r.entered_by}`;
+      if (!groups.has(k)) groups.set(k, { ...r, count: 0 });
+      groups.get(k).count += 1;
+    });
+    return Array.from(groups.values());
+  });
+
+// ============ HOD-SCOPED FACULTY ASSIGNMENTS (subject allotment) ============
+async function assertHodBranch(branch: string) {
+  const me = await requireRole(hodRoles);
+  const { deptToBranch } = await import("./branch");
+  const myBranch = deptToBranch(me.department);
+  if (me.role === "hod" && myBranch !== branch.toLowerCase()) {
+    throw new Error("You may only manage allotments in your own department.");
+  }
+  return me;
+}
+
+export const hodListAssignments = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({ academic_year: z.string().regex(yearRe), branch: z.string() }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await assertHodBranch(data.branch);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("faculty_assignments")
+      .select(
+        "id, staff_id, subject_id, branch, semester, academic_year, staff_users(username,name,department,role), subjects(code,name,branch,semester)",
+      )
+      .eq("branch", data.branch)
+      .eq("academic_year", data.academic_year)
+      .order("semester");
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const hodUpsertAssignment = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        staff_id: z.number().int(),
+        subject_id: z.number().int(),
+        branch: z.string().min(1),
+        semester: z.number().int().min(1).max(8),
+        academic_year: z.string().regex(yearRe),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await assertHodBranch(data.branch);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Ensure the subject belongs to this branch/sem.
+    const { data: subj } = await supabaseAdmin
+      .from("subjects")
+      .select("id, branch, semester")
+      .eq("id", data.subject_id)
+      .maybeSingle();
+    if (!subj) throw new Error("Subject not found.");
+    if (subj.branch !== data.branch || subj.semester !== data.semester) {
+      throw new Error("Subject does not match the selected branch/semester.");
+    }
+    const { error } = await supabaseAdmin.from("faculty_assignments").upsert(data, {
+      onConflict: "staff_id,subject_id,branch,semester,academic_year",
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const hodDeleteAssignment = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
+  .handler(async ({ data }) => {
+    const me = await requireRole(hodRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("faculty_assignments")
+      .select("id, branch")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("Assignment not found.");
+    if (me.role === "hod") {
+      const { deptToBranch } = await import("./branch");
+      if (deptToBranch(me.department) !== row.branch.toLowerCase()) {
+        throw new Error("You may only remove allotments in your own department.");
+      }
+    }
+    const { error } = await supabaseAdmin.from("faculty_assignments").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
