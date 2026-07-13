@@ -1272,11 +1272,24 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
                       </button>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => {
+                        if (confirm("Delete this submission? The uploaded file will also be removed from storage.")) {
+                          delSub.mutate(s.id);
+                        }
+                      }}
+                      className="text-rose-500 hover:text-rose-700"
+                      title="Delete submission"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">
                     No submissions found.
                   </td>
                 </tr>
