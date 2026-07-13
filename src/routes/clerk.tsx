@@ -1275,12 +1275,19 @@ function PromoteTab() {
   );
 }
 
-function SalaryTab() {
+function SalaryTab({ preset }: { preset?: { month: number; year: number; key: number } | null }) {
   const qc = useQueryClient();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [adding, setAdding] = useState(false);
+  useEffect(() => {
+    if (preset) {
+      setMonth(preset.month);
+      setYear(preset.year);
+    }
+  }, [preset?.key]);
+
 
   const staffQ = useQuery({ queryKey: ["salary-staff"], queryFn: () => salaryStaffList() });
   const listQ = useQuery({
