@@ -198,13 +198,7 @@ function HomeView({ me, deptLabel, onNav }: { me: any; deptLabel: string; onNav:
       <HeroBanner
         name={me?.name || me?.username || "HOD"}
         role={`HOD · ${deptLabel}`}
-        palette={{
-          gradient: "from-[#065f46] via-[#064e3b] to-[#052e2b]",
-          nameColor: "text-lime-300",
-          eyebrowColor: "text-lime-200/90",
-          metaColor: "text-lime-200",
-          blob: "bg-lime-300",
-        }}
+        palette="hod"
         subtitle={
           <>
             Academic Year <span className="font-semibold text-lime-200">{ay}</span>

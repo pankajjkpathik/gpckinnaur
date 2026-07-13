@@ -26,6 +26,7 @@ import {
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { QuickCard } from "@/components/portal/QuickCard";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import { PdfDocsInline } from "@/components/portal/PdfDocsInline";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
@@ -325,46 +326,31 @@ function HomeView({ me, ay, onNav: _onNav }: { me: any; ay: string; onNav: (v: V
   });
   const d = dash.data;
 
-  const today = new Date();
-  const dateLabel = today.toLocaleDateString("en-IN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  const hour = today.getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-
   const totalClassesToday = d?.today_classes?.length ?? 0;
   const totalSubjects = d?.assignments?.length ?? 0;
   const uniqueClasses = new Set((d?.assignments ?? []).map((a: any) => `${a.branch}-${a.semester}`)).size;
 
+
+
   return (
     <div className="space-y-6">
-      {/* Hero banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#7b1f4c] via-[#5a1638] to-[#2d0a1c] text-white shadow-lg">
-        <div className="absolute inset-0 opacity-10" aria-hidden>
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white blur-3xl" />
-          <div className="absolute -bottom-32 -left-16 w-96 h-96 rounded-full bg-orange-300 blur-3xl" />
-        </div>
-        <div className="relative p-5 sm:p-8 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] items-start sm:items-center gap-5">
-          <div className="min-w-0">
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.22em] text-amber-200/90 font-semibold truncate">{dateLabel}</p>
-            <h1 className="mt-1.5 font-extrabold text-white leading-tight tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] text-[clamp(1.35rem,4.5vw,2rem)] sm:text-3xl break-words">
-              {greeting}, <span className="text-amber-300">{me.name || "Faculty"}</span> <span className="inline-block">👋</span>
-            </h1>
-            <p className="mt-2 text-[13px] sm:text-sm text-white/95 leading-relaxed">
-              Academic Year <span className="font-semibold text-amber-200">{ay}</span>
-              <span className="text-white/70"> · Use the left panel to jump into any module.</span>
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full sm:w-auto shrink-0">
-            <StatTile value={totalClassesToday} label="Classes Today" />
-            <StatTile value={totalSubjects} label="Subjects" />
-            <StatTile value={uniqueClasses} label="Sections" />
-          </div>
-        </div>
-      </div>
+      <HeroBanner
+        name={me.name || "Faculty"}
+        palette="faculty"
+        subtitle={
+          <>
+            Academic Year <span className="font-semibold text-amber-200">{ay}</span>
+            <span className="text-white/70"> · Use the left panel to jump into any module.</span>
+          </>
+        }
+        stats={[
+          { value: totalClassesToday, label: "Classes Today" },
+          { value: totalSubjects, label: "Subjects" },
+          { value: uniqueClasses, label: "Sections" },
+        ]}
+      />
+
+
 
       {/* Today + Subjects */}
       {d && (

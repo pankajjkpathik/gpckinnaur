@@ -40,13 +40,7 @@ function ClerkPortal() {
         <HeroBanner
           name={(me as any).name || (me as any).username || "Clerk"}
           role="Office & Records"
-          palette={{
-            gradient: "from-[#b45309] via-[#78350f] to-[#431407]",
-            nameColor: "text-yellow-200",
-            eyebrowColor: "text-yellow-200/90",
-            metaColor: "text-yellow-200",
-            blob: "bg-yellow-300",
-          }}
+          palette="clerk"
           subtitle={<span className="text-white/80">Master student records · Bulk import · Salary</span>}
         />
         <div className="flex gap-1 border-b flex-wrap">
