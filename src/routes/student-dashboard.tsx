@@ -48,6 +48,7 @@ import {
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 
 import { branchToDept } from "@/lib/branch";
 import logoAsset from "@/assets/logo.png.asset.json";
@@ -295,12 +296,24 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-gray-800">
-        Welcome, {me.name ? me.name.toUpperCase() : "STUDENT"}
-      </h1>
-      <p className="text-sm text-gray-500 -mt-3">
-        Choose an option from the left panel to view your details.
-      </p>
+      <HeroBanner
+        name={me.name || "Student"}
+        role={me.branch ? `${me.branch} · Sem ${me.semester ?? ""}` : "Student"}
+        palette={{
+          gradient: "from-[#6d28d9] via-[#4c1d95] to-[#2e1065]",
+          nameColor: "text-fuchsia-200",
+          eyebrowColor: "text-fuchsia-200/90",
+          metaColor: "text-fuchsia-200",
+          blob: "bg-fuchsia-400",
+        }}
+        subtitle={<span className="text-white/80">Choose an option from the left panel to view your details.</span>}
+        stats={[
+          { value: data ? `${data.attendance_pct}%` : "—", label: "Attendance" },
+          { value: data?.today_periods?.length ?? 0, label: "Today" },
+          { value: data?.pending_leaves ?? 0, label: "Leaves" },
+        ]}
+      />
+
       <div className="grid sm:grid-cols-3 gap-4">
         <Card>
           <p className="text-xs uppercase tracking-wide text-gray-400">Overall Attendance</p>

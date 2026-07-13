@@ -5,6 +5,7 @@ import { Plus, Pencil, Upload, ArrowUpCircle, Download, FileSpreadsheet, Trash2 
 import * as XLSX from "xlsx";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import { clerkRoles, hasRole } from "@/lib/roles";
 import {
   clerkListStudents,
@@ -36,6 +37,18 @@ function ClerkPortal() {
   return (
     <PortalShell title="Clerk Portal" subtitle="Master Records" me={me as any} accent="amber">
       <div className="container mx-auto px-4 py-6 space-y-4">
+        <HeroBanner
+          name={(me as any).name || (me as any).username || "Clerk"}
+          role="Office & Records"
+          palette={{
+            gradient: "from-[#b45309] via-[#78350f] to-[#431407]",
+            nameColor: "text-yellow-200",
+            eyebrowColor: "text-yellow-200/90",
+            metaColor: "text-yellow-200",
+            blob: "bg-yellow-300",
+          }}
+          subtitle={<span className="text-white/80">Master student records · Bulk import · Salary</span>}
+        />
         <div className="flex gap-1 border-b flex-wrap">
           {(
             [

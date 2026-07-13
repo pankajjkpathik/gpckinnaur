@@ -6,6 +6,7 @@ import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { tpoRoles, hasRole } from "@/lib/roles";
 import { BarStats } from "@/components/portal/Charts";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import {
   listPlacements,
   upsertPlacement,
@@ -62,7 +63,7 @@ function TpoPortal() {
       accent="rose"
     >
       <div className="container mx-auto px-4 py-6">
-        {view === "home" && <HomeView onNav={setView} />}
+        {view === "home" && <HomeView onNav={setView} me={me as any} />}
         {view === "placements" && <PlacementsView onBack={() => setView("home")} />}
         {view === "training" && <TrainingView onBack={() => setView("home")} />}
         {view === "lectures" && <LecturesView onBack={() => setView("home")} />}
@@ -71,7 +72,7 @@ function TpoPortal() {
   );
 }
 
-function HomeView({ onNav }: { onNav: (v: View) => void }) {
+function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
   const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View }[] = [
     {
       icon: Briefcase,
@@ -100,7 +101,18 @@ function HomeView({ onNav }: { onNav: (v: View) => void }) {
   ];
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, Training and Placement Officer</h1>
+      <HeroBanner
+        name={me?.name || "TPO"}
+        role="Training & Placement"
+        palette={{
+          gradient: "from-[#0e7490] via-[#155e75] to-[#083344]",
+          nameColor: "text-cyan-200",
+          eyebrowColor: "text-cyan-200/90",
+          metaColor: "text-cyan-200",
+          blob: "bg-cyan-300",
+        }}
+        subtitle={<span className="text-white/80">Placements · Internships · Guest Lectures</span>}
+      />
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((c) => (
           <button

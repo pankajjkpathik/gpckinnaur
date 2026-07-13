@@ -21,6 +21,7 @@ import { facultyPhoto } from "@/lib/faculty-photos";
 import { initialsOf } from "@/lib/portal-identity";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { QuickCard } from "@/components/portal/QuickCard";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import { hodRoles, hasRole } from "@/lib/roles";
 import {
   hodDashboard,
@@ -194,7 +195,29 @@ function HomeView({ me, deptLabel, onNav }: { me: any; deptLabel: string; onNav:
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, HOD({deptLabel})</h1>
+      <HeroBanner
+        name={me?.name || me?.username || "HOD"}
+        role={`HOD · ${deptLabel}`}
+        palette={{
+          gradient: "from-[#065f46] via-[#064e3b] to-[#052e2b]",
+          nameColor: "text-lime-300",
+          eyebrowColor: "text-lime-200/90",
+          metaColor: "text-lime-200",
+          blob: "bg-lime-300",
+        }}
+        subtitle={
+          <>
+            Academic Year <span className="font-semibold text-lime-200">{ay}</span>
+            <span className="text-white/70"> · Department oversight for {deptLabel}.</span>
+          </>
+        }
+        stats={[
+          { value: q.data?.pending_lessons ?? 0, label: "Pending Lessons" },
+          { value: q.data?.pending_marks ?? 0, label: "Pending Marks" },
+          { value: q.data?.pending_leaves ?? 0, label: "Pending Leaves" },
+        ]}
+      />
+
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((c) => (

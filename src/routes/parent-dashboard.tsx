@@ -22,6 +22,7 @@ import {
   parentNotices,
 } from "@/lib/parent.functions";
 import { pageMeta } from "@/lib/seo";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 
 export const Route = createFileRoute("/parent-dashboard")({
   head: () =>
@@ -100,14 +101,26 @@ function ParentDashboard() {
       </header>
 
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-white border rounded-lg p-5 mb-5">
-          <p className="text-xs uppercase tracking-wider text-emerald-700 font-semibold">Viewing records for</p>
-          <h1 className="text-2xl font-bold text-gray-800 mt-1">{st.name?.toUpperCase()}</h1>
-          <p className="text-xs text-gray-500 mt-0.5 font-mono">
-            {st.enrollment_no} · {st.branch}-Sem{st.semester}
-            {st.father_name ? ` · Father: ${st.father_name}` : ""}
-          </p>
+        <div className="mb-5">
+          <HeroBanner
+            name={st.name || "Guardian"}
+            role={`${st.enrollment_no || ""} · ${st.branch || ""}-Sem${st.semester ?? ""}`}
+            palette={{
+              gradient: "from-[#047857] via-[#065f46] to-[#022c22]",
+              nameColor: "text-lime-200",
+              eyebrowColor: "text-lime-200/90",
+              metaColor: "text-lime-200",
+              blob: "bg-emerald-300",
+            }}
+            subtitle={
+              <span className="text-white/85">
+                Viewing records for your ward
+                {st.father_name ? ` · Father: ${st.father_name}` : ""}
+              </span>
+            }
+          />
         </div>
+
 
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
           {tabs.map((t) => (

@@ -25,6 +25,7 @@ import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { QuickCard } from "@/components/portal/QuickCard";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import {
   listParentMessages,
   markParentMessageRead,
@@ -144,7 +145,7 @@ function PrincipalPortal() {
       </header>
 
       <main className="container mx-auto px-4 py-6">
-        {view === "home" && <HomeView year={year} onNav={setView} />}
+        {view === "home" && <HomeView year={year} onNav={setView} me={me as any} />}
         {view === "attendance" && <AttendanceReportsView year={year} onBack={() => setView("home")} />}
         {view === "sessional" && (
           <>
@@ -181,7 +182,7 @@ function PrincipalPortal() {
 }
 
 // ─── HOME (card grid) ─────────────────────────────────────────────────────────
-function HomeView({ year, onNav }: { year: string; onNav: (v: View) => void }) {
+function HomeView({ year, onNav, me }: { year: string; onNav: (v: View) => void; me: any }) {
   const fn = useServerFn(principalDashboard);
   const { data } = useQuery({
     queryKey: ["principal-dash", year],
@@ -275,7 +276,29 @@ function HomeView({ year, onNav }: { year: string; onNav: (v: View) => void }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, Principal</h1>
+      <HeroBanner
+        name={me?.name || "Principal"}
+        role="Principal"
+        palette={{
+          gradient: "from-[#3730a3] via-[#2e1065] to-[#1e1b4b]",
+          nameColor: "text-amber-300",
+          eyebrowColor: "text-amber-200/90",
+          metaColor: "text-amber-200",
+          blob: "bg-amber-300",
+        }}
+        subtitle={
+          <>
+            Academic Year <span className="font-semibold text-amber-200">{year}</span>
+            <span className="text-white/70"> · Institute-wide oversight & analytics.</span>
+          </>
+        }
+        stats={[
+          { value: data?.students ?? "—", label: "Students" },
+          { value: data?.staff ?? "—", label: "Staff" },
+          { value: data?.circulars ?? "—", label: "Circulars" },
+        ]}
+      />
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
           <QuickCard

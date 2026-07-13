@@ -25,6 +25,7 @@ import {
 } from "@/lib/submissions.functions";
 import logoAsset from "@/assets/logo.png.asset.json";
 import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 
 export const Route = createFileRoute("/staff-dashboard")({
   head: () => ({
@@ -347,21 +348,28 @@ function DashboardHome({ me, counts }: any) {
     });
   return (
     <div className="space-y-6">
-      <div className="bg-white border rounded-lg p-5">
-        <h2 className="text-xl font-bold text-[color:var(--navy)]">Welcome back, {((me as any).name || me.username).toString().toUpperCase()}</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Role: <span className="font-medium capitalize">{me.role}</span>
-          {((me as any).extraRoles ?? []).length > 0 && (
-            <span className="text-muted-foreground"> (also: {((me as any).extraRoles as string[]).join(", ")})</span>
-          )}
-          {me.department && (
-            <>
-              {" "}
-              · Department: <span className="capitalize font-medium">{me.department}</span>
-            </>
-          )}
-        </p>
-      </div>
+      <HeroBanner
+        name={(me as any).name || me.username || "Staff"}
+        role={`${me.role}${me.department ? ` · ${me.department}` : ""}`}
+        palette={{
+          gradient: "from-[#0f172a] via-[#1e293b] to-[#020617]",
+          nameColor: "text-sky-300",
+          eyebrowColor: "text-sky-200/90",
+          metaColor: "text-sky-200",
+          blob: "bg-sky-400",
+        }}
+        subtitle={
+          <>
+            <span className="text-white/85 capitalize">Role: <span className="font-semibold">{me.role}</span></span>
+            {((me as any).extraRoles ?? []).length > 0 && (
+              <span className="text-white/60"> (also: {((me as any).extraRoles as string[]).join(", ")})</span>
+            )}
+            {me.department && (
+              <span className="text-white/70"> · Department: <span className="capitalize font-medium text-sky-200">{me.department}</span></span>
+            )}
+          </>
+        }
+      />
 
       {portals.length > 0 && (
         <div>
