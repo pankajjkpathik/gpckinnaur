@@ -33,6 +33,7 @@ import {
   hodMarksGroups,
   hodMarksDetail,
   hodReviewMarks,
+  hodExportApprovedMarks,
   deptClassAttendance,
   hodUpsertTimetableSlot,
   hodListAssignments,
