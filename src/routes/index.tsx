@@ -178,19 +178,49 @@ function PortalLanding() {
         </div>
       </main>
 
-      {/* Bottom strip: contact for help */}
-      <div className="relative z-10 border-t border-white/10 bg-black/25 backdrop-blur">
-        <div className="container mx-auto px-6 py-4 text-center text-xs text-white/75">
-          Contact{" "}
-          <a
-            href="mailto:gpckinnaur@gmail.com"
-            className="text-[color:var(--gold)] hover:underline font-medium"
-          >
-            gpckinnaur@gmail.com
-          </a>{" "}
-          for any query or help.
+      {/* Need help callout */}
+      <section
+        aria-labelledby="portal-help-heading"
+        className="relative z-10 border-t border-white/10 bg-black/30 backdrop-blur"
+      >
+        <div className="container mx-auto px-6 py-6">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-white/[0.04] p-5 md:p-6 flex flex-col sm:flex-row gap-4 sm:items-start">
+            <div className="shrink-0 w-11 h-11 rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--gold)] flex items-center justify-center">
+              <LifeBuoy className="w-5 h-5" aria-hidden />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <h2
+                id="portal-help-heading"
+                className="text-sm font-semibold text-white tracking-wide"
+              >
+                Need help signing in?
+              </h2>
+              <p className="mt-1 text-xs text-white/70 leading-relaxed">
+                Email{" "}
+                <a
+                  href="mailto:gpckinnaur@gmail.com?subject=Portal%20support%20request"
+                  className="text-[color:var(--gold)] hover:underline font-medium"
+                >
+                  gpckinnaur@gmail.com
+                </a>{" "}
+                and include the details below so we can resolve your issue faster:
+              </p>
+              <ul className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-white/75 list-disc list-inside marker:text-[color:var(--gold)]">
+                <li>Your full name and role (student, parent, staff)</li>
+                <li>Enrolment / employee ID (never your password)</li>
+                <li>Department and, for students, current semester</li>
+                <li>Which portal you were using (Student / Parent / Staff)</li>
+                <li>What you were trying to do when it failed</li>
+                <li>Exact error message and a screenshot, if possible</li>
+              </ul>
+              <p className="mt-3 text-[11px] text-white/50">
+                Office hours: Mon–Sat, 10:00 AM – 4:00 PM. Please do not share your password with anyone.
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
 
 
       {/* Footer */}
