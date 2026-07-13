@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bell, Megaphone, AlarmClock, CalendarClock, Zap } from "lucide-react";
+import { ArrowLeft, Bell, Megaphone, AlarmClock, CalendarClock, Zap, Eye, MousePointerClick } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { useFacNotifPrefs, type FacNotifPrefs } from "@/lib/faculty-notif-prefs";
