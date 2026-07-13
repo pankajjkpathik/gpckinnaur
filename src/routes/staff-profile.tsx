@@ -6,6 +6,7 @@ import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
 import { Camera, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/staff-profile")({
   head: () => ({ meta: [{ title: "My Profile — Staff Portal" }, { name: "robots", content: "noindex, nofollow" }] }),
