@@ -369,6 +369,7 @@ function HomeView({ me, deptLabel, ay }: { me: any; deptLabel: string; ay: strin
         name={me?.name || me?.username || "HOD"}
         role={`HOD · ${deptLabel}`}
         palette="hod"
+        avatarSrc={avatarUrl(me)}
         subtitle={
           <>
             Academic Year <span className="font-semibold text-lime-200">{ay}</span>
@@ -381,6 +382,7 @@ function HomeView({ me, deptLabel, ay }: { me: any; deptLabel: string; ay: strin
           { value: q.data?.pending_leaves ?? 0, label: "Pending Leaves" },
         ]}
       />
+
 
       <div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Department Snapshot</p>
