@@ -103,7 +103,7 @@ function TpoPortal() {
   );
 }
 
-function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
+function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
   const qc = useQueryClient();
   const uploadFn = useServerFn(uploadStaffAvatar);
   const uploadAvatar = useMutation({
