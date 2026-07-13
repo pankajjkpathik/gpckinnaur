@@ -75,6 +75,7 @@ import { listAnnouncements } from "@/lib/admin-extras.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
@@ -184,7 +185,9 @@ function FacultyPortalInner({
 
   // Keep realtime live for all faculty views, so the sidebar badge stays fresh.
   useFacultyNotifRealtime(ay);
-  const { unreadCount } = useFacultyNotifications(me, ay);
+  const { unreadCount, items: notifItems, unread: notifUnread, readIds: notifReadIds, setReadIds: setNotifReadIds } =
+    useFacultyNotifications(me, ay);
+
 
   // HOD/Principal who also hold the faculty role (via extraRoles) can edit as faculty too.
   const heldAll = [me.role, ...((me as any).extraRoles ?? [])];
@@ -238,28 +241,19 @@ function FacultyPortalInner({
                   <Icon className="w-4 h-4 shrink-0" />
                   <span className="truncate flex-1">{item.label}</span>
                   {item.badge && item.badge > 0 && (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
+                    <UnreadBadgePreview
+                      items={notifUnread}
+                      readIds={notifReadIds}
+                      setReadIds={setNotifReadIds}
+                      onJump={() => {
                         setView("home");
                         focusNotifications();
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setView("home");
-                          focusNotifications();
-                        }
-                      }}
-                      className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm animate-in fade-in cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-300"
-                      title={`${item.badge} unread — jump to notifications`}
-                    >
-                      {item.badge > 9 ? "9+" : item.badge}
-                    </span>
+                      count={item.badge}
+                      variant="desktop"
+                    />
                   )}
+
                 </button>
 
               );
@@ -281,20 +275,19 @@ function FacultyPortalInner({
               >
                 {item.label}
                 {item.badge && item.badge > 0 && (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
+                  <UnreadBadgePreview
+                    items={notifUnread}
+                    readIds={notifReadIds}
+                    setReadIds={setNotifReadIds}
+                    onJump={() => {
                       setView("home");
                       focusNotifications();
                     }}
-                    className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[9px] font-bold align-middle cursor-pointer"
-                    title={`${item.badge} unread — jump to notifications`}
-                  >
-                    {item.badge > 9 ? "9+" : item.badge}
-                  </span>
+                    count={item.badge}
+                    variant="mobile"
+                  />
                 )}
+
               </button>
 
             );
@@ -883,7 +876,144 @@ function useFacultyNotifRealtime(ay: string) {
 }
 
 
+function UnreadBadgePreview({
+  items,
+  readIds,
+  setReadIds,
+  onJump,
+  count,
+  variant,
+}: {
+  items: NotifItem[];
+  readIds: Set<string>;
+  setReadIds: (next: Set<string>) => void;
+  onJump: () => void;
+  count: number;
+  variant: "desktop" | "mobile";
+}) {
+  const [open, setOpen] = useState(false);
+  const latest = items.slice(0, 5);
+  const markRead = (key: string) => {
+    const next = new Set(readIds);
+    next.add(key);
+    setReadIds(next);
+  };
+  const markAll = () => {
+    const next = new Set(readIds);
+    for (const it of items) next.add(it.key);
+    setReadIds(next);
+  };
+  const label = count > 9 ? "9+" : String(count);
+  const trigger =
+    variant === "desktop" ? (
+      <span
+        role="button"
+        tabIndex={0}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") e.stopPropagation();
+        }}
+        className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm animate-in fade-in cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-300"
+        title={`${count} unread`}
+      >
+        {label}
+      </span>
+    ) : (
+      <span
+        role="button"
+        tabIndex={0}
+        onClick={(e) => e.stopPropagation()}
+        className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[9px] font-bold align-middle cursor-pointer"
+        title={`${count} unread`}
+      >
+        {label}
+      </span>
+    );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent
+        align="end"
+        side={variant === "desktop" ? "right" : "bottom"}
+        className="w-80 p-0 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-3 py-2 border-b bg-gradient-to-r from-amber-50 via-white to-rose-50 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Bell className="w-4 h-4 text-[#7b1f4c] shrink-0" />
+            <p className="text-sm font-semibold text-gray-800 truncate">Latest unread</p>
+            <span className="text-[10px] text-gray-500 shrink-0">{count} total</span>
+          </div>
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={markAll}
+              className="text-[11px] inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-gray-200 hover:bg-gray-50 text-gray-700"
+            >
+              <CheckCheck className="w-3 h-3" /> All
+            </button>
+          )}
+        </div>
+        <div className="max-h-80 overflow-y-auto divide-y">
+          {latest.length === 0 ? (
+            <div className="text-center py-6 text-xs text-gray-400">
+              <Bell className="w-6 h-6 mx-auto mb-1 opacity-40" />
+              You're all caught up!
+            </div>
+          ) : (
+            latest.map((it) => {
+              const styles =
+                it.kind === "announcement"
+                  ? { icon: Megaphone, tint: "bg-indigo-100 text-indigo-700" }
+                  : it.kind === "notice"
+                  ? { icon: FileText, tint: "bg-amber-100 text-amber-700" }
+                  : { icon: AlarmClock, tint: "bg-rose-100 text-rose-700" };
+              const Icon = styles.icon;
+              return (
+                <div key={it.key} className="flex items-start gap-2 px-3 py-2 hover:bg-gray-50">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${styles.tint}`}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-gray-800 line-clamp-2 leading-snug">{it.title}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5 truncate">{it.meta}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => markRead(it.key)}
+                    className="shrink-0 text-[10px] px-1.5 py-1 rounded border border-gray-200 hover:bg-white text-gray-600 hover:text-[#7b1f4c]"
+                    title="Mark as read"
+                  >
+                    Mark read
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+        <div className="border-t px-3 py-2 bg-gray-50 flex items-center justify-between">
+          <span className="text-[10px] text-gray-500">
+            Showing {latest.length} of {count}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onJump();
+            }}
+            className="text-[11px] font-semibold text-[#7b1f4c] hover:underline"
+          >
+            View all →
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
+
   const { items, unread, readIds, setReadIds, loading } = useFacultyNotifications(me, ay);
   const [showAll, setShowAll] = useState(false);
   const [active, setActive] = useState<NotifItem | null>(null);
