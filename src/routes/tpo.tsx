@@ -605,7 +605,7 @@ function PlacementsView({ onBack }: { onBack?: () => void }) {
 }
 
 // ─── INDUSTRIAL TRAINING ──────────────────────────────────────────────────────
-function TrainingView({ onBack }: { onBack: () => void }) {
+function TrainingView({ onBack }: { onBack?: () => void }) {
   const qc = useQueryClient();
   const listQ = useQuery({ queryKey: ["tpo-training"], queryFn: () => listIndustrialTraining({ data: {} }) });
   const [open, setOpen] = useState(false);
