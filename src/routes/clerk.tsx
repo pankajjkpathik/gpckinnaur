@@ -23,7 +23,9 @@ import {
   Loader2,
   Activity,
   History,
+  Search,
 } from "lucide-react";
+
 import * as XLSX from "xlsx";
 import { staffMe, uploadStaffAvatar, staffChangePassword, staffUpdateProfile } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
@@ -37,9 +39,11 @@ import {
   clerkBulkImportStudents,
   clerkPromoteStudents,
   clerkRecentActivity,
+  clerkGlobalSearch,
 } from "@/lib/clerk.functions";
 import { adminCreateStudent } from "@/lib/admin.functions";
 import { salaryList, salaryUpsert, salaryDelete, salaryStaffList } from "@/lib/salary.functions";
+
 
 export const Route = createFileRoute("/clerk")({
   head: () => portalMeta("Clerk Portal"),
@@ -57,7 +61,20 @@ function ClerkPortal() {
     else if (!hasRole(me, clerkRoles)) nav({ to: "/staff-dashboard", replace: true });
   }, [me, isLoading, nav]);
   const [tab, setTab] = useState<Tab>("home");
+  const [studentPreset, setStudentPreset] = useState<{ q: string; key: number } | null>(null);
+  const [salaryPreset, setSalaryPreset] = useState<{ month: number; year: number; key: number } | null>(null);
   if (isLoading || !me || !hasRole(me, clerkRoles)) return <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading…</div>;
+
+  const jumpToStudent = (q: string) => {
+    setStudentPreset({ q, key: Date.now() });
+    setTab("students");
+  };
+  const jumpToSalary = (month?: number, year?: number) => {
+    const now = new Date();
+    setSalaryPreset({ month: month ?? now.getMonth() + 1, year: year ?? now.getFullYear(), key: Date.now() });
+    setTab("salary");
+  };
+
 
   const NAV: { icon: any; label: string; tab: Tab }[] = [
     { icon: UsersRound, label: "Dashboard", tab: "home" },
@@ -74,6 +91,9 @@ function ClerkPortal() {
       <div className="flex">
         {/* LHS sidebar */}
         <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
+          <div className="p-3 border-b">
+            <GlobalSearch onJumpStudent={jumpToStudent} onJumpSalary={jumpToSalary} />
+          </div>
           <nav className="py-3">
             {NAV.map((item) => {
               const active = tab === item.tab;
@@ -96,38 +116,187 @@ function ClerkPortal() {
           </nav>
         </aside>
 
+
         {/* Mobile nav */}
-        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
-          {NAV.map((item) => {
-            const active = tab === item.tab;
-            return (
-              <button
-                key={item.tab}
-                onClick={() => setTab(item.tab)}
-                className={`px-3 py-2 text-xs ${
-                  active ? "border-b-2 border-amber-600 text-amber-700 font-semibold" : "text-gray-600"
-                }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
+        <div className="md:hidden w-full border-b bg-white flex flex-col">
+          <div className="p-2 border-b">
+            <GlobalSearch onJumpStudent={jumpToStudent} onJumpSalary={jumpToSalary} />
+          </div>
+          <div className="overflow-x-auto flex whitespace-nowrap">
+            {NAV.map((item) => {
+              const active = tab === item.tab;
+              return (
+                <button
+                  key={item.tab}
+                  onClick={() => setTab(item.tab)}
+                  className={`px-3 py-2 text-xs ${
+                    active ? "border-b-2 border-amber-600 text-amber-700 font-semibold" : "text-gray-600"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* RHS output */}
         <main className="flex-1 min-w-0 p-4 md:p-6 space-y-4">
           {tab === "home" && <HomeTab me={me as any} onNav={setTab} />}
-          {tab === "students" && <StudentsTab />}
+          {tab === "students" && <StudentsTab preset={studentPreset} />}
           {tab === "import" && <ImportTab />}
           {tab === "promote" && <PromoteTab />}
-          {tab === "salary" && <SalaryTab />}
+          {tab === "salary" && <SalaryTab preset={salaryPreset} />}
           {tab === "profile" && <ProfileTab me={me as any} />}
           {tab === "password" && <PasswordTab me={me as any} />}
         </main>
+
       </div>
     </PortalShell>
   );
 }
+
+function GlobalSearch({
+  onJumpStudent,
+  onJumpSalary,
+}: {
+  onJumpStudent: (q: string) => void;
+  onJumpSalary: (month?: number, year?: number) => void;
+}) {
+  const [term, setTerm] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(term.trim()), 250);
+    return () => clearTimeout(id);
+  }, [term]);
+  const q = useQuery({
+    queryKey: ["clerk-global-search", debounced],
+    queryFn: () => clerkGlobalSearch({ data: { q: debounced } }),
+    enabled: debounced.length >= 2,
+    staleTime: 15_000,
+  });
+  const results = q.data;
+  const hasAny =
+    !!results &&
+    ((results.students?.length ?? 0) + (results.staff?.length ?? 0) + (results.salary?.length ?? 0) > 0);
+  const showPanel = open && debounced.length >= 2;
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="Search students, staff, salary…"
+          className="w-full border rounded pl-8 pr-2 py-2 text-sm"
+        />
+      </div>
+      {showPanel && (
+        <div className="absolute z-30 left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-[70vh] overflow-y-auto text-sm">
+          {q.isFetching && <div className="p-3 text-xs text-gray-500">Searching…</div>}
+          {!q.isFetching && !hasAny && (
+            <div className="p-3 text-xs text-gray-500">No matches for “{debounced}”.</div>
+          )}
+          {results?.students?.length ? (
+            <div>
+              <div className="px-3 py-1.5 text-[11px] uppercase tracking-wide bg-gray-50 text-gray-500 border-b">
+                Students · {results.students.length}
+              </div>
+              {results.students.map((s: any) => (
+                <button
+                  key={`stu-${s.id}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onJumpStudent(s.enrollment_no || s.name);
+                    setOpen(false);
+                    setTerm("");
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-amber-50 border-b flex items-start gap-2"
+                >
+                  <Users className="w-4 h-4 mt-0.5 text-amber-600 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{s.name}</div>
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {s.enrollment_no} · {s.branch} · Sem {s.semester}
+                      {s.phone ? ` · ${s.phone}` : ""}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {results?.staff?.length ? (
+            <div>
+              <div className="px-3 py-1.5 text-[11px] uppercase tracking-wide bg-gray-50 text-gray-500 border-b">
+                Staff · {results.staff.length}
+              </div>
+              {results.staff.map((s: any) => (
+                <button
+                  key={`stf-${s.id}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onJumpSalary();
+                    setOpen(false);
+                    setTerm("");
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-amber-50 border-b flex items-start gap-2"
+                >
+                  <User className="w-4 h-4 mt-0.5 text-indigo-600 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{s.name || s.username}</div>
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {s.role}
+                      {s.department ? ` · ${s.department}` : ""}
+                      {s.email ? ` · ${s.email}` : ""}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {results?.salary?.length ? (
+            <div>
+              <div className="px-3 py-1.5 text-[11px] uppercase tracking-wide bg-gray-50 text-gray-500 border-b">
+                Salary · {results.salary.length}
+              </div>
+              {results.salary.map((r: any) => (
+                <button
+                  key={`sal-${r.id}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onJumpSalary(r.month, r.year);
+                    setOpen(false);
+                    setTerm("");
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-amber-50 border-b flex items-start gap-2"
+                >
+                  <Wallet className="w-4 h-4 mt-0.5 text-emerald-600 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">
+                      {r.staff_users?.name || r.staff_users?.username} · ₹
+                      {Number(r.net_pay || 0).toLocaleString("en-IN")}
+                    </div>
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {String(r.month).padStart(2, "0")}/{r.year}
+                      {r.staff_users?.department ? ` · ${r.staff_users.department}` : ""}
+                      {r.paid_on ? ` · paid ${r.paid_on}` : ""}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 
 function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
   const qc = useQueryClient();
@@ -590,13 +759,21 @@ function ActivityPanel({ rows, loading }: { rows: ActivityRow[]; loading?: boole
 
 
 
-function StudentsTab() {
+function StudentsTab({ preset }: { preset?: { q: string; key: number } | null }) {
   const qc = useQueryClient();
   const [branch, setBranch] = useState("");
   const [sem, setSem] = useState<number | "">("");
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  useEffect(() => {
+    if (preset) {
+      setQ(preset.q);
+      setBranch("");
+      setSem("");
+    }
+  }, [preset?.key]);
+
   const list = useQuery({
     queryKey: ["clerk-students", branch, sem, q],
     queryFn: () =>
@@ -1098,12 +1275,19 @@ function PromoteTab() {
   );
 }
 
-function SalaryTab() {
+function SalaryTab({ preset }: { preset?: { month: number; year: number; key: number } | null }) {
   const qc = useQueryClient();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [adding, setAdding] = useState(false);
+  useEffect(() => {
+    if (preset) {
+      setMonth(preset.month);
+      setYear(preset.year);
+    }
+  }, [preset?.key]);
+
 
   const staffQ = useQuery({ queryKey: ["salary-staff"], queryFn: () => salaryStaffList() });
   const listQ = useQuery({

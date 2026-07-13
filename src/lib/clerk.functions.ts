@@ -179,3 +179,52 @@ export const clerkRecentActivity = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return rows ?? [];
   });
+
+// =====================================================================
+// GLOBAL SEARCH (students, staff, salary)
+// =====================================================================
+
+export const clerkGlobalSearch = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({ q: z.string().min(1).max(80) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(clerkAccess);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const term = data.q.trim();
+    const like = `%${term}%`;
+
+    const [studentsRes, staffRes, salaryRes] = await Promise.all([
+      supabaseAdmin
+        .from("students")
+        .select("id, enrollment_no, name, branch, semester, phone, email")
+        .or(
+          `name.ilike.${like},enrollment_no.ilike.${like},phone.ilike.${like},email.ilike.${like}`,
+        )
+        .limit(10),
+      supabaseAdmin
+        .from("staff_users")
+        .select("id, username, name, role, department, email, phone")
+        .or(
+          `username.ilike.${like},name.ilike.${like},email.ilike.${like},phone.ilike.${like},department.ilike.${like}`,
+        )
+        .limit(10),
+      supabaseAdmin
+        .from("staff_salary")
+        .select("id, staff_id, month, year, net_pay, paid_on, staff_users!inner(username, name, role, department)")
+        .or(
+          `username.ilike.${like},name.ilike.${like},department.ilike.${like}`,
+          { foreignTable: "staff_users" },
+        )
+        .order("year", { ascending: false })
+        .order("month", { ascending: false })
+        .limit(10),
+    ]);
+
+    return {
+      students: studentsRes.data ?? [],
+      staff: staffRes.data ?? [],
+      salary: salaryRes.data ?? [],
+    };
+  });
+
