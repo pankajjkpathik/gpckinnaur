@@ -537,7 +537,33 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
                         {dn === 0 ? "Today" : `${dn}d`}
                       </span>
                     </div>
-                    <AssignmentStatusButtons assignmentId={a.id} currentStatus={subStatus(a.id)} size="xs" />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <AssignmentStatusButtons assignmentId={a.id} currentStatus={subStatus(a.id)} size="xs" />
+                      <button
+                        type="button"
+                        onClick={() => setDetailAssignment(a)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded border text-[11px] font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        <Eye className="w-3 h-3" /> Details
+                      </button>
+                      {a.file_url ? (
+                        <a
+                          href={a.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded border text-[11px] font-medium text-indigo-700 hover:bg-indigo-50"
+                        >
+                          <Download className="w-3 h-3" /> Brief
+                        </a>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => setView("assignments-docs")}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded border text-[11px] font-medium text-emerald-700 hover:bg-emerald-50"
+                      >
+                        <Upload className="w-3 h-3" /> Submit
+                      </button>
+                    </div>
                   </li>
                 );
               })}
