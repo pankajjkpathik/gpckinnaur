@@ -59,7 +59,7 @@ import {
   deleteAssignment as deleteAssignmentFn,
   facultyReceivedSubmissions,
   facultyGradeSubmission,
-  facultyGradeSubmission,
+
   facultyDeleteSubmission,
   uploadAssignmentFile,
 } from "@/lib/assignments.functions";
