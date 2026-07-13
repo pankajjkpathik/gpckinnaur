@@ -455,21 +455,24 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
                 const dn = daysUntil(a.due_date);
                 const urgent = dn <= 2;
                 return (
-                  <li key={a.id} className="py-2 flex items-start gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-800 truncate">{a.title}</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {a.subjects?.code || a.subject_name || ""} · Due{" "}
-                        {new Date(a.due_date).toLocaleDateString()}
-                      </p>
+                  <li key={a.id} className="py-2 space-y-1.5">
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-800 truncate">{a.title}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {a.subjects?.code || a.subject_name || ""} · Due{" "}
+                          {new Date(a.due_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${
+                          urgent ? "bg-rose-100 text-rose-700" : "bg-indigo-100 text-indigo-700"
+                        }`}
+                      >
+                        {dn === 0 ? "Today" : `${dn}d`}
+                      </span>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${
-                        urgent ? "bg-rose-100 text-rose-700" : "bg-indigo-100 text-indigo-700"
-                      }`}
-                    >
-                      {dn === 0 ? "Today" : `${dn}d`}
-                    </span>
+                    <AssignmentStatusButtons assignmentId={a.id} currentStatus={subStatus(a.id)} size="xs" />
                   </li>
                 );
               })}
