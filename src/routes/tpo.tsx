@@ -1,12 +1,26 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Briefcase, Factory, ClipboardList, ArrowLeft, Plus, Trash2, FileText } from "lucide-react";
-import { staffMe } from "@/lib/auth.functions";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  Briefcase,
+  Factory,
+  ClipboardList,
+  ArrowLeft,
+  Plus,
+  Trash2,
+  TrendingUp,
+  Building2,
+  GraduationCap,
+  Mic,
+} from "lucide-react";
+import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { tpoRoles, hasRole } from "@/lib/roles";
 import { BarStats } from "@/components/portal/Charts";
 import { HeroBanner } from "@/components/portal/HeroBanner";
+import { QuickCard } from "@/components/portal/QuickCard";
+import { avatarUrl } from "@/lib/portal-identity";
 import {
   listPlacements,
   upsertPlacement,
@@ -86,56 +100,271 @@ function TpoPortal() {
 }
 
 function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
-  const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View }[] = [
+  const qc = useQueryClient();
+  const uploadFn = useServerFn(uploadStaffAvatar);
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      if (file.size > 5 * 1024 * 1024) throw new Error("Image must be 5 MB or smaller");
+      const b64: string = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onerror = () => reject(new Error("Failed to read file"));
+        r.onload = () => {
+          const s = String(r.result || "");
+          const i = s.indexOf(",");
+          resolve(i >= 0 ? s.slice(i + 1) : s);
+        };
+        r.readAsDataURL(file);
+      });
+      return uploadFn({ data: { filename: file.name, contentType: file.type || "image/png", contentBase64: b64 } });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["staff-me"] });
+      qc.invalidateQueries({ queryKey: ["staff-me-profile"] });
+    },
+  });
+
+  const placementsQ = useQuery({ queryKey: ["tpo-placements"], queryFn: () => listPlacements({ data: {} }) });
+  const trainingsQ = useQuery({ queryKey: ["tpo-training"], queryFn: () => listIndustrialTraining({ data: {} }) });
+  const lecturesQ = useQuery({ queryKey: ["tpo-lectures"], queryFn: () => listGuestLectures() });
+
+  const placements = placementsQ.data ?? [];
+  const trainings = trainingsQ.data ?? [];
+  const lectures = lecturesQ.data ?? [];
+
+  const currentYear = new Date().getFullYear();
+  const placementsThisYear = placements.filter((r: any) => r.year === currentYear).length;
+  const avgPackage = useMemo(() => {
+    const withPkg = placements.filter((r: any) => r.year === currentYear && r.package_lpa);
+    if (!withPkg.length) return null;
+    const total = withPkg.reduce((s: number, r: any) => s + Number(r.package_lpa), 0);
+    return (total / withPkg.length).toFixed(1);
+  }, [placements, currentYear]);
+  const topCompanies = useMemo(() => {
+    const agg = new Map<string, number>();
+    placements
+      .filter((r: any) => r.year === currentYear)
+      .forEach((r: any) => agg.set(r.company, (agg.get(r.company) ?? 0) + 1));
+    return Array.from(agg.entries())
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }, [placements, currentYear]);
+  const recentPlacements = useMemo(
+    () => [...placements].sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0)).slice(0, 5),
+    [placements],
+  );
+  const recentLectures = useMemo(
+    () =>
+      [...lectures]
+        .sort((a: any, b: any) => (b.lecture_date ?? "").localeCompare(a.lecture_date ?? ""))
+        .slice(0, 4),
+    [lectures],
+  );
+
+  const quickActions: { view: View; icon: any; label: string; desc: string; color: string; border: string; stat: number; statLabel: string }[] = [
     {
+      view: "placements",
       icon: Briefcase,
-      label: "Manage Placements",
-      desc: "Record and manage student job placements.",
+      label: "Placements",
+      desc: "Track student job offers & CTC",
       color: "bg-[#7b1f4c]",
       border: "border-[#7b1f4c]",
-      view: "placements",
+      stat: placementsThisYear,
+      statLabel: `Placed in ${currentYear}`,
     },
     {
+      view: "training",
       icon: Factory,
       label: "Industrial Training",
-      desc: "Assign and document student internships.",
+      desc: "Assign & document internships",
       color: "bg-orange-500",
       border: "border-orange-500",
-      view: "training",
+      stat: trainings.length,
+      statLabel: "Training records",
     },
     {
+      view: "lectures",
       icon: ClipboardList,
       label: "Guest Lectures",
-      desc: "Keep a record of all expert talks.",
-      color: "bg-gray-500",
-      border: "border-gray-500",
-      view: "lectures",
+      desc: "Log expert talks & seminars",
+      color: "bg-cyan-600",
+      border: "border-cyan-600",
+      stat: lectures.length,
+      statLabel: "Lectures logged",
     },
   ];
+
   return (
     <div className="space-y-6">
       <HeroBanner
-        name={me?.name || "TPO"}
-        role="Training & Placement"
+        name={me?.name || me?.username || "TPO"}
+        role="Training & Placement Officer"
+        avatarSrc={avatarUrl(me)}
+        onAvatarChange={(f) => uploadAvatar.mutate(f)}
+        avatarUploading={uploadAvatar.isPending}
         palette="tpo"
-        subtitle={<span className="text-white/80">Placements · Internships · Guest Lectures</span>}
+        subtitle={
+          <>
+            Placement Year <span className="font-semibold text-cyan-200">{currentYear}</span>
+            <span className="text-white/70"> · Drive student outcomes & industry outreach.</span>
+          </>
+        }
+        stats={[
+          { value: placementsThisYear, label: "Placed" },
+          { value: trainings.length, label: "Trainings" },
+          { value: avgPackage ? `${avgPackage}L` : "—", label: "Avg CTC" },
+        ]}
       />
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards.map((c) => (
-          <button
-            key={c.view}
-            onClick={() => onNav(c.view)}
-            className={`flex items-center gap-4 p-4 bg-white rounded border-t-4 ${c.border} shadow-sm hover:shadow-md transition-shadow text-left w-full`}
-          >
-            <span className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${c.color}`}>
-              <c.icon className="w-6 h-6 text-white" />
-            </span>
-            <span>
-              <p className="font-semibold text-gray-800 text-sm">{c.label}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{c.desc}</p>
-            </span>
+
+      {/* Quick Actions */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-3 bg-gradient-to-r from-cyan-50 to-white border-b">
+          <p className="font-semibold text-gray-800">Quick Actions</p>
+          <p className="text-[11px] text-gray-500">Jump straight into placements, internships, or lectures.</p>
+        </div>
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {quickActions.map((q) => (
+            <QuickCard
+              key={q.view}
+              icon={q.icon}
+              label={q.label}
+              desc={q.desc}
+              color={q.color}
+              border={q.border}
+              stat={q.stat}
+              statLabel={q.statLabel}
+              onClick={() => onNav(q.view)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiTile icon={TrendingUp} label="Total Placements" value={placements.length} tone="from-fuchsia-500 to-rose-500" />
+        <KpiTile icon={GraduationCap} label={`Placed in ${currentYear}`} value={placementsThisYear} tone="from-cyan-500 to-sky-600" />
+        <KpiTile icon={Building2} label="Unique Companies" value={new Set(placements.map((p: any) => p.company)).size} tone="from-amber-500 to-orange-600" />
+        <KpiTile icon={Mic} label="Guest Lectures" value={lectures.length} tone="from-emerald-500 to-teal-600" />
+      </div>
+
+      {/* Chart + Recent */}
+      <div className="grid lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3 bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-gray-800">Top Recruiters ({currentYear})</p>
+              <p className="text-[11px] text-gray-500">Placement count by company this year.</p>
+            </div>
+            <button
+              onClick={() => onNav("placements")}
+              className="text-[11px] text-cyan-700 hover:underline"
+            >
+              View all →
+            </button>
+          </div>
+          <div className="p-5">
+            {topCompanies.length > 0 ? (
+              <BarStats data={topCompanies} color="#0e7490" />
+            ) : (
+              <p className="text-xs text-gray-400 py-8 text-center">
+                No placements recorded for {currentYear} yet. Add one to see the chart.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
+            <p className="font-semibold text-gray-800">Recent Placements</p>
+            <p className="text-[11px] text-gray-500">Latest offers on record.</p>
+          </div>
+          <ul className="divide-y">
+            {recentPlacements.length === 0 ? (
+              <li className="p-5 text-xs text-gray-400 text-center">No placements yet.</li>
+            ) : (
+              recentPlacements.map((r: any) => (
+                <li key={r.id} className="px-4 py-3 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-fuchsia-500 to-rose-500 text-white flex items-center justify-center text-xs font-bold shadow">
+                    {(r.student_name || "?").slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-800 truncate">{r.student_name}</p>
+                    <p className="text-[11px] text-gray-500 truncate">
+                      {r.company} · {r.year}
+                    </p>
+                  </div>
+                  {r.package_lpa != null && (
+                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+                      ₹{r.package_lpa}L
+                    </span>
+                  )}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      </div>
+
+      {/* Recent Lectures */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-gray-800 flex items-center gap-2">
+              <Mic className="w-4 h-4 text-cyan-700" /> Recent Guest Lectures
+            </p>
+            <p className="text-[11px] text-gray-500">Latest expert sessions organised.</p>
+          </div>
+          <button onClick={() => onNav("lectures")} className="text-[11px] text-cyan-700 hover:underline">
+            All lectures →
           </button>
-        ))}
+        </div>
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {recentLectures.length === 0 ? (
+            <p className="col-span-full text-xs text-gray-400 py-6 text-center">
+              No guest lectures logged yet.
+            </p>
+          ) : (
+            recentLectures.map((l: any) => (
+              <div key={l.id} className="border rounded-lg p-3 hover:shadow-sm transition-shadow">
+                <p className="text-sm font-semibold text-gray-800 truncate">{l.topic}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  <span className="text-gray-700 font-medium">{l.speaker}</span>
+                  {l.department ? ` · ${l.department}` : ""}
+                </p>
+                <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">
+                  {l.lecture_date ?? "Date TBD"}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: any;
+  label: string;
+  value: React.ReactNode;
+  tone: string;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-xl bg-white border shadow-sm p-4">
+      <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full bg-gradient-to-br ${tone} opacity-15 blur-2xl`} />
+      <div className="relative flex items-center gap-3">
+        <span className={`w-10 h-10 rounded-lg bg-gradient-to-br ${tone} text-white flex items-center justify-center shadow`}>
+          <Icon className="w-5 h-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-2xl font-bold text-gray-900 leading-none">{value}</p>
+          <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">{label}</p>
+        </div>
       </div>
     </div>
   );
