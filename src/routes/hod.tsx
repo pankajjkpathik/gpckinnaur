@@ -21,6 +21,7 @@ import { facultyPhoto } from "@/lib/faculty-photos";
 import { initialsOf } from "@/lib/portal-identity";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { QuickCard } from "@/components/portal/QuickCard";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import { hodRoles, hasRole } from "@/lib/roles";
 import {
   hodDashboard,
