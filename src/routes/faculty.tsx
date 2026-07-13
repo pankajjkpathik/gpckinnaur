@@ -704,6 +704,8 @@ function useFacNotifRtStatus() {
 
 function useFacultyNotifRealtime(ay: string) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+
   useEffect(() => {
     let cancelled = false;
     let retry = 0;
