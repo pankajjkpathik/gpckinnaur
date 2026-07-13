@@ -1370,16 +1370,172 @@ function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
   const ttFn = useServerFn(studentTimetable);
   const { data: tt } = useQuery({ queryKey: ["student-tt"], queryFn: () => ttFn() });
   const periods = (tt?.periods ?? []) as any[];
+  const entries = (tt?.entries ?? []) as any[];
 
   const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
 
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const startOfWeek = useMemo(() => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() - d.getDay()); // Sunday
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, [selectedDate]);
+
+  const weekDays = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(startOfWeek);
+        d.setDate(startOfWeek.getDate() + i);
+        return d;
+      }),
+    [startOfWeek],
+  );
+
+  const dow = selectedDate.getDay();
+  const todayPeriods = useMemo(() => {
+    const map = new Map<number, any>();
+    entries.filter((e) => e.day_of_week === dow).forEach((e) => map.set(e.period_no, e));
+    return periods.map((p) => ({ period: p, slot: map.get(p.period_no) ?? null }));
+  }, [entries, periods, dow]);
+
+  const shiftWeek = (delta: number) => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + delta * 7);
+    setSelectedDate(d);
+  };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isToday = selectedDate.getTime() === today.getTime();
+  const fmtHM = (t?: string | null) => (t ? String(t).slice(0, 5) : "");
+
   return (
     <div className="space-y-4">
+      {/* My Week */}
+      <Card>
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <CalendarClock className="w-5 h-5 text-[#7b1f4c]" /> My Week
+            </h1>
+            <p className="text-xs text-gray-400">
+              Pick a day to see the classes scheduled for that date.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => shiftWeek(-1)}
+              className="border rounded px-2 py-1 text-sm hover:bg-gray-50"
+              aria-label="Previous week"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedDate(today)}
+              className="border rounded px-3 py-1 text-sm hover:bg-gray-50"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => shiftWeek(1)}
+              className="border rounded px-2 py-1 text-sm hover:bg-gray-50"
+              aria-label="Next week"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 mb-4">
+          {weekDays.map((d) => {
+            const selected = d.getTime() === selectedDate.getTime();
+            const isTodayCell = d.getTime() === today.getTime();
+            return (
+              <button
+                key={d.toISOString()}
+                type="button"
+                onClick={() => setSelectedDate(d)}
+                className={`rounded border p-2 text-center transition ${
+                  selected
+                    ? "bg-[#7b1f4c] text-white border-[#7b1f4c]"
+                    : "bg-white hover:bg-gray-50 border-gray-200"
+                }`}
+              >
+                <div className={`text-[10px] uppercase tracking-wide ${selected ? "text-white/80" : "text-gray-500"}`}>
+                  {DAY_NAMES[d.getDay()].slice(0, 3)}
+                </div>
+                <div className="text-lg font-semibold leading-tight">{d.getDate()}</div>
+                <div className={`text-[10px] ${selected ? "text-white/80" : "text-gray-400"}`}>
+                  {d.toLocaleString(undefined, { month: "short" })}
+                  {isTodayCell && !selected ? " •" : ""}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="border-t pt-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-semibold text-gray-700">
+              {DAY_NAMES[dow]}, {selectedDate.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
+              {isToday && <span className="ml-2 text-[10px] uppercase text-emerald-600 font-semibold">Today</span>}
+            </p>
+            <p className="text-xs text-gray-500">
+              {todayPeriods.filter((r) => r.slot).length} class{todayPeriods.filter((r) => r.slot).length === 1 ? "" : "es"}
+            </p>
+          </div>
+
+          {periods.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-6">Periods not configured yet.</p>
+          ) : todayPeriods.every((r) => !r.slot) ? (
+            <p className="text-sm text-gray-500 text-center py-6">
+              No classes scheduled for this day.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {todayPeriods.map(({ period, slot }) => (
+                <li key={period.period_no} className="py-2 flex items-center gap-3">
+                  <div className="w-20 shrink-0 text-xs text-gray-500">
+                    <div className="font-medium text-gray-700">P{period.period_no}</div>
+                    <div>
+                      {fmtHM(period.start_time)}–{fmtHM(period.end_time)}
+                    </div>
+                  </div>
+                  {slot ? (
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">
+                        {slot.subjects?.code ? `${slot.subjects.code} · ` : ""}
+                        {slot.subjects?.name ?? "—"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {slot.staff_users?.username ? `${slot.staff_users.username}` : "Faculty TBA"}
+                        {slot.room ? ` · Room ${slot.room}` : ""}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex-1 text-xs text-gray-400 italic">Free period</div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </Card>
+
+      {/* Full weekly grid */}
       <Card>
         <div className="flex items-center justify-between flex-wrap gap-2 mb-3 print:hidden">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
-            <p className="text-xs text-gray-400">Your weekly class schedule.</p>
+            <h2 className="text-lg font-bold text-gray-800">Full Weekly Timetable</h2>
+            <p className="text-xs text-gray-400">Your complete weekly class schedule.</p>
           </div>
           <button
             onClick={() => window.print()}
@@ -1393,12 +1549,12 @@ function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
           <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
         ) : periods.length === 0 ? (
           <p className="p-6 text-center text-sm text-gray-400">Timetable periods not configured yet.</p>
-        ) : (tt.entries as any[]).length === 0 ? (
+        ) : entries.length === 0 ? (
           <p className="p-6 text-center text-sm text-gray-400">No timetable published yet for your class.</p>
         ) : (
           <TimetableGrid
             periods={periods as any}
-            slots={(tt.entries as any[]) as any}
+            slots={entries as any}
             editable={false}
             institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
             classLine={`${branchToDept(me.branch)} - ${ORD[me.semester] ?? me.semester} Semester`}
@@ -1408,6 +1564,7 @@ function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
     </div>
   );
 }
+
 
 // ─── SYLLABUS COVERAGE ────────────────────────────────────────────────────────
 function SyllabusView({ me, onBack }: { me: any; onBack: () => void }) {
