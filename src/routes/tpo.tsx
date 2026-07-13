@@ -846,6 +846,29 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
           </div>
         </div>
       )}
+
+      {preview && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={closePreview}>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h3 className="font-semibold text-gray-800">{preview.title} — Preview</h3>
+              <div className="flex items-center gap-2">
+                <a
+                  href={preview.url}
+                  download={preview.filename}
+                  className="inline-flex items-center gap-1 text-sm bg-[#7b1f4c] text-white px-3 py-1.5 rounded hover:bg-[#5f1a3c]"
+                >
+                  Download
+                </a>
+                <button onClick={closePreview} className="text-sm px-3 py-1.5 rounded border hover:bg-gray-50">
+                  Close
+                </button>
+              </div>
+            </div>
+            <iframe src={preview.url} title={preview.title} className="flex-1 w-full" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
