@@ -223,5 +223,7 @@ export async function generateUndertakings(r: TrainingRecord): Promise<PdfBuild>
     );
   });
 
-  doc.save(`Undertakings-${(r.company || "training").replace(/[^\w]+/g, "_")}-${r.id}.pdf`);
+  const filename = `Undertakings-${(r.company || "training").replace(/[^\w]+/g, "_")}-${r.id}.pdf`;
+  const blob = doc.output("blob");
+  return { blob, filename, url: URL.createObjectURL(blob) };
 }
