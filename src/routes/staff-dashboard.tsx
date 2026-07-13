@@ -58,8 +58,6 @@ function StaffDashboard() {
 
   useEffect(() => {
     if (!isLoading && !me) navigate({ to: "/staff-login" });
-    // Principal has a dedicated single-entry dashboard — bypass the staff hub.
-    else if (me && me.role === "principal") window.location.replace("/principal");
   }, [me, isLoading, navigate]);
 
   if (isLoading || !me || !me.role)
@@ -361,24 +359,8 @@ function DashboardHome({ me, counts }: any) {
         }
       />
 
-      {portals.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Workspaces</h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {portals.map((p) => (
-              <a
-                key={p.href}
-                href={p.href}
-                className={`block rounded-lg p-4 ring-1 transition hover:shadow-md ${p.accent}`}
-              >
-                <p className="font-semibold">{p.title}</p>
-                <p className="text-xs opacity-80 mt-1">{p.desc}</p>
-                <p className="text-xs font-medium mt-3">Open →</p>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+
+
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard label="Total Notices" value={counts?.totalNotices ?? 0} />
