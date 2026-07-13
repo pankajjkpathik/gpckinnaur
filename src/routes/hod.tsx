@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
 import { HeroBanner } from "@/components/portal/HeroBanner";
+import { avatarUrl } from "@/lib/portal-identity";
+
 import { hodRoles, hasRole } from "@/lib/roles";
 import {
   hodDashboard,
