@@ -461,6 +461,25 @@ type NotifItem = {
   badge: string;
 };
 
+const FAC_NOTIF_ANCHOR_ID = "faculty-notifications-panel";
+function focusNotifications() {
+  if (typeof window === "undefined") return;
+  const attempt = (tries: number) => {
+    const el = document.getElementById(FAC_NOTIF_ANCHOR_ID);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("ring-2", "ring-rose-400", "ring-offset-2");
+      (el as HTMLElement).focus({ preventScroll: true });
+      window.setTimeout(() => {
+        el.classList.remove("ring-2", "ring-rose-400", "ring-offset-2");
+      }, 1600);
+    } else if (tries > 0) {
+      window.setTimeout(() => attempt(tries - 1), 80);
+    }
+  };
+  window.requestAnimationFrame(() => attempt(10));
+}
+
 // Shared "read" state so the sidebar badge and the panel stay in sync.
 const readStateListeners = new Set<() => void>();
 function loadReadIds(key: string): Set<string> {
