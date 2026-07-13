@@ -103,9 +103,6 @@ function ClerkPortal() {
               </button>
             );
           })}
-          <Link to="/admin-users" className="px-3 py-2 text-xs text-amber-700">
-            Users →
-          </Link>
         </div>
 
         {/* RHS output */}
