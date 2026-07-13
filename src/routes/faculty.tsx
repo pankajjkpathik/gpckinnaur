@@ -1225,6 +1225,7 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Submitted On</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Download</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Grade</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
