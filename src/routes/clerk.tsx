@@ -118,6 +118,8 @@ function ClerkPortal() {
           {tab === "import" && <ImportTab />}
           {tab === "promote" && <PromoteTab />}
           {tab === "salary" && <SalaryTab />}
+          {tab === "profile" && <ProfileTab me={me as any} />}
+          {tab === "password" && <PasswordTab me={me as any} />}
         </main>
       </div>
     </PortalShell>
