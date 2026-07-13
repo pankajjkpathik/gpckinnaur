@@ -296,31 +296,37 @@ function PrincipalSidebar({
         )}
       </div>
 
-      {/* TPO group */}
+      {/* TPO group — view-only inside Principal Portal (management stays with TPO) */}
       <div>
         <button
           onClick={() => setTpoOpen((o) => !o)}
-          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-rose-600 to-pink-500 text-white text-sm font-semibold shadow-sm"
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-[#5b1138] to-[#7b1f4c] text-white text-sm font-semibold shadow-sm"
         >
           <span className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4" /> TPO Portal
+            <Briefcase className="w-4 h-4" /> TPO Information
           </span>
           <ChevronDown className={`w-4 h-4 transition-transform ${tpoOpen ? "" : "-rotate-90"}`} />
         </button>
         {tpoOpen && (
           <ul className="mt-1.5 space-y-0.5">
-            {TPO_NAV.map((item) => (
-              <li key={item.label}>
-                <a
-                  href={`/tpo${item.hash ? `#${item.hash}` : ""}`}
-                  onClick={onCloseMobile}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
-                >
-                  <item.icon className="w-4 h-4 text-gray-400" />
-                  <span className="truncate">{item.label}</span>
-                </a>
-              </li>
-            ))}
+            {TPO_NAV.map((item) => {
+              const isActive = active === item.view;
+              return (
+                <li key={item.view}>
+                  <button
+                    onClick={() => onNav(item.view)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      isActive
+                        ? "bg-[#7b1f4c]/10 text-[#7b1f4c] font-semibold"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <item.icon className={`w-4 h-4 ${isActive ? "text-[#7b1f4c]" : "text-gray-400"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
