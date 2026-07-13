@@ -1,9 +1,10 @@
 // PDF generators for Industrial Training letter and per-student Undertakings.
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import logoAsset from "@/assets/logo.png.asset.json";
 
-const INSTITUTE = "GOVT. POLYTECHNIC COLLEGE KINNAUR";
-const INSTITUTE_ADDRESS = "Reckong Peo, Distt. Kinnaur (H.P.) - 172107";
+const INSTITUTE = "GOVERNMENT POLYTECHNIC, KINNAUR";
+const INSTITUTE_ADDRESS = "Camp at GP Rohru, Distt. Shimla (H.P.)";
 const INSTITUTE_PHONE = "Phone: 01786-222206";
 
 type TrainingRecord = {
@@ -17,8 +18,30 @@ type TrainingRecord = {
   end_date?: string | null;
 };
 
-function letterhead(doc: jsPDF) {
+let _logoCache: string | null = null;
+async function loadLogo(): Promise<string | null> {
+  if (_logoCache) return _logoCache;
+  try {
+    const res = await fetch(logoAsset.url);
+    const blob = await res.blob();
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+    _logoCache = dataUrl;
+    return dataUrl;
+  } catch {
+    return null;
+  }
+}
+
+function letterhead(doc: jsPDF, logo: string | null) {
   const w = doc.internal.pageSize.getWidth();
+  if (logo) {
+    try { doc.addImage(logo, "PNG", 40, 30, 60, 60); } catch { /* ignore */ }
+  }
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text("OFFICE OF THE PRINCIPAL", w / 2, 50, { align: "center" });
