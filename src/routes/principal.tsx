@@ -338,13 +338,15 @@ function PrincipalSidebar({
         <ul className="space-y-0.5">
           <li>
             <a
-              href="/staff-dashboard"
-              onClick={(e) => { e.preventDefault(); window.location.href = "/"; }}
+              href="https://www.gpkinnaur.edu.in"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
             >
               <Home className="w-4 h-4 text-gray-400" /> Public Website
             </a>
           </li>
+
           <li>
             <a
               href="/staff-profile"
