@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar,
@@ -679,32 +679,118 @@ function useFacultyNotifications(me: any, ay: string) {
   };
 }
 
+type RealtimeStatus = "connecting" | "connected" | "reconnecting" | "error";
+let facNotifRtStatus: RealtimeStatus = "connecting";
+let facNotifRtLastEvent = 0;
+const facNotifRtListeners = new Set<() => void>();
+function setFacNotifRtStatus(s: RealtimeStatus) {
+  facNotifRtStatus = s;
+  facNotifRtListeners.forEach((l) => l());
+}
+function subscribeFacNotifRt(cb: () => void) {
+  facNotifRtListeners.add(cb);
+  return () => {
+    facNotifRtListeners.delete(cb);
+  };
+}
+function useFacNotifRtStatus() {
+  return useSyncExternalStore(
+    subscribeFacNotifRt,
+    () => facNotifRtStatus,
+    () => "connecting" as RealtimeStatus,
+  );
+}
+
 function useFacultyNotifRealtime(ay: string) {
   const qc = useQueryClient();
   useEffect(() => {
-    const channel = supabase
-      .channel("fac-notif-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () =>
-        qc.invalidateQueries({ queryKey: ["fac-notif-notices"] }),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () =>
-        qc.invalidateQueries({ queryKey: ["fac-notif-ann"] }),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () =>
-        qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] }),
-      )
-      .subscribe();
+    let cancelled = false;
+    let retry = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const invalidateAll = () => {
+      qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+      qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+      qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+    };
+
+    const startPolling = () => {
+      if (pollTimer) return;
+      pollTimer = setInterval(invalidateAll, 60_000);
+    };
+    const stopPolling = () => {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    };
+
+    const connect = () => {
+      if (cancelled) return;
+      setFacNotifRtStatus(retry === 0 ? "connecting" : "reconnecting");
+      channel = supabase
+        .channel(`fac-notif-live-${Date.now()}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
+          facNotifRtLastEvent = Date.now();
+          qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () => {
+          facNotifRtLastEvent = Date.now();
+          qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () => {
+          facNotifRtLastEvent = Date.now();
+          qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+        })
+        .subscribe((status) => {
+          if (cancelled) return;
+          if (status === "SUBSCRIBED") {
+            const wasReconnecting = retry > 0;
+            retry = 0;
+            setFacNotifRtStatus("connected");
+            stopPolling();
+            if (wasReconnecting) invalidateAll();
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            setFacNotifRtStatus(retry === 0 ? "error" : "reconnecting");
+            startPolling();
+            invalidateAll();
+            if (channel) {
+              supabase.removeChannel(channel);
+              channel = null;
+            }
+            const delay = Math.min(30_000, 2000 * 2 ** retry);
+            retry += 1;
+            retryTimer = setTimeout(connect, delay);
+          }
+        });
+    };
+
+    connect();
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      stopPolling();
+      if (channel) supabase.removeChannel(channel);
     };
   }, [qc, ay]);
 }
+
 
 function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   const { items, unread, readIds, setReadIds, loading } = useFacultyNotifications(me, ay);
   const [showAll, setShowAll] = useState(false);
   const [active, setActive] = useState<NotifItem | null>(null);
+  const rtStatus = useFacNotifRtStatus();
+  const qc = useQueryClient();
+  const refetchAll = () => {
+    qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+    qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+    qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+  };
   const visible = showAll ? items : unread;
+
 
   const markAllRead = () => setReadIds(new Set(items.map((i) => i.key)));
   const toggleRead = (key: string) => {
@@ -739,12 +825,30 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
             )}
           </div>
           <p className="font-semibold text-gray-800">Notifications</p>
-          <span
-            className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200"
-            title="Live updates enabled"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
-          </span>
+          {rtStatus === "connected" ? (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200"
+              title="Live updates enabled"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+            </span>
+          ) : rtStatus === "reconnecting" || rtStatus === "connecting" ? (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200"
+              title="Reconnecting to live updates"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              {rtStatus === "connecting" ? "Connecting" : "Reconnecting"}
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200"
+              title="Live updates unavailable"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Offline
+            </span>
+          )}
+
           <span className="text-xs text-gray-500">
             {unread.length} unread · {items.length} total
           </span>
@@ -763,6 +867,34 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
           )}
         </div>
       </div>
+      {rtStatus !== "connected" && rtStatus !== "connecting" && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`px-5 py-2 text-xs flex items-center justify-between gap-3 border-b ${
+            rtStatus === "reconnecting"
+              ? "bg-amber-50 text-amber-800 border-amber-200"
+              : "bg-rose-50 text-rose-800 border-rose-200"
+          }`}
+        >
+          <span className="flex items-center gap-2 min-w-0">
+            <AlarmClock className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">
+              {rtStatus === "reconnecting"
+                ? "Reconnecting to live updates — showing the latest fetched data. Auto-refreshing every minute."
+                : "Live updates are offline. We'll keep retrying and refresh in the background every minute."}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={refetchAll}
+            className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded border border-current/20 bg-white/60 hover:bg-white font-semibold"
+          >
+            Refresh now
+          </button>
+        </div>
+      )}
+
       <div className="divide-y max-h-80 overflow-y-auto">
         {loading ? (
           <p className="text-sm text-gray-400 text-center py-6">Loading notifications…</p>
