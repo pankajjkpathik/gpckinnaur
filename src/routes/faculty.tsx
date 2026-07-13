@@ -18,6 +18,10 @@ import {
   BarChart2,
   ArrowLeft,
   CheckSquare,
+  Bell,
+  Megaphone,
+  AlarmClock,
+  CheckCheck,
 } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
