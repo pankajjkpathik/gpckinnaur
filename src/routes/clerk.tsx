@@ -61,7 +61,20 @@ function ClerkPortal() {
     else if (!hasRole(me, clerkRoles)) nav({ to: "/staff-dashboard", replace: true });
   }, [me, isLoading, nav]);
   const [tab, setTab] = useState<Tab>("home");
+  const [studentPreset, setStudentPreset] = useState<{ q: string; key: number } | null>(null);
+  const [salaryPreset, setSalaryPreset] = useState<{ month: number; year: number; key: number } | null>(null);
   if (isLoading || !me || !hasRole(me, clerkRoles)) return <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading…</div>;
+
+  const jumpToStudent = (q: string) => {
+    setStudentPreset({ q, key: Date.now() });
+    setTab("students");
+  };
+  const jumpToSalary = (month?: number, year?: number) => {
+    const now = new Date();
+    setSalaryPreset({ month: month ?? now.getMonth() + 1, year: year ?? now.getFullYear(), key: Date.now() });
+    setTab("salary");
+  };
+
 
   const NAV: { icon: any; label: string; tab: Tab }[] = [
     { icon: UsersRound, label: "Dashboard", tab: "home" },
