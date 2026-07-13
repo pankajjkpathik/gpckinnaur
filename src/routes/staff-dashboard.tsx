@@ -57,8 +57,15 @@ function StaffDashboard() {
   const { data: counts } = useQuery({ queryKey: ["counts"], queryFn: () => submissionCounts(), enabled: !!me });
 
   useEffect(() => {
-    if (!isLoading && !me) navigate({ to: "/staff-login" });
+    if (isLoading) return;
+    if (!me) {
+      navigate({ to: "/staff-login" });
+    } else if (me.role === "principal") {
+      // Principal has a single unified dashboard at /principal
+      window.location.replace("/principal");
+    }
   }, [me, isLoading, navigate]);
+
 
   if (isLoading || !me || !me.role)
     return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;

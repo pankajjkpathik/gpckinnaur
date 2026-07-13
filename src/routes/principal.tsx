@@ -106,10 +106,11 @@ function BackBtn({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="inline-flex items-center gap-1.5 text-sm text-gray-600 border rounded px-3 py-1.5 mb-5 hover:bg-gray-50 bg-white"
     >
-      <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+      <ArrowLeft className="w-4 h-4" /> Back to Dashboard Home
     </button>
   );
 }
+
 
 function PrincipalPortal() {
   const [view, setView] = useState<View>("home");
