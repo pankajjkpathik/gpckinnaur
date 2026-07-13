@@ -65,8 +65,8 @@ function TpoPortal() {
   const { data: me, isLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
   useEffect(() => {
     if (isLoading) return;
-    if (!me) nav({ to: "/staff-login" });
-    else if (!hasRole(me, tpoRoles)) nav({ to: "/staff-dashboard" });
+    if (!me) nav({ to: "/staff-login", replace: true });
+    else if (!hasRole(me, tpoRoles)) nav({ to: "/staff-dashboard", replace: true });
   }, [me, isLoading, nav]);
 
   useEffect(() => {
