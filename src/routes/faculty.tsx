@@ -1264,6 +1264,7 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
 
       <div className="px-2 pt-2 pb-1 border-b bg-gray-50/50 flex items-center gap-1 overflow-x-auto">
         {([
+          { id: "unread", label: "Unread", count: tabCounts.unread },
           { id: "all", label: "All", count: tabCounts.all },
           { id: "announcement", label: "Announcements", count: tabCounts.announcement },
           { id: "deadline", label: "Deadlines", count: tabCounts.deadline },
@@ -1271,6 +1272,7 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
         ] as const).map((t) => {
           const activeTab = tab === t.id;
           const isOver = t.id === "overdue";
+          const isUnreadTab = t.id === "unread";
           return (
             <button
               key={t.id}
