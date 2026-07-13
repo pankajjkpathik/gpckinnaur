@@ -112,7 +112,16 @@ export function PortalShell({
             <Link to="/staff-profile" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1" title="My Profile">
               👤 <span className="hidden sm:inline">Profile</span>
             </Link>
-            <Link to={dashboardHref(me.role)} className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1">
+            <Link
+              to={dashboardHref(me.role)}
+              activeOptions={{ exact: true }}
+              className="text-xs px-3 py-1.5 border rounded inline-flex items-center gap-1 transition-colors border-slate-300 text-slate-700 hover:bg-slate-100"
+              activeProps={{
+                className:
+                  "text-xs px-3 py-1.5 border rounded inline-flex items-center gap-1 transition-colors bg-slate-900 text-white border-slate-900 shadow-sm hover:bg-slate-800",
+                "aria-current": "page",
+              }}
+            >
               <ArrowLeft className="w-3 h-3" /> Dashboard
             </Link>
             <button onClick={logout} className="text-xs px-3 py-1.5 bg-slate-800 text-white hover:bg-slate-700 rounded inline-flex items-center gap-1">
