@@ -312,7 +312,7 @@ function HodPortal() {
     window.location.href = "/";
   }
 
-  if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
+  if (isLoading || !me || !hasRole(me, hodRoles)) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
   const isViewer = me.role !== "hod";
   const branch = deptToBranch(me.department);
