@@ -155,6 +155,54 @@ function SettingsCard({ userId }: { userId: string | number }) {
         </label>
       </div>
 
+      <div className="px-5 py-4 border-t">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          Auto-mark as read
+        </p>
+        <div className="space-y-2">
+          <label
+            className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
+              prefs.autoReadOnFocus ? "border-emerald-200 bg-emerald-50/40" : "border-gray-200 bg-gray-50/50"
+            }`}
+          >
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-sky-100 text-sky-700">
+              <MousePointerClick className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-800">When panel is focused</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Mark all currently listed notifications as read when you click or tab into the notifications panel.
+              </p>
+            </div>
+            <Switch
+              checked={prefs.autoReadOnFocus}
+              onChange={() => toggle("autoReadOnFocus", "Auto-read on focus")}
+            />
+          </label>
+
+          <label
+            className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
+              prefs.autoReadOnScroll ? "border-emerald-200 bg-emerald-50/40" : "border-gray-200 bg-gray-50/50"
+            }`}
+          >
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-violet-100 text-violet-700">
+              <Eye className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-800">When scrolled into view</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Mark listed notifications as read once the panel becomes at least half visible on screen.
+              </p>
+            </div>
+            <Switch
+              checked={prefs.autoReadOnScroll}
+              onChange={() => toggle("autoReadOnScroll", "Auto-read on scroll")}
+            />
+          </label>
+        </div>
+      </div>
+
+
       <div className="px-5 py-3 bg-gray-50 border-t text-[11px] text-gray-500">
         Preferences are stored on this device and each of your browsers separately.
       </div>
