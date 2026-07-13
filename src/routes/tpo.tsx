@@ -841,7 +841,14 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
               </div>
 
               <div className="border rounded p-3">
-                <p className="font-semibold text-gray-700 mb-2">Select Students</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-semibold text-gray-700">Select Students</p>
+                  {branch && semester && (studentsQ.data ?? []).length > 0 && (
+                    <p className="text-[11px] text-gray-500">
+                      {(studentsQ.data as any[]).filter((s) => s.already_assigned).length} already assigned
+                    </p>
+                  )}
+                </div>
                 {!branch || !semester ? (
                   <p className="text-xs text-gray-400">Choose a branch and semester above to list students.</p>
                 ) : studentsQ.isLoading ? (
@@ -851,7 +858,11 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                 ) : (
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {(studentsQ.data ?? []).map((s: any) => (
-                      <label key={s.id} className="flex items-center gap-2 text-sm">
+                      <label
+                        key={s.id}
+                        className={`flex items-center gap-2 text-sm ${s.already_assigned ? "text-gray-500" : ""}`}
+                        title={s.already_assigned ? "This student already has a training assigned for this branch & semester." : undefined}
+                      >
                         <input
                           type="checkbox"
                           checked={!!picked[s.id]}
@@ -863,7 +874,12 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                           }}
                           className="accent-[#7b1f4c]"
                         />
-                        {s.name}
+                        <span className="truncate">{s.name}</span>
+                        {s.already_assigned && (
+                          <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5">
+                            Assigned
+                          </span>
+                        )}
                       </label>
                     ))}
                   </div>
