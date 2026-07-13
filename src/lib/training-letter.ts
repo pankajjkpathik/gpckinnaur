@@ -187,12 +187,17 @@ function undertakingPage(
   doc.text(signatureLabel, w - margin, y, { align: "right" });
 }
 
-export async function generateUndertakings(r: TrainingRecord): Promise<PdfBuild> {
+export async function generateUndertakings(
+  r: TrainingRecord,
+  opts?: { instituteAddress?: string },
+): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const logo = await loadLogo();
+  const address = opts?.instituteAddress?.trim() || DEFAULT_INSTITUTE_ADDRESS;
   const names = (r.student_names ?? []).filter(Boolean);
   const sem = r.semester ? `${ordinal(r.semester)} semester` : "____ semester";
   const branchTxt = r.branch ? `${r.branch.charAt(0).toUpperCase()}${r.branch.slice(1)} Engineering` : "Engineering";
+
   const period =
     r.start_date
       ? `w.e.f. ${fmtDate(r.start_date)}${r.end_date ? ` to ${fmtDate(r.end_date)}` : ""}`
