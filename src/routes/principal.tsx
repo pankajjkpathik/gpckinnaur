@@ -601,11 +601,18 @@ function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: an
       {/* Snapshot tiles — read-only KPIs, sidebar handles navigation */}
       <div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Institute Snapshot</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3">
           {snapshots.map((s) => (
-            <div key={s.label} className={`rounded-xl border p-4 ${s.tint}`}>
-              <p className="text-[11px] text-gray-500 leading-tight">{s.label}</p>
-              <p className={`text-2xl font-bold mt-1 ${s.ring}`}>{s.value}</p>
+            <div
+              key={s.label}
+              className={`min-w-0 rounded-xl border p-3 sm:p-4 ${s.tint}`}
+            >
+              <p className="text-[11px] text-gray-500 leading-tight line-clamp-2 min-h-[2.2em]">
+                {s.label}
+              </p>
+              <p className={`text-xl sm:text-2xl font-bold mt-1 tabular-nums truncate ${s.ring}`}>
+                {s.value}
+              </p>
             </div>
           ))}
         </div>
