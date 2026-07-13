@@ -13,7 +13,10 @@ import {
   Building2,
   GraduationCap,
   Mic,
+  FileText,
+  FileSignature,
 } from "lucide-react";
+import { generateTrainingLetter, generateUndertakings } from "@/lib/training-letter";
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { tpoRoles, hasRole } from "@/lib/roles";
