@@ -537,7 +537,9 @@ type NotifItem = {
   meta: string;
   timestamp: number;
   badge: string;
+  raw?: any;
 };
+
 
 const FAC_NOTIF_ANCHOR_ID = "faculty-notifications-panel";
 function focusNotifications() {
