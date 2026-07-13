@@ -19,7 +19,12 @@ import {
   createDisciplinaryAction,
   deleteDisciplinaryAction,
 } from "@/lib/assignments.functions";
-import { listPlacements, hodDepartmentOverview } from "@/lib/tpo.functions";
+import {
+  listPlacements,
+  hodDepartmentOverview,
+  listIndustrialTraining,
+  listGuestLectures,
+} from "@/lib/tpo.functions";
 import { listPeriods, listTimetable } from "@/lib/academic.functions";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
@@ -90,7 +95,10 @@ type View =
   | "ptm"
   | "circulars"
   | "disciplinary"
-  | "department";
+  | "department"
+  | "tpo_placements"
+  | "tpo_training"
+  | "tpo_lectures";
 
 function BackBtn({ onClick }: { onClick: () => void }) {
   return (
@@ -203,6 +211,9 @@ function PrincipalPortal() {
             </>
           )}
           {view === "department" && <DepartmentOverviewView year={year} onBack={() => setView("home")} />}
+          {view === "tpo_placements" && <PlacementDataView onBack={() => setView("home")} />}
+          {view === "tpo_training" && <TpoTrainingDetailsView onBack={() => setView("home")} />}
+          {view === "tpo_lectures" && <TpoLecturesDetailsView onBack={() => setView("home")} />}
         </main>
       </div>
     </div>
@@ -212,7 +223,6 @@ function PrincipalPortal() {
 /* ─── Sidebar with collapsible Principal + TPO groups ─────────────────────── */
 
 type NavItem = { view: View; label: string; icon: ComponentType<{ className?: string }> };
-type TpoNavItem = { hash: string; label: string; icon: ComponentType<{ className?: string }> };
 
 const PRINCIPAL_NAV: NavItem[] = [
   { view: "home", label: "Dashboard", icon: Home },
@@ -228,11 +238,11 @@ const PRINCIPAL_NAV: NavItem[] = [
   { view: "disciplinary", label: "Disciplinary Actions", icon: Shield },
 ];
 
-const TPO_NAV: TpoNavItem[] = [
-  { hash: "", label: "TPO Dashboard", icon: GraduationCap },
-  { hash: "placements", label: "Manage Placements", icon: Briefcase },
-  { hash: "training", label: "Industrial Training", icon: Factory },
-  { hash: "lectures", label: "Guest Lectures", icon: ClipboardList },
+// TPO section under Principal is view-only. All create/edit/delete rights remain with the TPO.
+const TPO_NAV: NavItem[] = [
+  { view: "tpo_placements", label: "Placement Details", icon: Briefcase },
+  { view: "tpo_training", label: "Industrial Training Details", icon: Factory },
+  { view: "tpo_lectures", label: "Guest Lecture Details", icon: ClipboardList },
 ];
 
 function PrincipalSidebar({
