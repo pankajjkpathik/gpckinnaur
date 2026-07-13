@@ -7,6 +7,7 @@ import { hasRole, hodRoles } from "@/lib/roles";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
 import { Camera, Loader2, Save, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile-settings")({
   head: () => ({
@@ -165,11 +166,16 @@ function ProfileSettings() {
     },
     onSuccess: () => {
       setSaveMsg({ kind: "ok", text: "Profile updated successfully" });
+      toast.success("Profile updated");
       setInitial(form);
       qc.invalidateQueries({ queryKey: ["staff-me"] });
       qc.invalidateQueries({ queryKey: ["staff-me-profile-settings"] });
     },
-    onError: (e: any) => setSaveMsg({ kind: "err", text: e?.message || "Failed to update profile" }),
+    onError: (e: any) => {
+      const text = e?.message || "Failed to update profile";
+      setSaveMsg({ kind: "err", text });
+      toast.error("Could not update profile", { description: text });
+    },
   });
 
   const upload = useMutation({
@@ -182,10 +188,15 @@ function ProfileSettings() {
     },
     onSuccess: () => {
       setAvatarMsg({ kind: "ok", text: "Profile photo updated" });
+      toast.success("Profile photo updated");
       qc.invalidateQueries({ queryKey: ["staff-me"] });
       qc.invalidateQueries({ queryKey: ["staff-me-profile-settings"] });
     },
-    onError: (e: any) => setAvatarMsg({ kind: "err", text: e?.message || "Upload failed" }),
+    onError: (e: any) => {
+      const text = e?.message || "Upload failed";
+      setAvatarMsg({ kind: "err", text });
+      toast.error("Photo upload failed", { description: text });
+    },
   });
 
   if (!me) return null;

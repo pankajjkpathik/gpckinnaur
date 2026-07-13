@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { parentChangePassword, parentMe, parentLogout } from "@/lib/parent.functions";
 import { checkPasswordStrength, firstPasswordStrengthError } from "@/lib/password-strength";
 import logoAsset from "@/assets/logo.png.asset.json";
@@ -31,11 +32,16 @@ function ParentChangePassword() {
     onSuccess: async () => {
       setErr(null);
       setOkMsg("Password updated. Signing you out…");
+      toast.success("Password updated", { description: "Signing you out for security…" });
       try { await parentLogout(); } catch { /* ignore */ }
       qc.clear();
       setTimeout(() => nav({ to: "/parent-login" }), 1200);
     },
-    onError: (e: any) => setErr(e.message),
+    onError: (e: any) => {
+      const text = e?.message || "Failed to update password";
+      setErr(text);
+      toast.error("Could not update password", { description: text });
+    },
   });
 
   if (!isLoading && !me) {
@@ -107,9 +113,9 @@ function ParentChangePassword() {
             <button
               onClick={() => {
                 setErr(null);
-                if (pw !== pw2) return setErr("New passwords do not match.");
+                if (pw !== pw2) { toast.error("New passwords do not match."); return setErr("New passwords do not match."); }
                 const s = firstPasswordStrengthError(pw, current);
-                if (s) return setErr(s);
+                if (s) { toast.error(s); return setErr(s); }
                 save.mutate();
               }}
               disabled={save.isPending || !current || !pw}

@@ -6,6 +6,7 @@ import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
 import { Camera, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/staff-profile")({
   head: () => ({ meta: [{ title: "My Profile — Staff Portal" }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -58,10 +59,15 @@ function StaffProfile() {
     },
     onSuccess: () => {
       setError(null);
+      toast.success("Profile photo updated");
       qc.invalidateQueries({ queryKey: ["staff-me-profile"] });
       qc.invalidateQueries({ queryKey: ["staff-me"] });
     },
-    onError: (e: any) => setError(e?.message || "Upload failed"),
+    onError: (e: any) => {
+      const text = e?.message || "Upload failed";
+      setError(text);
+      toast.error("Photo upload failed", { description: text });
+    },
   });
 
   if (!me) return null;

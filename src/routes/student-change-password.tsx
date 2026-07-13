@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { studentChangePassword } from "@/lib/admin.functions";
 import { checkPasswordStrength, firstPasswordStrengthError } from "@/lib/password-strength";
@@ -25,11 +26,16 @@ function Page() {
     mutationFn: (d: { currentPassword: string; newPassword: string }) => studentChangePassword({ data: d }),
     onSuccess: async () => {
       setMsg({ kind: "ok", text: "Password updated. Signing you out…" });
+      toast.success("Password updated", { description: "Signing you out for security…" });
       try { await studentLogout(); } catch { /* ignore */ }
       qc.clear();
       setTimeout(() => navigate({ to: "/student-login" }), 1200);
     },
-    onError: (e: any) => setMsg({ kind: "err", text: e.message || "Failed to update" }),
+    onError: (e: any) => {
+      const text = e?.message || "Failed to update";
+      setMsg({ kind: "err", text });
+      toast.error("Could not update password", { description: text });
+    },
   });
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
@@ -44,9 +50,9 @@ function Page() {
         <form onSubmit={(e) => {
           e.preventDefault();
           setMsg(null);
-          if (pw !== pw2) { setMsg({ kind: "err", text: "Passwords do not match" }); return; }
+          if (pw !== pw2) { setMsg({ kind: "err", text: "Passwords do not match" }); toast.error("Passwords do not match"); return; }
           const err = firstPasswordStrengthError(pw, current);
-          if (err) { setMsg({ kind: "err", text: err }); return; }
+          if (err) { setMsg({ kind: "err", text: err }); toast.error(err); return; }
           m.mutate({ currentPassword: current, newPassword: pw });
         }} className="space-y-3">
           <input value={current} onChange={(e) => setCurrent(e.target.value)} type="password" required placeholder="Current password" className="w-full border rounded px-3 py-2 text-sm" />
