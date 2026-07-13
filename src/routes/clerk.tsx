@@ -43,7 +43,7 @@ export const Route = createFileRoute("/clerk")({
   component: ClerkPortal,
 });
 
-type Tab = "home" | "students" | "import" | "promote" | "salary";
+type Tab = "home" | "students" | "import" | "promote" | "salary" | "profile" | "password";
 
 function ClerkPortal() {
   const nav = useNavigate();
