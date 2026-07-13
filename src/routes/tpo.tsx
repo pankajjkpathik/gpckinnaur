@@ -842,12 +842,43 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
               </div>
 
               <div className="border rounded p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-semibold text-gray-700">Select Students</p>
+                <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                  <p className="font-semibold text-gray-700">
+                    Select Students
+                    {Object.keys(picked).length > 0 && (
+                      <span className="ml-2 text-[11px] font-normal text-[#7b1f4c]">
+                        {Object.keys(picked).length} selected
+                      </span>
+                    )}
+                  </p>
                   {branch && semester && (studentsQ.data ?? []).length > 0 && (
-                    <p className="text-[11px] text-gray-500">
-                      {(studentsQ.data as any[]).filter((s) => s.already_assigned).length} already assigned
-                    </p>
+                    <div className="flex items-center gap-2 text-[11px]">
+                      <span className="text-gray-500">
+                        {(studentsQ.data as any[]).filter((s) => s.already_assigned).length} already assigned
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next: Record<number, string> = { ...picked };
+                          for (const s of studentsQ.data as any[]) {
+                            if (!s.already_assigned) next[s.id] = s.name;
+                          }
+                          setPicked(next);
+                        }}
+                        className="text-[#7b1f4c] font-semibold hover:underline"
+                      >
+                        Select all eligible
+                      </button>
+                      <span className="text-gray-300">·</span>
+                      <button
+                        type="button"
+                        onClick={() => setPicked({})}
+                        disabled={Object.keys(picked).length === 0}
+                        className="text-gray-600 hover:underline disabled:opacity-40 disabled:no-underline"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   )}
                 </div>
                 {!branch || !semester ? (
@@ -885,6 +916,9 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                     ))}
                   </div>
                 )}
+                <p className="text-[11px] text-gray-500 mt-2">
+                  All selected students will be assigned to the same company and dates in one training record. The generated Training Letter and Undertakings will include every selected student.
+                </p>
               </div>
 
               <div>
