@@ -18,8 +18,8 @@ export const studentDashboard = createServerFn({ method: "GET" }).handler(async 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const today = new Date().toISOString().slice(0, 10);
   const dow = new Date().getDay();
-  const [att, todayPeriods, pendingLeaves] = await Promise.all([
-    supabaseAdmin.from("attendance").select("status").eq("student_id", me.id),
+  const [att, todayPeriods, pendingLeaves, periods] = await Promise.all([
+    supabaseAdmin.from("attendance").select("status, subject_id").eq("student_id", me.id),
     supabaseAdmin
       .from("timetable")
       .select("period_no, room, day_of_week, subject_id, subjects(id,code,name), staff_users:staff_id(username)")
@@ -34,10 +34,20 @@ export const studentDashboard = createServerFn({ method: "GET" }).handler(async 
       .eq("applicant_id", me.id)
       .eq("applicant_type", "student")
       .eq("status", "pending"),
+    supabaseAdmin.from("periods_master").select("period_no, start_time, end_time").order("period_no"),
   ]);
   const all = att.data ?? [];
   const total = all.length;
   const present = all.filter((a: any) => a.status === "present" || a.status === "late").length;
+  // Per-subject attendance summary keyed by subject_id
+  const attBySubject: Record<string, { total: number; present: number }> = {};
+  for (const r of all as any[]) {
+    const k = String(r.subject_id ?? "");
+    if (!k) continue;
+    if (!attBySubject[k]) attBySubject[k] = { total: 0, present: 0 };
+    attBySubject[k].total += 1;
+    if (r.status === "present" || r.status === "late") attBySubject[k].present += 1;
+  }
   return {
     attendance_pct: total ? Math.round((present / total) * 1000) / 10 : 0,
     total_periods: total,
@@ -45,6 +55,8 @@ export const studentDashboard = createServerFn({ method: "GET" }).handler(async 
     today_periods: todayPeriods.data ?? [],
     pending_leaves: pendingLeaves.count ?? 0,
     today_date: today,
+    periods: periods.data ?? [],
+    attendance_by_subject: attBySubject,
   };
 });
 
