@@ -25,6 +25,7 @@ import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { QuickCard } from "@/components/portal/QuickCard";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import {
   listParentMessages,
   markParentMessageRead,
