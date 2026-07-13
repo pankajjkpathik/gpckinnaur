@@ -527,9 +527,17 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
             )}
           </div>
           <p className="font-semibold text-gray-800">Notifications</p>
+          <span
+            key={liveTick}
+            className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200"
+            title="Live updates enabled"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+          </span>
           <span className="text-xs text-gray-500">
             {unread.length} unread · {items.length} total
           </span>
+
         </div>
         <div className="flex items-center gap-2">
           <button
