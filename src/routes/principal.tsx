@@ -580,6 +580,217 @@ function PrincipalSidebar({
   );
 }
 
+/* ─── Global search palette ──────────────────────────────────────────────── */
+
+function PrincipalSearch({
+  open,
+  onOpenChange,
+  onNavigate,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onNavigate: (v: View) => void;
+}) {
+  // Fetch only while the palette is open to keep the dashboard idle-cost low.
+  const notices = useQuery({
+    queryKey: ["principal-search-notices"],
+    queryFn: () => listNotices(),
+    enabled: open,
+  });
+  const placements = useQuery({
+    queryKey: ["principal-search-placements"],
+    queryFn: () => listPlacements({ data: {} }),
+    enabled: open,
+  });
+  const lectures = useQuery({
+    queryKey: ["principal-search-lectures"],
+    queryFn: () => listGuestLectures(),
+    enabled: open,
+  });
+  const trainings = useQuery({
+    queryKey: ["principal-search-trainings"],
+    queryFn: () => listIndustrialTraining({ data: {} }),
+    enabled: open,
+  });
+  const students = useQuery({
+    queryKey: ["principal-search-students"],
+    queryFn: () => principalListStudents(),
+    enabled: open,
+  });
+
+  const sections: { label: string; view: View; icon: ComponentType<{ className?: string }> }[] = [
+    { label: "Dashboard", view: "home", icon: Home },
+    { label: "Department Overview", view: "department", icon: BarChart3 },
+    { label: "Attendance Reports", view: "attendance", icon: ClipboardCheck },
+    { label: "Sessional Reports", view: "sessional", icon: FileSpreadsheet },
+    { label: "Syllabus Status", view: "syllabus", icon: BookMarked },
+    { label: "View Timetable", view: "timetable", icon: Calendar },
+    { label: "Parents Messages", view: "messages", icon: Mail },
+    { label: "PTM Information", view: "ptm", icon: CalendarCheck },
+    { label: "Circulars", view: "circulars", icon: FileText },
+    { label: "Disciplinary Actions", view: "disciplinary", icon: Shield },
+    { label: "Placement Details", view: "tpo_placements", icon: Briefcase },
+    { label: "Industrial Training Details", view: "tpo_training", icon: Factory },
+    { label: "Guest Lecture Details", view: "tpo_lectures", icon: ClipboardList },
+  ];
+
+  const departments = Object.entries(BRANCH_TO_DEPT);
+
+  return (
+    <CommandDialog open={open} onOpenChange={onOpenChange}>
+      <CommandInput placeholder="Search sections, notices, students, placements…" />
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
+
+        <CommandGroup heading="Navigate">
+          {sections.map((s) => (
+            <CommandItem
+              key={s.view}
+              value={`nav ${s.label}`}
+              onSelect={() => onNavigate(s.view)}
+            >
+              <s.icon className="w-4 h-4 mr-2 text-gray-500" />
+              {s.label}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+
+        <CommandSeparator />
+
+        <CommandGroup heading="Departments">
+          {departments.map(([code, name]) => (
+            <CommandItem
+              key={code}
+              value={`department ${name} ${code}`}
+              onSelect={() => onNavigate("department")}
+            >
+              <BarChart3 className="w-4 h-4 mr-2 text-gray-500" />
+              {name}
+              <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">{code}</span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+
+        {(notices.data ?? []).length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Notices">
+              {(notices.data ?? []).slice(0, 20).map((n: any) => (
+                <CommandItem
+                  key={`notice-${n.id}`}
+                  value={`notice ${n.title ?? ""} ${n.category ?? ""}`}
+                  onSelect={() => onNavigate("circulars")}
+                >
+                  <FileText className="w-4 h-4 mr-2 text-gray-500" />
+                  <span className="truncate">{n.title ?? "Untitled notice"}</span>
+                  {n.category && (
+                    <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">
+                      {n.category}
+                    </span>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {(placements.data ?? []).length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Placements">
+              {(placements.data ?? []).slice(0, 20).map((p: any) => (
+                <CommandItem
+                  key={`placement-${p.id}`}
+                  value={`placement ${p.student_name ?? ""} ${p.company ?? ""} ${p.year ?? ""}`}
+                  onSelect={() => onNavigate("tpo_placements")}
+                >
+                  <Briefcase className="w-4 h-4 mr-2 text-gray-500" />
+                  <span className="truncate">
+                    {p.student_name ?? "Student"}
+                    {p.company ? ` · ${p.company}` : ""}
+                  </span>
+                  {p.year && (
+                    <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">
+                      {p.year}
+                    </span>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {(lectures.data ?? []).length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Guest Lectures">
+              {(lectures.data ?? []).slice(0, 20).map((l: any) => (
+                <CommandItem
+                  key={`lecture-${l.id}`}
+                  value={`lecture ${l.topic ?? ""} ${l.speaker ?? ""}`}
+                  onSelect={() => onNavigate("tpo_lectures")}
+                >
+                  <ClipboardList className="w-4 h-4 mr-2 text-gray-500" />
+                  <span className="truncate">
+                    {l.topic ?? "Lecture"}
+                    {l.speaker ? ` · ${l.speaker}` : ""}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {(trainings.data ?? []).length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Industrial Training">
+              {(trainings.data ?? []).slice(0, 20).map((t: any) => (
+                <CommandItem
+                  key={`train-${t.id}`}
+                  value={`training ${t.company ?? ""} ${t.title ?? ""}`}
+                  onSelect={() => onNavigate("tpo_training")}
+                >
+                  <Factory className="w-4 h-4 mr-2 text-gray-500" />
+                  <span className="truncate">
+                    {t.company ?? t.title ?? "Training"}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {(students.data ?? []).length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Students">
+              {(students.data ?? []).slice(0, 30).map((s: any) => (
+                <CommandItem
+                  key={`stu-${s.id}`}
+                  value={`student ${s.name ?? ""} ${s.roll_no ?? ""} ${s.branch ?? ""}`}
+                  onSelect={() => onNavigate("disciplinary")}
+                >
+                  <GraduationCap className="w-4 h-4 mr-2 text-gray-500" />
+                  <span className="truncate">
+                    {s.name ?? "Student"}
+                    {s.roll_no ? ` · ${s.roll_no}` : ""}
+                  </span>
+                  {s.branch && (
+                    <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-400">
+                      {s.branch}
+                    </span>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+      </CommandList>
+    </CommandDialog>
+  );
+}
+
 // ─── HOME (single unified dashboard — navigation lives in the sidebar) ───────
 function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: any }) {
   const fn = useServerFn(principalDashboard);
