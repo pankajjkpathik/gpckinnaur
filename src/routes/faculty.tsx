@@ -184,7 +184,9 @@ function FacultyPortalInner({
 
   // Keep realtime live for all faculty views, so the sidebar badge stays fresh.
   useFacultyNotifRealtime(ay);
-  const { unreadCount } = useFacultyNotifications(me, ay);
+  const { unreadCount, items: notifItems, unread: notifUnread, readIds: notifReadIds, setReadIds: setNotifReadIds } =
+    useFacultyNotifications(me, ay);
+
 
   // HOD/Principal who also hold the faculty role (via extraRoles) can edit as faculty too.
   const heldAll = [me.role, ...((me as any).extraRoles ?? [])];
