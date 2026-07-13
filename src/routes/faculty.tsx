@@ -23,7 +23,8 @@ import {
   AlarmClock,
   CheckCheck,
 } from "lucide-react";
-import { staffMe } from "@/lib/auth.functions";
+import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { QuickCard } from "@/components/portal/QuickCard";
 import { HeroBanner } from "@/components/portal/HeroBanner";
