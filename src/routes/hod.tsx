@@ -388,7 +388,7 @@ function HodPortal() {
             {view === "attendance" && (
               <AttendanceReportsView defaultBranch={branch} onBack={() => setView("home")} />
             )}
-            {view === "sessional" && <SessionalReportsView ay={ay} onBack={() => setView("home")} />}
+            {view === "sessional" && <SessionalReportsView ay={ay} branch={branch} deptLabel={deptLabel} onBack={() => setView("home")} />}
             {view === "syllabus" && (
               <SyllabusProgressView branch={branch} deptLabel={deptLabel} ay={ay} onBack={() => setView("home")} />
             )}
