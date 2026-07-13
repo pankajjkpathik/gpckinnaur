@@ -57,6 +57,7 @@ function dashboardHref(role: string): any {
   if (role === "hod") return "/hod";
   if (role === "tpo") return "/tpo";
   if (role === "clerk") return "/clerk";
+  if (role === "faculty") return "/faculty";
   return "/staff-dashboard";
 }
 
