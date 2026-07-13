@@ -144,7 +144,7 @@ function PrincipalPortal() {
       </header>
 
       <main className="container mx-auto px-4 py-6">
-        {view === "home" && <HomeView year={year} onNav={setView} />}
+        {view === "home" && <HomeView year={year} onNav={setView} me={me as any} />}
         {view === "attendance" && <AttendanceReportsView year={year} onBack={() => setView("home")} />}
         {view === "sessional" && (
           <>
