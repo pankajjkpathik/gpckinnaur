@@ -149,7 +149,9 @@ function FacultyPortal() {
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
-  const isViewer = me.role !== "faculty";
+  // HOD/Principal who also hold the faculty role (via extraRoles) can edit as faculty too.
+  const heldAll = [me.role, ...((me as any).extraRoles ?? [])];
+  const isViewer = !heldAll.includes("faculty");
 
   return (
     <PortalShell
