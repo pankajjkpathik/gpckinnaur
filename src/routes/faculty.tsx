@@ -388,6 +388,208 @@ function StatTile({ value, label }: { value: number; label: string }) {
   );
 }
 
+type NotifItem = {
+  key: string;
+  kind: "announcement" | "notice" | "deadline";
+  title: string;
+  meta: string;
+  timestamp: number;
+  badge: string;
+};
+
+function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
+  const noticesQ = useQuery({ queryKey: ["fac-notif-notices"], queryFn: () => listNotices(), retry: false });
+  const annQ = useQuery({ queryKey: ["fac-notif-ann"], queryFn: () => listAnnouncements(), retry: false });
+  const asgQ = useQuery({
+    queryKey: ["fac-notif-asg", ay],
+    queryFn: () => facultyListAssignmentsCreated({ data: { academic_year: ay } }),
+    retry: false,
+  });
+
+  const storageKey = `fac-notif-read:${me.id}`;
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      return new Set(JSON.parse(localStorage.getItem(storageKey) || "[]"));
+    } catch {
+      return new Set();
+    }
+  });
+  const persist = (next: Set<string>) => {
+    setReadIds(new Set(next));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const items: NotifItem[] = useMemo(() => {
+    const out: NotifItem[] = [];
+    const now = Date.now();
+    const in14d = now + 14 * 24 * 3600 * 1000;
+
+    for (const a of annQ.data ?? []) {
+      if ((a as any).is_active === false) continue;
+      const ts = new Date((a as any).created_at).getTime();
+      out.push({
+        key: `ann-${(a as any).id}`,
+        kind: "announcement",
+        title: (a as any).content?.slice(0, 140) || "Announcement",
+        meta: fmtRelative(ts),
+        timestamp: ts,
+        badge: "Announcement",
+      });
+    }
+    for (const n of noticesQ.data ?? []) {
+      const ts = new Date((n as any).date || (n as any).created_at || Date.now()).getTime();
+      out.push({
+        key: `notice-${(n as any).id}`,
+        kind: "notice",
+        title: (n as any).title,
+        meta: `${(n as any).category || "general"} · ${fmtRelative(ts)}`,
+        timestamp: ts,
+        badge: "Notice",
+      });
+    }
+    for (const a of asgQ.data ?? []) {
+      const due = (a as any).due_date ? new Date((a as any).due_date).getTime() : null;
+      if (!due) continue;
+      // Show upcoming (next 14d) and overdue (last 3d)
+      if (due < now - 3 * 24 * 3600 * 1000) continue;
+      if (due > in14d) continue;
+      const days = Math.ceil((due - now) / (24 * 3600 * 1000));
+      const rel =
+        days < 0 ? `Overdue by ${Math.abs(days)}d` : days === 0 ? "Due today" : days === 1 ? "Due tomorrow" : `Due in ${days}d`;
+      out.push({
+        key: `asg-${(a as any).id}`,
+        kind: "deadline",
+        title: (a as any).title,
+        meta: `${(a as any).subject_name || (a as any).subjects?.code || "Subject"} · ${(a as any).branch}-Sem${(a as any).semester} · ${rel}`,
+        timestamp: due,
+        badge: days < 0 ? "Overdue" : "Deadline",
+      });
+    }
+
+    out.sort((a, b) => (a.kind === "deadline" ? a.timestamp : -a.timestamp) - (b.kind === "deadline" ? b.timestamp : -b.timestamp));
+    return out;
+  }, [annQ.data, noticesQ.data, asgQ.data]);
+
+  const unread = items.filter((i) => !readIds.has(i.key));
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? items : unread;
+
+  const markAllRead = () => persist(new Set(items.map((i) => i.key)));
+  const toggleRead = (key: string) => {
+    const next = new Set(readIds);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    persist(next);
+  };
+
+  const loading = noticesQ.isLoading || annQ.isLoading || asgQ.isLoading;
+
+  return (
+    <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+      <div className="px-5 py-3 bg-gradient-to-r from-amber-50 via-white to-rose-50 border-b flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Bell className="w-5 h-5 text-[#7b1f4c]" />
+            {unread.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                {unread.length > 9 ? "9+" : unread.length}
+              </span>
+            )}
+          </div>
+          <p className="font-semibold text-gray-800">Notifications</p>
+          <span className="text-xs text-gray-500">
+            {unread.length} unread · {items.length} total
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAll((v) => !v)}
+            className="text-xs text-[#7b1f4c] hover:underline"
+          >
+            {showAll ? "Show unread only" : "Show all"}
+          </button>
+          {unread.length > 0 && (
+            <button
+              onClick={markAllRead}
+              className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 text-gray-700"
+            >
+              <CheckCheck className="w-3 h-3" /> Mark all read
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="divide-y max-h-80 overflow-y-auto">
+        {loading ? (
+          <p className="text-sm text-gray-400 text-center py-6">Loading notifications…</p>
+        ) : visible.length === 0 ? (
+          <div className="text-center py-8 text-gray-400 text-sm">
+            <Bell className="w-8 h-8 mx-auto mb-2 opacity-40" />
+            {showAll ? "No notifications yet." : "You're all caught up!"}
+          </div>
+        ) : (
+          visible.map((it) => {
+            const isRead = readIds.has(it.key);
+            const styles =
+              it.kind === "announcement"
+                ? { icon: Megaphone, tint: "bg-indigo-100 text-indigo-700", chip: "bg-indigo-50 text-indigo-700 border-indigo-200" }
+                : it.kind === "notice"
+                ? { icon: FileText, tint: "bg-amber-100 text-amber-700", chip: "bg-amber-50 text-amber-700 border-amber-200" }
+                : { icon: AlarmClock, tint: "bg-rose-100 text-rose-700", chip: "bg-rose-50 text-rose-700 border-rose-200" };
+            const Icon = styles.icon;
+            return (
+              <div
+                key={it.key}
+                className={`flex items-start gap-3 px-5 py-3 hover:bg-gray-50 transition ${isRead ? "opacity-60" : ""}`}
+              >
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${styles.tint}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${styles.chip}`}>
+                      {it.badge}
+                    </span>
+                    {!isRead && <span className="w-2 h-2 rounded-full bg-rose-500" aria-label="unread" />}
+                  </div>
+                  <p className="text-sm font-medium text-gray-800 mt-1 line-clamp-2">{it.title}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">{it.meta}</p>
+                </div>
+                <button
+                  onClick={() => toggleRead(it.key)}
+                  className="text-[11px] text-gray-400 hover:text-[#7b1f4c] shrink-0"
+                  title={isRead ? "Mark unread" : "Mark read"}
+                >
+                  {isRead ? "Unread" : "Read"}
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function fmtRelative(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+
+
+
 
 // ─── ATTENDANCE ───────────────────────────────────────────────────────────────
 function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
