@@ -623,9 +623,9 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
   const [picked, setPicked] = useState<Record<number, string>>({});
 
   const studentsQ = useQuery({
-    enabled: open,
+    enabled: open && !!branch && !!semester,
     queryKey: ["tpo-students", branch, semester],
-    queryFn: () => tpoListStudents({ data: { branch: branch || undefined, semester: semester || undefined } }),
+    queryFn: () => tpoListStudents({ data: { branch, semester: semester as number } }),
   });
 
   const create = useMutation({
