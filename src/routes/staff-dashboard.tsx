@@ -63,6 +63,9 @@ function StaffDashboard() {
     } else if (me.role === "principal") {
       // Principal has a single unified dashboard at /principal
       window.location.replace("/principal");
+    } else if (me.role === "hod") {
+      // HOD has a single unified dashboard at /hod
+      window.location.replace("/hod");
     }
   }, [me, isLoading, navigate]);
 
