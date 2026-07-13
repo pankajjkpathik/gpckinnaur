@@ -68,7 +68,9 @@ function ordinal(n: number | null | undefined) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-export async function generateTrainingLetter(r: TrainingRecord) {
+export type PdfBuild = { blob: Blob; filename: string; url: string };
+
+export async function generateTrainingLetter(r: TrainingRecord): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const margin = 50;
