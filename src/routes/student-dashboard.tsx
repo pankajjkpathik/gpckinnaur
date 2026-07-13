@@ -299,13 +299,7 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
       <HeroBanner
         name={me.name || "Student"}
         role={me.branch ? `${me.branch} · Sem ${me.semester ?? ""}` : "Student"}
-        palette={{
-          gradient: "from-[#6d28d9] via-[#4c1d95] to-[#2e1065]",
-          nameColor: "text-fuchsia-200",
-          eyebrowColor: "text-fuchsia-200/90",
-          metaColor: "text-fuchsia-200",
-          blob: "bg-fuchsia-400",
-        }}
+        palette="student"
         subtitle={<span className="text-white/80">Choose an option from the left panel to view your details.</span>}
         stats={[
           { value: data ? `${data.attendance_pct}%` : "—", label: "Attendance" },

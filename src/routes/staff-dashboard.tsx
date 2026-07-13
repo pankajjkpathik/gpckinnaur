@@ -351,13 +351,7 @@ function DashboardHome({ me, counts }: any) {
       <HeroBanner
         name={(me as any).name || me.username || "Staff"}
         role={`${me.role}${me.department ? ` · ${me.department}` : ""}`}
-        palette={{
-          gradient: "from-[#0f172a] via-[#1e293b] to-[#020617]",
-          nameColor: "text-sky-300",
-          eyebrowColor: "text-sky-200/90",
-          metaColor: "text-sky-200",
-          blob: "bg-sky-400",
-        }}
+        palette="staff"
         subtitle={
           <>
             <span className="text-white/85 capitalize">Role: <span className="font-semibold">{me.role}</span></span>

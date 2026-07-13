@@ -105,13 +105,7 @@ function ParentDashboard() {
           <HeroBanner
             name={st.name || "Guardian"}
             role={`${st.enrollment_no || ""} · ${st.branch || ""}-Sem${st.semester ?? ""}`}
-            palette={{
-              gradient: "from-[#047857] via-[#065f46] to-[#022c22]",
-              nameColor: "text-lime-200",
-              eyebrowColor: "text-lime-200/90",
-              metaColor: "text-lime-200",
-              blob: "bg-emerald-300",
-            }}
+            palette="parent"
             subtitle={
               <span className="text-white/85">
                 Viewing records for your ward
