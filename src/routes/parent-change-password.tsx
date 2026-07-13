@@ -32,11 +32,16 @@ function ParentChangePassword() {
     onSuccess: async () => {
       setErr(null);
       setOkMsg("Password updated. Signing you out…");
+      toast.success("Password updated", { description: "Signing you out for security…" });
       try { await parentLogout(); } catch { /* ignore */ }
       qc.clear();
       setTimeout(() => nav({ to: "/parent-login" }), 1200);
     },
-    onError: (e: any) => setErr(e.message),
+    onError: (e: any) => {
+      const text = e?.message || "Failed to update password";
+      setErr(text);
+      toast.error("Could not update password", { description: text });
+    },
   });
 
   if (!isLoading && !me) {
