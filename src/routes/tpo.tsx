@@ -66,29 +66,25 @@ function TpoPortal() {
     else if (!hasRole(me, tpoRoles)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
-  const [view, setView] = useState<View>("home");
-
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const applyHash = () => {
+    const scrollToHash = () => {
       const h = window.location.hash.replace(/^#/, "");
-      if (h === "placements" || h === "training" || h === "lectures") setView(h);
-      else if (h === "" || h === "home") setView("home");
+      if (!h) return;
+      const el = document.getElementById(h);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     };
-    applyHash();
-    window.addEventListener("hashchange", applyHash);
-    return () => window.removeEventListener("hashchange", applyHash);
+    scrollToHash();
+    window.addEventListener("hashchange", scrollToHash);
+    return () => window.removeEventListener("hashchange", scrollToHash);
   }, []);
-
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
-  const NAV: { icon: any; label: string; view: View }[] = [
-    { icon: GraduationCap, label: "Dashboard", view: "home" },
-    { icon: Briefcase, label: "Placements", view: "placements" },
-    { icon: Factory, label: "Industrial Training", view: "training" },
-    { icon: ClipboardList, label: "Guest Lectures", view: "lectures" },
-  ];
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <PortalShell
@@ -97,57 +93,12 @@ function TpoPortal() {
       me={me as any}
       accent="rose"
     >
-      <div className="flex">
-        {/* LHS sidebar */}
-        <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
-          <nav className="py-3">
-            {NAV.map((item) => {
-              const active = view === item.view;
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.view}
-                  onClick={() => setView(item.view)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left border-l-4 transition ${
-                    active
-                      ? "border-cyan-700 bg-cyan-50 text-cyan-800 font-semibold"
-                      : "border-transparent text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate flex-1">{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
-
-        {/* Mobile nav */}
-        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
-          {NAV.map((item) => {
-            const active = view === item.view;
-            return (
-              <button
-                key={item.view}
-                onClick={() => setView(item.view)}
-                className={`px-3 py-2 text-xs ${
-                  active ? "border-b-2 border-cyan-700 text-cyan-800 font-semibold" : "text-gray-600"
-                }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* RHS output */}
-        <main className="flex-1 min-w-0 p-4 md:p-6">
-          {view === "home" && <HomeView onNav={setView} me={me as any} />}
-          {view === "placements" && <PlacementsView onBack={() => setView("home")} />}
-          {view === "training" && <TrainingView onBack={() => setView("home")} />}
-          {view === "lectures" && <LecturesView onBack={() => setView("home")} />}
-        </main>
-      </div>
+      <main className="p-4 md:p-6 space-y-10">
+        <section id="home"><HomeView onNav={scrollTo} me={me as any} /></section>
+        <section id="placements" className="scroll-mt-6"><PlacementsView /></section>
+        <section id="training" className="scroll-mt-6"><TrainingView /></section>
+        <section id="lectures" className="scroll-mt-6"><LecturesView /></section>
+      </main>
     </PortalShell>
   );
 }
