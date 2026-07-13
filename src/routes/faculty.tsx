@@ -372,6 +372,9 @@ function HomeView({ me, ay, onNav: _onNav }: { me: any; ay: string; onNav: (v: V
           </div>
         </div>
       )}
+
+      {/* Unread notifications */}
+      <NotificationsPanel me={me} ay={ay} />
     </div>
   );
 }
