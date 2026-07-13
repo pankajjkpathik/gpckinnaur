@@ -486,6 +486,7 @@ function HodPortal() {
           onCloseMobile={() => setMobileNavOpen(false)}
           collapsed={sidebarCollapsed}
           onToggleCollapsed={() => setSidebarCollapsed((c) => !c)}
+          canWrite={!isViewer}
         />
         <main className="flex-1 min-w-0">
           {isViewer && view !== "home" && (
