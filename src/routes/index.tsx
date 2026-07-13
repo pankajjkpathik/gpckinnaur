@@ -196,6 +196,66 @@ function PortalLanding() {
         </div>
       </main>
 
+      {/* Latest notices */}
+      {notices.length > 0 && (
+        <section
+          aria-labelledby="portal-notices-heading"
+          className="relative z-10 border-t border-white/10 bg-black/20 backdrop-blur"
+        >
+          <div className="container mx-auto px-6 py-8">
+            <div className="flex items-end justify-between mb-4 gap-4">
+              <div className="flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-[color:var(--gold)]" aria-hidden />
+                <h2
+                  id="portal-notices-heading"
+                  className="text-[11px] tracking-[0.22em] font-semibold uppercase text-white/85"
+                >
+                  Latest Notices
+                </h2>
+              </div>
+            </div>
+            <ul className="grid gap-3 md:grid-cols-3">
+              {notices.map((n) => {
+                const body = (
+                  <div className="h-full rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-colors p-4 flex flex-col">
+                    <div className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase text-white/55">
+                      <span className="text-[color:var(--gold)] font-semibold">
+                        {n.category || "general"}
+                      </span>
+                      {n.date && (
+                        <>
+                          <span className="w-px h-3 bg-white/20" />
+                          <time dateTime={n.date}>{fmtDate(n.date)}</time>
+                        </>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-white line-clamp-2">
+                      {n.title}
+                    </p>
+                    {n.content && (
+                      <p className="mt-1 text-xs text-white/65 line-clamp-2">{n.content}</p>
+                    )}
+                  </div>
+                );
+                return (
+                  <li key={n.id}>
+                    {n.link ? (
+                      <a href={n.link} target="_blank" rel="noopener noreferrer" className="block h-full">
+                        {body}
+                      </a>
+                    ) : (
+                      body
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
+      )}
+
+
+
       {/* Need help callout */}
       <section
         aria-labelledby="portal-help-heading"
