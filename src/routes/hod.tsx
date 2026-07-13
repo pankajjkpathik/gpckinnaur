@@ -29,6 +29,7 @@ import {
 import { staffMe, staffLogout } from "@/lib/auth.functions";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { avatarUrl } from "@/lib/portal-identity";
+import placeholderAvatar from "@/assets/placeholder-avatar.png";
 
 import { hodRoles, hasRole } from "@/lib/roles";
 import {
