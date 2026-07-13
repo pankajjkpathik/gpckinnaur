@@ -23,7 +23,9 @@ import {
   Loader2,
   Activity,
   History,
+  Search,
 } from "lucide-react";
+
 import * as XLSX from "xlsx";
 import { staffMe, uploadStaffAvatar, staffChangePassword, staffUpdateProfile } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
