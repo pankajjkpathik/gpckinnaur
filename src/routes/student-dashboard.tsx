@@ -677,6 +677,16 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
         attBySubject={(data as any)?.attendance_by_subject || {}}
         setView={setView}
       />
+
+      <AssignmentQuickDetailDialog
+        assignment={detailAssignment}
+        onClose={() => setDetailAssignment(null)}
+        onGoToAssignments={() => {
+          setDetailAssignment(null);
+          setView("assignments-docs");
+        }}
+        currentStatus={detailAssignment ? subStatus(detailAssignment.id) : null}
+      />
     </div>
   );
 }
