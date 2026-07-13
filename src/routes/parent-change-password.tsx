@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { parentChangePassword, parentMe } from "@/lib/parent.functions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { parentChangePassword, parentMe, parentLogout } from "@/lib/parent.functions";
+import { checkPasswordStrength, firstPasswordStrengthError } from "@/lib/password-strength";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/parent-change-password")({
