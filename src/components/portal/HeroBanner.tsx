@@ -65,7 +65,7 @@ export function HeroBanner({
       </div>
       <div className="relative p-5 sm:p-8 grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)_auto] items-start sm:items-center gap-4 sm:gap-5">
         <div className="shrink-0 relative">
-          <HeroAvatar src={avatarSrc} name={name} />
+          <HeroAvatar src={avatarSrc} name={name} fallbackSrc={fallbackAvatarSrc} />
           {onAvatarChange && (
             <label
               className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-slate-800 flex items-center justify-center shadow-md ring-2 ring-white cursor-pointer hover:bg-slate-100"
