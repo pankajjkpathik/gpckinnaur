@@ -146,7 +146,7 @@ function StudentDashboard() {
     { icon: Calendar, label: "Timetable", view: "timetable" },
     { icon: CalendarClock, label: "Exam Schedule", view: "exam-schedule" },
     { icon: BookOpen, label: "Assignments", view: "assignments-docs" },
-    { icon: Upload, label: "Upload Assignment", view: "upload" },
+    
     { icon: DollarSign, label: "Fees Payment", view: "fees" },
     { icon: Users, label: "My Faculty", view: "faculty" },
     { icon: Shield, label: "Disciplinary Actions", view: "disciplinary" },
