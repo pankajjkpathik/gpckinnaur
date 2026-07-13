@@ -973,7 +973,45 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
         </div>
       )}
 
+      <div className="px-2 pt-2 pb-1 border-b bg-gray-50/50 flex items-center gap-1 overflow-x-auto">
+        {([
+          { id: "all", label: "All", count: tabCounts.all },
+          { id: "announcement", label: "Announcements", count: tabCounts.announcement },
+          { id: "deadline", label: "Deadlines", count: tabCounts.deadline },
+          { id: "overdue", label: "Overdue", count: tabCounts.overdue },
+        ] as const).map((t) => {
+          const activeTab = tab === t.id;
+          const isOver = t.id === "overdue";
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition ${
+                activeTab
+                  ? isOver
+                    ? "bg-rose-600 text-white border-rose-600"
+                    : "bg-[#7b1f4c] text-white border-[#7b1f4c]"
+                  : isOver && t.count > 0
+                  ? "bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {t.label}
+              <span
+                className={`ml-1.5 inline-flex items-center justify-center min-w-[16px] h-[16px] rounded-full text-[10px] px-1 ${
+                  activeTab ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {t.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="divide-y max-h-80 overflow-y-auto">
+
         {loading ? (
           <p className="text-sm text-gray-400 text-center py-6">Loading notifications…</p>
         ) : visible.length === 0 ? (
