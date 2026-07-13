@@ -130,6 +130,21 @@ export const syllabusCompliance = createServerFn({ method: "GET" })
 
 
 // ============ RESULTS OVERVIEW ============
+export const instituteExamTypes = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireRole(principalRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("marks")
+      .select("exam_type")
+      .eq("academic_year", data.academic_year)
+      .eq("approved_by_hod", true);
+    const set = new Set<string>();
+    (rows ?? []).forEach((r: any) => { if (r.exam_type) set.add(r.exam_type); });
+    return Array.from(set).sort();
+  });
+
 export const instituteResults = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe), exam_type: z.string() }).parse(d))
   .handler(async ({ data }) => {
