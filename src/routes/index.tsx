@@ -65,6 +65,9 @@ const cards = [
 
 
 function PortalLanding() {
+  const { notices } = Route.useLoaderData();
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   return (
     <div
       className="relative min-h-screen text-white overflow-hidden flex flex-col"
