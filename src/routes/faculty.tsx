@@ -349,12 +349,12 @@ function HomeView({ me, ay, onNav: _onNav }: { me: any; ay: string; onNav: (v: V
         </div>
         <div className="relative p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-white/70">{dateLabel}</p>
-            <h1 className="text-2xl sm:text-3xl font-bold mt-1">
-              {greeting}, {me.name || "Faculty"} 👋
+            <p className="text-[11px] uppercase tracking-[0.2em] text-amber-200/90 font-semibold">{dateLabel}</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold mt-1 text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
+              {greeting}, <span className="text-amber-300">{me.name || "Faculty"}</span> <span className="inline-block">👋</span>
             </h1>
-            <p className="text-sm text-white/80 mt-1">
-              Academic Year <span className="font-semibold">{ay}</span> · Use the left panel to jump into any module.
+            <p className="text-sm text-white mt-2">
+              Academic Year <span className="font-semibold text-amber-200">{ay}</span> <span className="text-white/70">· Use the left panel to jump into any module.</span>
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
