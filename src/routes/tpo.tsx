@@ -612,6 +612,12 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
   const qc = useQueryClient();
   const listQ = useQuery({ queryKey: ["tpo-training"], queryFn: () => listIndustrialTraining({ data: {} }) });
   const [open, setOpen] = useState(false);
+  const [preview, setPreview] = useState<{ url: string; filename: string; title: string } | null>(null);
+  const openPreview = async (title: string, builder: Promise<{ url: string; filename: string }>) => {
+    const { url, filename } = await builder;
+    setPreview((p) => { if (p) URL.revokeObjectURL(p.url); return { url, filename, title }; });
+  };
+  const closePreview = () => setPreview((p) => { if (p) URL.revokeObjectURL(p.url); return null; });
   const [branch, setBranch] = useState("");
   const [semester, setSemester] = useState<number | "">("");
   const [picked, setPicked] = useState<Record<number, string>>({});
