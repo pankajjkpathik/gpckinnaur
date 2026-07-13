@@ -243,7 +243,7 @@ function HodSidebar({
         <GraduationCap className="w-4 h-4" />
       </Link>
       <a
-        href="/staff-profile"
+        href="/profile-settings"
         title="My Profile"
         aria-label="My Profile"
         className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-900"
@@ -318,7 +318,7 @@ function HodSidebar({
           </li>
           <li>
             <a
-              href="/staff-profile"
+              href="/profile-settings"
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
             >
               <LayoutDashboard className="w-4 h-4 text-gray-400" /> My Profile
