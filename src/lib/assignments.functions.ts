@@ -260,6 +260,41 @@ export const studentSubmitAssignment = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Quick status toggle from the student dashboard: mark an assignment as
+// "noted" (acknowledged) or "submitted" (student confirmed submission).
+// Upserts a submissions row without requiring a file upload.
+export const studentSetAssignmentStatus = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        assignment_id: z.number().int(),
+        status: z.enum(["noted", "submitted"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const me = await requireStudent();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("assignment_submissions")
+      .select("id, file_url")
+      .eq("assignment_id", data.assignment_id)
+      .eq("student_id", me.id)
+      .maybeSingle();
+    const payload: any = {
+      assignment_id: data.assignment_id,
+      student_id: me.id,
+      status: data.status,
+      file_url: existing?.file_url ?? null,
+      submitted_at: data.status === "submitted" ? new Date().toISOString() : (existing ? undefined : null),
+    };
+    const { error } = await supabaseAdmin
+      .from("assignment_submissions")
+      .upsert(payload, { onConflict: "assignment_id,student_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true, status: data.status };
+  });
+
 export const studentMySubmissions = createServerFn({ method: "GET" }).handler(async () => {
   const me = await requireStudent();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
