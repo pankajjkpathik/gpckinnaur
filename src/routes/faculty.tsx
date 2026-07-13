@@ -398,8 +398,97 @@ type NotifItem = {
   badge: string;
 };
 
-function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
-  const qc = useQueryClient();
+// Shared "read" state so the sidebar badge and the panel stay in sync.
+const readStateListeners = new Set<() => void>();
+function loadReadIds(key: string): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    return new Set(JSON.parse(localStorage.getItem(key) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+function saveReadIds(key: string, ids: Set<string>) {
+  try {
+    localStorage.setItem(key, JSON.stringify(Array.from(ids)));
+  } catch {
+    /* ignore */
+  }
+  readStateListeners.forEach((l) => l());
+}
+function useReadIds(storageKey: string) {
+  const [ids, setIds] = useState<Set<string>>(() => loadReadIds(storageKey));
+  useEffect(() => {
+    const refresh = () => setIds(loadReadIds(storageKey));
+    readStateListeners.add(refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      readStateListeners.delete(refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, [storageKey]);
+  const persist = (next: Set<string>) => {
+    setIds(new Set(next));
+    saveReadIds(storageKey, next);
+  };
+  return [ids, persist] as const;
+}
+
+function computeNotifItems(
+  ann: any[] | undefined,
+  notices: any[] | undefined,
+  asg: any[] | undefined,
+): NotifItem[] {
+  const out: NotifItem[] = [];
+  const now = Date.now();
+  const in14d = now + 14 * 24 * 3600 * 1000;
+  for (const a of ann ?? []) {
+    if ((a as any).is_active === false) continue;
+    const ts = new Date((a as any).created_at).getTime();
+    out.push({
+      key: `ann-${(a as any).id}`,
+      kind: "announcement",
+      title: ((a as any).content ?? "").slice(0, 140) || "Announcement",
+      meta: fmtRelative(ts),
+      timestamp: ts,
+      badge: "Announcement",
+    });
+  }
+  for (const n of notices ?? []) {
+    const ts = new Date((n as any).date || (n as any).created_at || Date.now()).getTime();
+    out.push({
+      key: `notice-${(n as any).id}`,
+      kind: "notice",
+      title: (n as any).title,
+      meta: `${(n as any).category || "general"} · ${fmtRelative(ts)}`,
+      timestamp: ts,
+      badge: "Notice",
+    });
+  }
+  for (const a of asg ?? []) {
+    const due = (a as any).due_date ? new Date((a as any).due_date).getTime() : null;
+    if (!due) continue;
+    if (due < now - 3 * 24 * 3600 * 1000) continue;
+    if (due > in14d) continue;
+    const days = Math.ceil((due - now) / (24 * 3600 * 1000));
+    const rel =
+      days < 0 ? `Overdue by ${Math.abs(days)}d` : days === 0 ? "Due today" : days === 1 ? "Due tomorrow" : `Due in ${days}d`;
+    out.push({
+      key: `asg-${(a as any).id}`,
+      kind: "deadline",
+      title: (a as any).title,
+      meta: `${(a as any).subject_name || (a as any).subjects?.code || "Subject"} · ${(a as any).branch}-Sem${(a as any).semester} · ${rel}`,
+      timestamp: due,
+      badge: days < 0 ? "Overdue" : "Deadline",
+    });
+  }
+  out.sort(
+    (a, b) => (a.kind === "deadline" ? a.timestamp : -a.timestamp) - (b.kind === "deadline" ? b.timestamp : -b.timestamp),
+  );
+  return out;
+}
+
+function useFacultyNotifications(me: any, ay: string) {
   const noticesQ = useQuery({ queryKey: ["fac-notif-notices"], queryFn: () => listNotices(), retry: false });
   const annQ = useQuery({ queryKey: ["fac-notif-ann"], queryFn: () => listAnnouncements(), retry: false });
   const asgQ = useQuery({
@@ -407,112 +496,55 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
     queryFn: () => facultyListAssignmentsCreated({ data: { academic_year: ay } }),
     retry: false,
   });
-  const [liveTick, setLiveTick] = useState(0);
+  const [readIds, setReadIds] = useReadIds(`fac-notif-read:${me.id}`);
+  const items = useMemo(
+    () => computeNotifItems(annQ.data, noticesQ.data, asgQ.data),
+    [annQ.data, noticesQ.data, asgQ.data],
+  );
+  const unread = items.filter((i) => !readIds.has(i.key));
+  return {
+    items,
+    unread,
+    unreadCount: unread.length,
+    readIds,
+    setReadIds,
+    loading: noticesQ.isLoading || annQ.isLoading || asgQ.isLoading,
+  };
+}
 
+function useFacultyNotifRealtime(ay: string) {
+  const qc = useQueryClient();
   useEffect(() => {
     const channel = supabase
       .channel("fac-notif-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
-        qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
-        setLiveTick((t) => t + 1);
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () => {
-        qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
-        setLiveTick((t) => t + 1);
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () => {
-        qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
-        setLiveTick((t) => t + 1);
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () =>
+        qc.invalidateQueries({ queryKey: ["fac-notif-notices"] }),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () =>
+        qc.invalidateQueries({ queryKey: ["fac-notif-ann"] }),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () =>
+        qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] }),
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [qc, ay]);
+}
 
-
-  const storageKey = `fac-notif-read:${me.id}`;
-  const [readIds, setReadIds] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    try {
-      return new Set(JSON.parse(localStorage.getItem(storageKey) || "[]"));
-    } catch {
-      return new Set();
-    }
-  });
-  const persist = (next: Set<string>) => {
-    setReadIds(new Set(next));
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const items: NotifItem[] = useMemo(() => {
-    const out: NotifItem[] = [];
-    const now = Date.now();
-    const in14d = now + 14 * 24 * 3600 * 1000;
-
-    for (const a of annQ.data ?? []) {
-      if ((a as any).is_active === false) continue;
-      const ts = new Date((a as any).created_at).getTime();
-      out.push({
-        key: `ann-${(a as any).id}`,
-        kind: "announcement",
-        title: (a as any).content?.slice(0, 140) || "Announcement",
-        meta: fmtRelative(ts),
-        timestamp: ts,
-        badge: "Announcement",
-      });
-    }
-    for (const n of noticesQ.data ?? []) {
-      const ts = new Date((n as any).date || (n as any).created_at || Date.now()).getTime();
-      out.push({
-        key: `notice-${(n as any).id}`,
-        kind: "notice",
-        title: (n as any).title,
-        meta: `${(n as any).category || "general"} · ${fmtRelative(ts)}`,
-        timestamp: ts,
-        badge: "Notice",
-      });
-    }
-    for (const a of asgQ.data ?? []) {
-      const due = (a as any).due_date ? new Date((a as any).due_date).getTime() : null;
-      if (!due) continue;
-      // Show upcoming (next 14d) and overdue (last 3d)
-      if (due < now - 3 * 24 * 3600 * 1000) continue;
-      if (due > in14d) continue;
-      const days = Math.ceil((due - now) / (24 * 3600 * 1000));
-      const rel =
-        days < 0 ? `Overdue by ${Math.abs(days)}d` : days === 0 ? "Due today" : days === 1 ? "Due tomorrow" : `Due in ${days}d`;
-      out.push({
-        key: `asg-${(a as any).id}`,
-        kind: "deadline",
-        title: (a as any).title,
-        meta: `${(a as any).subject_name || (a as any).subjects?.code || "Subject"} · ${(a as any).branch}-Sem${(a as any).semester} · ${rel}`,
-        timestamp: due,
-        badge: days < 0 ? "Overdue" : "Deadline",
-      });
-    }
-
-    out.sort((a, b) => (a.kind === "deadline" ? a.timestamp : -a.timestamp) - (b.kind === "deadline" ? b.timestamp : -b.timestamp));
-    return out;
-  }, [annQ.data, noticesQ.data, asgQ.data]);
-
-  const unread = items.filter((i) => !readIds.has(i.key));
+function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
+  const { items, unread, readIds, setReadIds, loading } = useFacultyNotifications(me, ay);
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? items : unread;
 
-  const markAllRead = () => persist(new Set(items.map((i) => i.key)));
+  const markAllRead = () => setReadIds(new Set(items.map((i) => i.key)));
   const toggleRead = (key: string) => {
     const next = new Set(readIds);
     if (next.has(key)) next.delete(key);
     else next.add(key);
-    persist(next);
+    setReadIds(next);
   };
-
-  const loading = noticesQ.isLoading || annQ.isLoading || asgQ.isLoading;
 
   return (
     <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
@@ -528,7 +560,6 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
           </div>
           <p className="font-semibold text-gray-800">Notifications</p>
           <span
-            key={liveTick}
             className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200"
             title="Live updates enabled"
           >
@@ -537,13 +568,9 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
           <span className="text-xs text-gray-500">
             {unread.length} unread · {items.length} total
           </span>
-
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowAll((v) => !v)}
-            className="text-xs text-[#7b1f4c] hover:underline"
-          >
+          <button onClick={() => setShowAll((v) => !v)} className="text-xs text-[#7b1f4c] hover:underline">
             {showAll ? "Show unread only" : "Show all"}
           </button>
           {unread.length > 0 && (
@@ -607,6 +634,7 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
     </div>
   );
 }
+
 
 function fmtRelative(ts: number): string {
   const diff = Date.now() - ts;
