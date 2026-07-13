@@ -113,9 +113,9 @@ function ParentChangePassword() {
             <button
               onClick={() => {
                 setErr(null);
-                if (pw !== pw2) return setErr("New passwords do not match.");
+                if (pw !== pw2) { toast.error("New passwords do not match."); return setErr("New passwords do not match."); }
                 const s = firstPasswordStrengthError(pw, current);
-                if (s) return setErr(s);
+                if (s) { toast.error(s); return setErr(s); }
                 save.mutate();
               }}
               disabled={save.isPending || !current || !pw}
