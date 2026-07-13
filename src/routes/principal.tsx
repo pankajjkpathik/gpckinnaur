@@ -141,6 +141,14 @@ function PrincipalPortal() {
   const [view, setView] = useState<View>(initialView);
   const [year, setYear] = useState(defaultYear());
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("principal:sidebarCollapsed") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("principal:sidebarCollapsed", sidebarCollapsed ? "1" : "0");
+  }, [sidebarCollapsed]);
   const { data: me } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
 
   // Keep ?view= in sync so refresh/back-forward preserves the selected section.
