@@ -44,11 +44,30 @@ export const clerkUpdateStudent = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(clerkAccess);
+    const me = await requireRole(clerkAccess);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { id, ...patch } = data;
+    const { data: before } = await supabaseAdmin
+      .from("students")
+      .select("name, enrollment_no, branch, semester")
+      .eq("id", id)
+      .maybeSingle();
     const { error } = await supabaseAdmin.from("students").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
+    const changed = Object.keys(patch);
+    await supabaseAdmin.from("audit_log").insert({
+      actor_type: "staff",
+      actor_id: me.id,
+      action: "student_update",
+      entity: "students",
+      entity_id: String(id),
+      details: {
+        actor_name: me.username,
+        student_name: before?.name ?? null,
+        enrollment_no: before?.enrollment_no ?? null,
+        fields: changed,
+      },
+    });
     return { ok: true };
   });
 
