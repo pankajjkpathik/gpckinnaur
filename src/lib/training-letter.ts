@@ -236,7 +236,9 @@ export async function generateUndertakings(
       ],
       "Signature of Parent",
       logo,
+      address,
     );
+
   });
 
   const filename = `Undertakings-${(r.company || "training").replace(/[^\w]+/g, "_")}-${r.id}.pdf`;
