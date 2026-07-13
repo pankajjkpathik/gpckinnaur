@@ -623,9 +623,9 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
   const [picked, setPicked] = useState<Record<number, string>>({});
 
   const studentsQ = useQuery({
-    enabled: open,
+    enabled: open && !!branch && !!semester,
     queryKey: ["tpo-students", branch, semester],
-    queryFn: () => tpoListStudents({ data: { branch: branch || undefined, semester: semester || undefined } }),
+    queryFn: () => tpoListStudents({ data: { branch, semester: semester as number } }),
   });
 
   const create = useMutation({
@@ -764,29 +764,36 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                 <div>
                   <label className="text-xs text-gray-500 mb-1 block">Class</label>
                   <div className="grid grid-cols-2 gap-2">
-                    <input
+                    <select
                       value={branch}
-                      onChange={(e) => setBranch(e.target.value)}
-                      placeholder="Branch"
-                      className="border rounded px-2 py-2"
-                    />
-                    <input
+                      onChange={(e) => { setBranch(e.target.value); setPicked({}); }}
+                      className="border rounded px-2 py-2 bg-white"
+                    >
+                      <option value="">Select Branch</option>
+                      <option value="civil">Civil Engineering</option>
+                      <option value="mechanical">Mechanical Engineering</option>
+                      <option value="applied_science">Applied Sciences</option>
+                    </select>
+                    <select
                       value={semester}
-                      onChange={(e) => setSemester(e.target.value ? Number(e.target.value) : "")}
-                      type="number"
-                      placeholder="Sem"
-                      className="border rounded px-2 py-2"
-                    />
+                      onChange={(e) => { setSemester(e.target.value ? Number(e.target.value) : ""); setPicked({}); }}
+                      className="border rounded px-2 py-2 bg-white"
+                    >
+                      <option value="">Select Semester</option>
+                      {[1,2,3,4,5,6].map((s) => <option key={s} value={s}>Sem {s}</option>)}
+                    </select>
                   </div>
                 </div>
               </div>
 
               <div className="border rounded p-3">
                 <p className="font-semibold text-gray-700 mb-2">Select Students</p>
-                {studentsQ.isLoading ? (
+                {!branch || !semester ? (
+                  <p className="text-xs text-gray-400">Choose a branch and semester above to list students.</p>
+                ) : studentsQ.isLoading ? (
                   <p className="text-xs text-gray-400">Loading…</p>
                 ) : (studentsQ.data ?? []).length === 0 ? (
-                  <p className="text-xs text-gray-400">Enter a branch/semester above to list students.</p>
+                  <p className="text-xs text-gray-400">No active students found for this branch &amp; semester.</p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {(studentsQ.data ?? []).map((s: any) => (
