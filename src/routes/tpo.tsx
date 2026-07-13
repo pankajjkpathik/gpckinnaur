@@ -683,6 +683,7 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
     mutationFn: (d: any) => createIndustrialTraining({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tpo-training"] });
+      qc.invalidateQueries({ queryKey: ["tpo-students"] });
       setOpen(false);
       setPicked({});
     },
