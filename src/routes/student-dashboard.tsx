@@ -73,7 +73,7 @@ type View =
   | "attendance"
   | "marks"
   | "results"
-  | "upload"
+  
   | "assignments-docs"
   | "lesson-plans"
   | "exam-schedule"
