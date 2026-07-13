@@ -478,12 +478,38 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
 
         {/* Assignment reminders */}
         <Card className="lg:col-span-1">
-          <div className="flex items-center gap-2 mb-3">
-            <NotebookPen className="w-4 h-4 text-indigo-600" />
-            <h2 className="font-semibold text-gray-800">Assignment Reminders</h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <NotebookPen className="w-4 h-4 text-indigo-600" />
+              <h2 className="font-semibold text-gray-800">Assignment Reminders</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPrefsOpen(true)}
+              className="text-gray-400 hover:text-indigo-700 p-1 -m-1 rounded"
+              aria-label="Reminder settings"
+              title="Reminder settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
           </div>
-          {upcomingAssignments.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No upcoming assignments.</p>
+          {!effectivePrefs.assignments_enabled ? (
+            <div className="text-sm text-gray-500 py-4 text-center">
+              <BellOff className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+              <p>Assignment reminders are turned off.</p>
+              <button
+                type="button"
+                onClick={() => setPrefsOpen(true)}
+                className="text-xs text-indigo-700 hover:underline mt-1"
+              >
+                Turn on
+              </button>
+            </div>
+          ) : upcomingAssignments.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">
+              No assignments due in the next {effectivePrefs.assignments_lead_days} day
+              {effectivePrefs.assignments_lead_days === 1 ? "" : "s"}.
+            </p>
           ) : (
             <ul className="divide-y">
               {upcomingAssignments.map((a: any) => {
@@ -522,21 +548,46 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
               <DollarSign className="w-4 h-4 text-emerald-600" />
               <h2 className="font-semibold text-gray-800">Fees Reminder</h2>
             </div>
-            {pendingFees.length > 0 && (
+            <div className="flex items-center gap-2">
+              {effectivePrefs.fees_enabled && pendingFees.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFeesOpen(true)}
+                  className="text-xs font-medium text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+                >
+                  View details
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setFeesOpen(true)}
-                className="text-xs font-medium text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+                onClick={() => setPrefsOpen(true)}
+                className="text-gray-400 hover:text-emerald-700 p-1 -m-1 rounded"
+                aria-label="Reminder settings"
+                title="Reminder settings"
               >
-                View details
+                <Settings className="w-4 h-4" />
               </button>
-            )}
+            </div>
           </div>
-          {pendingFees.length === 0 ? (
+          {!effectivePrefs.fees_enabled ? (
+            <div className="text-sm text-gray-500 py-4 text-center">
+              <BellOff className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+              <p>Fees reminders are turned off.</p>
+              <button
+                type="button"
+                onClick={() => setPrefsOpen(true)}
+                className="text-xs text-emerald-700 hover:underline mt-1"
+              >
+                Turn on
+              </button>
+            </div>
+          ) : pendingFees.length === 0 ? (
             <p className="text-sm text-emerald-700 py-4 text-center">
-              All fees are paid. Thank you!
+              No fees due in the next {effectivePrefs.fees_lead_days} day
+              {effectivePrefs.fees_lead_days === 1 ? "" : "s"}.
             </p>
-          ) : (
+          ) : null}
+
             <>
               <div className="bg-rose-50 border border-rose-200 rounded p-3 mb-3">
                 <p className="text-xs text-rose-700 uppercase tracking-wide">Total Outstanding</p>
