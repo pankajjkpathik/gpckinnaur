@@ -346,6 +346,9 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const [feesOpen, setFeesOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [detailAssignment, setDetailAssignment] = useState<any | null>(null);
+  const [tsQuery, setTsQuery] = useState("");
+  const [tsSubject, setTsSubject] = useState<string>("all");
+  const [tsRange, setTsRange] = useState<"all" | "morning" | "afternoon" | "evening">("all");
   const dashFn = useServerFn(studentDashboard);
   const assignFn = useServerFn(studentListAssignments);
   const feesFn = useServerFn(studentMyFees);
@@ -444,39 +447,161 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
             <CalendarClock className="w-4 h-4 text-[#7b1f4c]" />
             <h2 className="font-semibold text-gray-800">Today's Classes</h2>
           </div>
-          {(data?.today_periods?.length ?? 0) === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No classes scheduled today.</p>
-          ) : (
-            <ul className="divide-y">
-              {data!.today_periods.map((p: any) => {
-                const pm = (data as any).periods?.find((x: any) => x.period_no === p.period_no);
-                return (
-                  <li key={p.period_no}>
-                    <button
-                      type="button"
-                      onClick={() => setOpenClass({ ...p, timing: pm })}
-                      className="w-full py-2 flex items-start gap-3 text-left hover:bg-gray-50 rounded px-1 -mx-1 transition"
-                    >
-                      <span className="w-8 h-8 rounded-full bg-[#7b1f4c]/10 text-[#7b1f4c] text-xs font-bold flex items-center justify-center shrink-0">
-                        P{p.period_no}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-800 truncate">
-                          {p.subjects?.name || p.subjects?.code || "—"}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {p.staff_users?.username || "TBA"}
-                          {p.room ? ` · Room ${p.room}` : ""}
-                          {pm ? ` · ${pm.start_time?.slice(0, 5)}–${pm.end_time?.slice(0, 5)}` : ""}
-                        </p>
-                      </div>
-                      <span className="text-[10px] text-[#7b1f4c] font-semibold shrink-0 mt-1">View →</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          {(() => {
+            const allPeriods = (data?.today_periods ?? []) as any[];
+            const periodsMeta = ((data as any)?.periods ?? []) as any[];
+            const subjectOptions = Array.from(
+              new Map(
+                allPeriods.map((p: any) => {
+                  const id = String(p.subjects?.id ?? p.subject_id ?? "");
+                  const label = p.subjects?.name || p.subjects?.code || "—";
+                  return [id, label];
+                }),
+              ).entries(),
+            );
+            const inRange = (hh: number) =>
+              tsRange === "all"
+                ? true
+                : tsRange === "morning"
+                ? hh < 12
+                : tsRange === "afternoon"
+                ? hh >= 12 && hh < 17
+                : hh >= 17;
+            const q = tsQuery.trim().toLowerCase();
+            const filtered = allPeriods
+              .map((p: any) => ({
+                p,
+                pm: periodsMeta.find((x: any) => x.period_no === p.period_no),
+              }))
+              .filter(({ p, pm }) => {
+                const subjMatch =
+                  tsSubject === "all" ||
+                  String(p.subjects?.id ?? p.subject_id ?? "") === tsSubject;
+                if (!subjMatch) return false;
+                const hh = pm?.start_time ? Number(pm.start_time.slice(0, 2)) : NaN;
+                if (!Number.isNaN(hh) && !inRange(hh)) return false;
+                if (!q) return true;
+                const hay = [
+                  p.subjects?.name,
+                  p.subjects?.code,
+                  p.staff_users?.username,
+                  p.room,
+                  `p${p.period_no}`,
+                ]
+                  .filter(Boolean)
+                  .join(" ")
+                  .toLowerCase();
+                return hay.includes(q);
+              });
+            const activeFilters =
+              tsQuery.trim() !== "" || tsSubject !== "all" || tsRange !== "all";
+
+            return (
+              <>
+                {allPeriods.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    <div className="relative">
+                      <input
+                        type="search"
+                        value={tsQuery}
+                        onChange={(e) => setTsQuery(e.target.value)}
+                        placeholder="Search subject, faculty, room…"
+                        className="w-full pl-3 pr-8 py-1.5 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-[#7b1f4c]"
+                      />
+                      {tsQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setTsQuery("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          aria-label="Clear search"
+                        >
+                          <XIcon className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <select
+                        value={tsSubject}
+                        onChange={(e) => setTsSubject(e.target.value)}
+                        className="flex-1 min-w-0 text-xs border rounded px-2 py-1 bg-white"
+                      >
+                        <option value="all">All subjects</option>
+                        {subjectOptions.map(([id, label]) => (
+                          <option key={id} value={id}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={tsRange}
+                        onChange={(e) => setTsRange(e.target.value as any)}
+                        className="text-xs border rounded px-2 py-1 bg-white"
+                      >
+                        <option value="all">Any time</option>
+                        <option value="morning">Morning (before 12)</option>
+                        <option value="afternoon">Afternoon (12–17)</option>
+                        <option value="evening">Evening (17+)</option>
+                      </select>
+                      {activeFilters && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTsQuery("");
+                            setTsSubject("all");
+                            setTsRange("all");
+                          }}
+                          className="text-[11px] text-gray-500 hover:text-[#7b1f4c] underline underline-offset-2"
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {allPeriods.length === 0 ? (
+                  <p className="text-sm text-gray-400 py-4 text-center">
+                    No classes scheduled today.
+                  </p>
+                ) : filtered.length === 0 ? (
+                  <p className="text-sm text-gray-400 py-4 text-center">
+                    No classes match your filters.
+                  </p>
+                ) : (
+                  <ul className="divide-y">
+                    {filtered.map(({ p, pm }) => (
+                      <li key={p.period_no}>
+                        <button
+                          type="button"
+                          onClick={() => setOpenClass({ ...p, timing: pm })}
+                          className="w-full py-2 flex items-start gap-3 text-left hover:bg-gray-50 rounded px-1 -mx-1 transition"
+                        >
+                          <span className="w-8 h-8 rounded-full bg-[#7b1f4c]/10 text-[#7b1f4c] text-xs font-bold flex items-center justify-center shrink-0">
+                            P{p.period_no}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-800 truncate">
+                              {p.subjects?.name || p.subjects?.code || "—"}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {p.staff_users?.username || "TBA"}
+                              {p.room ? ` · Room ${p.room}` : ""}
+                              {pm
+                                ? ` · ${pm.start_time?.slice(0, 5)}–${pm.end_time?.slice(0, 5)}`
+                                : ""}
+                            </p>
+                          </div>
+                          <span className="text-[10px] text-[#7b1f4c] font-semibold shrink-0 mt-1">
+                            View →
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            );
+          })()}
         </Card>
 
 
