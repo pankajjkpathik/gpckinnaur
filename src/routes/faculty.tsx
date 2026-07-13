@@ -187,7 +187,7 @@ function FacultyPortalInner({
 }) {
 
   // Keep realtime live for all faculty views, so the sidebar badge stays fresh.
-  useFacultyNotifRealtime(ay);
+  useFacultyNotifRealtime(ay, me.id);
   const { unreadCount, items: notifItems, unread: notifUnread, readIds: notifReadIds, setReadIds: setNotifReadIds } =
     useFacultyNotifications(me, ay);
 
