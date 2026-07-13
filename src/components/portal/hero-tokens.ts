@@ -36,8 +36,8 @@
  * ## Example — adding a new "librarian" palette
  *
  * ```ts
- * // 1. Extend the name union.
- * export type HeroPaletteName = ... | "librarian";
+ * // 1. Add the name to the single source of truth.
+ * export const HERO_PALETTE_NAMES = [..., "librarian"] as const;
  *
  * // 2. Add the palette. Match the shape of an existing entry.
  * librarian: {
