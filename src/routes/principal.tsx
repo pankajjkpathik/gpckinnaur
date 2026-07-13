@@ -331,8 +331,49 @@ function PrincipalSidebar({
           </ul>
         )}
       </div>
+
+      {/* General — account & site notices */}
+      <div className="pt-1 border-t border-gray-100">
+        <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-[0.18em] text-gray-400 font-semibold">General</p>
+        <ul className="space-y-0.5">
+          <li>
+            <a
+              href="/staff-dashboard"
+              onClick={(e) => { e.preventDefault(); window.location.href = "/"; }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <Home className="w-4 h-4 text-gray-400" /> Public Website
+            </a>
+          </li>
+          <li>
+            <a
+              href="/staff-profile"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <LayoutDashboard className="w-4 h-4 text-gray-400" /> My Profile
+            </a>
+          </li>
+          <li>
+            <a
+              href="/staff-change-password"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <Shield className="w-4 h-4 text-gray-400" /> Change Password
+            </a>
+          </li>
+          <li>
+            <a
+              href="/messages"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <Mail className="w-4 h-4 text-gray-400" /> Internal Messages
+            </a>
+          </li>
+        </ul>
+      </div>
     </nav>
   );
+
 
   return (
     <>
