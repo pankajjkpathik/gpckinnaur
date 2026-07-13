@@ -326,19 +326,11 @@ function HomeView({ me, ay, onNav: _onNav }: { me: any; ay: string; onNav: (v: V
   });
   const d = dash.data;
 
-  const today = new Date();
-  const dateLabel = today.toLocaleDateString("en-IN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  const hour = today.getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-
   const totalClassesToday = d?.today_classes?.length ?? 0;
   const totalSubjects = d?.assignments?.length ?? 0;
   const uniqueClasses = new Set((d?.assignments ?? []).map((a: any) => `${a.branch}-${a.semester}`)).size;
+
+
 
   return (
     <div className="space-y-6">
