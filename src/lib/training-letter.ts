@@ -154,10 +154,12 @@ function undertakingPage(
   points: string[],
   signatureLabel: string,
   logo: string | null,
+  address: string,
 ) {
   const w = doc.internal.pageSize.getWidth();
   const margin = 60;
-  letterhead(doc, logo);
+  letterhead(doc, logo, address);
+
   let y = 140;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
