@@ -91,6 +91,9 @@ function ClerkPortal() {
       <div className="flex">
         {/* LHS sidebar */}
         <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
+          <div className="p-3 border-b">
+            <GlobalSearch onJumpStudent={jumpToStudent} onJumpSalary={jumpToSalary} />
+          </div>
           <nav className="py-3">
             {NAV.map((item) => {
               const active = tab === item.tab;
@@ -112,6 +115,7 @@ function ClerkPortal() {
             })}
           </nav>
         </aside>
+
 
         {/* Mobile nav */}
         <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
