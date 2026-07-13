@@ -133,8 +133,17 @@ function BackBtn({ onClick }: { onClick: () => void }) {
  * Banner shown at the top of every TPO oversight view under the Principal
  * portal. Makes it visually obvious that the Principal has read-only access —
  * all TPO create/edit/delete rights remain with the Training & Placement
- * Officer. Wrap the entire view body in `<TpoReadOnlyGuard>` to also disable
- * any interactive controls at the DOM level.
+ * Officer.
+ *
+ * Structural read-only enforcement lives on the server:
+ *   - Only `principalRoles` (super_admin, principal) can reach this portal
+ *     via the `useEffect` role gate in `PrincipalPortal`.
+ *   - The TPO views (`PlacementDataView`, `TpoTrainingDetailsView`,
+ *     `TpoLecturesDetailsView`) import ONLY the `list*` server functions —
+ *     no create/update/delete mutations. If you add a mutation import here,
+ *     you are breaking the oversight contract; move it to `/tpo` instead.
+ *   - Supabase RLS on `placements`, `industrial_training` and
+ *     `guest_lectures` remains the source of truth.
  */
 function TpoReadOnlyBanner() {
   return (
@@ -150,27 +159,6 @@ function TpoReadOnlyBanner() {
         actions are unavailable in the Principal portal.
       </p>
     </div>
-  );
-}
-
-/**
- * Structural read-only guard for TPO oversight sections. The fieldset
- * disables any nested `<button>`, `<input>`, `<select>`, `<textarea>` or
- * `<form>` — a defence-in-depth so a future edit that accidentally drops a
- * mutation control into these views cannot fire from the Principal side.
- * Read-only widgets (links, print button, tables, charts) remain fully
- * usable because they aren't form controls.
- */
-function TpoReadOnlyGuard({ children }: { children: React.ReactNode }) {
-  return (
-    <fieldset
-      disabled
-      // `disabled` on a fieldset greys out form controls. We keep the visual
-      // treatment neutral so tables/charts read normally.
-      className="contents [&_button:not([data-tpo-allow])]:pointer-events-none [&_button:not([data-tpo-allow])]:cursor-not-allowed"
-    >
-      {children}
-    </fieldset>
   );
 }
 
