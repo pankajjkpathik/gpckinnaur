@@ -37,9 +37,11 @@ import {
   clerkBulkImportStudents,
   clerkPromoteStudents,
   clerkRecentActivity,
+  clerkGlobalSearch,
 } from "@/lib/clerk.functions";
 import { adminCreateStudent } from "@/lib/admin.functions";
 import { salaryList, salaryUpsert, salaryDelete, salaryStaffList } from "@/lib/salary.functions";
+
 
 export const Route = createFileRoute("/clerk")({
   head: () => portalMeta("Clerk Portal"),
