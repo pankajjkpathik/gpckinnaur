@@ -59,6 +59,9 @@ import {
   deleteAssignment as deleteAssignmentFn,
   facultyReceivedSubmissions,
   facultyGradeSubmission,
+
+  facultyDeleteSubmission,
+  uploadAssignmentFile,
 } from "@/lib/assignments.functions";
 
 export const Route = createFileRoute("/faculty")({
@@ -153,6 +156,19 @@ function FacultyPortal() {
   const heldAll = [me.role, ...((me as any).extraRoles ?? [])];
   const isViewer = !heldAll.includes("faculty");
 
+  const NAV: { icon: any; label: string; view: View }[] = [
+    { icon: GraduationCap, label: "Dashboard", view: "home" },
+    { icon: ClipboardCheck, label: "Record Attendance", view: "attendance" },
+    { icon: FileSpreadsheet, label: "Enter Marks", view: "marks" },
+    { icon: GraduationCap, label: "Semester Marks", view: "semester-marks" },
+    { icon: FilePlus, label: "Assignments", view: "assignments" },
+    { icon: Eye, label: "Submissions", view: "submissions" },
+    { icon: BookMarked, label: "Syllabus Coverage", view: "syllabus" },
+    { icon: BookOpen, label: "Lesson Plans", view: "lesson-plans" },
+    { icon: Calendar, label: "Exam Schedule", view: "exam-schedule" },
+    { icon: Printer, label: "Reports", view: "reports" },
+  ];
+
   return (
     <PortalShell
       title={isViewer ? "Faculty View (Read-only)" : "Faculty Portal"}
@@ -160,28 +176,76 @@ function FacultyPortal() {
       me={me as any}
       accent="teal"
     >
-      <div className="container mx-auto px-4 py-6">
-        {isViewer && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded px-3 py-2 mb-4">
+      {isViewer && (
+        <div className="container mx-auto px-4 pt-4">
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded px-3 py-2">
             You are viewing the Faculty portal as <strong className="capitalize">{me.role}</strong>. Edits are disabled.
           </div>
-        )}
-        <fieldset disabled={isViewer} className={isViewer ? "pointer-events-none opacity-90" : ""}>
-          {view === "home" && <HomeView me={me as any} ay={ay} onNav={setView} />}
-          {view === "attendance" && <AttendanceView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "marks" && <MarksView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "semester-marks" && <SemesterMarksView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "assignments" && <AssignmentsView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "submissions" && <SubmissionsView onBack={() => setView("home")} />}
-          {view === "syllabus" && <SyllabusView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "lesson-plans" && <LessonPlansView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "exam-schedule" && <ExamScheduleView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "reports" && <ReportsView ay={ay} me={me as any} onBack={() => setView("home")} />}
-        </fieldset>
+        </div>
+      )}
+      <div className="flex">
+        {/* LHS sidebar */}
+        <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
+          <nav className="py-3">
+            {NAV.map((item) => {
+              const active = view === item.view;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => setView(item.view)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left border-l-4 transition ${
+                    active
+                      ? "border-[#7b1f4c] bg-[#7b1f4c]/5 text-[#7b1f4c] font-semibold"
+                      : "border-transparent text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Mobile nav */}
+        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
+          {NAV.map((item) => {
+            const active = view === item.view;
+            return (
+              <button
+                key={item.view}
+                onClick={() => setView(item.view)}
+                className={`px-3 py-2 text-xs ${
+                  active ? "border-b-2 border-[#7b1f4c] text-[#7b1f4c] font-semibold" : "text-gray-600"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* RHS output */}
+        <main className="flex-1 min-w-0 p-4 md:p-6">
+          <fieldset disabled={isViewer} className={isViewer ? "pointer-events-none opacity-90" : ""}>
+            {view === "home" && <HomeView me={me as any} ay={ay} onNav={setView} />}
+            {view === "attendance" && <AttendanceView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "marks" && <MarksView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "semester-marks" && <SemesterMarksView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "assignments" && <AssignmentsView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "submissions" && <SubmissionsView onBack={() => setView("home")} />}
+            {view === "syllabus" && <SyllabusView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "lesson-plans" && <LessonPlansView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "exam-schedule" && <ExamScheduleView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "reports" && <ReportsView ay={ay} me={me as any} onBack={() => setView("home")} />}
+          </fieldset>
+        </main>
       </div>
     </PortalShell>
   );
 }
+
 
 // ─── HOME: card grid ──────────────────────────────────────────────────────────
 function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => void }) {
@@ -924,6 +988,8 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
     queryFn: () => facultyListAssignmentsCreated({ data: { academic_year: ay } }),
   });
   const [form, setForm] = useState({ title: "", asgId: "" as number | "", dueDate: "", description: "", fileUrl: "" });
+  const [uploading, setUploading] = useState(false);
+
 
   const save = useMutation({
     mutationFn: () => {
@@ -998,14 +1064,60 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Assignment File URL (optional)</label>
+            <label className="text-xs text-gray-500 mb-1 block">Assignment File (optional)</label>
             <input
-              value={form.fileUrl}
-              onChange={(e) => setForm({ ...form, fileUrl: e.target.value })}
-              placeholder="https://…/brief.pdf"
-              className="border rounded w-full px-3 py-2"
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.jpg,.jpeg,.png"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                if (f.size > 20 * 1024 * 1024) {
+                  alert("File too large (max 20 MB).");
+                  e.target.value = "";
+                  return;
+                }
+                try {
+                  setUploading(true);
+                  const buf = await f.arrayBuffer();
+                  // Convert to base64 in chunks (avoid stack overflow on large files).
+                  let binary = "";
+                  const bytes = new Uint8Array(buf);
+                  const CHUNK = 0x8000;
+                  for (let i = 0; i < bytes.length; i += CHUNK) {
+                    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + CHUNK)) as any);
+                  }
+                  const b64 = btoa(binary);
+                  const res = await uploadAssignmentFile({
+                    data: { filename: f.name, contentType: f.type || "application/octet-stream", contentBase64: b64 },
+                  });
+                  setForm((prev) => ({ ...prev, fileUrl: res.file_url }));
+                } catch (err: any) {
+                  alert("Upload failed: " + (err?.message ?? String(err)));
+                } finally {
+                  setUploading(false);
+                }
+              }}
+              className="border rounded w-full px-3 py-2 text-xs"
             />
+            {uploading && <p className="text-xs text-gray-500 mt-1">Uploading…</p>}
+            {form.fileUrl && !uploading && (
+              <p className="text-xs text-green-700 mt-1">
+                ✓ File attached ·{" "}
+                <a href={form.fileUrl} target="_blank" rel="noreferrer" className="underline">
+                  preview
+                </a>{" "}
+                ·{" "}
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, fileUrl: "" }))}
+                  className="underline text-rose-600"
+                >
+                  remove
+                </button>
+              </p>
+            )}
           </div>
+
           <div className="col-span-2">
             <label className="text-xs text-gray-500 mb-1 block">Description (Optional)</label>
             <textarea
@@ -1089,6 +1201,11 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
     },
   });
 
+  const delSub = useMutation({
+    mutationFn: (id: number) => facultyDeleteSubmission({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fac-received-subs"] }),
+  });
+
   const rows = subs.data ?? [];
 
   return (
@@ -1108,6 +1225,7 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Submitted On</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Download</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Grade</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -1154,11 +1272,24 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
                       </button>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => {
+                        if (confirm("Delete this submission? The uploaded file will also be removed from storage.")) {
+                          delSub.mutate(s.id);
+                        }
+                      }}
+                      className="text-rose-500 hover:text-rose-700"
+                      title="Delete submission"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">
                     No submissions found.
                   </td>
                 </tr>

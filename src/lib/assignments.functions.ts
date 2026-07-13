@@ -17,6 +17,18 @@ const httpUrl = z
   .url()
   .refine((v) => /^https?:\/\//i.test(v), { message: "File URL must be http(s)" });
 
+const ASSIGNMENT_BUCKET = "assignments";
+// Signed URLs live in `file_url` as `.../object/sign/assignments/<path>?token=...`
+// so we can recover the storage path from the URL and clean up on delete.
+function extractAssignmentPath(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/\/assignments\/([^?]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+// 10 years — signed URLs are effectively permanent for portal downloads.
+const SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10;
+
+
 // =====================================================================
 // ASSIGNMENTS  (faculty create / list / delete; students list their class)
 // =====================================================================
@@ -112,18 +124,88 @@ export const deleteAssignment = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const held = [me.role, ...(me.extraRoles ?? [])];
     const isPrivileged = held.some((r) => ["super_admin", "principal", "hod"].includes(r as string));
-    if (!isPrivileged) {
-      const { data: row } = await supabaseAdmin
-        .from("assignments")
-        .select("created_by")
-        .eq("id", data.id)
-        .maybeSingle();
-      if (!row || row.created_by !== me.id) throw new Error("Forbidden");
+    // Fetch the assignment + its submissions so we can strip any storage
+    // objects (assignment brief + student files) before removing the rows.
+    const { data: row } = await supabaseAdmin
+      .from("assignments")
+      .select("created_by, file_url")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("Assignment not found");
+    if (!isPrivileged && row.created_by !== me.id) throw new Error("Forbidden");
+
+    const { data: subs } = await supabaseAdmin
+      .from("assignment_submissions")
+      .select("file_url")
+      .eq("assignment_id", data.id);
+
+    const paths = [
+      extractAssignmentPath(row.file_url),
+      ...((subs ?? []).map((s: any) => extractAssignmentPath(s.file_url))),
+    ].filter(Boolean) as string[];
+    if (paths.length) {
+      await supabaseAdmin.storage.from(ASSIGNMENT_BUCKET).remove(paths);
     }
+
     const { error } = await supabaseAdmin.from("assignments").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// Faculty: upload an assignment brief to portal storage; returns a long-lived
+// signed URL that can be stored on the assignment row as `file_url`.
+export const uploadAssignmentFile = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        filename: z.string().min(1).max(200),
+        contentType: z.string().min(1).max(150),
+        // base64-encoded file body (no data: prefix)
+        contentBase64: z.string().min(1),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const me = await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const safe = data.filename.replace(/[^\w.\-]+/g, "_");
+    const path = `briefs/${me.id}/${Date.now()}-${safe}`;
+    const bytes = Buffer.from(data.contentBase64, "base64");
+    const { error: upErr } = await supabaseAdmin.storage
+      .from(ASSIGNMENT_BUCKET)
+      .upload(path, bytes, { contentType: data.contentType, upsert: false });
+    if (upErr) throw new Error(upErr.message);
+    const { data: signed, error: sErr } = await supabaseAdmin.storage
+      .from(ASSIGNMENT_BUCKET)
+      .createSignedUrl(path, SIGNED_URL_TTL);
+    if (sErr || !signed) throw new Error(sErr?.message || "Failed to sign URL");
+    return { file_url: signed.signedUrl };
+  });
+
+// Faculty: delete a single student submission (also removes its storage file).
+export const facultyDeleteSubmission = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.number().int() }).parse(d))
+  .handler(async ({ data }) => {
+    const me = await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const held = [me.role, ...(me.extraRoles ?? [])];
+    const isPrivileged = held.some((r) => ["super_admin", "principal", "hod"].includes(r as string));
+    const { data: sub } = await supabaseAdmin
+      .from("assignment_submissions")
+      .select("file_url, assignments(created_by)")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!sub) throw new Error("Submission not found");
+    if (!isPrivileged && (sub as any).assignments?.created_by !== me.id) {
+      throw new Error("Forbidden");
+    }
+    const path = extractAssignmentPath((sub as any).file_url);
+    if (path) await supabaseAdmin.storage.from(ASSIGNMENT_BUCKET).remove([path]);
+    const { error } = await supabaseAdmin.from("assignment_submissions").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 
 // Students: assignments for their branch + semester.
 export const studentListAssignments = createServerFn({ method: "GET" }).handler(async () => {
