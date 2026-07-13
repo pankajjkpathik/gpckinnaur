@@ -163,6 +163,11 @@ function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
     queryKey: ["salary-list", now.getMonth() + 1, now.getFullYear()],
     queryFn: () => salaryList({ data: { month: now.getMonth() + 1, year: now.getFullYear() } }),
   });
+  const activityQ = useQuery({
+    queryKey: ["clerk-activity"],
+    queryFn: () => clerkRecentActivity({ data: { limit: 20 } }),
+    refetchInterval: 60_000,
+  });
 
   const students = studentsQ.data ?? [];
   const staff = staffQ.data ?? [];
