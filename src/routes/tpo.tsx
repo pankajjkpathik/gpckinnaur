@@ -45,7 +45,8 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   return <div className={`bg-white border rounded-lg shadow-sm p-5 ${className}`}>{children}</div>;
 }
 
-function BackBtn({ onClick }: { onClick: () => void }) {
+function BackBtn({ onClick }: { onClick?: () => void }) {
+  if (!onClick) return null;
   return (
     <button
       onClick={onClick}
