@@ -672,6 +672,7 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
   const [branch, setBranch] = useState("");
   const [semester, setSemester] = useState<number | "">("");
   const [picked, setPicked] = useState<Record<number, string>>({});
+  const [studentQuery, setStudentQuery] = useState("");
 
   const studentsQ = useQuery({
     enabled: open && !!branch && !!semester,
