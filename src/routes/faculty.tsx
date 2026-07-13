@@ -825,12 +825,30 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
             )}
           </div>
           <p className="font-semibold text-gray-800">Notifications</p>
-          <span
-            className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200"
-            title="Live updates enabled"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
-          </span>
+          {rtStatus === "connected" ? (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200"
+              title="Live updates enabled"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+            </span>
+          ) : rtStatus === "reconnecting" || rtStatus === "connecting" ? (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200"
+              title="Reconnecting to live updates"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              {rtStatus === "connecting" ? "Connecting" : "Reconnecting"}
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200"
+              title="Live updates unavailable"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Offline
+            </span>
+          )}
+
           <span className="text-xs text-gray-500">
             {unread.length} unread · {items.length} total
           </span>
