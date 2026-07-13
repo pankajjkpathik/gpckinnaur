@@ -68,11 +68,12 @@ function ordinal(n: number | null | undefined) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-export function generateTrainingLetter(r: TrainingRecord) {
+export async function generateTrainingLetter(r: TrainingRecord) {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const margin = 50;
-  letterhead(doc);
+  const logo = await loadLogo();
+  letterhead(doc, logo);
 
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
   doc.setFontSize(10);
