@@ -178,7 +178,7 @@ function undertakingPage(
   doc.text(signatureLabel, w - margin, y, { align: "right" });
 }
 
-export async function generateUndertakings(r: TrainingRecord) {
+export async function generateUndertakings(r: TrainingRecord): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const logo = await loadLogo();
   const names = (r.student_names ?? []).filter(Boolean);
