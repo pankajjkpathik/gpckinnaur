@@ -244,7 +244,7 @@ function StudentDashboard() {
             const goHome = () => setView("home");
             return (
               <>
-                {view === "home" && <HomeView me={me} />}
+                {view === "home" && <HomeView me={me} setView={setView} />}
                 {view === "attendance" && <AttendanceView onBack={goHome} />}
                 {view === "marks" && <MarksView onBack={goHome} />}
                 {view === "results" && <ResultsView me={me} onBack={goHome} />}
@@ -268,7 +268,8 @@ function StudentDashboard() {
 }
 
 // ─── HOME (summary) ───────────────────────────────────────────────────────────
-function HomeView({ me }: { me: any }) {
+function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
+  const [openClass, setOpenClass] = useState<any | null>(null);
   const dashFn = useServerFn(studentDashboard);
   const assignFn = useServerFn(studentListAssignments);
   const feesFn = useServerFn(studentMyFees);
@@ -335,25 +336,37 @@ function HomeView({ me }: { me: any }) {
             <p className="text-sm text-gray-400 py-4 text-center">No classes scheduled today.</p>
           ) : (
             <ul className="divide-y">
-              {data!.today_periods.map((p: any) => (
-                <li key={p.period_no} className="py-2 flex items-start gap-3">
-                  <span className="w-8 h-8 rounded-full bg-[#7b1f4c]/10 text-[#7b1f4c] text-xs font-bold flex items-center justify-center shrink-0">
-                    P{p.period_no}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-800 truncate">
-                      {p.subjects?.name || p.subjects?.code || "—"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {p.staff_users?.username || "TBA"}
-                      {p.room ? ` · Room ${p.room}` : ""}
-                    </p>
-                  </div>
-                </li>
-              ))}
+              {data!.today_periods.map((p: any) => {
+                const pm = (data as any).periods?.find((x: any) => x.period_no === p.period_no);
+                return (
+                  <li key={p.period_no}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenClass({ ...p, timing: pm })}
+                      className="w-full py-2 flex items-start gap-3 text-left hover:bg-gray-50 rounded px-1 -mx-1 transition"
+                    >
+                      <span className="w-8 h-8 rounded-full bg-[#7b1f4c]/10 text-[#7b1f4c] text-xs font-bold flex items-center justify-center shrink-0">
+                        P{p.period_no}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {p.subjects?.name || p.subjects?.code || "—"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {p.staff_users?.username || "TBA"}
+                          {p.room ? ` · Room ${p.room}` : ""}
+                          {pm ? ` · ${pm.start_time?.slice(0, 5)}–${pm.end_time?.slice(0, 5)}` : ""}
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-[#7b1f4c] font-semibold shrink-0 mt-1">View →</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Card>
+
 
         {/* Assignment reminders */}
         <Card className="lg:col-span-1">
@@ -433,9 +446,168 @@ function HomeView({ me }: { me: any }) {
           )}
         </Card>
       </div>
+
+
+      <ClassDetailDialog
+        openClass={openClass}
+        onClose={() => setOpenClass(null)}
+        attBySubject={(data as any)?.attendance_by_subject || {}}
+        setView={setView}
+      />
     </div>
   );
 }
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function ClassDetailDialog({
+  openClass,
+  onClose,
+  attBySubject,
+  setView,
+}: {
+  openClass: any | null;
+  onClose: () => void;
+  attBySubject: Record<string, { total: number; present: number }>;
+  setView: (v: any) => void;
+}) {
+  const sylFn = useServerFn(studentSyllabus);
+  const { data: syllabus = [], isLoading } = useQuery({
+    queryKey: ["student-syllabus-modal"],
+    queryFn: () => sylFn(),
+    enabled: !!openClass,
+  });
+
+  if (!openClass) return null;
+  const subjectId = openClass.subjects?.id ?? openClass.subject_id;
+  const subj = (syllabus as any[]).find((s) => s.id === subjectId);
+  const att = attBySubject[String(subjectId)];
+  const pct = att && att.total ? Math.round((att.present / att.total) * 1000) / 10 : null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-5 py-4 border-b bg-[#7b1f4c] text-white flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-widest opacity-80">
+              Period {openClass.period_no}
+              {openClass.timing
+                ? ` · ${openClass.timing.start_time?.slice(0, 5)}–${openClass.timing.end_time?.slice(0, 5)}`
+                : ""}
+              {" · "}
+              {DAY_NAMES[openClass.day_of_week] ?? ""}
+            </p>
+            <h3 className="text-lg font-bold truncate">
+              {openClass.subjects?.name || openClass.subjects?.code || "Class"}
+            </h3>
+            <p className="text-xs opacity-90 truncate">
+              {openClass.subjects?.code ? `${openClass.subjects.code} · ` : ""}
+              {openClass.staff_users?.username || "TBA"}
+              {openClass.room ? ` · Room ${openClass.room}` : ""}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white text-2xl leading-none shrink-0"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto p-5 space-y-5">
+          {/* Attendance summary */}
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <ClipboardCheck className="w-4 h-4 text-emerald-600" />
+              <h4 className="font-semibold text-gray-800 text-sm">Your Attendance in this Subject</h4>
+            </div>
+            {att ? (
+              <div className="flex items-center gap-4">
+                <div className="text-3xl font-bold text-emerald-700">{pct}%</div>
+                <div className="text-sm text-gray-600">
+                  {att.present} present of {att.total} periods
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No attendance recorded yet for this subject.</p>
+            )}
+          </section>
+
+          {/* Syllabus */}
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <BookMarked className="w-4 h-4 text-[#7b1f4c]" />
+              <h4 className="font-semibold text-gray-800 text-sm">Syllabus Notes</h4>
+            </div>
+            {isLoading ? (
+              <p className="text-sm text-gray-400">Loading syllabus…</p>
+            ) : !subj || !subj.units?.length ? (
+              <p className="text-sm text-gray-500">No syllabus units published for this subject yet.</p>
+            ) : (
+              <ol className="space-y-3">
+                {subj.units.map((u: any) => (
+                  <li key={u.unit_no} className="border-l-2 border-[#7b1f4c]/30 pl-3">
+                    <p className="text-sm font-semibold text-gray-800">
+                      Unit {u.unit_no}: {u.title}
+                    </p>
+                    {u.topics && u.topics.length > 0 && (
+                      <ul className="mt-1 text-xs text-gray-600 list-disc list-inside space-y-0.5">
+                        {u.topics.map((t: string, i: number) => (
+                          <li key={i}>{t}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+        </div>
+
+        {/* Footer actions */}
+        <div className="px-5 py-3 border-t bg-gray-50 flex flex-wrap gap-2 justify-end">
+          <button
+            onClick={() => {
+              onClose();
+              setView("attendance");
+            }}
+            className="px-3 py-1.5 rounded border text-xs font-medium text-gray-700 hover:bg-white flex items-center gap-1.5"
+          >
+            <ClipboardCheck className="w-3.5 h-3.5" /> Full Attendance
+          </button>
+          <button
+            onClick={() => {
+              onClose();
+              setView("syllabus");
+            }}
+            className="px-3 py-1.5 rounded border text-xs font-medium text-gray-700 hover:bg-white flex items-center gap-1.5"
+          >
+            <BookMarked className="w-3.5 h-3.5" /> Syllabus Coverage
+          </button>
+          <button
+            onClick={() => {
+              onClose();
+              setView("timetable");
+            }}
+            className="px-3 py-1.5 rounded bg-[#7b1f4c] text-white text-xs font-medium hover:bg-[#65173e] flex items-center gap-1.5"
+          >
+            <Calendar className="w-3.5 h-3.5" /> Full Timetable
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 // ─── MY ATTENDANCE ────────────────────────────────────────────────────────────
 function AttendanceView({ onBack }: { onBack: () => void }) {
