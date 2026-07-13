@@ -21,6 +21,7 @@ export function HeroBanner({
   avatarSrc,
   onAvatarChange,
   avatarUploading = false,
+  fallbackAvatarSrc,
 }: {
   name: string;
   role?: string;
@@ -38,6 +39,8 @@ export function HeroBanner({
   /** When provided, a camera badge appears on the avatar to pick a new image. */
   onAvatarChange?: (file: File) => void;
   avatarUploading?: boolean;
+  /** Default placeholder image shown when the user has no avatar (falls back to initials if omitted). */
+  fallbackAvatarSrc?: string;
 }) {
 
   const p = resolveHeroPalette(palette);
