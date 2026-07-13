@@ -146,16 +146,17 @@ export const instituteExamTypes = createServerFn({ method: "GET" })
   });
 
 export const instituteResults = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe), exam_type: z.string() }).parse(d))
+  .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe), exam_type: z.string().optional() }).parse(d))
   .handler(async ({ data }) => {
     await requireRole(principalRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("marks")
       .select("obtained, max_marks, subjects(branch,semester)")
       .eq("academic_year", data.academic_year)
-      .eq("exam_type", data.exam_type)
       .eq("approved_by_hod", true);
+    if (data.exam_type && data.exam_type.trim() !== "") q = q.eq("exam_type", data.exam_type);
+    const { data: rows } = await q;
     const agg = new Map<string, { branch: string; semester: number; total: number; pass: number; sum: number }>();
     (rows ?? []).forEach((r: any) => {
       const b = r.subjects?.branch,
