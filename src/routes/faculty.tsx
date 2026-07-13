@@ -369,6 +369,8 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
       <HeroBanner
         name={me.name || "Faculty"}
         avatarSrc={avatarUrl(me as any)}
+        onAvatarChange={(f) => uploadAvatar.mutate(f)}
+        avatarUploading={uploadAvatar.isPending}
         palette="faculty"
         subtitle={
           <>
