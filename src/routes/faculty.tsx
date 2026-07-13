@@ -1108,8 +1108,65 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
     }
   };
 
+  const scopedUnreadKeys = useMemo(
+    () => scoped.filter((i) => !readIds.has(i.key)).map((i) => i.key),
+    [scoped, readIds],
+  );
+  const autoMarkVisibleAsRead = useCallback(() => {
+    if (scopedUnreadKeys.length === 0) return;
+    const next = new Set(readIds);
+    let changed = false;
+    for (const k of scopedUnreadKeys) {
+      if (!next.has(k)) {
+        next.add(k);
+        changed = true;
+      }
+    }
+    if (changed) setReadIds(next);
+  }, [scopedUnreadKeys, readIds, setReadIds]);
+
+  // Auto-mark on focus: when any element inside the panel receives focus.
+  useEffect(() => {
+    if (!prefs.autoReadOnFocus) return;
+    const el = panelRef.current;
+    if (!el) return;
+    const onFocus = () => {
+      // Small delay so users can perceive the highlight before it clears.
+      window.setTimeout(autoMarkVisibleAsRead, 350);
+    };
+    el.addEventListener("focusin", onFocus);
+    return () => el.removeEventListener("focusin", onFocus);
+  }, [prefs.autoReadOnFocus, autoMarkVisibleAsRead]);
+
+  // Auto-mark on scroll into view: fires each time the panel becomes ≥50% visible.
+  useEffect(() => {
+    if (!prefs.autoReadOnScroll) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const el = panelRef.current;
+    if (!el) return;
+    let armed = true;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && e.intersectionRatio >= 0.5) {
+            if (armed) {
+              armed = false;
+              window.setTimeout(autoMarkVisibleAsRead, 600);
+            }
+          } else if (!e.isIntersecting) {
+            armed = true;
+          }
+        }
+      },
+      { threshold: [0, 0.5, 1] },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [prefs.autoReadOnScroll, autoMarkVisibleAsRead]);
+
   return (
     <div
+      ref={panelRef}
       id={FAC_NOTIF_ANCHOR_ID}
       tabIndex={-1}
       className="bg-white border rounded-xl shadow-sm overflow-hidden scroll-mt-24 outline-none transition-shadow"
