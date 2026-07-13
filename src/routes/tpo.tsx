@@ -201,16 +201,42 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
       .sort((a, b) => b.value - a.value)
       .slice(0, 6);
   }, [placements, currentYear]);
-  const recentPlacements = useMemo(
-    () => [...placements].sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0)).slice(0, 5),
+  // Filter state for Recent Placements & Guest Lectures panels
+  const [placeCompany, setPlaceCompany] = useState<string>("");
+  const [placeYear, setPlaceYear] = useState<string>("");
+  const [lectureDept, setLectureDept] = useState<string>("");
+
+  const companyOptions = useMemo(
+    () => Array.from(new Set(placements.map((r: any) => r.company).filter(Boolean))).sort(),
     [placements],
+  );
+  const yearOptions = useMemo(
+    () =>
+      Array.from(new Set(placements.map((r: any) => r.year).filter(Boolean)))
+        .sort((a: any, b: any) => b - a),
+    [placements],
+  );
+  const deptOptions = useMemo(
+    () => Array.from(new Set(lectures.map((r: any) => r.department).filter(Boolean))).sort(),
+    [lectures],
+  );
+
+  const recentPlacements = useMemo(
+    () =>
+      [...placements]
+        .filter((r: any) => (placeCompany ? r.company === placeCompany : true))
+        .filter((r: any) => (placeYear ? String(r.year) === placeYear : true))
+        .sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0))
+        .slice(0, 5),
+    [placements, placeCompany, placeYear],
   );
   const recentLectures = useMemo(
     () =>
       [...lectures]
+        .filter((r: any) => (lectureDept ? r.department === lectureDept : true))
         .sort((a: any, b: any) => (b.lecture_date ?? "").localeCompare(a.lecture_date ?? ""))
         .slice(0, 4),
-    [lectures],
+    [lectures, lectureDept],
   );
 
   const quickActions: { view: View; icon: any; label: string; desc: string; color: string; border: string; stat: number; statLabel: string }[] = [
