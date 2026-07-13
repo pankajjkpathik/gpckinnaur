@@ -433,6 +433,12 @@ function HodPortal() {
 
   if (isLoading || !me || !hasRole(me, hodRoles)) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
+  // Redirect viewers away from write-only views if reached via URL/bookmark.
+  const WRITE_ONLY_VIEWS: View[] = ["faculty", "lessons"];
+  if (me.role !== "hod" && WRITE_ONLY_VIEWS.includes(view)) {
+    setTimeout(() => setView("home"), 0);
+  }
+
   const isViewer = me.role !== "hod";
   const branch = deptToBranch(me.department);
   const deptLabel = branchToDept(branch);
