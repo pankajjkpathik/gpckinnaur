@@ -67,6 +67,8 @@ import {
   facultyDeleteSubmission,
   uploadAssignmentFile,
 } from "@/lib/assignments.functions";
+import { listNotices } from "@/lib/notices.functions";
+import { listAnnouncements } from "@/lib/admin-extras.functions";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
