@@ -691,6 +691,144 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   );
 }
 
+function AssignmentQuickDetailDialog({
+  assignment,
+  onClose,
+  onGoToAssignments,
+  currentStatus,
+}: {
+  assignment: any | null;
+  onClose: () => void;
+  onGoToAssignments: () => void;
+  currentStatus: string | null;
+}) {
+  if (!assignment) return null;
+  const due = assignment.due_date ? new Date(assignment.due_date) : null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dn = due
+    ? Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b bg-indigo-700 text-white flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-widest opacity-80">Assignment</p>
+            <h3 className="font-semibold text-lg truncate">{assignment.title}</h3>
+            <p className="text-xs opacity-90 truncate">
+              {assignment.subjects?.name || assignment.subject_name || "—"}
+              {assignment.subjects?.code ? ` · ${assignment.subjects.code}` : ""}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white/80 hover:text-white shrink-0"
+            aria-label="Close"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4 overflow-y-auto">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <div>
+              <dt className="text-[10px] uppercase tracking-wide text-gray-500">Due date</dt>
+              <dd className="font-medium text-gray-900">
+                {due ? due.toLocaleDateString() : "—"}
+                {dn !== null && (
+                  <span
+                    className={`ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      dn < 0
+                        ? "bg-rose-100 text-rose-700"
+                        : dn <= 2
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-indigo-100 text-indigo-700"
+                    }`}
+                  >
+                    {dn < 0 ? "Overdue" : dn === 0 ? "Today" : `${dn}d left`}
+                  </span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] uppercase tracking-wide text-gray-500">Your status</dt>
+              <dd className="font-medium text-gray-900 capitalize">
+                {currentStatus ?? "Not started"}
+              </dd>
+            </div>
+            {assignment.max_marks != null && (
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-gray-500">Max marks</dt>
+                <dd className="font-medium text-gray-900">{assignment.max_marks}</dd>
+              </div>
+            )}
+            {assignment.assignment_type && (
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-gray-500">Type</dt>
+                <dd className="font-medium text-gray-900 capitalize">
+                  {String(assignment.assignment_type).replace(/_/g, " ")}
+                </dd>
+              </div>
+            )}
+          </dl>
+
+          {assignment.description && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">
+                Description
+              </p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                {assignment.description}
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 pt-2">
+            {assignment.file_url ? (
+              <a
+                href={assignment.file_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700"
+              >
+                <Download className="w-3.5 h-3.5" /> Download brief
+              </a>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs text-gray-400">
+                <FileText className="w-3.5 h-3.5" /> No brief attached
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={onGoToAssignments}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <Upload className="w-3.5 h-3.5" /> Open Assignments page
+            </button>
+          </div>
+
+          <div className="pt-2 border-t">
+            <p className="text-[10px] uppercase tracking-wide text-gray-500 mb-1.5">
+              Quick status
+            </p>
+            <AssignmentStatusButtons assignmentId={assignment.id} currentStatus={currentStatus} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function FeesDetailDialog({
   open,
   onClose,
