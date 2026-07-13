@@ -159,12 +159,32 @@ function FacultyPortal() {
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
+  return <FacultyPortalInner me={me as any} ay={ay} setAy={setAy} view={view} setView={setView} />;
+}
+
+function FacultyPortalInner({
+  me,
+  ay,
+  setAy: _setAy,
+  view,
+  setView,
+}: {
+  me: any;
+  ay: string;
+  setAy: (v: string) => void;
+  view: View;
+  setView: (v: View) => void;
+}) {
+  // Keep realtime live for all faculty views, so the sidebar badge stays fresh.
+  useFacultyNotifRealtime(ay);
+  const { unreadCount } = useFacultyNotifications(me, ay);
+
   // HOD/Principal who also hold the faculty role (via extraRoles) can edit as faculty too.
   const heldAll = [me.role, ...((me as any).extraRoles ?? [])];
   const isViewer = !heldAll.includes("faculty");
 
-  const NAV: { icon: any; label: string; view: View }[] = [
-    { icon: GraduationCap, label: "Dashboard", view: "home" },
+  const NAV: { icon: any; label: string; view: View; badge?: number }[] = [
+    { icon: GraduationCap, label: "Dashboard", view: "home", badge: unreadCount },
     { icon: ClipboardCheck, label: "Record Attendance", view: "attendance" },
     { icon: FileSpreadsheet, label: "Enter Marks", view: "marks" },
     { icon: GraduationCap, label: "Semester Marks", view: "semester-marks" },
@@ -175,6 +195,7 @@ function FacultyPortal() {
     { icon: Calendar, label: "Exam Schedule", view: "exam-schedule" },
     { icon: Printer, label: "Reports", view: "reports" },
   ];
+
 
   return (
     <PortalShell
