@@ -629,7 +629,11 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   };
 
   return (
-    <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+    <div
+      id={FAC_NOTIF_ANCHOR_ID}
+      tabIndex={-1}
+      className="bg-white border rounded-xl shadow-sm overflow-hidden scroll-mt-24 outline-none transition-shadow"
+    >
       <div className="px-5 py-3 bg-gradient-to-r from-amber-50 via-white to-rose-50 border-b flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="relative">
