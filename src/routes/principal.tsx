@@ -73,7 +73,6 @@ import { BarStats, PieStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
 import { listNotices } from "@/lib/notices.functions";
-import { principalListStudents } from "@/lib/assignments.functions";
 import { BRANCH_TO_DEPT } from "@/lib/branch";
 import {
   CommandDialog,
