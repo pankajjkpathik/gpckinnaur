@@ -133,3 +133,49 @@ export function HeroStatTile({ value, label }: { value: ReactNode; label: string
     </div>
   );
 }
+
+function HeroAvatar({ src, name }: { src?: string | null; name: string }) {
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">(
+    src ? "loading" : "loaded",
+  );
+
+  useEffect(() => {
+    setStatus(src ? "loading" : "loaded");
+  }, [src]);
+
+  const showImg = src && status !== "error";
+  const showFallback = !src || status === "error";
+  const showSkeleton = !!src && status === "loading";
+
+  return (
+    <div className="relative w-16 h-16 sm:w-20 sm:h-20">
+      {showImg && (
+        <img
+          src={src!}
+          alt={name}
+          onLoad={() => setStatus("loaded")}
+          onError={() => setStatus("error")}
+          className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-white/40 shadow-lg bg-white/10 transition-opacity duration-300 ${
+            status === "loaded" ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
+      {showSkeleton && (
+        <div
+          aria-hidden
+          className="absolute inset-0 rounded-full ring-2 ring-white/40 shadow-lg bg-white/20 animate-pulse"
+        />
+      )}
+      {showFallback && (
+        <div
+          role={status === "error" ? "img" : undefined}
+          aria-label={status === "error" ? `${name} (photo failed to load)` : undefined}
+          title={status === "error" ? "Profile photo failed to load" : undefined}
+          className="absolute inset-0 rounded-full ring-2 ring-white/40 shadow-lg bg-white/15 backdrop-blur flex items-center justify-center text-white font-bold text-xl sm:text-2xl"
+        >
+          {initialsOf(name)}
+        </div>
+      )}
+    </div>
+  );
+}
