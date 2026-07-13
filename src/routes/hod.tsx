@@ -1115,16 +1115,36 @@ function SessionalReportsView({
   onBack: () => void;
 }) {
   const [tab, setTab] = useState<"pending" | "approved" | "returned">("pending");
+  const [examType, setExamType] = useState<string>("");
   const [exporting, setExporting] = useState<null | "csv" | "pdf">(null);
+
+  const tabLabel = tab.charAt(0).toUpperCase() + tab.slice(1);
+  const filterSummary = `Session ${ay} · ${deptLabel} · ${tabLabel}${examType ? ` · ${examType}` : ""}`;
 
   const runExport = async (format: "csv" | "pdf") => {
     setExporting(format);
     try {
-      const rows = await hodExportApprovedMarks({ data: { academic_year: ay, branch } });
+      const rows = await hodExportApprovedMarks({
+        data: {
+          academic_year: ay,
+          branch,
+          status: tab,
+          ...(examType ? { exam_type: examType } : {}),
+        },
+      });
       if (!rows.length) {
-        alert("No approved sessional marks to export for this session and department.");
+        alert(`No ${tab} sessional marks match the current filters.`);
         return;
       }
+      const filterHeader = [
+        ["Applied filters"],
+        ["Session", ay],
+        ["Department", deptLabel],
+        ["Status", tabLabel],
+        ["Exam type", examType || "All"],
+        ["Exported at", new Date().toLocaleString()],
+        [],
+      ];
       const header = [
         "Subject Code",
         "Subject",
@@ -1136,8 +1156,8 @@ function SessionalReportsView({
         "Max",
         "Remarks",
         "Faculty",
-        "Approved By",
-        "Approved At",
+        tab === "approved" ? "Approved By" : "Reviewer",
+        tab === "approved" ? "Approved At" : "Reviewed At",
       ];
       const body = rows.map((r) => [
         r.subject_code,
@@ -1154,14 +1174,16 @@ function SessionalReportsView({
         r.approved_at ? new Date(r.approved_at).toLocaleString() : "",
       ]);
       const safeDept = deptLabel.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
-      const filename = `sessional-approved_${safeDept}_${ay}`;
+      const safeExam = examType ? `_${examType.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}` : "";
+      const filename = `sessional-${tab}_${safeDept}_${ay}${safeExam}`;
       if (format === "csv") {
-        exportCSV(filename, header, body);
+        // Prepend filter header rows so CSV consumers see the applied filters.
+        exportCSV(filename, [], [...filterHeader, header, ...body]);
       } else {
         exportPDF(
           filename,
-          `Approved Sessional Marks — ${deptLabel}`,
-          `Session ${ay} · ${rows.length} record${rows.length === 1 ? "" : "s"}`,
+          `${tabLabel} Sessional Marks — ${deptLabel}`,
+          `${filterSummary} · ${rows.length} record${rows.length === 1 ? "" : "s"}`,
           header,
           body,
         );
@@ -1183,28 +1205,41 @@ function SessionalReportsView({
             <p className="text-xs text-gray-500">
               Validate internal marks sheets submitted by faculty. Approved sheets remain visible for reference.
             </p>
+            <p className="text-[11px] text-gray-400 mt-1">Filters: {filterSummary}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {tab === "approved" && (
-              <div className="inline-flex items-center gap-1.5">
-                <button
-                  onClick={() => runExport("csv")}
-                  disabled={exporting !== null}
-                  title={`Download approved sessional marks for ${deptLabel} · ${ay} as CSV`}
-                  className="text-xs px-3 py-1.5 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50"
-                >
-                  {exporting === "csv" ? "Exporting…" : "Export CSV"}
-                </button>
-                <button
-                  onClick={() => runExport("pdf")}
-                  disabled={exporting !== null}
-                  title={`Download approved sessional marks for ${deptLabel} · ${ay} as PDF`}
-                  className="text-xs px-3 py-1.5 rounded bg-[#7b1f4c] text-white hover:bg-[#651841] disabled:opacity-50"
-                >
-                  {exporting === "pdf" ? "Exporting…" : "Export PDF"}
-                </button>
-              </div>
-            )}
+            <label className="text-[11px] text-gray-500 inline-flex items-center gap-1">
+              Exam
+              <select
+                value={examType}
+                onChange={(e) => setExamType(e.target.value)}
+                className="border rounded px-2 py-1 text-xs bg-white"
+              >
+                <option value="">All</option>
+                <option value="Sessional 1">Sessional 1</option>
+                <option value="Sessional 2">Sessional 2</option>
+                <option value="Assignment">Assignment</option>
+                <option value="Quiz">Quiz</option>
+              </select>
+            </label>
+            <div className="inline-flex items-center gap-1.5">
+              <button
+                onClick={() => runExport("csv")}
+                disabled={exporting !== null}
+                title={`Download ${tab} sessional marks · ${filterSummary} as CSV`}
+                className="text-xs px-3 py-1.5 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                {exporting === "csv" ? "Exporting…" : "Export CSV"}
+              </button>
+              <button
+                onClick={() => runExport("pdf")}
+                disabled={exporting !== null}
+                title={`Download ${tab} sessional marks · ${filterSummary} as PDF`}
+                className="text-xs px-3 py-1.5 rounded bg-[#7b1f4c] text-white hover:bg-[#651841] disabled:opacity-50"
+              >
+                {exporting === "pdf" ? "Exporting…" : "Export PDF"}
+              </button>
+            </div>
             <div className="inline-flex rounded-lg border overflow-hidden text-xs">
               {(["pending", "approved", "returned"] as const).map((t) => (
                 <button
