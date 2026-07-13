@@ -1059,14 +1059,60 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Assignment File URL (optional)</label>
+            <label className="text-xs text-gray-500 mb-1 block">Assignment File (optional)</label>
             <input
-              value={form.fileUrl}
-              onChange={(e) => setForm({ ...form, fileUrl: e.target.value })}
-              placeholder="https://…/brief.pdf"
-              className="border rounded w-full px-3 py-2"
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.jpg,.jpeg,.png"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                if (f.size > 20 * 1024 * 1024) {
+                  alert("File too large (max 20 MB).");
+                  e.target.value = "";
+                  return;
+                }
+                try {
+                  setUploading(true);
+                  const buf = await f.arrayBuffer();
+                  // Convert to base64 in chunks (avoid stack overflow on large files).
+                  let binary = "";
+                  const bytes = new Uint8Array(buf);
+                  const CHUNK = 0x8000;
+                  for (let i = 0; i < bytes.length; i += CHUNK) {
+                    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + CHUNK)) as any);
+                  }
+                  const b64 = btoa(binary);
+                  const res = await uploadAssignmentFile({
+                    data: { filename: f.name, contentType: f.type || "application/octet-stream", contentBase64: b64 },
+                  });
+                  setForm((prev) => ({ ...prev, fileUrl: res.file_url }));
+                } catch (err: any) {
+                  alert("Upload failed: " + (err?.message ?? String(err)));
+                } finally {
+                  setUploading(false);
+                }
+              }}
+              className="border rounded w-full px-3 py-2 text-xs"
             />
+            {uploading && <p className="text-xs text-gray-500 mt-1">Uploading…</p>}
+            {form.fileUrl && !uploading && (
+              <p className="text-xs text-green-700 mt-1">
+                ✓ File attached ·{" "}
+                <a href={form.fileUrl} target="_blank" rel="noreferrer" className="underline">
+                  preview
+                </a>{" "}
+                ·{" "}
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, fileUrl: "" }))}
+                  className="underline text-rose-600"
+                >
+                  remove
+                </button>
+              </p>
+            )}
           </div>
+
           <div className="col-span-2">
             <label className="text-xs text-gray-500 mb-1 block">Description (Optional)</label>
             <textarea
