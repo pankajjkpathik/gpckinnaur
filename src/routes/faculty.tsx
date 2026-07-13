@@ -1201,6 +1201,11 @@ function SubmissionsView({ onBack }: { onBack: () => void }) {
     },
   });
 
+  const delSub = useMutation({
+    mutationFn: (id: number) => facultyDeleteSubmission({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fac-received-subs"] }),
+  });
+
   const rows = subs.data ?? [];
 
   return (
