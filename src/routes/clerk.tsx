@@ -360,6 +360,8 @@ function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
           </ul>
         </div>
       </div>
+
+      <ActivityPanel rows={activityQ.data ?? []} loading={activityQ.isLoading} />
     </div>
   );
 }
