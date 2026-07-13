@@ -191,7 +191,24 @@ export const tpoListStudents = createServerFn({ method: "GET" })
     if (data.semester) q = q.eq("semester", data.semester);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    return rows ?? [];
+
+    // Flag students who already have an industrial training assignment
+    // for this same branch + semester.
+    const assigned = new Set<number>();
+    if (data.branch && data.semester) {
+      let tq = supabaseAdmin
+        .from("industrial_training")
+        .select("student_ids, company, training_type")
+        .eq("branch", data.branch)
+        .eq("semester", data.semester);
+      const { data: trainings } = await tq;
+      for (const t of trainings ?? []) {
+        const ids = Array.isArray((t as any).student_ids) ? ((t as any).student_ids as number[]) : [];
+        for (const id of ids) assigned.add(Number(id));
+      }
+    }
+
+    return (rows ?? []).map((s: any) => ({ ...s, already_assigned: assigned.has(Number(s.id)) }));
   });
 
 // =====================================================================
