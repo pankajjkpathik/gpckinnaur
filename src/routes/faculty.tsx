@@ -24,6 +24,7 @@ import {
   Megaphone,
   AlarmClock,
   CheckCheck,
+  Settings,
 } from "lucide-react";
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { useServerFn } from "@tanstack/react-start";
