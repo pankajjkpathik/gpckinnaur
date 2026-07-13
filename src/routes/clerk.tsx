@@ -5,6 +5,7 @@ import { Plus, Pencil, Upload, ArrowUpCircle, Download, FileSpreadsheet, Trash2 
 import * as XLSX from "xlsx";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 import { clerkRoles, hasRole } from "@/lib/roles";
 import {
   clerkListStudents,
