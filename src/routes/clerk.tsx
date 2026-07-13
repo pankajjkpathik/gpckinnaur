@@ -118,33 +118,39 @@ function ClerkPortal() {
 
 
         {/* Mobile nav */}
-        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
-          {NAV.map((item) => {
-            const active = tab === item.tab;
-            return (
-              <button
-                key={item.tab}
-                onClick={() => setTab(item.tab)}
-                className={`px-3 py-2 text-xs ${
-                  active ? "border-b-2 border-amber-600 text-amber-700 font-semibold" : "text-gray-600"
-                }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
+        <div className="md:hidden w-full border-b bg-white flex flex-col">
+          <div className="p-2 border-b">
+            <GlobalSearch onJumpStudent={jumpToStudent} onJumpSalary={jumpToSalary} />
+          </div>
+          <div className="overflow-x-auto flex whitespace-nowrap">
+            {NAV.map((item) => {
+              const active = tab === item.tab;
+              return (
+                <button
+                  key={item.tab}
+                  onClick={() => setTab(item.tab)}
+                  className={`px-3 py-2 text-xs ${
+                    active ? "border-b-2 border-amber-600 text-amber-700 font-semibold" : "text-gray-600"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* RHS output */}
         <main className="flex-1 min-w-0 p-4 md:p-6 space-y-4">
           {tab === "home" && <HomeTab me={me as any} onNav={setTab} />}
-          {tab === "students" && <StudentsTab />}
+          {tab === "students" && <StudentsTab preset={studentPreset} />}
           {tab === "import" && <ImportTab />}
           {tab === "promote" && <PromoteTab />}
-          {tab === "salary" && <SalaryTab />}
+          {tab === "salary" && <SalaryTab preset={salaryPreset} />}
           {tab === "profile" && <ProfileTab me={me as any} />}
           {tab === "password" && <PasswordTab me={me as any} />}
         </main>
+
       </div>
     </PortalShell>
   );
