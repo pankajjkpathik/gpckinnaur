@@ -153,6 +153,19 @@ function FacultyPortal() {
   const heldAll = [me.role, ...((me as any).extraRoles ?? [])];
   const isViewer = !heldAll.includes("faculty");
 
+  const NAV: { icon: any; label: string; view: View }[] = [
+    { icon: GraduationCap, label: "Dashboard", view: "home" },
+    { icon: ClipboardCheck, label: "Record Attendance", view: "attendance" },
+    { icon: FileSpreadsheet, label: "Enter Marks", view: "marks" },
+    { icon: GraduationCap, label: "Semester Marks", view: "semester-marks" },
+    { icon: FilePlus, label: "Assignments", view: "assignments" },
+    { icon: Eye, label: "Submissions", view: "submissions" },
+    { icon: BookMarked, label: "Syllabus Coverage", view: "syllabus" },
+    { icon: BookOpen, label: "Lesson Plans", view: "lesson-plans" },
+    { icon: Calendar, label: "Exam Schedule", view: "exam-schedule" },
+    { icon: Printer, label: "Reports", view: "reports" },
+  ];
+
   return (
     <PortalShell
       title={isViewer ? "Faculty View (Read-only)" : "Faculty Portal"}
@@ -160,28 +173,76 @@ function FacultyPortal() {
       me={me as any}
       accent="teal"
     >
-      <div className="container mx-auto px-4 py-6">
-        {isViewer && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded px-3 py-2 mb-4">
+      {isViewer && (
+        <div className="container mx-auto px-4 pt-4">
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded px-3 py-2">
             You are viewing the Faculty portal as <strong className="capitalize">{me.role}</strong>. Edits are disabled.
           </div>
-        )}
-        <fieldset disabled={isViewer} className={isViewer ? "pointer-events-none opacity-90" : ""}>
-          {view === "home" && <HomeView me={me as any} ay={ay} onNav={setView} />}
-          {view === "attendance" && <AttendanceView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "marks" && <MarksView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "semester-marks" && <SemesterMarksView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "assignments" && <AssignmentsView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "submissions" && <SubmissionsView onBack={() => setView("home")} />}
-          {view === "syllabus" && <SyllabusView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "lesson-plans" && <LessonPlansView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "exam-schedule" && <ExamScheduleView ay={ay} me={me as any} onBack={() => setView("home")} />}
-          {view === "reports" && <ReportsView ay={ay} me={me as any} onBack={() => setView("home")} />}
-        </fieldset>
+        </div>
+      )}
+      <div className="flex">
+        {/* LHS sidebar */}
+        <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
+          <nav className="py-3">
+            {NAV.map((item) => {
+              const active = view === item.view;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => setView(item.view)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left border-l-4 transition ${
+                    active
+                      ? "border-[#7b1f4c] bg-[#7b1f4c]/5 text-[#7b1f4c] font-semibold"
+                      : "border-transparent text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Mobile nav */}
+        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
+          {NAV.map((item) => {
+            const active = view === item.view;
+            return (
+              <button
+                key={item.view}
+                onClick={() => setView(item.view)}
+                className={`px-3 py-2 text-xs ${
+                  active ? "border-b-2 border-[#7b1f4c] text-[#7b1f4c] font-semibold" : "text-gray-600"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* RHS output */}
+        <main className="flex-1 min-w-0 p-4 md:p-6">
+          <fieldset disabled={isViewer} className={isViewer ? "pointer-events-none opacity-90" : ""}>
+            {view === "home" && <HomeView me={me as any} ay={ay} onNav={setView} />}
+            {view === "attendance" && <AttendanceView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "marks" && <MarksView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "semester-marks" && <SemesterMarksView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "assignments" && <AssignmentsView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "submissions" && <SubmissionsView onBack={() => setView("home")} />}
+            {view === "syllabus" && <SyllabusView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "lesson-plans" && <LessonPlansView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "exam-schedule" && <ExamScheduleView ay={ay} me={me as any} onBack={() => setView("home")} />}
+            {view === "reports" && <ReportsView ay={ay} me={me as any} onBack={() => setView("home")} />}
+          </fieldset>
+        </main>
       </div>
     </PortalShell>
   );
 }
+
 
 // ─── HOME: card grid ──────────────────────────────────────────────────────────
 function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => void }) {
