@@ -264,19 +264,25 @@ export const hodExportApprovedMarks = createServerFn({ method: "GET" })
       .object({
         academic_year: z.string().regex(yearRe),
         branch: z.string().trim().min(1).optional(),
+        status: z.enum(["pending", "approved", "returned"]).default("approved"),
+        exam_type: z.string().trim().min(1).optional(),
       })
       .parse(d),
   )
   .handler(async ({ data }) => {
     await requireRole(hodRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("marks")
       .select(
-        "id, subject_id, exam_type, obtained, max_marks, remarks, reviewed_at, subjects!inner(code,name,branch,semester), students(enrollment_no,name), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
+        "id, subject_id, exam_type, obtained, max_marks, remarks, reviewed_at, submitted_to_hod, approved_by_hod, returned_remarks, subjects!inner(code,name,branch,semester), students(enrollment_no,name), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
       )
-      .eq("academic_year", data.academic_year)
-      .eq("approved_by_hod", true);
+      .eq("academic_year", data.academic_year);
+    if (data.status === "approved") q = q.eq("approved_by_hod", true);
+    else if (data.status === "pending") q = q.eq("submitted_to_hod", true).eq("approved_by_hod", false);
+    else if (data.status === "returned") q = q.eq("submitted_to_hod", false).not("returned_remarks", "is", null);
+    if (data.exam_type) q = q.eq("exam_type", data.exam_type);
+    const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     let list = rows ?? [];
     if (data.branch) {
