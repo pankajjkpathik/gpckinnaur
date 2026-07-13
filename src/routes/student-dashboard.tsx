@@ -42,8 +42,6 @@ import {
 
 import {
   studentListAssignments,
-  studentSubmitAssignment,
-  studentMySubmissions,
   studentMyFees,
   studentMyDisciplinary,
 } from "@/lib/assignments.functions";
