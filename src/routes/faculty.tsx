@@ -782,7 +782,15 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   const { items, unread, readIds, setReadIds, loading } = useFacultyNotifications(me, ay);
   const [showAll, setShowAll] = useState(false);
   const [active, setActive] = useState<NotifItem | null>(null);
+  const rtStatus = useFacNotifRtStatus();
+  const qc = useQueryClient();
+  const refetchAll = () => {
+    qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+    qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+    qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+  };
   const visible = showAll ? items : unread;
+
 
   const markAllRead = () => setReadIds(new Set(items.map((i) => i.key)));
   const toggleRead = (key: string) => {
