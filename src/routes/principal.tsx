@@ -19,7 +19,12 @@ import {
   createDisciplinaryAction,
   deleteDisciplinaryAction,
 } from "@/lib/assignments.functions";
-import { listPlacements, hodDepartmentOverview } from "@/lib/tpo.functions";
+import {
+  listPlacements,
+  hodDepartmentOverview,
+  listIndustrialTraining,
+  listGuestLectures,
+} from "@/lib/tpo.functions";
 import { listPeriods, listTimetable } from "@/lib/academic.functions";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
@@ -53,7 +58,7 @@ import {
   ChevronDown,
   Home,
   LayoutDashboard,
-  GraduationCap,
+  
   Factory,
   ClipboardList,
 } from "lucide-react";
@@ -90,7 +95,10 @@ type View =
   | "ptm"
   | "circulars"
   | "disciplinary"
-  | "department";
+  | "department"
+  | "tpo_placements"
+  | "tpo_training"
+  | "tpo_lectures";
 
 function BackBtn({ onClick }: { onClick: () => void }) {
   return (
@@ -203,6 +211,9 @@ function PrincipalPortal() {
             </>
           )}
           {view === "department" && <DepartmentOverviewView year={year} onBack={() => setView("home")} />}
+          {view === "tpo_placements" && <PlacementDataView onBack={() => setView("home")} />}
+          {view === "tpo_training" && <TpoTrainingDetailsView onBack={() => setView("home")} />}
+          {view === "tpo_lectures" && <TpoLecturesDetailsView onBack={() => setView("home")} />}
         </main>
       </div>
     </div>
@@ -212,7 +223,6 @@ function PrincipalPortal() {
 /* ─── Sidebar with collapsible Principal + TPO groups ─────────────────────── */
 
 type NavItem = { view: View; label: string; icon: ComponentType<{ className?: string }> };
-type TpoNavItem = { hash: string; label: string; icon: ComponentType<{ className?: string }> };
 
 const PRINCIPAL_NAV: NavItem[] = [
   { view: "home", label: "Dashboard", icon: Home },
@@ -228,11 +238,11 @@ const PRINCIPAL_NAV: NavItem[] = [
   { view: "disciplinary", label: "Disciplinary Actions", icon: Shield },
 ];
 
-const TPO_NAV: TpoNavItem[] = [
-  { hash: "", label: "TPO Dashboard", icon: GraduationCap },
-  { hash: "placements", label: "Manage Placements", icon: Briefcase },
-  { hash: "training", label: "Industrial Training", icon: Factory },
-  { hash: "lectures", label: "Guest Lectures", icon: ClipboardList },
+// TPO section under Principal is view-only. All create/edit/delete rights remain with the TPO.
+const TPO_NAV: NavItem[] = [
+  { view: "tpo_placements", label: "Placement Details", icon: Briefcase },
+  { view: "tpo_training", label: "Industrial Training Details", icon: Factory },
+  { view: "tpo_lectures", label: "Guest Lecture Details", icon: ClipboardList },
 ];
 
 function PrincipalSidebar({
@@ -286,31 +296,37 @@ function PrincipalSidebar({
         )}
       </div>
 
-      {/* TPO group */}
+      {/* TPO group — view-only inside Principal Portal (management stays with TPO) */}
       <div>
         <button
           onClick={() => setTpoOpen((o) => !o)}
-          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-rose-600 to-pink-500 text-white text-sm font-semibold shadow-sm"
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-[#5b1138] to-[#7b1f4c] text-white text-sm font-semibold shadow-sm"
         >
           <span className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4" /> TPO Portal
+            <Briefcase className="w-4 h-4" /> TPO Information
           </span>
           <ChevronDown className={`w-4 h-4 transition-transform ${tpoOpen ? "" : "-rotate-90"}`} />
         </button>
         {tpoOpen && (
           <ul className="mt-1.5 space-y-0.5">
-            {TPO_NAV.map((item) => (
-              <li key={item.label}>
-                <a
-                  href={`/tpo${item.hash ? `#${item.hash}` : ""}`}
-                  onClick={onCloseMobile}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
-                >
-                  <item.icon className="w-4 h-4 text-gray-400" />
-                  <span className="truncate">{item.label}</span>
-                </a>
-              </li>
-            ))}
+            {TPO_NAV.map((item) => {
+              const isActive = active === item.view;
+              return (
+                <li key={item.view}>
+                  <button
+                    onClick={() => onNav(item.view)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      isActive
+                        ? "bg-[#7b1f4c]/10 text-[#7b1f4c] font-semibold"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <item.icon className={`w-4 h-4 ${isActive ? "text-[#7b1f4c]" : "text-gray-400"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -1833,4 +1849,114 @@ function ordinalSuffix(n: number) {
   if (n % 10 === 2 && n !== 12) return "nd";
   if (n % 10 === 3 && n !== 13) return "rd";
   return "th";
+}
+
+// ─── TPO INFORMATION (read-only views inside Principal Portal) ────────────────
+function TpoTrainingDetailsView({ onBack }: { onBack: () => void }) {
+  const { data = [] } = useQuery({
+    queryKey: ["principal-tpo-training"],
+    queryFn: () => listIndustrialTraining({ data: {} }),
+  });
+  const rows = data as any[];
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-white border rounded-lg p-5">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Industrial Training Details</h1>
+        <p className="text-xs text-gray-400 mb-4">
+          Read-only view of all industrial training records. Managed by the Training &amp; Placement Officer.
+        </p>
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Training Type</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Branch</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Semester</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Students</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Company</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Period</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="px-4 py-3">{r.training_type}</td>
+                  <td className="px-4 py-3 capitalize">{r.branch ?? "—"}</td>
+                  <td className="px-4 py-3">{r.semester ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {Array.isArray(r.student_names) && r.student_names.length > 0
+                      ? (r.student_names as string[]).join(", ")
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3">{r.company ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">
+                    {r.start_date ?? "—"}
+                    {r.end_date ? ` → ${r.end_date}` : ""}
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                    No industrial training records yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TpoLecturesDetailsView({ onBack }: { onBack: () => void }) {
+  const { data = [] } = useQuery({
+    queryKey: ["principal-tpo-lectures"],
+    queryFn: () => listGuestLectures(),
+  });
+  const rows = data as any[];
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-white border rounded-lg p-5">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Guest Lecture Details</h1>
+        <p className="text-xs text-gray-400 mb-4">
+          Read-only view of all guest lectures. Managed by the Training &amp; Placement Officer.
+        </p>
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Topic</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Speaker</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Department</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="px-4 py-3 text-xs text-gray-500">{r.lecture_date ?? "—"}</td>
+                  <td className="px-4 py-3 font-medium">{r.topic}</td>
+                  <td className="px-4 py-3">{r.speaker}</td>
+                  <td className="px-4 py-3">{r.department ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">{r.detail ?? "—"}</td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                    No guest lecture records yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 }
