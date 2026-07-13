@@ -93,16 +93,77 @@ function BackBtn({ onClick }: { onClick: () => void }) {
 /* ─── Sidebar navigation config ──────────────────────────────────────────── */
 type NavItem = { view: View; label: string; icon: ComponentType<{ className?: string }> };
 
+// Core HOD workflows — management & approvals
 const HOD_NAV: NavItem[] = [
   { view: "home", label: "Dashboard", icon: Home },
   { view: "overview", label: "Department Overview", icon: BarChart3 },
   { view: "faculty", label: "Manage Faculty", icon: Users },
+  { view: "lessons", label: "Lesson Plan Reviews", icon: GraduationCap },
+];
+
+// Read-only monitoring across the branch
+const MONITORING_NAV: NavItem[] = [
   { view: "attendance", label: "Attendance Reports", icon: ClipboardCheck },
   { view: "sessional", label: "Sessional Reports", icon: FileSpreadsheet },
   { view: "syllabus", label: "Syllabus Coverage", icon: BookMarked },
   { view: "timetable", label: "Branch Timetable", icon: Calendar },
-  { view: "lessons", label: "Lesson Plan Reviews", icon: GraduationCap },
 ];
+
+function SidebarGroup({
+  title,
+  icon: Icon,
+  gradient,
+  items,
+  active,
+  onNav,
+  defaultOpen,
+}: {
+  title: string;
+  icon: ComponentType<{ className?: string }>;
+  gradient: string;
+  items: NavItem[];
+  active: View;
+  onNav: (v: View) => void;
+  defaultOpen?: boolean;
+}) {
+  const containsActive = items.some((i) => i.view === active);
+  const [open, setOpen] = useState<boolean>(defaultOpen ?? containsActive);
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg ${gradient} text-white text-sm font-semibold shadow-sm`}
+      >
+        <span className="flex items-center gap-2">
+          <Icon className="w-4 h-4" /> {title}
+        </span>
+        <ChevronDown className={`w-4 h-4 transition-transform ${open ? "" : "-rotate-90"}`} />
+      </button>
+      {open && (
+        <ul className="mt-1.5 space-y-0.5">
+          {items.map((item) => {
+            const isActive = active === item.view;
+            return (
+              <li key={item.view}>
+                <button
+                  onClick={() => onNav(item.view)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    isActive
+                      ? "bg-[#7b1f4c]/10 text-[#7b1f4c] font-semibold"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
+                >
+                  <item.icon className={`w-4 h-4 ${isActive ? "text-[#7b1f4c]" : "text-gray-400"}`} />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function HodSidebar({
   active,
@@ -115,43 +176,26 @@ function HodSidebar({
   mobileOpen: boolean;
   onCloseMobile: () => void;
 }) {
-  const [hodOpen, setHodOpen] = useState(true);
-
   const inner = (
     <nav className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2">
-      <div>
-        <button
-          onClick={() => setHodOpen((o) => !o)}
-          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-[#7b1f4c] to-[#a63a6b] text-white text-sm font-semibold shadow-sm"
-        >
-          <span className="flex items-center gap-2">
-            <LayoutDashboard className="w-4 h-4" /> HOD Portal
-          </span>
-          <ChevronDown className={`w-4 h-4 transition-transform ${hodOpen ? "" : "-rotate-90"}`} />
-        </button>
-        {hodOpen && (
-          <ul className="mt-1.5 space-y-0.5">
-            {HOD_NAV.map((item) => {
-              const isActive = active === item.view;
-              return (
-                <li key={item.view}>
-                  <button
-                    onClick={() => onNav(item.view)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                      isActive
-                        ? "bg-[#7b1f4c]/10 text-[#7b1f4c] font-semibold"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                  >
-                    <item.icon className={`w-4 h-4 ${isActive ? "text-[#7b1f4c]" : "text-gray-400"}`} />
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+      <SidebarGroup
+        title="HOD Portal"
+        icon={LayoutDashboard}
+        gradient="bg-gradient-to-r from-[#7b1f4c] to-[#a63a6b]"
+        items={HOD_NAV}
+        active={active}
+        onNav={onNav}
+        defaultOpen
+      />
+
+      <SidebarGroup
+        title="Academic Monitoring"
+        icon={BarChart3}
+        gradient="bg-gradient-to-r from-[#5b1138] to-[#7b1f4c]"
+        items={MONITORING_NAV}
+        active={active}
+        onNav={onNav}
+      />
 
       <div className="pt-1 border-t border-gray-100">
         <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-[0.18em] text-gray-400 font-semibold">General</p>
@@ -219,6 +263,7 @@ function HodSidebar({
     </>
   );
 }
+
 
 function HodPortal() {
   const nav = useNavigate();
