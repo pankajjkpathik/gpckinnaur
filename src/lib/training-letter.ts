@@ -72,12 +72,17 @@ function ordinal(n: number | null | undefined) {
 
 export type PdfBuild = { blob: Blob; filename: string; url: string };
 
-export async function generateTrainingLetter(r: TrainingRecord): Promise<PdfBuild> {
+export async function generateTrainingLetter(
+  r: TrainingRecord,
+  opts?: { instituteAddress?: string },
+): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const margin = 50;
   const logo = await loadLogo();
-  letterhead(doc, logo);
+  const address = opts?.instituteAddress?.trim() || DEFAULT_INSTITUTE_ADDRESS;
+  letterhead(doc, logo, address);
+
 
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
   doc.setFontSize(10);
