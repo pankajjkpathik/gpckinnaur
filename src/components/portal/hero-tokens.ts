@@ -93,18 +93,36 @@ export type HeroPalette = {
 };
 
 /**
- * Named palettes shipped by the app. Adding a new role means extending this
- * union and adding a matching entry to `HERO_PALETTES` below.
+ * Single source of truth for the set of registered palette names.
+ * Iterated by the dev preview + visual regression harness so new palettes
+ * flow into both automatically.
  */
-export type HeroPaletteName =
-  | "faculty"
-  | "principal"
-  | "hod"
-  | "tpo"
-  | "clerk"
-  | "student"
-  | "parent"
-  | "staff";
+export const HERO_PALETTE_NAMES = [
+  "faculty",
+  "principal",
+  "hod",
+  "tpo",
+  "clerk",
+  "student",
+  "parent",
+  "staff",
+] as const;
+
+/**
+ * Named palettes shipped by the app. Derived from `HERO_PALETTE_NAMES` so the
+ * union and the runtime list can never drift apart. Adding a new role means
+ * adding one string to the array — TypeScript will then flag `HERO_PALETTES`
+ * until the matching palette entry exists.
+ */
+export type HeroPaletteName = (typeof HERO_PALETTE_NAMES)[number];
+
+/** Runtime guard — narrow a `string` to a `HeroPaletteName`. */
+export function isHeroPaletteName(value: unknown): value is HeroPaletteName {
+  return (
+    typeof value === "string" &&
+    (HERO_PALETTE_NAMES as readonly string[]).includes(value)
+  );
+}
 
 /**
  * The canonical palette map. Keys are `HeroPaletteName` values so TypeScript
