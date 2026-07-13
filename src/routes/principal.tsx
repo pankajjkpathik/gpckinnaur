@@ -50,7 +50,14 @@ import {
   FileText,
   Video,
   BarChart3,
+  ChevronDown,
+  Home,
+  LayoutDashboard,
+  GraduationCap,
+  Factory,
+  ClipboardList,
 } from "lucide-react";
+
 import { BarStats, PieStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
