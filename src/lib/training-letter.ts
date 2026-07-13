@@ -135,7 +135,9 @@ export async function generateTrainingLetter(r: TrainingRecord): Promise<PdfBuil
   doc.setFontSize(10);
   doc.text(`Copy to: H.O.D. ${branchTxt}, GPC Kinnaur (H.P.)`, margin, y);
 
-  doc.save(`Training-Letter-${(r.company || "company").replace(/[^\w]+/g, "_")}-${r.id}.pdf`);
+  const filename = `Training-Letter-${(r.company || "company").replace(/[^\w]+/g, "_")}-${r.id}.pdf`;
+  const blob = doc.output("blob");
+  return { blob, filename, url: URL.createObjectURL(blob) };
 }
 
 function undertakingPage(
