@@ -2361,6 +2361,7 @@ function TpoTrainingDetailsView({ onBack }: { onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
+      <TpoReadOnlyBanner />
       <div className="bg-white border rounded-lg p-5">
         <h1 className="text-xl font-bold text-gray-800 mb-1">Industrial Training Details</h1>
         <p className="text-xs text-gray-400 mb-4">
