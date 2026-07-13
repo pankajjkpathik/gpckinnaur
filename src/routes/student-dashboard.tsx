@@ -336,25 +336,37 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
             <p className="text-sm text-gray-400 py-4 text-center">No classes scheduled today.</p>
           ) : (
             <ul className="divide-y">
-              {data!.today_periods.map((p: any) => (
-                <li key={p.period_no} className="py-2 flex items-start gap-3">
-                  <span className="w-8 h-8 rounded-full bg-[#7b1f4c]/10 text-[#7b1f4c] text-xs font-bold flex items-center justify-center shrink-0">
-                    P{p.period_no}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-800 truncate">
-                      {p.subjects?.name || p.subjects?.code || "—"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {p.staff_users?.username || "TBA"}
-                      {p.room ? ` · Room ${p.room}` : ""}
-                    </p>
-                  </div>
-                </li>
-              ))}
+              {data!.today_periods.map((p: any) => {
+                const pm = (data as any).periods?.find((x: any) => x.period_no === p.period_no);
+                return (
+                  <li key={p.period_no}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenClass({ ...p, timing: pm })}
+                      className="w-full py-2 flex items-start gap-3 text-left hover:bg-gray-50 rounded px-1 -mx-1 transition"
+                    >
+                      <span className="w-8 h-8 rounded-full bg-[#7b1f4c]/10 text-[#7b1f4c] text-xs font-bold flex items-center justify-center shrink-0">
+                        P{p.period_no}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {p.subjects?.name || p.subjects?.code || "—"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {p.staff_users?.username || "TBA"}
+                          {p.room ? ` · Room ${p.room}` : ""}
+                          {pm ? ` · ${pm.start_time?.slice(0, 5)}–${pm.end_time?.slice(0, 5)}` : ""}
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-[#7b1f4c] font-semibold shrink-0 mt-1">View →</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Card>
+
 
         {/* Assignment reminders */}
         <Card className="lg:col-span-1">
