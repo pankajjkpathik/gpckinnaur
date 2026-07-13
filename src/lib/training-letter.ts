@@ -1,9 +1,10 @@
 // PDF generators for Industrial Training letter and per-student Undertakings.
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import logoAsset from "@/assets/logo.png.asset.json";
 
-const INSTITUTE = "GOVT. POLYTECHNIC COLLEGE KINNAUR";
-const INSTITUTE_ADDRESS = "Reckong Peo, Distt. Kinnaur (H.P.) - 172107";
+const INSTITUTE = "GOVERNMENT POLYTECHNIC, KINNAUR";
+const INSTITUTE_ADDRESS = "Camp at GP Rohru, Distt. Shimla (H.P.)";
 const INSTITUTE_PHONE = "Phone: 01786-222206";
 
 type TrainingRecord = {
@@ -17,8 +18,30 @@ type TrainingRecord = {
   end_date?: string | null;
 };
 
-function letterhead(doc: jsPDF) {
+let _logoCache: string | null = null;
+async function loadLogo(): Promise<string | null> {
+  if (_logoCache) return _logoCache;
+  try {
+    const res = await fetch(logoAsset.url);
+    const blob = await res.blob();
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+    _logoCache = dataUrl;
+    return dataUrl;
+  } catch {
+    return null;
+  }
+}
+
+function letterhead(doc: jsPDF, logo: string | null) {
   const w = doc.internal.pageSize.getWidth();
+  if (logo) {
+    try { doc.addImage(logo, "PNG", 40, 30, 60, 60); } catch { /* ignore */ }
+  }
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text("OFFICE OF THE PRINCIPAL", w / 2, 50, { align: "center" });
@@ -45,11 +68,12 @@ function ordinal(n: number | null | undefined) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-export function generateTrainingLetter(r: TrainingRecord) {
+export async function generateTrainingLetter(r: TrainingRecord) {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const margin = 50;
-  letterhead(doc);
+  const logo = await loadLogo();
+  letterhead(doc, logo);
 
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
   doc.setFontSize(10);
@@ -118,10 +142,11 @@ function undertakingPage(
   paragraph: string,
   points: string[],
   signatureLabel: string,
+  logo: string | null,
 ) {
   const w = doc.internal.pageSize.getWidth();
   const margin = 60;
-  letterhead(doc);
+  letterhead(doc, logo);
   let y = 140;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
@@ -149,8 +174,9 @@ function undertakingPage(
   doc.text(signatureLabel, w - margin, y, { align: "right" });
 }
 
-export function generateUndertakings(r: TrainingRecord) {
+export async function generateUndertakings(r: TrainingRecord) {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const logo = await loadLogo();
   const names = (r.student_names ?? []).filter(Boolean);
   const sem = r.semester ? `${ordinal(r.semester)} semester` : "____ semester";
   const branchTxt = r.branch ? `${r.branch.charAt(0).toUpperCase()}${r.branch.slice(1)} Engineering` : "Engineering";
@@ -175,6 +201,7 @@ export function generateUndertakings(r: TrainingRecord) {
         "As the training is part of the curriculum and is entirely on my own will, if I join a training organization where a fee is charged for the same, I will not claim any reimbursement of training money paid, if any, and it will be purely at my own expenditure. I will also not claim any TA/DA for the training.",
       ],
       "Signature of Student",
+      logo,
     );
 
     // ── Parent Undertaking ──────────────────────────────
@@ -188,6 +215,7 @@ export function generateUndertakings(r: TrainingRecord) {
         "As the training is part of the curriculum and is entirely on our will, if my child joins a training organization where a fee is charged for the same, I or my child will not claim any reimbursement of training money paid, if any, and it will be purely on our own expenditure. My child will also not claim any TA/DA for the training.",
       ],
       "Signature of Parent",
+      logo,
     );
   });
 
