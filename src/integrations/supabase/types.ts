@@ -1504,6 +1504,44 @@ export type Database = {
         }
         Relationships: []
       }
+      student_notification_prefs: {
+        Row: {
+          assignments_enabled: boolean
+          assignments_lead_days: number
+          created_at: string
+          fees_enabled: boolean
+          fees_lead_days: number
+          student_id: number
+          updated_at: string
+        }
+        Insert: {
+          assignments_enabled?: boolean
+          assignments_lead_days?: number
+          created_at?: string
+          fees_enabled?: boolean
+          fees_lead_days?: number
+          student_id: number
+          updated_at?: string
+        }
+        Update: {
+          assignments_enabled?: boolean
+          assignments_lead_days?: number
+          created_at?: string
+          fees_enabled?: boolean
+          fees_lead_days?: number
+          student_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_notification_prefs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           aadhaar_number: string | null

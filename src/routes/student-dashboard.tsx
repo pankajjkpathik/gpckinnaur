@@ -20,6 +20,9 @@ import {
   Calendar,
   CalendarClock,
   NotebookPen,
+  Settings,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { listMaterials } from "@/lib/materials.functions";
@@ -46,6 +49,8 @@ import {
   studentMySubmissions,
   studentSetAssignmentStatus,
   studentRequestFeeReceipt,
+  studentGetNotificationPrefs,
+  studentUpdateNotificationPrefs,
 } from "@/lib/assignments.functions";
 
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
@@ -336,31 +341,59 @@ function AssignmentStatusButtons({
 function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const [openClass, setOpenClass] = useState<any | null>(null);
   const [feesOpen, setFeesOpen] = useState(false);
+  const [prefsOpen, setPrefsOpen] = useState(false);
   const dashFn = useServerFn(studentDashboard);
   const assignFn = useServerFn(studentListAssignments);
   const feesFn = useServerFn(studentMyFees);
+  const prefsFn = useServerFn(studentGetNotificationPrefs);
   const { data } = useQuery({ queryKey: ["student-dash"], queryFn: () => dashFn() });
   const { data: assignments = [] } = useQuery({ queryKey: ["student-assignments-home"], queryFn: () => assignFn() });
   const { data: fees = [] } = useQuery({ queryKey: ["student-fees-home"], queryFn: () => feesFn() });
+  const { data: prefs } = useQuery({
+    queryKey: ["student-notif-prefs"],
+    queryFn: () => prefsFn(),
+  });
+  const effectivePrefs = prefs ?? {
+    assignments_enabled: true,
+    fees_enabled: true,
+    assignments_lead_days: 7,
+    fees_lead_days: 14,
+  };
   const { data: mySubs = [] } = useMySubmissions();
   const subStatus = (aid: number) =>
     (mySubs as any[]).find((s) => s.assignment_id === aid)?.status ?? null;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const upcomingAssignments = (assignments as any[])
-    .filter((a) => a.due_date && new Date(a.due_date) >= today)
-    .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-    .slice(0, 5);
-  const pendingFees = (fees as any[]).filter(
-    (f) => Number(f.total_amount || 0) - Number(f.paid_amount || 0) > 0,
-  );
+  const daysUntil = (d: string) =>
+    Math.ceil((new Date(d).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  const upcomingAssignments = effectivePrefs.assignments_enabled
+    ? (assignments as any[])
+        .filter(
+          (a) =>
+            a.due_date &&
+            new Date(a.due_date) >= today &&
+            daysUntil(a.due_date) <= effectivePrefs.assignments_lead_days,
+        )
+        .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+        .slice(0, 5)
+    : [];
+
+  const pendingFees = effectivePrefs.fees_enabled
+    ? (fees as any[]).filter((f) => {
+        const due = Number(f.total_amount || 0) - Number(f.paid_amount || 0);
+        if (due <= 0) return false;
+        if (!f.due_date) return true;
+        const dn = daysUntil(f.due_date);
+        return dn <= effectivePrefs.fees_lead_days;
+      })
+    : [];
   const totalDue = pendingFees.reduce(
     (s, f) => s + (Number(f.total_amount || 0) - Number(f.paid_amount || 0)),
     0,
   );
-  const daysUntil = (d: string) =>
-    Math.ceil((new Date(d).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
 
   return (
     <div className="space-y-5">
@@ -445,12 +478,38 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
 
         {/* Assignment reminders */}
         <Card className="lg:col-span-1">
-          <div className="flex items-center gap-2 mb-3">
-            <NotebookPen className="w-4 h-4 text-indigo-600" />
-            <h2 className="font-semibold text-gray-800">Assignment Reminders</h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <NotebookPen className="w-4 h-4 text-indigo-600" />
+              <h2 className="font-semibold text-gray-800">Assignment Reminders</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPrefsOpen(true)}
+              className="text-gray-400 hover:text-indigo-700 p-1 -m-1 rounded"
+              aria-label="Reminder settings"
+              title="Reminder settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
           </div>
-          {upcomingAssignments.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No upcoming assignments.</p>
+          {!effectivePrefs.assignments_enabled ? (
+            <div className="text-sm text-gray-500 py-4 text-center">
+              <BellOff className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+              <p>Assignment reminders are turned off.</p>
+              <button
+                type="button"
+                onClick={() => setPrefsOpen(true)}
+                className="text-xs text-indigo-700 hover:underline mt-1"
+              >
+                Turn on
+              </button>
+            </div>
+          ) : upcomingAssignments.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">
+              No assignments due in the next {effectivePrefs.assignments_lead_days} day
+              {effectivePrefs.assignments_lead_days === 1 ? "" : "s"}.
+            </p>
           ) : (
             <ul className="divide-y">
               {upcomingAssignments.map((a: any) => {
@@ -489,19 +548,43 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
               <DollarSign className="w-4 h-4 text-emerald-600" />
               <h2 className="font-semibold text-gray-800">Fees Reminder</h2>
             </div>
-            {pendingFees.length > 0 && (
+            <div className="flex items-center gap-2">
+              {effectivePrefs.fees_enabled && pendingFees.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFeesOpen(true)}
+                  className="text-xs font-medium text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+                >
+                  View details
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setFeesOpen(true)}
-                className="text-xs font-medium text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+                onClick={() => setPrefsOpen(true)}
+                className="text-gray-400 hover:text-emerald-700 p-1 -m-1 rounded"
+                aria-label="Reminder settings"
+                title="Reminder settings"
               >
-                View details
+                <Settings className="w-4 h-4" />
               </button>
-            )}
+            </div>
           </div>
-          {pendingFees.length === 0 ? (
+          {!effectivePrefs.fees_enabled ? (
+            <div className="text-sm text-gray-500 py-4 text-center">
+              <BellOff className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+              <p>Fees reminders are turned off.</p>
+              <button
+                type="button"
+                onClick={() => setPrefsOpen(true)}
+                className="text-xs text-emerald-700 hover:underline mt-1"
+              >
+                Turn on
+              </button>
+            </div>
+          ) : pendingFees.length === 0 ? (
             <p className="text-sm text-emerald-700 py-4 text-center">
-              All fees are paid. Thank you!
+              No fees due in the next {effectivePrefs.fees_lead_days} day
+              {effectivePrefs.fees_lead_days === 1 ? "" : "s"}.
             </p>
           ) : (
             <>
@@ -548,6 +631,13 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
         onClose={() => setFeesOpen(false)}
         fees={fees as any[]}
       />
+
+      <NotificationPrefsDialog
+        open={prefsOpen}
+        onClose={() => setPrefsOpen(false)}
+        initial={effectivePrefs}
+      />
+
 
 
 
@@ -743,6 +833,194 @@ function FeesDetailDialog({
     </div>
   );
 }
+
+function NotificationPrefsDialog({
+  open,
+  onClose,
+  initial,
+}: {
+  open: boolean;
+  onClose: () => void;
+  initial: {
+    assignments_enabled: boolean;
+    fees_enabled: boolean;
+    assignments_lead_days: number;
+    fees_lead_days: number;
+  };
+}) {
+  const qc = useQueryClient();
+  const updateFn = useServerFn(studentUpdateNotificationPrefs);
+  const [form, setForm] = useState(initial);
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setForm(initial);
+      setMsg(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const save = useMutation({
+    mutationFn: (v: typeof form) => updateFn({ data: v }),
+    onSuccess: () => {
+      setMsg({ type: "ok", text: "Preferences saved." });
+      qc.invalidateQueries({ queryKey: ["student-notif-prefs"] });
+      setTimeout(onClose, 600);
+    },
+    onError: (e: any) =>
+      setMsg({ type: "err", text: e?.message ?? "Failed to save preferences" }),
+  });
+
+  if (!open) return null;
+
+  const ASSIGN_OPTIONS = [1, 3, 7, 14, 30];
+  const FEES_OPTIONS = [3, 7, 14, 30, 60];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b bg-[#7b1f4c] text-white flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <Bell className="w-5 h-5" /> Notification Preferences
+            </h3>
+            <p className="text-xs text-white/80">
+              Choose which reminders appear on your dashboard and how soon.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white/80 hover:text-white text-xl leading-none"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-5 overflow-y-auto space-y-5">
+          {/* Assignments */}
+          <section className="border rounded-lg p-4 space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.assignments_enabled}
+                onChange={(e) =>
+                  setForm({ ...form, assignments_enabled: e.target.checked })
+                }
+                className="mt-1 h-4 w-4 accent-indigo-600"
+              />
+              <div className="flex-1">
+                <p className="font-medium text-gray-800 flex items-center gap-2">
+                  <NotebookPen className="w-4 h-4 text-indigo-600" />
+                  Assignment reminders
+                </p>
+                <p className="text-xs text-gray-500">
+                  Show assignments approaching their due date.
+                </p>
+              </div>
+            </label>
+            <div className={form.assignments_enabled ? "" : "opacity-50 pointer-events-none"}>
+              <label className="text-xs font-medium text-gray-600 block mb-1.5">
+                Alert me this many days before the due date
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {ASSIGN_OPTIONS.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setForm({ ...form, assignments_lead_days: n })}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                      form.assignments_lead_days === n
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {n} day{n === 1 ? "" : "s"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Fees */}
+          <section className="border rounded-lg p-4 space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.fees_enabled}
+                onChange={(e) => setForm({ ...form, fees_enabled: e.target.checked })}
+                className="mt-1 h-4 w-4 accent-emerald-600"
+              />
+              <div className="flex-1">
+                <p className="font-medium text-gray-800 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-emerald-600" />
+                  Fees reminders
+                </p>
+                <p className="text-xs text-gray-500">
+                  Show outstanding fee records with an approaching due date.
+                </p>
+              </div>
+            </label>
+            <div className={form.fees_enabled ? "" : "opacity-50 pointer-events-none"}>
+              <label className="text-xs font-medium text-gray-600 block mb-1.5">
+                Alert me this many days before the due date
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {FEES_OPTIONS.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setForm({ ...form, fees_lead_days: n })}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                      form.fees_lead_days === n
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {n} day{n === 1 ? "" : "s"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {msg && (
+            <p className={`text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-rose-600"}`}>
+              {msg.text}
+            </p>
+          )}
+        </div>
+
+        <div className="px-5 py-3 border-t bg-gray-50 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm px-4 py-2 rounded border"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={save.isPending}
+            onClick={() => save.mutate(form)}
+            className="text-sm px-4 py-2 rounded bg-[#7b1f4c] text-white hover:bg-[#621a3f] disabled:opacity-60"
+          >
+            {save.isPending ? "Saving…" : "Save preferences"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
