@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -50,7 +50,14 @@ import {
   FileText,
   Video,
   BarChart3,
+  ChevronDown,
+  Home,
+  LayoutDashboard,
+  GraduationCap,
+  Factory,
+  ClipboardList,
 } from "lucide-react";
+
 import { BarStats, PieStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
@@ -99,6 +106,7 @@ function BackBtn({ onClick }: { onClick: () => void }) {
 function PrincipalPortal() {
   const [view, setView] = useState<View>("home");
   const [year, setYear] = useState(defaultYear());
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { data: me } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
 
   async function logout() {
@@ -107,11 +115,23 @@ function PrincipalPortal() {
   }
   const initials = (me?.username || "P")[0].toUpperCase();
 
+  function navTo(v: View) {
+    setView(v);
+    setMobileNavOpen(false);
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f7fb]">
-      <header className="bg-white border-b">
+      <header className="bg-white border-b sticky top-0 z-30">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setMobileNavOpen((o) => !o)}
+              className="lg:hidden -ml-1 p-2 rounded hover:bg-gray-100"
+              aria-label="Toggle navigation"
+            >
+              <LayoutDashboard className="w-5 h-5 text-gray-600" />
+            </button>
             <div
               className="w-10 h-10 rounded-full bg-[#7b1f4c]/10 flex items-center justify-center text-xl shrink-0"
               aria-hidden
@@ -144,46 +164,184 @@ function PrincipalPortal() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
-        {view === "home" && <HomeView year={year} onNav={setView} me={me as any} />}
-        {view === "attendance" && <AttendanceReportsView year={year} onBack={() => setView("home")} />}
-        {view === "sessional" && (
-          <>
-            <BackBtn onClick={() => setView("home")} />
-            <ResultsMonitor year={year} />
-          </>
-        )}
-        {view === "syllabus" && (
-          <>
-            <BackBtn onClick={() => setView("home")} />
-            <SyllabusMonitor year={year} />
-          </>
-        )}
-        {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
-        {view === "placements" && <PlacementDataView onBack={() => setView("home")} />}
-        {view === "messages" && <MessagesView onBack={() => setView("home")} />}
-        {view === "ptm" && <PTMView onBack={() => setView("home")} />}
-        {view === "circulars" && (
-          <>
-            <BackBtn onClick={() => setView("home")} />
-            <Circulars />
-          </>
-        )}
-        {view === "disciplinary" && (
-          <>
-            <BackBtn onClick={() => setView("home")} />
-            <Disciplinary />
-          </>
-        )}
-        {view === "department" && <DepartmentOverviewView year={year} onBack={() => setView("home")} />}
-      </main>
+      <div className="container mx-auto px-4 py-6 flex gap-6">
+        <PrincipalSidebar
+          active={view}
+          onNav={navTo}
+          mobileOpen={mobileNavOpen}
+          onCloseMobile={() => setMobileNavOpen(false)}
+        />
+        <main className="flex-1 min-w-0">
+          {view === "home" && <HomeView year={year} onNav={setView} me={me as any} />}
+          {view === "attendance" && <AttendanceReportsView year={year} onBack={() => setView("home")} />}
+          {view === "sessional" && (
+            <>
+              <BackBtn onClick={() => setView("home")} />
+              <ResultsMonitor year={year} />
+            </>
+          )}
+          {view === "syllabus" && (
+            <>
+              <BackBtn onClick={() => setView("home")} />
+              <SyllabusMonitor year={year} />
+            </>
+          )}
+          {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
+          {view === "placements" && <PlacementDataView onBack={() => setView("home")} />}
+          {view === "messages" && <MessagesView onBack={() => setView("home")} />}
+          {view === "ptm" && <PTMView onBack={() => setView("home")} />}
+          {view === "circulars" && (
+            <>
+              <BackBtn onClick={() => setView("home")} />
+              <Circulars />
+            </>
+          )}
+          {view === "disciplinary" && (
+            <>
+              <BackBtn onClick={() => setView("home")} />
+              <Disciplinary />
+            </>
+          )}
+          {view === "department" && <DepartmentOverviewView year={year} onBack={() => setView("home")} />}
+        </main>
+      </div>
     </div>
+  );
+}
+
+/* ─── Sidebar with collapsible Principal + TPO groups ─────────────────────── */
+
+type NavItem = { view: View; label: string; icon: ComponentType<{ className?: string }> };
+type TpoNavItem = { hash: string; label: string; icon: ComponentType<{ className?: string }> };
+
+const PRINCIPAL_NAV: NavItem[] = [
+  { view: "home", label: "Dashboard", icon: Home },
+  { view: "department", label: "Department Overview", icon: BarChart3 },
+  { view: "attendance", label: "Attendance Reports", icon: ClipboardCheck },
+  { view: "sessional", label: "Sessional Reports", icon: FileSpreadsheet },
+  { view: "syllabus", label: "Syllabus Status", icon: BookMarked },
+  { view: "timetable", label: "View Timetable", icon: Calendar },
+  { view: "placements", label: "Placement Data", icon: Briefcase },
+  { view: "messages", label: "Parents Messages", icon: Mail },
+  { view: "ptm", label: "PTM Information", icon: CalendarCheck },
+  { view: "circulars", label: "Circulars", icon: FileText },
+  { view: "disciplinary", label: "Disciplinary Actions", icon: Shield },
+];
+
+const TPO_NAV: TpoNavItem[] = [
+  { hash: "", label: "TPO Dashboard", icon: GraduationCap },
+  { hash: "placements", label: "Manage Placements", icon: Briefcase },
+  { hash: "training", label: "Industrial Training", icon: Factory },
+  { hash: "lectures", label: "Guest Lectures", icon: ClipboardList },
+];
+
+function PrincipalSidebar({
+  active,
+  onNav,
+  mobileOpen,
+  onCloseMobile,
+}: {
+  active: View;
+  onNav: (v: View) => void;
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
+}) {
+  const [principalOpen, setPrincipalOpen] = useState(true);
+  const [tpoOpen, setTpoOpen] = useState(false);
+
+  const inner = (
+    <nav className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2">
+      {/* Principal group */}
+      <div>
+        <button
+          onClick={() => setPrincipalOpen((o) => !o)}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-[#7b1f4c] to-[#a63a6b] text-white text-sm font-semibold shadow-sm"
+        >
+          <span className="flex items-center gap-2">
+            <LayoutDashboard className="w-4 h-4" /> Principal Portal
+          </span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${principalOpen ? "" : "-rotate-90"}`} />
+        </button>
+        {principalOpen && (
+          <ul className="mt-1.5 space-y-0.5">
+            {PRINCIPAL_NAV.map((item) => {
+              const isActive = active === item.view;
+              return (
+                <li key={item.view}>
+                  <button
+                    onClick={() => onNav(item.view)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      isActive
+                        ? "bg-[#7b1f4c]/10 text-[#7b1f4c] font-semibold"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <item.icon className={`w-4 h-4 ${isActive ? "text-[#7b1f4c]" : "text-gray-400"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {/* TPO group */}
+      <div>
+        <button
+          onClick={() => setTpoOpen((o) => !o)}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-rose-600 to-pink-500 text-white text-sm font-semibold shadow-sm"
+        >
+          <span className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4" /> TPO Portal
+          </span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${tpoOpen ? "" : "-rotate-90"}`} />
+        </button>
+        {tpoOpen && (
+          <ul className="mt-1.5 space-y-0.5">
+            {TPO_NAV.map((item) => (
+              <li key={item.label}>
+                <a
+                  href={`/tpo${item.hash ? `#${item.hash}` : ""}`}
+                  onClick={onCloseMobile}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                >
+                  <item.icon className="w-4 h-4 text-gray-400" />
+                  <span className="truncate">{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </nav>
+  );
+
+  return (
+    <>
+      {/* Desktop */}
+      <aside className="hidden lg:block w-64 shrink-0 sticky top-[76px] self-start">
+        {inner}
+      </aside>
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/40" onClick={onCloseMobile}>
+          <div
+            className="absolute left-0 top-0 h-full w-72 bg-[#f7f7fb] p-4 overflow-y-auto shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {inner}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
 // ─── HOME (card grid) ─────────────────────────────────────────────────────────
 function HomeView({ year, onNav, me }: { year: string; onNav: (v: View) => void; me: any }) {
   const fn = useServerFn(principalDashboard);
+
   const { data } = useQuery({
     queryKey: ["principal-dash", year],
     queryFn: () => fn({ data: { academic_year: year } }),
