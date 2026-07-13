@@ -161,7 +161,7 @@ export const staffUpdateProfile = createServerFn({ method: "POST" })
       patch[k] = v === "" ? null : v;
     }
     if (Object.keys(patch).length === 0) return { success: true };
-    const { error } = await supabaseAdmin.from("staff_users").update(patch).eq("id", session.data.id);
+    const { error } = await supabaseAdmin.from("staff_users").update(patch as any).eq("id", session.data.id);
     if (error) throw new Error(error.message);
     return { success: true };
   });
