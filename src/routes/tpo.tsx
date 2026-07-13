@@ -442,7 +442,7 @@ function KpiTile({
 }
 
 // ─── PLACEMENTS ───────────────────────────────────────────────────────────────
-function PlacementsView({ onBack }: { onBack: () => void }) {
+function PlacementsView({ onBack }: { onBack?: () => void }) {
   const qc = useQueryClient();
   const listQ = useQuery({ queryKey: ["tpo-placements"], queryFn: () => listPlacements({ data: {} }) });
   const [open, setOpen] = useState(false);
