@@ -32,6 +32,7 @@ import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { QuickCard } from "@/components/portal/QuickCard";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { avatarUrl } from "@/lib/portal-identity";
+import placeholderAvatar from "@/assets/placeholder-avatar.png";
 
 import {
   listParentMessages,
