@@ -455,6 +455,69 @@ export const studentMyFees = createServerFn({ method: "GET" }).handler(async () 
   return data ?? [];
 });
 
+// Student: request a fee receipt / acknowledgment for a specific fee record.
+// Broadcasts a message to all clerks so the accounts office can respond.
+export const studentRequestFeeReceipt = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        fee_id: z.number().int().positive(),
+        note: z.string().max(500).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const me = await requireStudent();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: fee, error: fErr } = await supabaseAdmin
+      .from("fee_records")
+      .select("*")
+      .eq("id", data.fee_id)
+      .eq("student_id", me.id)
+      .maybeSingle();
+    if (fErr) throw new Error(fErr.message);
+    if (!fee) throw new Error("Fee record not found");
+
+    const { data: student } = await supabaseAdmin
+      .from("students")
+      .select("name, enrollment_no, branch, semester")
+      .eq("id", me.id)
+      .maybeSingle();
+
+    const { data: clerks, error: cErr } = await supabaseAdmin
+      .from("staff_users")
+      .select("id")
+      .eq("role", "clerk")
+      .eq("is_active", true);
+    if (cErr) throw new Error(cErr.message);
+    if (!clerks || clerks.length === 0) throw new Error("No clerk available to receive the request");
+
+    const due = Number(fee.total_amount || 0) - Number(fee.paid_amount || 0);
+    const body = [
+      `Fee receipt / acknowledgment request`,
+      `Student: ${student?.name ?? me.id} (${student?.enrollment_no ?? "-"})`,
+      `Branch/Sem: ${student?.branch ?? "-"} / ${student?.semester ?? "-"}`,
+      `Record: Sem ${fee.semester ?? "-"} · ${fee.academic_year ?? "-"}`,
+      `Total: ₹${Number(fee.total_amount || 0).toLocaleString()} · Paid: ₹${Number(fee.paid_amount || 0).toLocaleString()} · Due: ₹${due.toLocaleString()}`,
+      `Status: ${fee.status}${fee.due_date ? ` · Due date: ${fee.due_date}` : ""}`,
+      data.note ? `Note: ${data.note}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const rows = clerks.map((c) => ({
+      sender_kind: "student",
+      sender_id: me.id,
+      recipient_kind: "staff",
+      recipient_id: c.id,
+      body,
+    }));
+    const { error } = await supabaseAdmin.from("messages").insert(rows);
+    if (error) throw new Error(error.message);
+    return { ok: true, sent_to: clerks.length };
+  });
+
 // Principal: lightweight student lookup for issuing disciplinary actions.
 export const principalListStudents = createServerFn({ method: "GET" }).handler(async () => {
   await requireRole(principalRoles);

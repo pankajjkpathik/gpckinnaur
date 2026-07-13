@@ -45,6 +45,7 @@ import {
   studentMyDisciplinary,
   studentMySubmissions,
   studentSetAssignmentStatus,
+  studentRequestFeeReceipt,
 } from "@/lib/assignments.functions";
 
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
@@ -334,6 +335,7 @@ function AssignmentStatusButtons({
 // ─── HOME (summary) ───────────────────────────────────────────────────────────
 function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const [openClass, setOpenClass] = useState<any | null>(null);
+  const [feesOpen, setFeesOpen] = useState(false);
   const dashFn = useServerFn(studentDashboard);
   const assignFn = useServerFn(studentListAssignments);
   const feesFn = useServerFn(studentMyFees);
@@ -482,9 +484,20 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
 
         {/* Fees reminder */}
         <Card className="lg:col-span-1">
-          <div className="flex items-center gap-2 mb-3">
-            <DollarSign className="w-4 h-4 text-emerald-600" />
-            <h2 className="font-semibold text-gray-800">Fees Reminder</h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-emerald-600" />
+              <h2 className="font-semibold text-gray-800">Fees Reminder</h2>
+            </div>
+            {pendingFees.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setFeesOpen(true)}
+                className="text-xs font-medium text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+              >
+                View details
+              </button>
+            )}
           </div>
           {pendingFees.length === 0 ? (
             <p className="text-sm text-emerald-700 py-4 text-center">
@@ -518,10 +531,24 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
                   );
                 })}
               </ul>
+              <button
+                type="button"
+                onClick={() => setFeesOpen(true)}
+                className="mt-3 w-full text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded py-2"
+              >
+                View outstanding & request receipt
+              </button>
             </>
           )}
         </Card>
       </div>
+
+      <FeesDetailDialog
+        open={feesOpen}
+        onClose={() => setFeesOpen(false)}
+        fees={fees as any[]}
+      />
+
 
 
       <ClassDetailDialog
@@ -533,6 +560,190 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
     </div>
   );
 }
+
+function FeesDetailDialog({
+  open,
+  onClose,
+  fees,
+}: {
+  open: boolean;
+  onClose: () => void;
+  fees: any[];
+}) {
+  const qc = useQueryClient();
+  const requestFn = useServerFn(studentRequestFeeReceipt);
+  const [noteFor, setNoteFor] = useState<number | null>(null);
+  const [note, setNote] = useState("");
+  const [msg, setMsg] = useState<{ id: number; type: "ok" | "err"; text: string } | null>(null);
+
+  const req = useMutation({
+    mutationFn: (vars: { fee_id: number; note?: string }) => requestFn({ data: vars }),
+    onSuccess: (_r, vars) => {
+      setMsg({ id: vars.fee_id, type: "ok", text: "Request sent to the accounts office." });
+      setNoteFor(null);
+      setNote("");
+      qc.invalidateQueries({ queryKey: ["student-fees-home"] });
+      qc.invalidateQueries({ queryKey: ["student-fees"] });
+    },
+    onError: (e: any, vars) => setMsg({ id: vars.fee_id, type: "err", text: e?.message ?? "Failed to send request" }),
+  });
+
+  if (!open) return null;
+
+  const rows = [...(fees ?? [])].sort((a, b) => {
+    const dueA = Number(a.total_amount || 0) - Number(a.paid_amount || 0);
+    const dueB = Number(b.total_amount || 0) - Number(b.paid_amount || 0);
+    if ((dueB > 0 ? 1 : 0) !== (dueA > 0 ? 1 : 0)) return (dueB > 0 ? 1 : 0) - (dueA > 0 ? 1 : 0);
+    const da = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+    const db = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+    return da - db;
+  });
+
+  const statusStyle = (s: string, due: number) => {
+    if (due <= 0) return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    if (s === "overdue") return "bg-rose-100 text-rose-700 border-rose-200";
+    if (s === "partial") return "bg-amber-100 text-amber-700 border-amber-200";
+    return "bg-sky-100 text-sky-700 border-sky-200";
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b bg-emerald-700 text-white flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <DollarSign className="w-5 h-5" /> Fees Details
+            </h3>
+            <p className="text-xs text-emerald-100">
+              Outstanding records with due dates and status. Request a receipt or acknowledgment from the accounts office.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white/80 hover:text-white text-xl leading-none"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-5 overflow-y-auto space-y-3">
+          {rows.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-8">No fee records available.</p>
+          ) : (
+            rows.map((f: any) => {
+              const total = Number(f.total_amount || 0);
+              const paid = Number(f.paid_amount || 0);
+              const due = total - paid;
+              const isOutstanding = due > 0;
+              const label = isOutstanding ? (f.status === "overdue" ? "Overdue" : f.status === "partial" ? "Partially Paid" : "Pending") : "Paid";
+              return (
+                <div key={f.id} className="border rounded-lg p-4">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div>
+                      <p className="font-semibold text-gray-800">
+                        Semester {f.semester ?? "-"} · {f.academic_year ?? "-"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {f.due_date ? `Due date: ${new Date(f.due_date).toLocaleDateString()}` : "No due date set"}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xs font-medium border rounded-full px-2.5 py-1 ${statusStyle(f.status, due)}`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mt-3 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-500">Total</p>
+                      <p className="font-medium text-gray-800">₹{total.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Paid</p>
+                      <p className="font-medium text-emerald-700">₹{paid.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Outstanding</p>
+                      <p className={`font-semibold ${isOutstanding ? "text-rose-700" : "text-emerald-700"}`}>
+                        ₹{due.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {msg && msg.id === f.id && (
+                    <p className={`mt-3 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-rose-600"}`}>
+                      {msg.text}
+                    </p>
+                  )}
+
+                  {noteFor === f.id ? (
+                    <div className="mt-3 space-y-2">
+                      <textarea
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        rows={2}
+                        maxLength={500}
+                        placeholder="Optional note for the accounts office (transaction ID, mode of payment, date, etc.)"
+                        className="w-full border rounded p-2 text-sm"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => { setNoteFor(null); setNote(""); }}
+                          className="text-sm px-3 py-1.5 rounded border"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={req.isPending}
+                          onClick={() => req.mutate({ fee_id: f.id, note: note.trim() || undefined })}
+                          className="text-sm px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+                        >
+                          {req.isPending ? "Sending…" : "Send request"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => { setNoteFor(f.id); setNote(""); setMsg(null); }}
+                        className="text-sm px-3 py-1.5 rounded border border-emerald-600 text-emerald-700 hover:bg-emerald-50 inline-flex items-center gap-1.5"
+                      >
+                        <FileText className="w-4 h-4" />
+                        {isOutstanding ? "Request payment acknowledgment" : "Request receipt"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="px-5 py-3 border-t bg-gray-50 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-900"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
