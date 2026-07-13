@@ -343,7 +343,7 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
     <div className="space-y-6">
       <HeroBanner
         name={me.name || "Faculty"}
-        avatarSrc={me.image_url ?? null}
+        avatarSrc={avatarUrl(me as any)}
         palette="faculty"
         subtitle={
           <>
