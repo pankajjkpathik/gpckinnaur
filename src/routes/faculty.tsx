@@ -755,7 +755,7 @@ function useFacNotifRtStatus() {
   );
 }
 
-function useFacultyNotifRealtime(ay: string) {
+function useFacultyNotifRealtime(ay: string, userId?: string | number) {
   const qc = useQueryClient();
   const navigate = useNavigate();
 
