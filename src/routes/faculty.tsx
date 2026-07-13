@@ -234,8 +234,23 @@ function FacultyPortalInner({
                   <span className="truncate flex-1">{item.label}</span>
                   {item.badge && item.badge > 0 && (
                     <span
-                      className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm animate-in fade-in"
-                      title={`${item.badge} unread`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setView("home");
+                        focusNotifications();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setView("home");
+                          focusNotifications();
+                        }
+                      }}
+                      className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm animate-in fade-in cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-300"
+                      title={`${item.badge} unread — jump to notifications`}
                     >
                       {item.badge > 9 ? "9+" : item.badge}
                     </span>
@@ -261,7 +276,17 @@ function FacultyPortalInner({
               >
                 {item.label}
                 {item.badge && item.badge > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold align-middle">
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setView("home");
+                      focusNotifications();
+                    }}
+                    className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[9px] font-bold align-middle cursor-pointer"
+                    title={`${item.badge} unread — jump to notifications`}
+                  >
                     {item.badge > 9 ? "9+" : item.badge}
                   </span>
                 )}
@@ -436,6 +461,25 @@ type NotifItem = {
   badge: string;
 };
 
+const FAC_NOTIF_ANCHOR_ID = "faculty-notifications-panel";
+function focusNotifications() {
+  if (typeof window === "undefined") return;
+  const attempt = (tries: number) => {
+    const el = document.getElementById(FAC_NOTIF_ANCHOR_ID);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("ring-2", "ring-rose-400", "ring-offset-2");
+      (el as HTMLElement).focus({ preventScroll: true });
+      window.setTimeout(() => {
+        el.classList.remove("ring-2", "ring-rose-400", "ring-offset-2");
+      }, 1600);
+    } else if (tries > 0) {
+      window.setTimeout(() => attempt(tries - 1), 80);
+    }
+  };
+  window.requestAnimationFrame(() => attempt(10));
+}
+
 // Shared "read" state so the sidebar badge and the panel stay in sync.
 const readStateListeners = new Set<() => void>();
 function loadReadIds(key: string): Set<string> {
@@ -585,7 +629,11 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   };
 
   return (
-    <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+    <div
+      id={FAC_NOTIF_ANCHOR_ID}
+      tabIndex={-1}
+      className="bg-white border rounded-xl shadow-sm overflow-hidden scroll-mt-24 outline-none transition-shadow"
+    >
       <div className="px-5 py-3 bg-gradient-to-r from-amber-50 via-white to-rose-50 border-b flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="relative">
