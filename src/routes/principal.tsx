@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -72,6 +72,7 @@ import {
 import { BarStats, PieStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
+import { hasRole, principalRoles } from "@/lib/roles";
 import { listNotices } from "@/lib/notices.functions";
 import { BRANCH_TO_DEPT } from "@/lib/branch";
 import {
@@ -128,6 +129,39 @@ function BackBtn({ onClick }: { onClick: () => void }) {
   );
 }
 
+/**
+ * Banner shown at the top of every TPO oversight view under the Principal
+ * portal. Makes it visually obvious that the Principal has read-only access —
+ * all TPO create/edit/delete rights remain with the Training & Placement
+ * Officer.
+ *
+ * Structural read-only enforcement lives on the server:
+ *   - Only `principalRoles` (super_admin, principal) can reach this portal
+ *     via the `useEffect` role gate in `PrincipalPortal`.
+ *   - The TPO views (`PlacementDataView`, `TpoTrainingDetailsView`,
+ *     `TpoLecturesDetailsView`) import ONLY the `list*` server functions —
+ *     no create/update/delete mutations. If you add a mutation import here,
+ *     you are breaking the oversight contract; move it to `/tpo` instead.
+ *   - Supabase RLS on `placements`, `industrial_training` and
+ *     `guest_lectures` remains the source of truth.
+ */
+function TpoReadOnlyBanner() {
+  return (
+    <div
+      role="note"
+      aria-label="Read-only view"
+      className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+    >
+      <Shield className="w-4 h-4 mt-0.5 shrink-0 text-amber-700" aria-hidden />
+      <p>
+        <span className="font-semibold">Read-only oversight.</span> This view is
+        managed by the Training &amp; Placement Officer. Create, edit and delete
+        actions are unavailable in the Principal portal.
+      </p>
+    </div>
+  );
+}
+
 
 const VALID_VIEWS: View[] = [
   "home",
@@ -177,7 +211,19 @@ function PrincipalPortal() {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("principal:sidebarCollapsed", sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
-  const { data: me } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
+  const nav = useNavigate();
+  const { data: me, isLoading: meLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
+
+  // Gate the entire Principal portal: only principal/super_admin may enter.
+  // Anyone else is bounced to the staff dashboard; unauthenticated → staff-login.
+  useEffect(() => {
+    if (meLoading) return;
+    if (!me) {
+      nav({ to: "/staff-login" });
+    } else if (!hasRole(me, principalRoles)) {
+      nav({ to: "/staff-dashboard" });
+    }
+  }, [me, meLoading, nav]);
 
   // Keep ?view= in sync so refresh/back-forward preserves the selected section.
   useEffect(() => {
@@ -956,6 +1002,7 @@ function PlacementDataView({ onBack }: { onBack: () => void }) {
         <BackBtn onClick={onBack} />
         <button onClick={() => window.print()} className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5 bg-white">🖨️ Print</button>
       </div>
+      <TpoReadOnlyBanner />
       <div className="bg-white border rounded-lg p-5">
         <h1 className="text-xl font-bold text-gray-800 mb-1">Placement Data (Read-only)</h1>
         <p className="text-xs text-gray-400 mb-4">View and analyze student placement records.</p>
@@ -2314,6 +2361,7 @@ function TpoTrainingDetailsView({ onBack }: { onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
+      <TpoReadOnlyBanner />
       <div className="bg-white border rounded-lg p-5">
         <h1 className="text-xl font-bold text-gray-800 mb-1">Industrial Training Details</h1>
         <p className="text-xs text-gray-400 mb-4">
@@ -2373,6 +2421,7 @@ function TpoLecturesDetailsView({ onBack }: { onBack: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
+      <TpoReadOnlyBanner />
       <div className="bg-white border rounded-lg p-5">
         <h1 className="text-xl font-bold text-gray-800 mb-1">Guest Lecture Details</h1>
         <p className="text-xs text-gray-400 mb-4">
