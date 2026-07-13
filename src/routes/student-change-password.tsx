@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { studentChangePassword } from "@/lib/admin.functions";
 import { checkPasswordStrength, firstPasswordStrengthError } from "@/lib/password-strength";
