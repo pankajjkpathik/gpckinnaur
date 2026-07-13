@@ -275,7 +275,29 @@ function HomeView({ year, onNav, me }: { year: string; onNav: (v: View) => void;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, Principal</h1>
+      <HeroBanner
+        name={me?.name || "Principal"}
+        role="Principal"
+        palette={{
+          gradient: "from-[#3730a3] via-[#2e1065] to-[#1e1b4b]",
+          nameColor: "text-amber-300",
+          eyebrowColor: "text-amber-200/90",
+          metaColor: "text-amber-200",
+          blob: "bg-amber-300",
+        }}
+        subtitle={
+          <>
+            Academic Year <span className="font-semibold text-amber-200">{year}</span>
+            <span className="text-white/70"> · Institute-wide oversight & analytics.</span>
+          </>
+        }
+        stats={[
+          { value: data?.total_students ?? "—", label: "Students" },
+          { value: data?.total_faculty ?? "—", label: "Faculty" },
+          { value: data?.total_branches ?? "—", label: "Branches" },
+        ]}
+      />
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
           <QuickCard
