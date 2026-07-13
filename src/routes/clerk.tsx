@@ -21,6 +21,8 @@ import {
   KeyRound,
   Camera,
   Loader2,
+  Activity,
+  History,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { staffMe, uploadStaffAvatar, staffChangePassword, staffUpdateProfile } from "@/lib/auth.functions";
@@ -34,6 +36,7 @@ import {
   clerkUpdateStudent,
   clerkBulkImportStudents,
   clerkPromoteStudents,
+  clerkRecentActivity,
 } from "@/lib/clerk.functions";
 import { adminCreateStudent } from "@/lib/admin.functions";
 import { salaryList, salaryUpsert, salaryDelete, salaryStaffList } from "@/lib/salary.functions";
@@ -159,6 +162,11 @@ function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
   const salaryQ = useQuery({
     queryKey: ["salary-list", now.getMonth() + 1, now.getFullYear()],
     queryFn: () => salaryList({ data: { month: now.getMonth() + 1, year: now.getFullYear() } }),
+  });
+  const activityQ = useQuery({
+    queryKey: ["clerk-activity"],
+    queryFn: () => clerkRecentActivity({ data: { limit: 20 } }),
+    refetchInterval: 60_000,
   });
 
   const students = studentsQ.data ?? [];
@@ -352,6 +360,8 @@ function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
           </ul>
         </div>
       </div>
+
+      <ActivityPanel rows={activityQ.data ?? []} loading={activityQ.isLoading} />
     </div>
   );
 }
@@ -383,6 +393,202 @@ function KpiTile({
   );
 }
 
+// ─── Recent Activity / Audit Log ─────────────────────────────────────────────
+type ActivityRow = {
+  id: number;
+  action: string;
+  entity: string | null;
+  entity_id: string | null;
+  details: any;
+  created_at: string;
+};
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function relTime(iso: string) {
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return "";
+  const diff = Date.now() - t;
+  const m = Math.round(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  if (d < 14) return `${d}d ago`;
+  const dt = new Date(iso);
+  return `${dt.getDate()} ${MONTHS[dt.getMonth()]}`;
+}
+
+function describeActivity(row: ActivityRow): { icon: any; tone: string; label: string; text: React.ReactNode } {
+  const d = row.details ?? {};
+  const actor = d.actor_name || "Someone";
+  switch (row.action) {
+    case "student_update": {
+      const fields = Array.isArray(d.fields) ? d.fields.join(", ") : "";
+      return {
+        icon: Pencil,
+        tone: "bg-amber-100 text-amber-700 border-amber-200",
+        label: "Student edit",
+        text: (
+          <>
+            <span className="font-semibold text-gray-800">{actor}</span> edited{" "}
+            <span className="font-medium text-gray-800">{d.student_name || `#${row.entity_id}`}</span>
+            {d.enrollment_no && <span className="text-gray-500"> ({d.enrollment_no})</span>}
+            {fields && <span className="text-gray-500"> · {fields}</span>}
+          </>
+        ),
+      };
+    }
+    case "student_promote": {
+      return {
+        icon: ArrowUpCircle,
+        tone: "bg-sky-100 text-sky-700 border-sky-200",
+        label: "Promotion",
+        text: (
+          <>
+            <span className="font-semibold text-gray-800">{actor}</span> promoted{" "}
+            <span className="font-medium text-gray-800 capitalize">{d.branch}</span> from Sem{" "}
+            <span className="font-semibold">{d.from_semester}</span> → Sem{" "}
+            <span className="font-semibold">{d.to_semester}</span>
+            {typeof d.promoted === "number" && (
+              <span className="text-gray-500"> · {d.promoted} student{d.promoted === 1 ? "" : "s"}</span>
+            )}
+          </>
+        ),
+      };
+    }
+    case "salary_upsert": {
+      const period = d.month && d.year ? `${MONTHS[d.month - 1]} ${d.year}` : "";
+      return {
+        icon: Wallet,
+        tone: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        label: "Salary",
+        text: (
+          <>
+            <span className="font-semibold text-gray-800">{actor}</span> recorded pay for{" "}
+            <span className="font-medium text-gray-800">{d.staff_name || `Staff #${row.entity_id}`}</span>
+            {period && <span className="text-gray-500"> · {period}</span>}
+            {d.net_pay != null && (
+              <span className="text-gray-500"> · ₹{Number(d.net_pay).toLocaleString("en-IN")}</span>
+            )}
+          </>
+        ),
+      };
+    }
+    case "salary_delete": {
+      const period = d.month && d.year ? `${MONTHS[d.month - 1]} ${d.year}` : "";
+      return {
+        icon: Trash2,
+        tone: "bg-rose-100 text-rose-700 border-rose-200",
+        label: "Salary removed",
+        text: (
+          <>
+            <span className="font-semibold text-gray-800">{actor}</span> removed salary for{" "}
+            <span className="font-medium text-gray-800">{d.staff_name || `Staff #${row.entity_id}`}</span>
+            {period && <span className="text-gray-500"> · {period}</span>}
+          </>
+        ),
+      };
+    }
+    default:
+      return {
+        icon: Activity,
+        tone: "bg-gray-100 text-gray-700 border-gray-200",
+        label: row.action,
+        text: <span className="text-gray-600">{row.action} on {row.entity}</span>,
+      };
+  }
+}
+
+const ACTIVITY_FILTERS: { key: "all" | "student_update" | "student_promote" | "salary"; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "student_update", label: "Edits" },
+  { key: "student_promote", label: "Promotions" },
+  { key: "salary", label: "Salary" },
+];
+
+function ActivityPanel({ rows, loading }: { rows: ActivityRow[]; loading?: boolean }) {
+  const [filter, setFilter] = useState<(typeof ACTIVITY_FILTERS)[number]["key"]>("all");
+  const filtered = useMemo(() => {
+    if (filter === "all") return rows;
+    if (filter === "salary") return rows.filter((r) => r.action.startsWith("salary_"));
+    return rows.filter((r) => r.action === filter);
+  }, [rows, filter]);
+
+  return (
+    <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+      <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-semibold text-gray-800 flex items-center gap-2">
+            <History className="w-4 h-4 text-amber-600" /> Recent Activity
+          </p>
+          <p className="text-[11px] text-gray-500">
+            Student edits, semester promotions & salary changes — newest first.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {ACTIVITY_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setFilter(f.key)}
+              className={`text-[11px] px-2 py-1 rounded-full border transition ${
+                filter === f.key
+                  ? "bg-amber-600 border-amber-600 text-white shadow-sm"
+                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <ul className="divide-y max-h-[360px] overflow-y-auto">
+        {loading ? (
+          <li className="p-6 text-xs text-gray-400 text-center flex items-center justify-center gap-2">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading activity…
+          </li>
+        ) : filtered.length === 0 ? (
+          <li className="p-6 text-xs text-gray-400 text-center flex flex-col items-center gap-1">
+            <Activity className="w-4 h-4 text-gray-300" />
+            {rows.length === 0
+              ? "No activity yet. Edits, promotions, and salary entries will appear here."
+              : "No entries match this filter."}
+          </li>
+        ) : (
+          filtered.map((row) => {
+            const meta = describeActivity(row);
+            const Icon = meta.icon;
+            return (
+              <li key={row.id} className="px-4 py-3 flex items-start gap-3">
+                <span className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${meta.tone}`}>
+                  <Icon className="w-4 h-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] uppercase tracking-wider font-semibold border px-1.5 py-0.5 rounded ${meta.tone}`}>
+                      {meta.label}
+                    </span>
+                    <span
+                      className="text-[10px] text-gray-400 ml-auto shrink-0"
+                      title={new Date(row.created_at).toLocaleString()}
+                    >
+                      {relTime(row.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 mt-1 leading-snug">{meta.text}</p>
+                </div>
+              </li>
+            );
+          })
+        )}
+      </ul>
+    </div>
+  );
+}
+
+
 
 function StudentsTab() {
   const qc = useQueryClient();
@@ -409,6 +615,7 @@ function StudentsTab() {
     mutationFn: (d: any) => clerkUpdateStudent({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clerk-students"] });
+      qc.invalidateQueries({ queryKey: ["clerk-activity"] });
       setEditing(null);
     },
   });
@@ -837,9 +1044,16 @@ function ImportTab() {
 }
 
 function PromoteTab() {
+  const qc = useQueryClient();
   const [branch, setBranch] = useState("civil");
   const [from, setFrom] = useState(1);
-  const m = useMutation({ mutationFn: (d: any) => clerkPromoteStudents({ data: d }) });
+  const m = useMutation({
+    mutationFn: (d: any) => clerkPromoteStudents({ data: d }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["clerk-students"] });
+      qc.invalidateQueries({ queryKey: ["clerk-activity"] });
+    },
+  });
   return (
     <div className="max-w-md space-y-3">
       <p className="text-sm text-muted-foreground">
@@ -900,12 +1114,16 @@ function SalaryTab() {
     mutationFn: (d: any) => salaryUpsert({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["salary-list"] });
+      qc.invalidateQueries({ queryKey: ["clerk-activity"] });
       setAdding(false);
     },
   });
   const del = useMutation({
     mutationFn: (d: any) => salaryDelete({ data: d }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["salary-list"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["salary-list"] });
+      qc.invalidateQueries({ queryKey: ["clerk-activity"] });
+    },
   });
 
   const total = useMemo(
