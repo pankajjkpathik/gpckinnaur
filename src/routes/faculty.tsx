@@ -897,7 +897,7 @@ function useFacultyNotifRealtime(ay: string, userId?: string | number) {
       stopPolling();
       if (channel) supabase.removeChannel(channel);
     };
-  }, [qc, ay, navigate]);
+  }, [qc, ay, navigate, userId]);
 }
 
 
