@@ -45,24 +45,31 @@ import { adminCreateStudent } from "@/lib/admin.functions";
 import { salaryList, salaryUpsert, salaryDelete, salaryStaffList } from "@/lib/salary.functions";
 
 
+const TABS = ["home", "students", "import", "promote", "salary", "profile", "password"] as const;
+type Tab = typeof TABS[number];
+
 export const Route = createFileRoute("/clerk")({
   head: () => portalMeta("Clerk Portal"),
+  validateSearch: (search: Record<string, unknown>): { tab: Tab } => {
+    const raw = String(search.tab ?? "home");
+    const tab = (TABS as readonly string[]).includes(raw) ? (raw as Tab) : "home";
+    return { tab };
+  },
   component: ClerkPortal,
 });
 
-type Tab = "home" | "students" | "import" | "promote" | "salary" | "profile" | "password";
-
 function ClerkPortal() {
   const nav = useNavigate();
+  const { tab } = Route.useSearch();
   const { data: me, isLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
   useEffect(() => {
     if (isLoading) return;
     if (!me) nav({ to: "/staff-login", replace: true });
     else if (!hasRole(me, clerkRoles)) nav({ to: "/staff-dashboard", replace: true });
   }, [me, isLoading, nav]);
-  const [tab, setTab] = useState<Tab>("home");
   const [studentPreset, setStudentPreset] = useState<{ q: string; key: number } | null>(null);
   const [salaryPreset, setSalaryPreset] = useState<{ month: number; year: number; key: number } | null>(null);
+  const setTab = (t: Tab) => nav({ to: "/clerk", search: { tab: t }, replace: true });
   if (isLoading || !me || !hasRole(me, clerkRoles)) return <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading…</div>;
 
   const jumpToStudent = (q: string) => {
@@ -74,6 +81,7 @@ function ClerkPortal() {
     setSalaryPreset({ month: month ?? now.getMonth() + 1, year: year ?? now.getFullYear(), key: Date.now() });
     setTab("salary");
   };
+
 
 
   const NAV: { icon: any; label: string; tab: Tab }[] = [
