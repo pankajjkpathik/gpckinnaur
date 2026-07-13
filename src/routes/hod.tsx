@@ -798,6 +798,37 @@ function SessionalReportsView({ ay, onBack }: { ay: string; onBack: () => void }
   );
 }
 
+function ProvenanceBadge({ row, status }: { row: any; status: "pending" | "approved" | "returned" }) {
+  const when = row.reviewed_at ? new Date(row.reviewed_at).toLocaleString() : null;
+  const who = row.reviewer?.name || row.reviewer?.username;
+  const cls =
+    status === "approved"
+      ? "bg-green-50 text-green-700 border-green-200"
+      : status === "returned"
+        ? "bg-amber-50 text-amber-800 border-amber-200"
+        : "bg-slate-50 text-slate-600 border-slate-200";
+  const label = status === "pending" ? "Pending" : status === "approved" ? "Approved" : "Returned";
+  const tooltip =
+    status === "pending"
+      ? "Awaiting HOD review"
+      : `${label}${who ? ` by ${who}` : ""}${when ? ` · ${when}` : ""}`;
+  return (
+    <span
+      title={tooltip}
+      className={`inline-flex flex-col items-start gap-0.5 px-2 py-1 rounded border text-[10px] leading-tight ${cls}`}
+    >
+      <span className="font-semibold uppercase tracking-wide">{label}</span>
+      {status !== "pending" && (who || when) && (
+        <span className="text-[9px] opacity-80">
+          {who ? `by ${who}` : ""}
+          {who && when ? " · " : ""}
+          {when ?? ""}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved" | "returned" }) {
   const qc = useQueryClient();
   const q = useQuery({
