@@ -198,7 +198,9 @@ function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
     [lectures, lectureDept],
   );
 
-  const quickActions: { view: View; icon: any; label: string; desc: string; color: string; border: string; stat: number; statLabel: string }[] = [
+  const alerts = useTpoAlerts(placements, trainings);
+
+  const quickActions: { view: View; icon: any; label: string; desc: string; color: string; border: string; stat: number; statLabel: string; badge?: number }[] = [
     {
       view: "placements",
       icon: Briefcase,
@@ -208,6 +210,7 @@ function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
       border: "border-[#7b1f4c]",
       stat: placementsThisYear,
       statLabel: `Placed in ${currentYear}`,
+      badge: alerts.newPlacements.length || undefined,
     },
     {
       view: "training",
@@ -218,6 +221,7 @@ function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
       border: "border-orange-500",
       stat: trainings.length,
       statLabel: "Training records",
+      badge: alerts.newTrainings.length || undefined,
     },
     {
       view: "lectures",
