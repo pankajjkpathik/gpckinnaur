@@ -341,31 +341,59 @@ function AssignmentStatusButtons({
 function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const [openClass, setOpenClass] = useState<any | null>(null);
   const [feesOpen, setFeesOpen] = useState(false);
+  const [prefsOpen, setPrefsOpen] = useState(false);
   const dashFn = useServerFn(studentDashboard);
   const assignFn = useServerFn(studentListAssignments);
   const feesFn = useServerFn(studentMyFees);
+  const prefsFn = useServerFn(studentGetNotificationPrefs);
   const { data } = useQuery({ queryKey: ["student-dash"], queryFn: () => dashFn() });
   const { data: assignments = [] } = useQuery({ queryKey: ["student-assignments-home"], queryFn: () => assignFn() });
   const { data: fees = [] } = useQuery({ queryKey: ["student-fees-home"], queryFn: () => feesFn() });
+  const { data: prefs } = useQuery({
+    queryKey: ["student-notif-prefs"],
+    queryFn: () => prefsFn(),
+  });
+  const effectivePrefs = prefs ?? {
+    assignments_enabled: true,
+    fees_enabled: true,
+    assignments_lead_days: 7,
+    fees_lead_days: 14,
+  };
   const { data: mySubs = [] } = useMySubmissions();
   const subStatus = (aid: number) =>
     (mySubs as any[]).find((s) => s.assignment_id === aid)?.status ?? null;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const upcomingAssignments = (assignments as any[])
-    .filter((a) => a.due_date && new Date(a.due_date) >= today)
-    .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-    .slice(0, 5);
-  const pendingFees = (fees as any[]).filter(
-    (f) => Number(f.total_amount || 0) - Number(f.paid_amount || 0) > 0,
-  );
+  const daysUntil = (d: string) =>
+    Math.ceil((new Date(d).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  const upcomingAssignments = effectivePrefs.assignments_enabled
+    ? (assignments as any[])
+        .filter(
+          (a) =>
+            a.due_date &&
+            new Date(a.due_date) >= today &&
+            daysUntil(a.due_date) <= effectivePrefs.assignments_lead_days,
+        )
+        .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+        .slice(0, 5)
+    : [];
+
+  const pendingFees = effectivePrefs.fees_enabled
+    ? (fees as any[]).filter((f) => {
+        const due = Number(f.total_amount || 0) - Number(f.paid_amount || 0);
+        if (due <= 0) return false;
+        if (!f.due_date) return true;
+        const dn = daysUntil(f.due_date);
+        return dn <= effectivePrefs.fees_lead_days;
+      })
+    : [];
   const totalDue = pendingFees.reduce(
     (s, f) => s + (Number(f.total_amount || 0) - Number(f.paid_amount || 0)),
     0,
   );
-  const daysUntil = (d: string) =>
-    Math.ceil((new Date(d).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
 
   return (
     <div className="space-y-5">
