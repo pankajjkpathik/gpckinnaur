@@ -63,7 +63,7 @@ function TpoPortal() {
       accent="rose"
     >
       <div className="container mx-auto px-4 py-6">
-        {view === "home" && <HomeView onNav={setView} />}
+        {view === "home" && <HomeView onNav={setView} me={me as any} />}
         {view === "placements" && <PlacementsView onBack={() => setView("home")} />}
         {view === "training" && <TrainingView onBack={() => setView("home")} />}
         {view === "lectures" && <LecturesView onBack={() => setView("home")} />}
