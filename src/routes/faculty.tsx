@@ -833,7 +833,7 @@ function useFacultyNotifRealtime(ay: string) {
       stopPolling();
       if (channel) supabase.removeChannel(channel);
     };
-  }, [qc, ay]);
+  }, [qc, ay, navigate]);
 }
 
 
