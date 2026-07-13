@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Briefcase, GraduationCap, LifeBuoy, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, Briefcase, GraduationCap, LifeBuoy, Megaphone, ShieldCheck, Users } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { listNotices } from "@/lib/notices.functions";
+
+type NoticeRow = Awaited<ReturnType<typeof listNotices>>[number];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,6 +19,20 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Sign in to the GP Kinnaur institute portal." },
     ],
   }),
+  loader: async () => {
+    try {
+      const all = await listNotices();
+      return { notices: (all ?? []).slice(0, 3) };
+    } catch {
+      return { notices: [] as Awaited<ReturnType<typeof listNotices>> };
+    }
+  },
+  errorComponent: ({ error }) => (
+    <div role="alert" className="p-6 text-sm text-red-600">
+      {error.message}
+    </div>
+  ),
+  notFoundComponent: () => <div className="p-6 text-sm">Page not found.</div>,
   component: PortalLanding,
 });
 
@@ -50,6 +67,9 @@ const cards = [
 
 
 function PortalLanding() {
+  const { notices } = Route.useLoaderData();
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   return (
     <div
       className="relative min-h-screen text-white overflow-hidden flex flex-col"
@@ -177,6 +197,66 @@ function PortalLanding() {
           </div>
         </div>
       </main>
+
+      {/* Latest notices */}
+      {notices.length > 0 && (
+        <section
+          aria-labelledby="portal-notices-heading"
+          className="relative z-10 border-t border-white/10 bg-black/20 backdrop-blur"
+        >
+          <div className="container mx-auto px-6 py-8">
+            <div className="flex items-end justify-between mb-4 gap-4">
+              <div className="flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-[color:var(--gold)]" aria-hidden />
+                <h2
+                  id="portal-notices-heading"
+                  className="text-[11px] tracking-[0.22em] font-semibold uppercase text-white/85"
+                >
+                  Latest Notices
+                </h2>
+              </div>
+            </div>
+            <ul className="grid gap-3 md:grid-cols-3">
+              {notices.map((n: NoticeRow) => {
+                const body = (
+                  <div className="h-full rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-colors p-4 flex flex-col">
+                    <div className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase text-white/55">
+                      <span className="text-[color:var(--gold)] font-semibold">
+                        {n.category || "general"}
+                      </span>
+                      {n.date && (
+                        <>
+                          <span className="w-px h-3 bg-white/20" />
+                          <time dateTime={n.date}>{fmtDate(n.date)}</time>
+                        </>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-white line-clamp-2">
+                      {n.title}
+                    </p>
+                    {n.content && (
+                      <p className="mt-1 text-xs text-white/65 line-clamp-2">{n.content}</p>
+                    )}
+                  </div>
+                );
+                return (
+                  <li key={n.id}>
+                    {n.link ? (
+                      <a href={n.link} target="_blank" rel="noopener noreferrer" className="block h-full">
+                        {body}
+                      </a>
+                    ) : (
+                      body
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
+      )}
+
+
 
       {/* Need help callout */}
       <section
