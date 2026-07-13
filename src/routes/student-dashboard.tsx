@@ -268,7 +268,8 @@ function StudentDashboard() {
 }
 
 // ─── HOME (summary) ───────────────────────────────────────────────────────────
-function HomeView({ me }: { me: any }) {
+function HomeView({ me, setView }: { me: any; setView: (v: string) => void }) {
+  const [openClass, setOpenClass] = useState<any | null>(null);
   const dashFn = useServerFn(studentDashboard);
   const assignFn = useServerFn(studentListAssignments);
   const feesFn = useServerFn(studentMyFees);
