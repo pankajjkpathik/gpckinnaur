@@ -59,10 +59,15 @@ function StaffProfile() {
     },
     onSuccess: () => {
       setError(null);
+      toast.success("Profile photo updated");
       qc.invalidateQueries({ queryKey: ["staff-me-profile"] });
       qc.invalidateQueries({ queryKey: ["staff-me"] });
     },
-    onError: (e: any) => setError(e?.message || "Upload failed"),
+    onError: (e: any) => {
+      const text = e?.message || "Upload failed";
+      setError(text);
+      toast.error("Photo upload failed", { description: text });
+    },
   });
 
   if (!me) return null;
