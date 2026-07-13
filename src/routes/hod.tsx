@@ -578,6 +578,7 @@ function FacultyAllotmentView({
   const qc = useQueryClient();
   const [year, setYear] = useState(defaultAY());
   const [form, setForm] = useState({ semester: 0, subject_id: 0, staff_id: 0 });
+  const [formError, setFormError] = useState<string | null>(null);
 
   const assignQ = useQuery({
     queryKey: ["hod-assignments", branch, year],
@@ -599,11 +600,22 @@ function FacultyAllotmentView({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hod-assignments"] });
       setForm((f) => ({ ...f, subject_id: 0, staff_id: 0 }));
+      setFormError(null);
+      toast.success("Subject allotted successfully");
+    },
+    onError: (e: any) => {
+      const msg = e?.message || "Failed to allot subject";
+      setFormError(msg);
+      toast.error(msg);
     },
   });
   const del = useMutation({
     mutationFn: (id: number) => hodDeleteAssignment({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hod-assignments"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["hod-assignments"] });
+      toast.success("Allotment removed");
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to remove allotment"),
   });
 
   // Faculty options: same rule as admin (any role with faculty capability),
@@ -614,6 +626,15 @@ function FacultyAllotmentView({
   );
   const own = facultyPool.filter((s: any) => deptToBranch(s.department) === branch);
   const guests = facultyPool.filter((s: any) => deptToBranch(s.department) !== branch);
+
+  const allotmentSchema = z.object({
+    academic_year: z
+      .string()
+      .regex(/^\d{4}-\d{2}$/, "Academic year must look like 2025-26"),
+    semester: z.number().int().min(1, "Select a semester").max(6, "Invalid semester"),
+    subject_id: z.number().int().positive("Select a subject"),
+    staff_id: z.number().int().positive("Select a faculty member"),
+  });
 
   return (
     <div className="space-y-4">
@@ -640,7 +661,31 @@ function FacultyAllotmentView({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!form.staff_id || !form.subject_id || !form.semester) return;
+            setFormError(null);
+            const parsed = allotmentSchema.safeParse({
+              academic_year: year,
+              semester: form.semester,
+              subject_id: form.subject_id,
+              staff_id: form.staff_id,
+            });
+            if (!parsed.success) {
+              const msg = parsed.error.issues[0]?.message ?? "Please check the form";
+              setFormError(msg);
+              toast.error(msg);
+              return;
+            }
+            const dupe = (assignQ.data ?? []).some(
+              (a: any) =>
+                a.subject_id === form.subject_id &&
+                a.staff_id === form.staff_id &&
+                a.semester === form.semester,
+            );
+            if (dupe) {
+              const msg = "This faculty is already allotted to that subject";
+              setFormError(msg);
+              toast.error(msg);
+              return;
+            }
             save.mutate({ ...form, branch, academic_year: year });
           }}
           className="grid sm:grid-cols-5 gap-2 items-end border-t pt-4"
@@ -657,7 +702,10 @@ function FacultyAllotmentView({
             2. Semester
             <select
               value={form.semester}
-              onChange={(e) => setForm({ ...form, semester: Number(e.target.value), subject_id: 0 })}
+              onChange={(e) => {
+                setFormError(null);
+                setForm({ ...form, semester: Number(e.target.value), subject_id: 0 });
+              }}
               required
               className="w-full border rounded px-2 py-1.5 text-sm bg-white"
             >
@@ -673,7 +721,10 @@ function FacultyAllotmentView({
             3. Subject
             <select
               value={form.subject_id}
-              onChange={(e) => setForm({ ...form, subject_id: Number(e.target.value) })}
+              onChange={(e) => {
+                setFormError(null);
+                setForm({ ...form, subject_id: Number(e.target.value) });
+              }}
               required
               disabled={!form.semester}
               className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
@@ -696,7 +747,10 @@ function FacultyAllotmentView({
             4. Faculty
             <select
               value={form.staff_id}
-              onChange={(e) => setForm({ ...form, staff_id: Number(e.target.value) })}
+              onChange={(e) => {
+                setFormError(null);
+                setForm({ ...form, staff_id: Number(e.target.value) });
+              }}
               required
               disabled={!form.subject_id}
               className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
@@ -726,11 +780,16 @@ function FacultyAllotmentView({
             disabled={save.isPending || !form.staff_id}
             className="bg-[#7b1f4c] text-white rounded px-3 py-2 text-sm font-semibold inline-flex items-center gap-1 justify-center disabled:opacity-50"
           >
-            <Plus className="w-4 h-4" /> Allot
+            <Plus className="w-4 h-4" /> {save.isPending ? "Allotting…" : "Allot"}
           </button>
-          {save.error && <p className="col-span-full text-xs text-rose-700">{(save.error as Error).message}</p>}
+          {formError && (
+            <p className="col-span-full text-xs text-rose-700" role="alert">
+              {formError}
+            </p>
+          )}
         </form>
       </Card>
+
 
       <Card>
         <p className="font-semibold text-gray-800 mb-2">Existing Allotments — {year}</p>
