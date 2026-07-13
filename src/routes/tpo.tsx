@@ -15,6 +15,10 @@ import {
   Mic,
   FileText,
   FileSignature,
+  Bell,
+  BellRing,
+  CheckCheck,
+  Sparkles,
 } from "lucide-react";
 import { generateTrainingLetter, generateUndertakings } from "@/lib/training-letter";
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
