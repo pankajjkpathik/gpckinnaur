@@ -240,28 +240,19 @@ function FacultyPortalInner({
                   <Icon className="w-4 h-4 shrink-0" />
                   <span className="truncate flex-1">{item.label}</span>
                   {item.badge && item.badge > 0 && (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
+                    <UnreadBadgePreview
+                      items={notifUnread}
+                      readIds={notifReadIds}
+                      setReadIds={setNotifReadIds}
+                      onJump={() => {
                         setView("home");
                         focusNotifications();
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setView("home");
-                          focusNotifications();
-                        }
-                      }}
-                      className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm animate-in fade-in cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-300"
-                      title={`${item.badge} unread — jump to notifications`}
-                    >
-                      {item.badge > 9 ? "9+" : item.badge}
-                    </span>
+                      count={item.badge}
+                      variant="desktop"
+                    />
                   )}
+
                 </button>
 
               );
