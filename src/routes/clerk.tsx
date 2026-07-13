@@ -759,13 +759,21 @@ function ActivityPanel({ rows, loading }: { rows: ActivityRow[]; loading?: boole
 
 
 
-function StudentsTab() {
+function StudentsTab({ preset }: { preset?: { q: string; key: number } | null }) {
   const qc = useQueryClient();
   const [branch, setBranch] = useState("");
   const [sem, setSem] = useState<number | "">("");
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  useEffect(() => {
+    if (preset) {
+      setQ(preset.q);
+      setBranch("");
+      setSem("");
+    }
+  }, [preset?.key]);
+
   const list = useQuery({
     queryKey: ["clerk-students", branch, sem, q],
     queryFn: () =>
