@@ -220,9 +220,9 @@ function PrincipalPortal() {
   useEffect(() => {
     if (meLoading) return;
     if (!me) {
-      nav({ to: "/staff-login" });
+      nav({ to: "/staff-login", replace: true });
     } else if (!hasRole(me, principalRoles)) {
-      nav({ to: "/staff-dashboard" });
+      nav({ to: "/staff-dashboard", replace: true });
     }
   }, [me, meLoading, nav]);
 
@@ -277,6 +277,10 @@ function PrincipalPortal() {
   function navTo(v: View) {
     setView(v);
     setMobileNavOpen(false);
+  }
+
+  if (meLoading || !me || !hasRole(me, principalRoles)) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading…</div>;
   }
 
   return (

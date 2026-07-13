@@ -379,8 +379,8 @@ function HodPortal() {
   const { data: me, isLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
   useEffect(() => {
     if (isLoading) return;
-    if (!me) nav({ to: "/staff-login" });
-    else if (!hasRole(me, hodRoles)) nav({ to: "/staff-dashboard" });
+    if (!me) nav({ to: "/staff-login", replace: true });
+    else if (!hasRole(me, hodRoles)) nav({ to: "/staff-dashboard", replace: true });
   }, [me, isLoading, nav]);
 
   const VALID_VIEWS: View[] = ["home", "overview", "faculty", "attendance", "sessional", "syllabus", "timetable", "lessons"];
