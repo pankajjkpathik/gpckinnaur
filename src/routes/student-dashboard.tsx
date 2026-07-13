@@ -1037,9 +1037,15 @@ function ClassDetailDialog({
   setView: (v: any) => void;
 }) {
   const sylFn = useServerFn(studentSyllabus);
+  const ttFn = useServerFn(studentTimetable);
   const { data: syllabus = [], isLoading } = useQuery({
     queryKey: ["student-syllabus-modal"],
     queryFn: () => sylFn(),
+    enabled: !!openClass,
+  });
+  const { data: tt } = useQuery({
+    queryKey: ["student-tt-modal"],
+    queryFn: () => ttFn(),
     enabled: !!openClass,
   });
 
@@ -1048,6 +1054,14 @@ function ClassDetailDialog({
   const subj = (syllabus as any[]).find((s) => s.id === subjectId);
   const att = attBySubject[String(subjectId)];
   const pct = att && att.total ? Math.round((att.present / att.total) * 1000) / 10 : null;
+
+  const periodsMap = new Map<number, any>();
+  ((tt as any)?.periods ?? []).forEach((p: any) => periodsMap.set(p.period_no, p));
+  const subjectSlots = (((tt as any)?.entries ?? []) as any[])
+    .filter((e) => (e.subjects?.id ?? e.subject_id) === subjectId)
+    .sort((a, b) => a.day_of_week - b.day_of_week || a.period_no - b.period_no);
+  const weeklyHours = subjectSlots.length;
+
 
   return (
     <div
@@ -1107,8 +1121,64 @@ function ClassDetailDialog({
             )}
           </section>
 
+          {/* Timetable slots for this subject */}
+          <section>
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="w-4 h-4 text-[#7b1f4c]" />
+              <h4 className="font-semibold text-gray-800 text-sm">
+                Timetable Slots{weeklyHours > 0 ? ` · ${weeklyHours}/week` : ""}
+              </h4>
+            </div>
+            {!tt ? (
+              <p className="text-sm text-gray-400">Loading timetable…</p>
+            ) : subjectSlots.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No timetable slots published for this subject yet.
+              </p>
+            ) : (
+              <ul className="divide-y border rounded">
+                {subjectSlots.map((s: any, i: number) => {
+                  const pm = periodsMap.get(s.period_no);
+                  const isNow =
+                    s.day_of_week === openClass.day_of_week &&
+                    s.period_no === openClass.period_no;
+                  return (
+                    <li
+                      key={`${s.day_of_week}-${s.period_no}-${i}`}
+                      className={`px-3 py-2 flex items-center gap-3 text-sm ${
+                        isNow ? "bg-[#7b1f4c]/5" : ""
+                      }`}
+                    >
+                      <div className="w-24 shrink-0 font-medium text-gray-800">
+                        {DAY_NAMES[s.day_of_week] ?? `Day ${s.day_of_week}`}
+                      </div>
+                      <div className="w-20 shrink-0 text-xs text-gray-600">
+                        P{s.period_no}
+                      </div>
+                      <div className="w-28 shrink-0 text-xs text-gray-600">
+                        {pm
+                          ? `${pm.start_time?.slice(0, 5)}–${pm.end_time?.slice(0, 5)}`
+                          : "—"}
+                      </div>
+                      <div className="flex-1 min-w-0 text-xs text-gray-500 truncate">
+                        {s.staff_users?.username ? `${s.staff_users.username}` : "TBA"}
+                        {s.room ? ` · Room ${s.room}` : ""}
+                      </div>
+                      {isNow && (
+                        <span className="text-[10px] font-semibold text-[#7b1f4c] shrink-0">
+                          NOW
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
           {/* Syllabus */}
           <section>
+
             <div className="flex items-center gap-2 mb-2">
               <BookMarked className="w-4 h-4 text-[#7b1f4c]" />
               <h4 className="font-semibold text-gray-800 text-sm">Syllabus Notes</h4>
