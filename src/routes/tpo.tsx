@@ -612,6 +612,12 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
   const qc = useQueryClient();
   const listQ = useQuery({ queryKey: ["tpo-training"], queryFn: () => listIndustrialTraining({ data: {} }) });
   const [open, setOpen] = useState(false);
+  const [preview, setPreview] = useState<{ url: string; filename: string; title: string } | null>(null);
+  const openPreview = async (title: string, builder: Promise<{ url: string; filename: string }>) => {
+    const { url, filename } = await builder;
+    setPreview((p) => { if (p) URL.revokeObjectURL(p.url); return { url, filename, title }; });
+  };
+  const closePreview = () => setPreview((p) => { if (p) URL.revokeObjectURL(p.url); return null; });
   const [branch, setBranch] = useState("");
   const [semester, setSemester] = useState<number | "">("");
   const [picked, setPicked] = useState<Record<number, string>>({});
@@ -680,15 +686,15 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => generateTrainingLetter(r)}
-                        title="Download Training Letter"
+                        onClick={() => openPreview("Industrial Training Letter", generateTrainingLetter(r))}
+                        title="Preview Training Letter"
                         className="inline-flex items-center gap-1 text-xs text-cyan-700 border border-cyan-200 hover:bg-cyan-50 rounded px-2 py-1"
                       >
                         <FileText className="w-3.5 h-3.5" /> Letter
                       </button>
                       <button
-                        onClick={() => generateUndertakings(r)}
-                        title="Download Student & Parent Undertakings"
+                        onClick={() => openPreview("Student & Parent Undertakings", generateUndertakings(r))}
+                        title="Preview Student & Parent Undertakings"
                         className="inline-flex items-center gap-1 text-xs text-amber-700 border border-amber-200 hover:bg-amber-50 rounded px-2 py-1"
                       >
                         <FileSignature className="w-3.5 h-3.5" /> Undertakings
@@ -837,6 +843,29 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {preview && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={closePreview}>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h3 className="font-semibold text-gray-800">{preview.title} — Preview</h3>
+              <div className="flex items-center gap-2">
+                <a
+                  href={preview.url}
+                  download={preview.filename}
+                  className="inline-flex items-center gap-1 text-sm bg-[#7b1f4c] text-white px-3 py-1.5 rounded hover:bg-[#5f1a3c]"
+                >
+                  Download
+                </a>
+                <button onClick={closePreview} className="text-sm px-3 py-1.5 rounded border hover:bg-gray-50">
+                  Close
+                </button>
+              </div>
+            </div>
+            <iframe src={preview.url} title={preview.title} className="flex-1 w-full" />
           </div>
         </div>
       )}

@@ -68,7 +68,9 @@ function ordinal(n: number | null | undefined) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-export async function generateTrainingLetter(r: TrainingRecord) {
+export type PdfBuild = { blob: Blob; filename: string; url: string };
+
+export async function generateTrainingLetter(r: TrainingRecord): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const margin = 50;
@@ -133,7 +135,9 @@ export async function generateTrainingLetter(r: TrainingRecord) {
   doc.setFontSize(10);
   doc.text(`Copy to: H.O.D. ${branchTxt}, GPC Kinnaur (H.P.)`, margin, y);
 
-  doc.save(`Training-Letter-${(r.company || "company").replace(/[^\w]+/g, "_")}-${r.id}.pdf`);
+  const filename = `Training-Letter-${(r.company || "company").replace(/[^\w]+/g, "_")}-${r.id}.pdf`;
+  const blob = doc.output("blob");
+  return { blob, filename, url: URL.createObjectURL(blob) };
 }
 
 function undertakingPage(
@@ -174,7 +178,7 @@ function undertakingPage(
   doc.text(signatureLabel, w - margin, y, { align: "right" });
 }
 
-export async function generateUndertakings(r: TrainingRecord) {
+export async function generateUndertakings(r: TrainingRecord): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const logo = await loadLogo();
   const names = (r.student_names ?? []).filter(Boolean);
@@ -219,5 +223,7 @@ export async function generateUndertakings(r: TrainingRecord) {
     );
   });
 
-  doc.save(`Undertakings-${(r.company || "training").replace(/[^\w]+/g, "_")}-${r.id}.pdf`);
+  const filename = `Undertakings-${(r.company || "training").replace(/[^\w]+/g, "_")}-${r.id}.pdf`;
+  const blob = doc.output("blob");
+  return { blob, filename, url: URL.createObjectURL(blob) };
 }
