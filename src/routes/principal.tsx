@@ -196,7 +196,7 @@ function PrincipalPortal() {
             </>
           )}
           {view === "timetable" && <TimetableView onBack={() => setView("home")} />}
-          {view === "placements" && <PlacementDataView onBack={() => setView("home")} />}
+          
           {view === "messages" && <MessagesView onBack={() => setView("home")} />}
           {view === "ptm" && <PTMView onBack={() => setView("home")} />}
           {view === "circulars" && (
@@ -232,7 +232,7 @@ const PRINCIPAL_NAV: NavItem[] = [
   { view: "sessional", label: "Sessional Reports", icon: FileSpreadsheet },
   { view: "syllabus", label: "Syllabus Status", icon: BookMarked },
   { view: "timetable", label: "View Timetable", icon: Calendar },
-  { view: "placements", label: "Placement Data", icon: Briefcase },
+  
   { view: "messages", label: "Parents Messages", icon: Mail },
   { view: "ptm", label: "PTM Information", icon: CalendarCheck },
   { view: "circulars", label: "Circulars", icon: FileText },
