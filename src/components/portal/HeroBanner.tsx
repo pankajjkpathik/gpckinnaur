@@ -49,7 +49,20 @@ export function HeroBanner({
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl bg-white dark:bg-white/40" />
         <div className={`absolute -bottom-32 -left-16 w-96 h-96 rounded-full blur-3xl ${p.blob}`} />
       </div>
-      <div className="relative p-5 sm:p-8 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] items-start sm:items-center gap-5">
+      <div className="relative p-5 sm:p-8 grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)_auto] items-start sm:items-center gap-4 sm:gap-5">
+        <div className="shrink-0">
+          {avatarSrc ? (
+            <img
+              src={avatarSrc}
+              alt={name}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-white/40 shadow-lg bg-white/10"
+            />
+          ) : (
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full ring-2 ring-white/40 shadow-lg bg-white/15 backdrop-blur flex items-center justify-center text-white font-bold text-xl sm:text-2xl">
+              {initialsOf(name)}
+            </div>
+          )}
+        </div>
         <div className="min-w-0">
           <p className={`${HERO_TYPOGRAPHY.eyebrow} ${p.eyebrowColor}`}>
             {dateLabel}
@@ -65,6 +78,7 @@ export function HeroBanner({
             </p>
           )}
         </div>
+
         {stats && stats.length > 0 && (
           <div
             className="grid gap-2 sm:gap-4 w-full sm:w-auto shrink-0"
