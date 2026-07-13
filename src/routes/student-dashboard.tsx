@@ -249,7 +249,7 @@ function StudentDashboard() {
                 {view === "attendance" && <AttendanceView onBack={goHome} />}
                 {view === "marks" && <MarksView onBack={goHome} />}
                 {view === "results" && <ResultsView me={me} onBack={goHome} />}
-                {view === "upload" && <UploadAssignmentView onBack={goHome} />}
+                
                 {view === "assignments-docs" && <AssignmentDocsView onBack={goHome} />}
                 {view === "lesson-plans" && <LessonPlansView me={me} onBack={goHome} />}
                 {view === "exam-schedule" && <ExamScheduleView me={me} onBack={goHome} />}
