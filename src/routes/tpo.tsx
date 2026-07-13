@@ -72,7 +72,7 @@ function TpoPortal() {
   );
 }
 
-function HomeView({ onNav }: { onNav: (v: View) => void }) {
+function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
   const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View }[] = [
     {
       icon: Briefcase,
