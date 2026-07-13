@@ -31,6 +31,8 @@ import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { QuickCard } from "@/components/portal/QuickCard";
 import { HeroBanner } from "@/components/portal/HeroBanner";
+import { avatarUrl } from "@/lib/portal-identity";
+
 import {
   listParentMessages,
   markParentMessageRead,
