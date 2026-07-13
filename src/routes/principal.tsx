@@ -60,7 +60,8 @@ import {
   ChevronDown,
   Home,
   LayoutDashboard,
-  
+  PanelLeftClose,
+  PanelLeftOpen,
   Factory,
   ClipboardList,
 } from "lucide-react";
