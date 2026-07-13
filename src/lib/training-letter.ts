@@ -84,12 +84,12 @@ export type PdfBuild = { blob: Blob; filename: string; url: string };
 
 export async function generateTrainingLetter(
   r: TrainingRecord,
-  opts?: { instituteAddress?: string },
+  opts?: { instituteAddress?: string; instituteLogo?: string | null },
 ): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const margin = 50;
-  const logo = await loadLogo();
+  const logo = await loadLogo(opts?.instituteLogo);
   const address = opts?.instituteAddress?.trim() || DEFAULT_INSTITUTE_ADDRESS;
   letterhead(doc, logo, address);
 
@@ -199,10 +199,10 @@ function undertakingPage(
 
 export async function generateUndertakings(
   r: TrainingRecord,
-  opts?: { instituteAddress?: string },
+  opts?: { instituteAddress?: string; instituteLogo?: string | null },
 ): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-  const logo = await loadLogo();
+  const logo = await loadLogo(opts?.instituteLogo);
   const address = opts?.instituteAddress?.trim() || DEFAULT_INSTITUTE_ADDRESS;
   const names = (r.student_names ?? []).filter(Boolean);
   const sem = r.semester ? `${ordinal(r.semester)} semester` : "____ semester";

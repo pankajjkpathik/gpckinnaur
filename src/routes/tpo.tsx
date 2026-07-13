@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 import { generateTrainingLetter, generateUndertakings } from "@/lib/training-letter";
-import { getInstituteAddress } from "@/lib/settings.functions";
+import { getInstituteAddress, getInstituteLogo } from "@/lib/settings.functions";
 
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
@@ -658,7 +658,9 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
   const qc = useQueryClient();
   const listQ = useQuery({ queryKey: ["tpo-training"], queryFn: () => listIndustrialTraining({ data: {} }) });
   const addrQ = useQuery({ queryKey: ["institute-address"], queryFn: () => getInstituteAddress() });
+  const logoQ = useQuery({ queryKey: ["institute-logo"], queryFn: () => getInstituteLogo() });
   const instituteAddress = addrQ.data?.value;
+  const instituteLogo = logoQ.data?.value || null;
 
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<{ url: string; filename: string; title: string } | null>(null);
@@ -735,14 +737,14 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => openPreview("Industrial Training Letter", generateTrainingLetter(r, { instituteAddress }))}
+                        onClick={() => openPreview("Industrial Training Letter", generateTrainingLetter(r, { instituteAddress, instituteLogo }))}
                         title="Preview Training Letter"
                         className="inline-flex items-center gap-1 text-xs text-cyan-700 border border-cyan-200 hover:bg-cyan-50 rounded px-2 py-1"
                       >
                         <FileText className="w-3.5 h-3.5" /> Letter
                       </button>
                       <button
-                        onClick={() => openPreview("Student & Parent Undertakings", generateUndertakings(r, { instituteAddress }))}
+                        onClick={() => openPreview("Student & Parent Undertakings", generateUndertakings(r, { instituteAddress, instituteLogo }))}
                         title="Preview Student & Parent Undertakings"
                         className="inline-flex items-center gap-1 text-xs text-amber-700 border border-amber-200 hover:bg-amber-50 rounded px-2 py-1"
                       >
