@@ -823,9 +823,9 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
               </div>
               {create.error && <p className="text-xs text-rose-700">{(create.error as Error).message}</p>}
               <div className="flex justify-end gap-2">
-                <button type="button" className="border px-4 py-1.5 rounded text-gray-600">
-                  Generate Training Letter
-                </button>
+                <p className="text-[11px] text-gray-500 mr-auto">
+                  After saving, download the Training Letter and Undertakings from the table below.
+                </p>
                 <button type="button" onClick={() => setOpen(false)} className="border px-4 py-1.5 rounded">
                   Cancel
                 </button>
