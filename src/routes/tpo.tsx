@@ -257,27 +257,33 @@ function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
         ]}
       />
 
-      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-cyan-50 to-white border-b">
-          <p className="font-semibold text-gray-800">Quick Actions</p>
-          <p className="text-[11px] text-gray-500">Jump straight into placements, internships, or lectures.</p>
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-cyan-50 to-white border-b">
+            <p className="font-semibold text-gray-800">Quick Actions</p>
+            <p className="text-[11px] text-gray-500">Jump straight into placements, internships, or lectures.</p>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {quickActions.map((q) => (
+              <QuickCard
+                key={q.view}
+                icon={q.icon}
+                label={q.label}
+                desc={q.desc}
+                color={q.color}
+                border={q.border}
+                stat={q.stat}
+                statLabel={q.statLabel}
+                badge={q.badge}
+                onClick={() => onNav(q.view)}
+              />
+            ))}
+          </div>
         </div>
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {quickActions.map((q) => (
-            <QuickCard
-              key={q.view}
-              icon={q.icon}
-              label={q.label}
-              desc={q.desc}
-              color={q.color}
-              border={q.border}
-              stat={q.stat}
-              statLabel={q.statLabel}
-              onClick={() => onNav(q.view)}
-            />
-          ))}
-        </div>
+
+        <AlertsPanel alerts={alerts} onJump={onNav} />
       </div>
+
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiTile icon={TrendingUp} label="Total Placements" value={placements.length} tone="from-fuchsia-500 to-rose-500" />
