@@ -771,12 +771,8 @@ function LessonPlansView({ me, onBack }: { me: any; onBack: () => void }) {
 function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
   void onBack;
   const ttFn = useServerFn(studentTimetable);
-  const periodsFn = useServerFn(listPeriods);
   const { data: tt } = useQuery({ queryKey: ["student-tt"], queryFn: () => ttFn() });
-  const { data: periods = [] } = useQuery({
-    queryKey: ["periods-master"],
-    queryFn: () => periodsFn(),
-  });
+  const periods = (tt?.periods ?? []) as any[];
 
   const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
 
@@ -796,10 +792,12 @@ function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
           </button>
         </div>
 
-        {!tt || (periods as any[]).length === 0 ? (
+        {!tt ? (
           <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
+        ) : periods.length === 0 ? (
+          <p className="p-6 text-center text-sm text-gray-400">Timetable periods not configured yet.</p>
         ) : (tt.entries as any[]).length === 0 ? (
-          <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
+          <p className="p-6 text-center text-sm text-gray-400">No timetable published yet for your class.</p>
         ) : (
           <TimetableGrid
             periods={periods as any}
