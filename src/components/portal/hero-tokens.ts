@@ -252,15 +252,19 @@ export const HERO_TYPOGRAPHY = {
 } as const;
 
 /**
- * Resolve either a palette name (looked up in `HERO_PALETTES`) or an inline
- * palette object into a concrete `HeroPalette`. `<HeroBanner />` calls this
- * so callers can pass either shape:
+ * Look up a registered palette by name. The `HeroBanner` prop is typed as
+ * `HeroPaletteName`, so callers can only pass one of the registered names —
+ * inline `HeroPalette` objects are intentionally rejected at compile time so
+ * every dashboard uses the shared design tokens.
  *
  * ```tsx
- * <HeroBanner palette="faculty" ... />           // named token — preferred
- * <HeroBanner palette={{ gradient: "...", ... }} ... />  // one-off override
+ * <HeroBanner palette="faculty" ... />   // ✅ named token
+ * <HeroBanner palette="banana"  ... />   // ✗ Type '"banana"' is not assignable
  * ```
+ *
+ * If you need a truly one-off look, add the palette to `HERO_PALETTES` first
+ * (with an entry in `HERO_PALETTE_NAMES`) rather than passing raw classes.
  */
-export function resolveHeroPalette(p: HeroPaletteName | HeroPalette): HeroPalette {
-  return typeof p === "string" ? HERO_PALETTES[p] : p;
+export function resolveHeroPalette(name: HeroPaletteName): HeroPalette {
+  return HERO_PALETTES[name];
 }
