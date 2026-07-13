@@ -7,6 +7,7 @@ import {
   instituteAttendance,
   syllabusCompliance,
   instituteResults,
+  instituteExamTypes,
   listCirculars,
   createCircular,
   deleteCircular,
