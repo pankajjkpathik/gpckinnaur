@@ -165,11 +165,16 @@ function FacultyProfile() {
     },
     onSuccess: () => {
       setSaveMsg({ kind: "ok", text: "Profile updated successfully" });
+      toast.success("Profile updated");
       setInitial(form);
       qc.invalidateQueries({ queryKey: ["staff-me"] });
       qc.invalidateQueries({ queryKey: ["staff-me-faculty-profile"] });
     },
-    onError: (e: any) => setSaveMsg({ kind: "err", text: e?.message || "Failed to update profile" }),
+    onError: (e: any) => {
+      const text = e?.message || "Failed to update profile";
+      setSaveMsg({ kind: "err", text });
+      toast.error("Could not update profile", { description: text });
+    },
   });
 
   const upload = useMutation({
@@ -182,10 +187,15 @@ function FacultyProfile() {
     },
     onSuccess: () => {
       setAvatarMsg({ kind: "ok", text: "Profile photo updated" });
+      toast.success("Profile photo updated");
       qc.invalidateQueries({ queryKey: ["staff-me"] });
       qc.invalidateQueries({ queryKey: ["staff-me-faculty-profile"] });
     },
-    onError: (e: any) => setAvatarMsg({ kind: "err", text: e?.message || "Upload failed" }),
+    onError: (e: any) => {
+      const text = e?.message || "Upload failed";
+      setAvatarMsg({ kind: "err", text });
+      toast.error("Photo upload failed", { description: text });
+    },
   });
 
   if (isLoading || !me || !hasRole(me as any, facultyRoles)) return null;
