@@ -27,7 +27,7 @@ import { staffMe, uploadStaffAvatar, staffChangePassword } from "@/lib/auth.func
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { QuickCard } from "@/components/portal/QuickCard";
-import { avatarUrl } from "@/lib/portal-identity";
+import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
 import { clerkRoles, hasRole } from "@/lib/roles";
 import {
   clerkListStudents,
