@@ -92,14 +92,15 @@ export const hodReviewMarks = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(hodRoles);
+    const me = await requireRole(hodRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const now = new Date().toISOString();
     const update = data.decision === "approved"
-      ? { approved_by_hod: true, locked: true, returned_remarks: null }
-      : { submitted_to_hod: false, approved_by_hod: false, returned_remarks: data.remarks ?? "Please revise." };
+      ? { approved_by_hod: true, locked: true, returned_remarks: null, reviewed_by: me.id, reviewed_at: now }
+      : { submitted_to_hod: false, approved_by_hod: false, returned_remarks: data.remarks ?? "Please revise.", reviewed_by: me.id, reviewed_at: now };
     const { error } = await supabaseAdmin
       .from("marks")
-      .update({ ...update, updated_at: new Date().toISOString() })
+      .update({ ...update, updated_at: now })
       .eq("subject_id", data.subject_id)
       .eq("exam_type", data.exam_type)
       .eq("academic_year", data.academic_year);
