@@ -22,6 +22,7 @@ import {
   parentNotices,
 } from "@/lib/parent.functions";
 import { pageMeta } from "@/lib/seo";
+import { HeroBanner } from "@/components/portal/HeroBanner";
 
 export const Route = createFileRoute("/parent-dashboard")({
   head: () =>
