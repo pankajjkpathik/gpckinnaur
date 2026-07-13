@@ -23,6 +23,9 @@ import {
   Settings,
   Bell,
   BellOff,
+  Eye,
+  Upload,
+  X as XIcon,
 } from "lucide-react";
 import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { listMaterials } from "@/lib/materials.functions";
