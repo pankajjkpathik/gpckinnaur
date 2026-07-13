@@ -1103,7 +1103,99 @@ function ClassDetailDialog({
 
         {/* Body */}
         <div className="overflow-y-auto p-5 space-y-5">
-          {/* Attendance summary */}
+          {/* This Period — full timetable details */}
+          {(() => {
+            const pm = periodsMap.get(openClass.period_no);
+            const dayEntries = (((tt as any)?.entries ?? []) as any[])
+              .filter((e) => e.day_of_week === openClass.day_of_week)
+              .sort((a, b) => a.period_no - b.period_no);
+            return (
+              <section className="rounded-lg border border-[#7b1f4c]/20 bg-[#7b1f4c]/5 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar className="w-4 h-4 text-[#7b1f4c]" />
+                  <h4 className="font-semibold text-gray-800 text-sm">
+                    Timetable Details · {DAY_NAMES[openClass.day_of_week] ?? ""} · Period {openClass.period_no}
+                  </h4>
+                </div>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-gray-500">Subject</dt>
+                    <dd className="font-medium text-gray-900 truncate">
+                      {openClass.subjects?.name || openClass.subjects?.code || "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-gray-500">Code</dt>
+                    <dd className="font-medium text-gray-900">{openClass.subjects?.code || "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-gray-500">Time</dt>
+                    <dd className="font-medium text-gray-900">
+                      {pm
+                        ? `${pm.start_time?.slice(0, 5)}–${pm.end_time?.slice(0, 5)}`
+                        : openClass.timing
+                        ? `${openClass.timing.start_time?.slice(0, 5)}–${openClass.timing.end_time?.slice(0, 5)}`
+                        : "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-gray-500">Room</dt>
+                    <dd className="font-medium text-gray-900">{openClass.room || "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-gray-500">Faculty</dt>
+                    <dd className="font-medium text-gray-900 truncate">
+                      {openClass.staff_users?.username || "TBA"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-gray-500">Class</dt>
+                    <dd className="font-medium text-gray-900 truncate">
+                      {openClass.classes?.name || openClass.class_id || "—"}
+                    </dd>
+                  </div>
+                </dl>
+
+                {dayEntries.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1.5">
+                      Full day schedule
+                    </p>
+                    <ul className="divide-y border rounded bg-white">
+                      {dayEntries.map((e: any, i: number) => {
+                        const epm = periodsMap.get(e.period_no);
+                        const isThis = e.period_no === openClass.period_no;
+                        return (
+                          <li
+                            key={`${e.period_no}-${i}`}
+                            className={`px-3 py-1.5 flex items-center gap-2 text-xs ${
+                              isThis ? "bg-[#7b1f4c]/10 font-medium" : ""
+                            }`}
+                          >
+                            <span className="w-8 shrink-0 text-gray-600">P{e.period_no}</span>
+                            <span className="w-24 shrink-0 text-gray-600">
+                              {epm ? `${epm.start_time?.slice(0, 5)}–${epm.end_time?.slice(0, 5)}` : "—"}
+                            </span>
+                            <span className="flex-1 min-w-0 truncate text-gray-800">
+                              {e.subjects?.name || e.subjects?.code || "—"}
+                            </span>
+                            <span className="shrink-0 text-gray-500 truncate max-w-[8rem]">
+                              {e.staff_users?.username || "TBA"}
+                            </span>
+                            <span className="w-14 shrink-0 text-right text-gray-500">
+                              {e.room ? `R${e.room}` : ""}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </section>
+            );
+          })()}
+
+
           <section>
             <div className="flex items-center justify-between gap-2 mb-2">
               <div className="flex items-center gap-2">
