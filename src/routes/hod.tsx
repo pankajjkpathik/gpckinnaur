@@ -21,8 +21,6 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
-import { facultyPhoto } from "@/lib/faculty-photos";
-import { initialsOf } from "@/lib/portal-identity";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { hodRoles, hasRole } from "@/lib/roles";
 import {
