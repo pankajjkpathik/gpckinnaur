@@ -706,11 +706,22 @@ function useFacultyNotifications(me: any, ay: string) {
     retry: false,
   });
   const [readIds, setReadIds] = useReadIds(`fac-notif-read:${me.id}`);
-  const items = useMemo(
-    () => computeNotifItems(annQ.data, noticesQ.data, asgQ.data),
-    [annQ.data, noticesQ.data, asgQ.data],
-  );
+  const { prefs } = useFacNotifPrefs(me.id);
+  const items = useMemo(() => {
+    const all = computeNotifItems(annQ.data, noticesQ.data, asgQ.data);
+    const now = Date.now();
+    return all.filter((it) => {
+      if (it.kind === "announcement" || it.kind === "notice") return prefs.announcements;
+      if (it.kind === "deadline") {
+        const overdue = it.timestamp < now;
+        if (overdue) return prefs.overdue;
+        return prefs.deadlines;
+      }
+      return true;
+    });
+  }, [annQ.data, noticesQ.data, asgQ.data, prefs]);
   const unread = items.filter((i) => !readIds.has(i.key));
+
   return {
     items,
     unread,
