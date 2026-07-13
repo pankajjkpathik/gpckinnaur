@@ -1,8 +1,12 @@
 // Storybook-style preview route for the shared HeroBanner component.
-// Renders every palette across three container widths (mobile / tablet / desktop)
-// on both light and dark surfaces so typography, spacing, wrapping, and colour
-// contrast can be eyeballed — and screenshotted by the Playwright script in
-// tests/visual/hero-banner.mjs — in a single scroll.
+// Renders every palette on one page so typography, spacing, wrapping, and
+// colour contrast can be eyeballed — and screenshotted by the Playwright
+// script in tests/visual/hero-banner.mjs — across common viewport sizes.
+//
+// Each palette renders at the full container width because HeroBanner uses
+// viewport-based Tailwind breakpoints (`sm:` = 640px viewport), not container
+// queries; the harness sets the actual browser viewport to mobile / tablet /
+// desktop widths and this page fills whatever it's given.
 //
 // Not linked from the app nav; visit /dev/hero-preview directly.
 
@@ -29,12 +33,6 @@ const PALETTES: HeroPaletteName[] = [
   "student",
   "parent",
   "staff",
-];
-
-const WIDTHS: { label: string; px: number }[] = [
-  { label: "Mobile · 375", px: 375 },
-  { label: "Tablet · 768", px: 768 },
-  { label: "Desktop · 1280", px: 1280 },
 ];
 
 const SAMPLE_NAMES: Record<HeroPaletteName, string> = {
@@ -81,9 +79,9 @@ function HeroPreviewPage() {
       >
         <h1 className="text-sm font-semibold">HeroBanner Preview</h1>
         <p className="text-xs opacity-70">
-          {PALETTES.length} palettes × {WIDTHS.length} widths
+          {PALETTES.length} palettes · viewport-driven layout
         </p>
-        <div className="ml-auto flex items-center gap-2 text-xs">
+        <div className="ml-auto flex items-center gap-3 text-xs">
           <label className="inline-flex items-center gap-1 cursor-pointer">
             <input
               type="checkbox"
@@ -111,36 +109,21 @@ function HeroPreviewPage() {
         </div>
       </header>
 
-      <main className="p-4 sm:p-6 space-y-10">
-        {WIDTHS.map((w) => (
-          <section key={w.px} data-viewport={w.px}>
-            <h2 className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-3">
-              {w.label}px
-            </h2>
-            <div className="space-y-4 overflow-x-auto">
-              {PALETTES.map((name) => (
-                <div
-                  key={name}
-                  data-palette={name}
-                  data-width={w.px}
-                  style={{ width: w.px, maxWidth: "100%" }}
-                  className="mx-auto"
-                >
-                  <p className="text-[11px] font-mono opacity-60 mb-1">{name}</p>
-                  <HeroBanner
-                    palette={name}
-                    name={
-                      longName
-                        ? `${SAMPLE_NAMES[name]} Chandrashekhar-Balasubramanian`
-                        : SAMPLE_NAMES[name]
-                    }
-                    role={roleFor(name)}
-                    subtitle="Here's your snapshot for today — quick, calm, and to the point."
-                    stats={showStats ? SAMPLE_STATS : undefined}
-                  />
-                </div>
-              ))}
-            </div>
+      <main className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
+        {PALETTES.map((name) => (
+          <section key={name} data-palette={name}>
+            <p className="text-[11px] font-mono opacity-60 mb-1.5">{name}</p>
+            <HeroBanner
+              palette={name}
+              name={
+                longName
+                  ? `${SAMPLE_NAMES[name]} Chandrashekhar-Balasubramanian`
+                  : SAMPLE_NAMES[name]
+              }
+              role={roleFor(name)}
+              subtitle="Here's your snapshot for today — quick, calm, and to the point."
+              stats={showStats ? SAMPLE_STATS : undefined}
+            />
           </section>
         ))}
       </main>
