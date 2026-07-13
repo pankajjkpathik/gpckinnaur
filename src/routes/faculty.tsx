@@ -985,6 +985,8 @@ function AssignmentsView({ ay, me, onBack }: { ay: string; me: any; onBack: () =
     queryFn: () => facultyListAssignmentsCreated({ data: { academic_year: ay } }),
   });
   const [form, setForm] = useState({ title: "", asgId: "" as number | "", dueDate: "", description: "", fileUrl: "" });
+  const [uploading, setUploading] = useState(false);
+
 
   const save = useMutation({
     mutationFn: () => {
