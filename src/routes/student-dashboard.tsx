@@ -484,9 +484,20 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
 
         {/* Fees reminder */}
         <Card className="lg:col-span-1">
-          <div className="flex items-center gap-2 mb-3">
-            <DollarSign className="w-4 h-4 text-emerald-600" />
-            <h2 className="font-semibold text-gray-800">Fees Reminder</h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-emerald-600" />
+              <h2 className="font-semibold text-gray-800">Fees Reminder</h2>
+            </div>
+            {pendingFees.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setFeesOpen(true)}
+                className="text-xs font-medium text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+              >
+                View details
+              </button>
+            )}
           </div>
           {pendingFees.length === 0 ? (
             <p className="text-sm text-emerald-700 py-4 text-center">
@@ -520,10 +531,24 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
                   );
                 })}
               </ul>
+              <button
+                type="button"
+                onClick={() => setFeesOpen(true)}
+                className="mt-3 w-full text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded py-2"
+              >
+                View outstanding & request receipt
+              </button>
             </>
           )}
         </Card>
       </div>
+
+      <FeesDetailDialog
+        open={feesOpen}
+        onClose={() => setFeesOpen(false)}
+        fees={fees as any[]}
+      />
+
 
 
       <ClassDetailDialog
