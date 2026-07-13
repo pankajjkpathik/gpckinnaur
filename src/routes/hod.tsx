@@ -29,6 +29,7 @@ import {
 import { staffMe, staffLogout } from "@/lib/auth.functions";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { avatarUrl } from "@/lib/portal-identity";
+import placeholderAvatar from "@/assets/placeholder-avatar.png";
 
 import { hodRoles, hasRole } from "@/lib/roles";
 import {
@@ -550,6 +551,7 @@ function HomeView({ me, deptLabel, ay }: { me: any; deptLabel: string; ay: strin
         role={`HOD · ${deptLabel}`}
         palette="hod"
         avatarSrc={avatarUrl(me)}
+        fallbackAvatarSrc={placeholderAvatar}
         subtitle={
           <>
             Academic Year <span className="font-semibold text-lime-200">{ay}</span>

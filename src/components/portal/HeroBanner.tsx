@@ -21,6 +21,7 @@ export function HeroBanner({
   avatarSrc,
   onAvatarChange,
   avatarUploading = false,
+  fallbackAvatarSrc,
 }: {
   name: string;
   role?: string;
@@ -38,6 +39,8 @@ export function HeroBanner({
   /** When provided, a camera badge appears on the avatar to pick a new image. */
   onAvatarChange?: (file: File) => void;
   avatarUploading?: boolean;
+  /** Default placeholder image shown when the user has no avatar (falls back to initials if omitted). */
+  fallbackAvatarSrc?: string;
 }) {
 
   const p = resolveHeroPalette(palette);
@@ -62,7 +65,7 @@ export function HeroBanner({
       </div>
       <div className="relative p-5 sm:p-8 grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)_auto] items-start sm:items-center gap-4 sm:gap-5">
         <div className="shrink-0 relative">
-          <HeroAvatar src={avatarSrc} name={name} />
+          <HeroAvatar src={avatarSrc} name={name} fallbackSrc={fallbackAvatarSrc} />
           {onAvatarChange && (
             <label
               className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-slate-800 flex items-center justify-center shadow-md ring-2 ring-white cursor-pointer hover:bg-slate-100"
@@ -134,7 +137,15 @@ export function HeroStatTile({ value, label }: { value: ReactNode; label: string
   );
 }
 
-function HeroAvatar({ src, name }: { src?: string | null; name: string }) {
+function HeroAvatar({
+  src,
+  name,
+  fallbackSrc,
+}: {
+  src?: string | null;
+  name: string;
+  fallbackSrc?: string;
+}) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">(
     src ? "loading" : "loaded",
   );
@@ -144,8 +155,10 @@ function HeroAvatar({ src, name }: { src?: string | null; name: string }) {
   }, [src]);
 
   const showImg = src && status !== "error";
-  const showFallback = !src || status === "error";
   const showSkeleton = !!src && status === "loading";
+  const showPlaceholderImg = (!src || status === "error") && !!fallbackSrc;
+  const showInitials = (!src || status === "error") && !fallbackSrc;
+  const errored = status === "error";
 
   return (
     <div className="relative w-16 h-16 sm:w-20 sm:h-20">
@@ -166,11 +179,22 @@ function HeroAvatar({ src, name }: { src?: string | null; name: string }) {
           className="absolute inset-0 rounded-full ring-2 ring-white/40 shadow-lg bg-white/20 animate-pulse"
         />
       )}
-      {showFallback && (
+      {showPlaceholderImg && (
+        <img
+          src={fallbackSrc}
+          alt={errored ? `${name} (photo failed to load)` : `${name} placeholder avatar`}
+          title={errored ? "Profile photo failed to load" : "No profile photo set"}
+          width={80}
+          height={80}
+          loading="lazy"
+          className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-white/40 shadow-lg bg-white/85 p-1"
+        />
+      )}
+      {showInitials && (
         <div
-          role={status === "error" ? "img" : undefined}
-          aria-label={status === "error" ? `${name} (photo failed to load)` : undefined}
-          title={status === "error" ? "Profile photo failed to load" : undefined}
+          role={errored ? "img" : undefined}
+          aria-label={errored ? `${name} (photo failed to load)` : undefined}
+          title={errored ? "Profile photo failed to load" : undefined}
           className="absolute inset-0 rounded-full ring-2 ring-white/40 shadow-lg bg-white/15 backdrop-blur flex items-center justify-center text-white font-bold text-xl sm:text-2xl"
         >
           {initialsOf(name)}

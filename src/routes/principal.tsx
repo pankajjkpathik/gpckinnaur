@@ -32,6 +32,7 @@ import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { QuickCard } from "@/components/portal/QuickCard";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { avatarUrl } from "@/lib/portal-identity";
+import placeholderAvatar from "@/assets/placeholder-avatar.png";
 
 import {
   listParentMessages,
@@ -891,6 +892,7 @@ function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: an
         role="Principal"
         palette="principal"
         avatarSrc={avatarUrl(me)}
+        fallbackAvatarSrc={placeholderAvatar}
 
         subtitle={
           <>
