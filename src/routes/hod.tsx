@@ -551,6 +551,7 @@ function HomeView({ me, deptLabel, ay }: { me: any; deptLabel: string; ay: strin
         role={`HOD · ${deptLabel}`}
         palette="hod"
         avatarSrc={avatarUrl(me)}
+        fallbackAvatarSrc={placeholderAvatar}
         subtitle={
           <>
             Academic Year <span className="font-semibold text-lime-200">{ay}</span>
