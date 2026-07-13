@@ -365,7 +365,7 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <HeroBanner
         name={me.name || "Faculty"}
         avatarSrc={avatarUrl(me as any)}
@@ -375,7 +375,7 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
         subtitle={
           <>
             Academic Year <span className="font-semibold text-amber-200">{ay}</span>
-            <span className="text-white/70"> · Use the left panel to jump into any module.</span>
+            <span className="text-white/70 hidden sm:inline"> · Use the left panel to jump into any module.</span>
           </>
         }
         stats={[
@@ -387,11 +387,11 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
 
       {/* Quick Actions */}
       <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
+        <div className="px-4 sm:px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
           <p className="font-semibold text-gray-800">Quick Actions</p>
           <p className="text-[11px] text-gray-500">Jump straight into your most-used modules.</p>
         </div>
-        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 touch-manipulation">
           {quickActions.map((q) => (
             <QuickCard
               key={q.view}
@@ -408,23 +408,23 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
 
       {/* Weekly timetable placeholder */}
       <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
-          <div>
-            <p className="font-semibold text-gray-800 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#7b1f4c]" /> Week at a Glance
+        <div className="px-4 sm:px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-800 flex items-center gap-2 truncate">
+              <Calendar className="w-4 h-4 text-[#7b1f4c] shrink-0" /> Week at a Glance
             </p>
-            <p className="text-[11px] text-gray-500">Mon – Sat overview · Full timetable coming from admin.</p>
+            <p className="text-[11px] text-gray-500 truncate">Mon – Sat overview · Full timetable coming from admin.</p>
           </div>
-          <span className="text-[10px] uppercase tracking-wider text-gray-400">Placeholder</span>
+          <span className="text-[10px] uppercase tracking-wider text-gray-400 shrink-0">Placeholder</span>
         </div>
-        <div className="p-4 grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="p-3 sm:p-4 grid grid-cols-3 sm:grid-cols-6 gap-2">
           {[1, 2, 3, 4, 5, 6].map((dow) => {
             const isToday = d?.day_of_week === dow;
             const count = isToday ? totalClassesToday : null;
             return (
               <div
                 key={dow}
-                className={`rounded-lg border p-3 text-center ${
+                className={`rounded-lg border p-3 text-center min-h-[72px] flex flex-col justify-center ${
                   isToday ? "border-[#7b1f4c] bg-rose-50/50" : "border-dashed border-gray-200 bg-gray-50/50"
                 }`}
               >
@@ -445,27 +445,27 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
 
       {/* Today + Subjects */}
       {d && (
-        <div className="grid md:grid-cols-5 gap-4">
+        <div className="grid md:grid-cols-5 gap-3 sm:gap-4">
           <div className="md:col-span-3 bg-white border rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
-              <p className="font-semibold text-gray-800 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="px-4 sm:px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+              <p className="font-semibold text-gray-800 flex items-center gap-2 min-w-0 truncate">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 Today's Schedule
               </p>
-              <span className="text-xs text-gray-500">{DAY_LABELS[d.day_of_week]}</span>
+              <span className="text-xs text-gray-500 shrink-0">{DAY_LABELS[d.day_of_week]}</span>
             </div>
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {d.today_classes.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 text-sm">
                   <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40" />
                   No classes scheduled today. Enjoy your day!
                 </div>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-2 touch-manipulation">
                   {d.today_classes.map((c: any) => (
                     <li
                       key={c.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-[#7b1f4c]/30 hover:bg-rose-50/30 transition"
+                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-[#7b1f4c]/30 hover:bg-rose-50/30 active:bg-rose-50 transition min-h-[64px]"
                     >
                       <div className="w-11 h-11 rounded-lg bg-[#7b1f4c]/10 text-[#7b1f4c] flex flex-col items-center justify-center shrink-0">
                         <span className="text-[9px] uppercase tracking-wide">Period</span>
@@ -488,21 +488,21 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
           </div>
 
           <div className="md:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
+            <div className="px-4 sm:px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
               <p className="font-semibold text-gray-800">My Subjects</p>
               <p className="text-[11px] text-gray-500">Session {ay}</p>
             </div>
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {d.assignments.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-6">No subjects assigned. Contact admin.</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {d.assignments.map((a: any) => (
-                    <li key={a.id} className="flex items-start gap-2 pb-2 border-b last:border-0 last:pb-0">
-                      <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#7b1f4c] shrink-0" />
+                    <li key={a.id} className="flex items-start gap-2 pb-2 border-b last:border-0 last:pb-0 min-h-[44px]">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#7b1f4c] shrink-0" />
                       <div className="min-w-0">
                         <p className="font-medium text-gray-800 truncate">{a.subjects?.name}</p>
-                        <p className="text-[11px] text-gray-500">
+                        <p className="text-[11px] text-gray-500 truncate">
                           {a.subjects?.code} · {a.branch}-Sem{a.semester}
                         </p>
                       </div>
