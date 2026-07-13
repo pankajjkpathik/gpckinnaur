@@ -1040,6 +1040,9 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
     queryKey: ["student-assignments-list"],
     queryFn: () => fn(),
   });
+  const { data: mySubs = [] } = useMySubmissions();
+  const subStatus = (aid: number) =>
+    (mySubs as any[]).find((s) => s.assignment_id === aid)?.status ?? null;
   const rows = data as any[];
   const today = new Date().toISOString().slice(0, 10);
 
@@ -1048,10 +1051,10 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Assignments</h1>
         <p className="text-xs text-gray-400 mb-4">
-          Download the assignment brief. Submit your completed work directly to your faculty as instructed on the
-          brief (email or in person).
+          Download the assignment brief. Mark it as <b>Noted</b> once you've read it, and as{" "}
+          <b>Submitted</b> after handing your work to your faculty.
         </p>
-        <div className="border rounded overflow-hidden">
+        <div className="border rounded overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
@@ -1059,11 +1062,13 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">File</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((a: any) => {
                 const overdue = a.due_date && a.due_date < today;
+                const st = subStatus(a.id);
                 return (
                   <tr key={a.id} className="border-t">
                     <td className="px-4 py-3">{a.subjects?.name || a.subject_name || "—"}</td>
@@ -1089,12 +1094,15 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
                         <span className="text-xs text-gray-400">No file</span>
                       )}
                     </td>
+                    <td className="px-4 py-3">
+                      <AssignmentStatusButtons assignmentId={a.id} currentStatus={st} />
+                    </td>
                   </tr>
                 );
               })}
               {!isLoading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
                     No assignments posted for your class yet.
                   </td>
                 </tr>
