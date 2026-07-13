@@ -18,6 +18,8 @@ import {
   BarChart2,
   ArrowLeft,
   CheckSquare,
+  Check,
+  Undo2,
   Bell,
   Megaphone,
   AlarmClock,
