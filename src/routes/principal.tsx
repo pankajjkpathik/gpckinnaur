@@ -60,7 +60,8 @@ import {
   ChevronDown,
   Home,
   LayoutDashboard,
-  
+  PanelLeftClose,
+  PanelLeftOpen,
   Factory,
   ClipboardList,
 } from "lucide-react";
@@ -140,6 +141,14 @@ function PrincipalPortal() {
   const [view, setView] = useState<View>(initialView);
   const [year, setYear] = useState(defaultYear());
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("principal:sidebarCollapsed") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("principal:sidebarCollapsed", sidebarCollapsed ? "1" : "0");
+  }, [sidebarCollapsed]);
   const { data: me } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
 
   // Keep ?view= in sync so refresh/back-forward preserves the selected section.
@@ -198,54 +207,71 @@ function PrincipalPortal() {
   return (
     <div className="min-h-screen bg-[#f7f7fb]">
       <header className="bg-white border-b sticky top-0 z-30">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="container mx-auto px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setMobileNavOpen((o) => !o)}
-              className="lg:hidden -ml-1 p-2 rounded hover:bg-gray-100"
+              className="lg:hidden -ml-1 p-2 rounded hover:bg-gray-100 shrink-0"
               aria-label="Toggle navigation"
             >
               <LayoutDashboard className="w-5 h-5 text-gray-600" />
             </button>
+            <button
+              onClick={() => setSidebarCollapsed((c) => !c)}
+              className="hidden lg:inline-flex -ml-1 p-2 rounded hover:bg-gray-100 shrink-0"
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="w-5 h-5 text-gray-600" />
+              ) : (
+                <PanelLeftClose className="w-5 h-5 text-gray-600" />
+              )}
+            </button>
             <div
-              className="w-10 h-10 rounded-full bg-[#7b1f4c]/10 flex items-center justify-center text-xl shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#7b1f4c]/10 flex items-center justify-center text-lg sm:text-xl shrink-0"
               aria-hidden
             >
               🏛️
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">GP Kinnaur · Principal</p>
-              <p className="font-bold text-gray-800">Principal Portal</p>
+              <p className="hidden sm:block text-[10px] uppercase tracking-[0.18em] text-gray-400">GP Kinnaur · Principal</p>
+              <p className="font-bold text-gray-800 truncate text-sm sm:text-base">Principal Portal</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <label className="text-xs text-gray-400 hidden sm:block">AY</label>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-sm shrink-0">
+            <label htmlFor="principal-ay" className="text-xs text-gray-400 hidden md:block">AY</label>
             <input
+              id="principal-ay"
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="border rounded px-2 py-1 text-sm w-20"
+              className="border rounded px-2 py-1 text-sm w-16 sm:w-20"
               placeholder="2025-26"
+              aria-label="Academic year"
             />
-            <Link to="/messages" className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
+            <Link to="/messages" className="hidden sm:inline-flex px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
               Messages
             </Link>
-            <button onClick={logout} className="px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
+            <button onClick={logout} className="px-2 sm:px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
               Log out
             </button>
-            <div className="w-9 h-9 rounded-full bg-[#7b1f4c] text-white flex items-center justify-center font-bold text-sm">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#7b1f4c] text-white flex items-center justify-center font-bold text-sm shrink-0">
               {initials}
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6 flex gap-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 flex gap-4 sm:gap-6">
         <PrincipalSidebar
           active={view}
           onNav={navTo}
           mobileOpen={mobileNavOpen}
           onCloseMobile={() => setMobileNavOpen(false)}
+          collapsed={sidebarCollapsed}
+          onExpand={() => setSidebarCollapsed(false)}
         />
+
         <main className="flex-1 min-w-0">
           {view === "home" && <HomeView year={year} onNav={setView} me={me as any} />}
           {view === "attendance" && <AttendanceReportsView year={year} onBack={() => setView("home")} />}
@@ -317,14 +343,50 @@ function PrincipalSidebar({
   onNav,
   mobileOpen,
   onCloseMobile,
+  collapsed = false,
+  onExpand,
 }: {
   active: View;
   onNav: (v: View) => void;
   mobileOpen: boolean;
   onCloseMobile: () => void;
+  collapsed?: boolean;
+  onExpand?: () => void;
 }) {
   const [principalOpen, setPrincipalOpen] = useState(true);
   const [tpoOpen, setTpoOpen] = useState(false);
+
+  // Collapsed rail (desktop only): icon-only nav, no group headers.
+  const collapsedRail = (
+    <nav className="bg-white border border-gray-200 rounded-xl shadow-sm p-2 flex flex-col items-center gap-1">
+      {[...PRINCIPAL_NAV, ...TPO_NAV].map((item) => {
+        const isActive = active === item.view;
+        return (
+          <button
+            key={item.view}
+            onClick={() => onNav(item.view)}
+            title={item.label}
+            aria-label={item.label}
+            className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${
+              isActive ? "bg-[#7b1f4c]/10 text-[#7b1f4c]" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            <item.icon className="w-5 h-5" />
+          </button>
+        );
+      })}
+      {onExpand && (
+        <button
+          onClick={onExpand}
+          title="Expand sidebar"
+          aria-label="Expand sidebar"
+          className="mt-1 w-10 h-10 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-700 border-t border-gray-100"
+        >
+          <PanelLeftOpen className="w-5 h-5" />
+        </button>
+      )}
+    </nav>
+  );
 
   const inner = (
     <nav className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2">
@@ -446,10 +508,14 @@ function PrincipalSidebar({
   return (
     <>
       {/* Desktop */}
-      <aside className="hidden lg:block w-64 shrink-0 sticky top-[76px] self-start">
-        {inner}
+      <aside
+        className={`hidden lg:block shrink-0 sticky top-[76px] self-start transition-[width] ${
+          collapsed ? "w-14" : "w-64"
+        }`}
+      >
+        {collapsed ? collapsedRail : inner}
       </aside>
-      {/* Mobile drawer */}
+      {/* Mobile drawer — always full nav */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/40" onClick={onCloseMobile}>
           <div
@@ -535,11 +601,18 @@ function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: an
       {/* Snapshot tiles — read-only KPIs, sidebar handles navigation */}
       <div>
         <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Institute Snapshot</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3">
           {snapshots.map((s) => (
-            <div key={s.label} className={`rounded-xl border p-4 ${s.tint}`}>
-              <p className="text-[11px] text-gray-500 leading-tight">{s.label}</p>
-              <p className={`text-2xl font-bold mt-1 ${s.ring}`}>{s.value}</p>
+            <div
+              key={s.label}
+              className={`min-w-0 rounded-xl border p-3 sm:p-4 ${s.tint}`}
+            >
+              <p className="text-[11px] text-gray-500 leading-tight line-clamp-2 min-h-[2.2em]">
+                {s.label}
+              </p>
+              <p className={`text-xl sm:text-2xl font-bold mt-1 tabular-nums truncate ${s.ring}`}>
+                {s.value}
+              </p>
             </div>
           ))}
         </div>
