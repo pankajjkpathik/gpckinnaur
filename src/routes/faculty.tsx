@@ -1049,12 +1049,30 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
 
 
   const markAllRead = () => setReadIds(new Set(items.map((i) => i.key)));
-  const toggleRead = (key: string) => {
+  const markOneRead = (it: NotifItem) => {
     const next = new Set(readIds);
-    if (next.has(key)) next.delete(key);
-    else next.add(key);
+    if (next.has(it.key)) return;
+    next.add(it.key);
+    setReadIds(next);
+    toast.success("Marked as read", {
+      description: it.title,
+      action: {
+        label: "Undo",
+        onClick: () => {
+          const rollback = new Set(readIds);
+          rollback.delete(it.key);
+          setReadIds(rollback);
+        },
+      },
+    });
+  };
+  const markOneUnread = (it: NotifItem) => {
+    const next = new Set(readIds);
+    if (!next.has(it.key)) return;
+    next.delete(it.key);
     setReadIds(next);
   };
+
   const openItem = (it: NotifItem) => {
     setActive(it);
     if (!readIds.has(it.key)) {
