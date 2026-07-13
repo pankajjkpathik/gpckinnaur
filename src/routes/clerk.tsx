@@ -156,6 +156,148 @@ function ClerkPortal() {
   );
 }
 
+function GlobalSearch({
+  onJumpStudent,
+  onJumpSalary,
+}: {
+  onJumpStudent: (q: string) => void;
+  onJumpSalary: (month?: number, year?: number) => void;
+}) {
+  const [term, setTerm] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(term.trim()), 250);
+    return () => clearTimeout(id);
+  }, [term]);
+  const q = useQuery({
+    queryKey: ["clerk-global-search", debounced],
+    queryFn: () => clerkGlobalSearch({ data: { q: debounced } }),
+    enabled: debounced.length >= 2,
+    staleTime: 15_000,
+  });
+  const results = q.data;
+  const hasAny =
+    !!results &&
+    ((results.students?.length ?? 0) + (results.staff?.length ?? 0) + (results.salary?.length ?? 0) > 0);
+  const showPanel = open && debounced.length >= 2;
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="Search students, staff, salary…"
+          className="w-full border rounded pl-8 pr-2 py-2 text-sm"
+        />
+      </div>
+      {showPanel && (
+        <div className="absolute z-30 left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-[70vh] overflow-y-auto text-sm">
+          {q.isFetching && <div className="p-3 text-xs text-gray-500">Searching…</div>}
+          {!q.isFetching && !hasAny && (
+            <div className="p-3 text-xs text-gray-500">No matches for “{debounced}”.</div>
+          )}
+          {results?.students?.length ? (
+            <div>
+              <div className="px-3 py-1.5 text-[11px] uppercase tracking-wide bg-gray-50 text-gray-500 border-b">
+                Students · {results.students.length}
+              </div>
+              {results.students.map((s: any) => (
+                <button
+                  key={`stu-${s.id}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onJumpStudent(s.enrollment_no || s.name);
+                    setOpen(false);
+                    setTerm("");
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-amber-50 border-b flex items-start gap-2"
+                >
+                  <Users className="w-4 h-4 mt-0.5 text-amber-600 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{s.name}</div>
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {s.enrollment_no} · {s.branch} · Sem {s.semester}
+                      {s.phone ? ` · ${s.phone}` : ""}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {results?.staff?.length ? (
+            <div>
+              <div className="px-3 py-1.5 text-[11px] uppercase tracking-wide bg-gray-50 text-gray-500 border-b">
+                Staff · {results.staff.length}
+              </div>
+              {results.staff.map((s: any) => (
+                <button
+                  key={`stf-${s.id}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onJumpSalary();
+                    setOpen(false);
+                    setTerm("");
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-amber-50 border-b flex items-start gap-2"
+                >
+                  <User className="w-4 h-4 mt-0.5 text-indigo-600 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{s.name || s.username}</div>
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {s.role}
+                      {s.department ? ` · ${s.department}` : ""}
+                      {s.email ? ` · ${s.email}` : ""}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {results?.salary?.length ? (
+            <div>
+              <div className="px-3 py-1.5 text-[11px] uppercase tracking-wide bg-gray-50 text-gray-500 border-b">
+                Salary · {results.salary.length}
+              </div>
+              {results.salary.map((r: any) => (
+                <button
+                  key={`sal-${r.id}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onJumpSalary(r.month, r.year);
+                    setOpen(false);
+                    setTerm("");
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-amber-50 border-b flex items-start gap-2"
+                >
+                  <Wallet className="w-4 h-4 mt-0.5 text-emerald-600 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">
+                      {r.staff_users?.name || r.staff_users?.username} · ₹
+                      {Number(r.net_pay || 0).toLocaleString("en-IN")}
+                    </div>
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {String(r.month).padStart(2, "0")}/{r.year}
+                      {r.staff_users?.department ? ` · ${r.staff_users.department}` : ""}
+                      {r.paid_on ? ` · paid ${r.paid_on}` : ""}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
 function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
   const qc = useQueryClient();
   const uploadFn = useServerFn(uploadStaffAvatar);
