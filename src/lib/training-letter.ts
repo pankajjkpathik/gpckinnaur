@@ -4,8 +4,9 @@ import autoTable from "jspdf-autotable";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 const INSTITUTE = "GOVERNMENT POLYTECHNIC, KINNAUR";
-const INSTITUTE_ADDRESS = "Camp at GP Rohru, Distt. Shimla (H.P.)";
+export const DEFAULT_INSTITUTE_ADDRESS = "Camp at GP Rohru, Distt. Shimla (H.P.)";
 const INSTITUTE_PHONE = "Phone: 01786-222206";
+
 
 type TrainingRecord = {
   id: number;
@@ -37,7 +38,7 @@ async function loadLogo(): Promise<string | null> {
   }
 }
 
-function letterhead(doc: jsPDF, logo: string | null) {
+function letterhead(doc: jsPDF, logo: string | null, address: string) {
   const w = doc.internal.pageSize.getWidth();
   if (logo) {
     try { doc.addImage(logo, "PNG", 40, 30, 60, 60); } catch { /* ignore */ }
@@ -49,11 +50,12 @@ function letterhead(doc: jsPDF, logo: string | null) {
   doc.text(INSTITUTE, w / 2, 68, { align: "center" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(INSTITUTE_ADDRESS, w / 2, 84, { align: "center" });
+  doc.text(address, w / 2, 84, { align: "center", maxWidth: w - 80 });
   doc.text(INSTITUTE_PHONE, w / 2, 98, { align: "center" });
   doc.setLineWidth(0.8);
   doc.line(40, 108, w - 40, 108);
 }
+
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "____________";
@@ -70,12 +72,17 @@ function ordinal(n: number | null | undefined) {
 
 export type PdfBuild = { blob: Blob; filename: string; url: string };
 
-export async function generateTrainingLetter(r: TrainingRecord): Promise<PdfBuild> {
+export async function generateTrainingLetter(
+  r: TrainingRecord,
+  opts?: { instituteAddress?: string },
+): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const margin = 50;
   const logo = await loadLogo();
-  letterhead(doc, logo);
+  const address = opts?.instituteAddress?.trim() || DEFAULT_INSTITUTE_ADDRESS;
+  letterhead(doc, logo, address);
+
 
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
   doc.setFontSize(10);
@@ -147,10 +154,12 @@ function undertakingPage(
   points: string[],
   signatureLabel: string,
   logo: string | null,
+  address: string,
 ) {
   const w = doc.internal.pageSize.getWidth();
   const margin = 60;
-  letterhead(doc, logo);
+  letterhead(doc, logo, address);
+
   let y = 140;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
@@ -178,12 +187,17 @@ function undertakingPage(
   doc.text(signatureLabel, w - margin, y, { align: "right" });
 }
 
-export async function generateUndertakings(r: TrainingRecord): Promise<PdfBuild> {
+export async function generateUndertakings(
+  r: TrainingRecord,
+  opts?: { instituteAddress?: string },
+): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const logo = await loadLogo();
+  const address = opts?.instituteAddress?.trim() || DEFAULT_INSTITUTE_ADDRESS;
   const names = (r.student_names ?? []).filter(Boolean);
   const sem = r.semester ? `${ordinal(r.semester)} semester` : "____ semester";
   const branchTxt = r.branch ? `${r.branch.charAt(0).toUpperCase()}${r.branch.slice(1)} Engineering` : "Engineering";
+
   const period =
     r.start_date
       ? `w.e.f. ${fmtDate(r.start_date)}${r.end_date ? ` to ${fmtDate(r.end_date)}` : ""}`
@@ -206,7 +220,9 @@ export async function generateUndertakings(r: TrainingRecord): Promise<PdfBuild>
       ],
       "Signature of Student",
       logo,
+      address,
     );
+
 
     // ── Parent Undertaking ──────────────────────────────
     doc.addPage();
@@ -220,7 +236,9 @@ export async function generateUndertakings(r: TrainingRecord): Promise<PdfBuild>
       ],
       "Signature of Parent",
       logo,
+      address,
     );
+
   });
 
   const filename = `Undertakings-${(r.company || "training").replace(/[^\w]+/g, "_")}-${r.id}.pdf`;

@@ -284,7 +284,16 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
       border: "border-stone-500",
       action: "/admin/audit",
     },
+    {
+      icon: FileText,
+      label: "Institute Settings",
+      desc: "Address shown on official PDFs",
+      color: "bg-neutral-700",
+      border: "border-neutral-700",
+      action: "/admin/settings",
+    },
   ];
+
 
   return (
     <div className="space-y-6">
