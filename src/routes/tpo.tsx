@@ -742,7 +742,7 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                         <FileText className="w-3.5 h-3.5" /> Letter
                       </button>
                       <button
-                        onClick={() => openPreview("Student & Parent Undertakings", generateUndertakings(r))}
+                        onClick={() => openPreview("Student & Parent Undertakings", generateUndertakings(r, { instituteAddress }))}
                         title="Preview Student & Parent Undertakings"
                         className="inline-flex items-center gap-1 text-xs text-amber-700 border border-amber-200 hover:bg-amber-50 rounded px-2 py-1"
                       >
