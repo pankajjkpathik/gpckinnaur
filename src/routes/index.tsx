@@ -217,7 +217,7 @@ function PortalLanding() {
               </div>
             </div>
             <ul className="grid gap-3 md:grid-cols-3">
-              {notices.map((n) => {
+              {notices.map((n: NoticeRow) => {
                 const body = (
                   <div className="h-full rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-colors p-4 flex flex-col">
                     <div className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase text-white/55">
