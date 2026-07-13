@@ -46,6 +46,7 @@ export function HeroBanner({
   });
   const hour = today.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const GreetIcon = hour < 12 ? Sunrise : hour < 17 ? Sun : Sunset;
 
   return (
     <div
