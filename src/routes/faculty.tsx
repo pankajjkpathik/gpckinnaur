@@ -248,149 +248,137 @@ function FacultyPortal() {
 
 
 // ─── HOME: card grid ──────────────────────────────────────────────────────────
-function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => void }) {
+function HomeView({ me, ay, onNav: _onNav }: { me: any; ay: string; onNav: (v: View) => void }) {
   const dash = useQuery({
     queryKey: ["fac-dash", ay],
     queryFn: () => facultyDashboard({ data: { academic_year: ay } }),
   });
   const d = dash.data;
 
-  const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View }[] = [
-    {
-      icon: ClipboardCheck,
-      label: "Record Attendance",
-      desc: "Mark daily attendance",
-      color: "bg-[#7b1f4c]",
-      border: "border-[#7b1f4c]",
-      view: "attendance",
-    },
-    {
-      icon: FileSpreadsheet,
-      label: "Enter Marks",
-      desc: "Input internal assessment scores",
-      color: "bg-orange-500",
-      border: "border-orange-500",
-      view: "marks",
-    },
-    {
-      icon: GraduationCap,
-      label: "Enter Semester Exam Marks",
-      desc: "Input Final Semester Marks",
-      color: "bg-gray-500",
-      border: "border-gray-500",
-      view: "semester-marks",
-    },
-    {
-      icon: FilePlus,
-      label: "Assignments",
-      desc: "Create and manage assignments",
-      color: "bg-green-600",
-      border: "border-green-600",
-      view: "assignments",
-    },
-    {
-      icon: Eye,
-      label: "View Submissions",
-      desc: "Grade student submissions",
-      color: "bg-purple-600",
-      border: "border-purple-600",
-      view: "submissions",
-    },
-    {
-      icon: BookMarked,
-      label: "Syllabus Coverage",
-      desc: "Track teaching progress",
-      color: "bg-gray-400",
-      border: "border-gray-400",
-      view: "syllabus",
-    },
-    {
-      icon: BookOpen,
-      label: "Lesson Plans",
-      desc: "Upload and manage lesson plans",
-      color: "bg-rose-600",
-      border: "border-rose-600",
-      view: "lesson-plans",
-    },
-    {
-      icon: Calendar,
-      label: "Exam Schedule",
-      desc: "Distribute exam datesheets",
-      color: "bg-cyan-500",
-      border: "border-cyan-500",
-      view: "exam-schedule",
-    },
-    {
-      icon: Printer,
-      label: "Generate Reports",
-      desc: "Create official printable reports",
-      color: "bg-[#4a0e2e]",
-      border: "border-[#4a0e2e]",
-      view: "reports",
-    },
-  ];
+  const today = new Date();
+  const dateLabel = today.toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const hour = today.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  const totalClassesToday = d?.today_classes?.length ?? 0;
+  const totalSubjects = d?.assignments?.length ?? 0;
+  const uniqueClasses = new Set((d?.assignments ?? []).map((a: any) => `${a.branch}-${a.semester}`)).size;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, {me.name || "Faculty"}</h1>
-
-      {/* Quick action card grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards.map((c) => (
-          <QuickCard
-            key={c.view}
-            icon={c.icon}
-            label={c.label}
-            desc={c.desc}
-            color={c.color}
-            border={c.border}
-            onClick={() => onNav(c.view)}
-          />
-        ))}
+      {/* Hero banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#7b1f4c] via-[#5a1638] to-[#2d0a1c] text-white shadow-lg">
+        <div className="absolute inset-0 opacity-10" aria-hidden>
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white blur-3xl" />
+          <div className="absolute -bottom-32 -left-16 w-96 h-96 rounded-full bg-orange-300 blur-3xl" />
+        </div>
+        <div className="relative p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-white/70">{dateLabel}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mt-1">
+              {greeting}, {me.name || "Faculty"} 👋
+            </h1>
+            <p className="text-sm text-white/80 mt-1">
+              Academic Year <span className="font-semibold">{ay}</span> · Use the left panel to jump into any module.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            <StatTile value={totalClassesToday} label="Classes Today" />
+            <StatTile value={totalSubjects} label="Subjects" />
+            <StatTile value={uniqueClasses} label="Sections" />
+          </div>
+        </div>
       </div>
 
-      {/* Today's schedule + My subjects */}
+      {/* Today + Subjects */}
       {d && (
-        <div className="grid md:grid-cols-2 gap-4 mt-2">
-          <Card>
-            <p className="font-semibold text-gray-700 mb-3">Today's Schedule ({DAY_LABELS[d.day_of_week]})</p>
-            {d.today_classes.length === 0 ? (
-              <p className="text-sm text-gray-400">No classes scheduled today.</p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {d.today_classes.map((c: any) => (
-                  <li key={c.id} className="flex items-center justify-between border-b pb-2">
-                    <span>
-                      P{c.period_no} · <strong>{c.subjects?.code}</strong> · {c.branch}-Sem{c.semester}
-                      {c.room ? ` · ${c.room}` : ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-          <Card>
-            <p className="font-semibold text-gray-700 mb-3">My Subjects ({ay})</p>
-            {d.assignments.length === 0 ? (
-              <p className="text-sm text-gray-400">No subjects assigned. Contact admin.</p>
-            ) : (
-              <ul className="text-sm space-y-1">
-                {d.assignments.map((a: any) => (
-                  <li key={a.id} className="border-b pb-1">
-                    · {a.subjects?.code} {a.subjects?.name}{" "}
-                    <span className="text-gray-400">
-                      ({a.branch}-Sem{a.semester})
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+        <div className="grid md:grid-cols-5 gap-4">
+          <div className="md:col-span-3 bg-white border rounded-xl shadow-sm overflow-hidden">
+            <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
+              <p className="font-semibold text-gray-800 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Today's Schedule
+              </p>
+              <span className="text-xs text-gray-500">{DAY_LABELS[d.day_of_week]}</span>
+            </div>
+            <div className="p-5">
+              {d.today_classes.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 text-sm">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  No classes scheduled today. Enjoy your day!
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {d.today_classes.map((c: any) => (
+                    <li
+                      key={c.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-[#7b1f4c]/30 hover:bg-rose-50/30 transition"
+                    >
+                      <div className="w-11 h-11 rounded-lg bg-[#7b1f4c]/10 text-[#7b1f4c] flex flex-col items-center justify-center shrink-0">
+                        <span className="text-[9px] uppercase tracking-wide">Period</span>
+                        <span className="text-sm font-bold leading-none">{c.period_no}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-800 truncate">
+                          {c.subjects?.name || c.subjects?.code}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {c.subjects?.code} · {c.branch}-Sem{c.semester}
+                          {c.room ? ` · Room ${c.room}` : ""}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div className="md:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
+            <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
+              <p className="font-semibold text-gray-800">My Subjects</p>
+              <p className="text-[11px] text-gray-500">Session {ay}</p>
+            </div>
+            <div className="p-5">
+              {d.assignments.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">No subjects assigned. Contact admin.</p>
+              ) : (
+                <ul className="space-y-2 text-sm">
+                  {d.assignments.map((a: any) => (
+                    <li key={a.id} className="flex items-start gap-2 pb-2 border-b last:border-0 last:pb-0">
+                      <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#7b1f4c] shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-800 truncate">{a.subjects?.name}</p>
+                        <p className="text-[11px] text-gray-500">
+                          {a.subjects?.code} · {a.branch}-Sem{a.semester}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
+function StatTile({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="bg-white/10 backdrop-blur border border-white/20 rounded-xl px-3 py-2 text-center min-w-[72px]">
+      <p className="text-2xl font-bold leading-tight">{value}</p>
+      <p className="text-[10px] uppercase tracking-wider text-white/80">{label}</p>
+    </div>
+  );
+}
+
 
 // ─── ATTENDANCE ───────────────────────────────────────────────────────────────
 function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
