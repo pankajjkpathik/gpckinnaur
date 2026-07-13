@@ -279,6 +279,10 @@ function PrincipalPortal() {
     setMobileNavOpen(false);
   }
 
+  if (meLoading || !me || !hasRole(me, principalRoles)) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading…</div>;
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f7fb]">
       <header className="bg-white border-b sticky top-0 z-30">
