@@ -1257,20 +1257,36 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
                   tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleRead(it.key);
+                    if (isRead) markOneUnread(it);
+                    else markOneRead(it);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
                       e.stopPropagation();
-                      toggleRead(it.key);
+                      if (isRead) markOneUnread(it);
+                      else markOneRead(it);
                     }
                   }}
-                  className="text-[11px] text-gray-400 hover:text-[#7b1f4c] shrink-0 cursor-pointer select-none"
-                  title={isRead ? "Mark unread" : "Mark read"}
+                  className={`shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md border cursor-pointer select-none transition ${
+                    isRead
+                      ? "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-[#7b1f4c]"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                  }`}
+                  title={isRead ? "Mark as unread" : `Mark this ${it.kind === "deadline" ? "deadline" : it.kind === "notice" ? "notice" : "announcement"} as read`}
+                  aria-label={isRead ? `Mark "${it.title}" as unread` : `Mark "${it.title}" as read`}
                 >
-                  {isRead ? "Unread" : "Read"}
+                  {isRead ? (
+                    <>
+                      <Undo2 className="w-3 h-3" /> Unread
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3 h-3" /> Mark read
+                    </>
+                  )}
                 </span>
+
               </button>
             );
           })
