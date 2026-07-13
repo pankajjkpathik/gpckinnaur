@@ -15,6 +15,10 @@ import {
   Mic,
   FileText,
   FileSignature,
+  Bell,
+  BellRing,
+  CheckCheck,
+  Sparkles,
 } from "lucide-react";
 import { generateTrainingLetter, generateUndertakings } from "@/lib/training-letter";
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
@@ -194,7 +198,9 @@ function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
     [lectures, lectureDept],
   );
 
-  const quickActions: { view: View; icon: any; label: string; desc: string; color: string; border: string; stat: number; statLabel: string }[] = [
+  const alerts = useTpoAlerts(placements, trainings);
+
+  const quickActions: { view: View; icon: any; label: string; desc: string; color: string; border: string; stat: number; statLabel: string; badge?: number }[] = [
     {
       view: "placements",
       icon: Briefcase,
@@ -204,6 +210,7 @@ function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
       border: "border-[#7b1f4c]",
       stat: placementsThisYear,
       statLabel: `Placed in ${currentYear}`,
+      badge: alerts.newPlacements.length || undefined,
     },
     {
       view: "training",
@@ -214,6 +221,7 @@ function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
       border: "border-orange-500",
       stat: trainings.length,
       statLabel: "Training records",
+      badge: alerts.newTrainings.length || undefined,
     },
     {
       view: "lectures",
@@ -249,27 +257,33 @@ function HomeView({ onNav, me }: { onNav: (id: string) => void; me: any }) {
         ]}
       />
 
-      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-cyan-50 to-white border-b">
-          <p className="font-semibold text-gray-800">Quick Actions</p>
-          <p className="text-[11px] text-gray-500">Jump straight into placements, internships, or lectures.</p>
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-cyan-50 to-white border-b">
+            <p className="font-semibold text-gray-800">Quick Actions</p>
+            <p className="text-[11px] text-gray-500">Jump straight into placements, internships, or lectures.</p>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {quickActions.map((q) => (
+              <QuickCard
+                key={q.view}
+                icon={q.icon}
+                label={q.label}
+                desc={q.desc}
+                color={q.color}
+                border={q.border}
+                stat={q.stat}
+                statLabel={q.statLabel}
+                badge={q.badge}
+                onClick={() => onNav(q.view)}
+              />
+            ))}
+          </div>
         </div>
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {quickActions.map((q) => (
-            <QuickCard
-              key={q.view}
-              icon={q.icon}
-              label={q.label}
-              desc={q.desc}
-              color={q.color}
-              border={q.border}
-              stat={q.stat}
-              statLabel={q.statLabel}
-              onClick={() => onNav(q.view)}
-            />
-          ))}
-        </div>
+
+        <AlertsPanel alerts={alerts} onJump={onNav} />
       </div>
+
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiTile icon={TrendingUp} label="Total Placements" value={placements.length} tone="from-fuchsia-500 to-rose-500" />
@@ -1019,5 +1033,198 @@ function LecturesView({ onBack }: { onBack?: () => void }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Alerts (new training requests + placement updates) ───────────────────────
+type TpoAlertItem = {
+  id: string;
+  kind: "placement" | "training";
+  title: string;
+  subtitle: string;
+  at: number;
+};
+type TpoAlertsState = {
+  lastSeen: number;
+  newPlacements: TpoAlertItem[];
+  newTrainings: TpoAlertItem[];
+  recent: TpoAlertItem[];
+  markAllRead: () => void;
+};
+
+const TPO_ALERTS_KEY = "tpo-alerts-last-seen";
+
+function useTpoAlerts(placements: any[], trainings: any[]): TpoAlertsState {
+  const [lastSeen, setLastSeen] = useState<number>(0);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = window.localStorage.getItem(TPO_ALERTS_KEY);
+    const n = raw ? Number(raw) : NaN;
+    if (Number.isFinite(n)) setLastSeen(n);
+  }, []);
+
+  const placementItems = useMemo<TpoAlertItem[]>(
+    () =>
+      (placements ?? [])
+        .map((r: any): TpoAlertItem | null => {
+          const at = r?.created_at ? new Date(r.created_at).getTime() : NaN;
+          if (!Number.isFinite(at)) return null;
+          return {
+            id: `p-${r.id}`,
+            kind: "placement",
+            title: `${r.student_name || "Student"} — ${r.company || "Company"}`,
+            subtitle: `${r.year ?? ""}${r.package_lpa != null ? ` · ₹${r.package_lpa}L` : ""}`.trim(),
+            at,
+          };
+        })
+        .filter((x): x is TpoAlertItem => !!x),
+    [placements],
+  );
+  const trainingItems = useMemo<TpoAlertItem[]>(
+    () =>
+      (trainings ?? [])
+        .map((r: any): TpoAlertItem | null => {
+          const at = r?.created_at ? new Date(r.created_at).getTime() : NaN;
+          if (!Number.isFinite(at)) return null;
+          return {
+            id: `t-${r.id}`,
+            kind: "training",
+            title: `${r.student_name || "Student"} — ${r.company_name || r.company || "Training request"}`,
+            subtitle: [r.branch, r.duration_weeks ? `${r.duration_weeks}w` : null].filter(Boolean).join(" · "),
+            at,
+          };
+        })
+        .filter((x): x is TpoAlertItem => !!x),
+    [trainings],
+  );
+
+  const newPlacements = useMemo(
+    () => placementItems.filter((i) => i.at > lastSeen).sort((a, b) => b.at - a.at),
+    [placementItems, lastSeen],
+  );
+  const newTrainings = useMemo(
+    () => trainingItems.filter((i) => i.at > lastSeen).sort((a, b) => b.at - a.at),
+    [trainingItems, lastSeen],
+  );
+
+  const recent = useMemo(
+    () => [...placementItems, ...trainingItems].sort((a, b) => b.at - a.at).slice(0, 8),
+    [placementItems, trainingItems],
+  );
+
+  const markAllRead = () => {
+    const now = Date.now();
+    setLastSeen(now);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(TPO_ALERTS_KEY, String(now));
+    }
+  };
+
+  return { lastSeen, newPlacements, newTrainings, recent, markAllRead };
+}
+
+function relTime(ms: number) {
+  const diff = Date.now() - ms;
+  const m = Math.round(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(ms).toLocaleDateString();
+}
+
+function AlertsPanel({
+  alerts,
+  onJump,
+}: {
+  alerts: TpoAlertsState;
+  onJump: (id: string) => void;
+}) {
+  const total = alerts.newPlacements.length + alerts.newTrainings.length;
+  return (
+    <aside className="bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
+      <div className="px-5 py-3 bg-gradient-to-r from-rose-50 to-white border-b flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-semibold text-gray-800 flex items-center gap-2">
+            {total > 0 ? (
+              <BellRing className="w-4 h-4 text-rose-600" />
+            ) : (
+              <Bell className="w-4 h-4 text-gray-400" />
+            )}
+            Alerts
+            {total > 0 && (
+              <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow">
+                {total}
+              </span>
+            )}
+          </p>
+          <p className="text-[11px] text-gray-500">
+            {total > 0
+              ? `${alerts.newTrainings.length} new training · ${alerts.newPlacements.length} placement`
+              : "You're all caught up."}
+          </p>
+        </div>
+        {total > 0 && (
+          <button
+            type="button"
+            onClick={alerts.markAllRead}
+            className="text-[11px] text-rose-700 hover:underline whitespace-nowrap inline-flex items-center gap-1"
+            title="Mark all alerts as read"
+          >
+            <CheckCheck className="w-3.5 h-3.5" /> Mark read
+          </button>
+        )}
+      </div>
+      <ul className="divide-y max-h-[280px] overflow-y-auto">
+        {alerts.recent.length === 0 ? (
+          <li className="p-5 text-xs text-gray-400 text-center flex flex-col items-center gap-1">
+            <Sparkles className="w-4 h-4 text-gray-300" />
+            No activity yet.
+          </li>
+        ) : (
+          alerts.recent.map((item) => {
+            const unread = item.at > alerts.lastSeen;
+            const tone =
+              item.kind === "training"
+                ? { chip: "bg-orange-100 text-orange-700 border-orange-200", label: "Training", section: "training" }
+                : { chip: "bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200", label: "Placement", section: "placements" };
+            return (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => onJump(tone.section)}
+                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 flex items-start gap-3 ${
+                    unread ? "bg-rose-50/40" : ""
+                  }`}
+                >
+                  <span
+                    className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${
+                      unread ? "bg-rose-500" : "bg-transparent"
+                    }`}
+                    aria-hidden
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] uppercase tracking-wider font-semibold border px-1.5 py-0.5 rounded ${tone.chip}`}
+                      >
+                        {tone.label}
+                      </span>
+                      <span className="text-[10px] text-gray-400 ml-auto shrink-0">{relTime(item.at)}</span>
+                    </div>
+                    <p className="text-sm text-gray-800 mt-1 truncate">{item.title}</p>
+                    {item.subtitle && (
+                      <p className="text-[11px] text-gray-500 truncate">{item.subtitle}</p>
+                    )}
+                  </div>
+                </button>
+              </li>
+            );
+          })
+        )}
+      </ul>
+    </aside>
   );
 }
