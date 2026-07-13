@@ -50,11 +50,11 @@ function ClerkPortal() {
   const { data: me, isLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
   useEffect(() => {
     if (isLoading) return;
-    if (!me) nav({ to: "/staff-login" });
-    else if (!hasRole(me, clerkRoles)) nav({ to: "/staff-dashboard" });
+    if (!me) nav({ to: "/staff-login", replace: true });
+    else if (!hasRole(me, clerkRoles)) nav({ to: "/staff-dashboard", replace: true });
   }, [me, isLoading, nav]);
   const [tab, setTab] = useState<Tab>("home");
-  if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
+  if (isLoading || !me || !hasRole(me, clerkRoles)) return <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading…</div>;
 
   const NAV: { icon: any; label: string; tab: Tab }[] = [
     { icon: UsersRound, label: "Dashboard", tab: "home" },
