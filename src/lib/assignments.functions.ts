@@ -518,6 +518,47 @@ export const studentRequestFeeReceipt = createServerFn({ method: "POST" })
     return { ok: true, sent_to: clerks.length };
   });
 
+// Student: notification preferences (which dashboard reminders and how many days ahead).
+const DEFAULT_PREFS = {
+  assignments_enabled: true,
+  fees_enabled: true,
+  assignments_lead_days: 7,
+  fees_lead_days: 14,
+};
+
+export const studentGetNotificationPrefs = createServerFn({ method: "GET" }).handler(async () => {
+  const me = await requireStudent();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("student_notification_prefs")
+    .select("assignments_enabled, fees_enabled, assignments_lead_days, fees_lead_days")
+    .eq("student_id", me.id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ?? DEFAULT_PREFS;
+});
+
+export const studentUpdateNotificationPrefs = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        assignments_enabled: z.boolean(),
+        fees_enabled: z.boolean(),
+        assignments_lead_days: z.number().int().min(1).max(30),
+        fees_lead_days: z.number().int().min(1).max(60),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const me = await requireStudent();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("student_notification_prefs")
+      .upsert({ student_id: me.id, ...data, updated_at: new Date().toISOString() });
+    if (error) throw new Error(error.message);
+    return { ok: true, prefs: data };
+  });
+
 // Principal: lightweight student lookup for issuing disciplinary actions.
 export const principalListStudents = createServerFn({ method: "GET" }).handler(async () => {
   await requireRole(principalRoles);
