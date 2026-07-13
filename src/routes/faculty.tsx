@@ -702,6 +702,7 @@ function useFacultyNotifRealtime(ay: string) {
 function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   const { items, unread, readIds, setReadIds, loading } = useFacultyNotifications(me, ay);
   const [showAll, setShowAll] = useState(false);
+  const [active, setActive] = useState<NotifItem | null>(null);
   const visible = showAll ? items : unread;
 
   const markAllRead = () => setReadIds(new Set(items.map((i) => i.key)));
@@ -710,6 +711,14 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
     if (next.has(key)) next.delete(key);
     else next.add(key);
     setReadIds(next);
+  };
+  const openItem = (it: NotifItem) => {
+    setActive(it);
+    if (!readIds.has(it.key)) {
+      const next = new Set(readIds);
+      next.add(it.key);
+      setReadIds(next);
+    }
   };
 
   return (
@@ -772,9 +781,11 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
                 : { icon: AlarmClock, tint: "bg-rose-100 text-rose-700", chip: "bg-rose-50 text-rose-700 border-rose-200" };
             const Icon = styles.icon;
             return (
-              <div
+              <button
                 key={it.key}
-                className={`flex items-start gap-3 px-5 py-3 hover:bg-gray-50 transition ${isRead ? "opacity-60" : ""}`}
+                type="button"
+                onClick={() => openItem(it)}
+                className={`w-full text-left flex items-start gap-3 px-5 py-3 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition ${isRead ? "opacity-60" : ""}`}
               >
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${styles.tint}`}>
                   <Icon className="w-4 h-4" />
@@ -789,21 +800,178 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
                   <p className="text-sm font-medium text-gray-800 mt-1 line-clamp-2">{it.title}</p>
                   <p className="text-[11px] text-gray-500 mt-0.5">{it.meta}</p>
                 </div>
-                <button
-                  onClick={() => toggleRead(it.key)}
-                  className="text-[11px] text-gray-400 hover:text-[#7b1f4c] shrink-0"
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleRead(it.key);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleRead(it.key);
+                    }
+                  }}
+                  className="text-[11px] text-gray-400 hover:text-[#7b1f4c] shrink-0 cursor-pointer select-none"
                   title={isRead ? "Mark unread" : "Mark read"}
                 >
                   {isRead ? "Unread" : "Read"}
-                </button>
-              </div>
+                </span>
+              </button>
             );
           })
         )}
       </div>
+      <NotificationDetailDialog item={active} onClose={() => setActive(null)} />
     </div>
   );
 }
+
+function NotificationDetailDialog({ item, onClose }: { item: NotifItem | null; onClose: () => void }) {
+  const open = !!item;
+  const kind = item?.kind;
+  const raw: any = item?.raw ?? {};
+  const styles =
+    kind === "announcement"
+      ? { icon: Megaphone, tint: "bg-indigo-100 text-indigo-700", chip: "bg-indigo-50 text-indigo-700 border-indigo-200" }
+      : kind === "notice"
+      ? { icon: FileText, tint: "bg-amber-100 text-amber-700", chip: "bg-amber-50 text-amber-700 border-amber-200" }
+      : { icon: AlarmClock, tint: "bg-rose-100 text-rose-700", chip: "bg-rose-50 text-rose-700 border-rose-200" };
+  const Icon = styles.icon;
+
+  const fmtDate = (v: any) => (v ? new Date(v).toLocaleString() : "—");
+  const fmtDay = (v: any) => (v ? new Date(v).toLocaleDateString() : "—");
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="flex items-start gap-3">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${styles.tint}`}>
+              <Icon className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${styles.chip}`}>
+                  {item?.badge}
+                </span>
+                <span className="text-[11px] text-gray-500">{item ? fmtRelative(item.timestamp) : ""}</span>
+              </div>
+              <DialogTitle className="mt-1 text-base leading-snug break-words">
+                {item?.title}
+              </DialogTitle>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-3 text-sm text-gray-700">
+          {kind === "announcement" && (
+            <>
+              <p className="whitespace-pre-wrap leading-relaxed">{raw.content || item?.title}</p>
+              <dl className="grid grid-cols-2 gap-2 text-xs bg-gray-50 border rounded-lg p-3">
+                <dt className="text-gray-500">Posted</dt>
+                <dd className="text-gray-800">{fmtDate(raw.created_at)}</dd>
+                {raw.audience && (
+                  <>
+                    <dt className="text-gray-500">Audience</dt>
+                    <dd className="text-gray-800 capitalize">{String(raw.audience)}</dd>
+                  </>
+                )}
+                {raw.is_active === false && (
+                  <>
+                    <dt className="text-gray-500">Status</dt>
+                    <dd className="text-gray-800">Inactive</dd>
+                  </>
+                )}
+              </dl>
+            </>
+          )}
+
+          {kind === "notice" && (
+            <>
+              {raw.description && (
+                <p className="whitespace-pre-wrap leading-relaxed">{raw.description}</p>
+              )}
+              <dl className="grid grid-cols-2 gap-2 text-xs bg-gray-50 border rounded-lg p-3">
+                <dt className="text-gray-500">Category</dt>
+                <dd className="text-gray-800 capitalize">{raw.category || "general"}</dd>
+                <dt className="text-gray-500">Date</dt>
+                <dd className="text-gray-800">{fmtDay(raw.date || raw.created_at)}</dd>
+                {raw.department && (
+                  <>
+                    <dt className="text-gray-500">Department</dt>
+                    <dd className="text-gray-800">{raw.department}</dd>
+                  </>
+                )}
+              </dl>
+              {raw.file_url && (
+                <a
+                  href={raw.file_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                >
+                  <Download className="w-3.5 h-3.5" /> Open attachment
+                </a>
+              )}
+            </>
+          )}
+
+          {kind === "deadline" && (
+            <>
+              {raw.description && (
+                <p className="whitespace-pre-wrap leading-relaxed">{raw.description}</p>
+              )}
+              <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-rose-700 mb-1">Assignment</p>
+                <p className="text-sm font-medium text-gray-800">{raw.title || item?.title}</p>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {(raw.subject_name || raw.subjects?.name || raw.subjects?.code || "Subject")}
+                  {raw.branch ? ` · ${raw.branch}-Sem${raw.semester}` : ""}
+                </p>
+              </div>
+              <dl className="grid grid-cols-2 gap-2 text-xs bg-gray-50 border rounded-lg p-3">
+                <dt className="text-gray-500">Due date</dt>
+                <dd className="text-gray-800">{fmtDate(raw.due_date)}</dd>
+                {raw.max_marks != null && (
+                  <>
+                    <dt className="text-gray-500">Max marks</dt>
+                    <dd className="text-gray-800">{raw.max_marks}</dd>
+                  </>
+                )}
+                {raw.assignment_type && (
+                  <>
+                    <dt className="text-gray-500">Type</dt>
+                    <dd className="text-gray-800 capitalize">{String(raw.assignment_type)}</dd>
+                  </>
+                )}
+                {raw.created_at && (
+                  <>
+                    <dt className="text-gray-500">Created</dt>
+                    <dd className="text-gray-800">{fmtDate(raw.created_at)}</dd>
+                  </>
+                )}
+              </dl>
+              {raw.file_url && (
+                <a
+                  href={raw.file_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded border border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
+                >
+                  <Download className="w-3.5 h-3.5" /> Assignment file
+                </a>
+              )}
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 
 function fmtRelative(ts: number): string {
