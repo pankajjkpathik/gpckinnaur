@@ -562,8 +562,22 @@ function focusNotifications() {
   window.requestAnimationFrame(() => attempt(10));
 }
 
-// Shared "read" state so the sidebar badge and the panel stay in sync.
+// Shared "read" state so the sidebar badge and the panel stay in sync,
+// and so all open tabs immediately reflect read/unread changes.
 const readStateListeners = new Set<() => void>();
+const READ_STATE_CHANNEL = "fac-notif-read-sync";
+let readStateBC: BroadcastChannel | null = null;
+function getReadStateBC(): BroadcastChannel | null {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return null;
+  if (!readStateBC) {
+    try {
+      readStateBC = new BroadcastChannel(READ_STATE_CHANNEL);
+    } catch {
+      readStateBC = null;
+    }
+  }
+  return readStateBC;
+}
 function loadReadIds(key: string): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
@@ -579,16 +593,47 @@ function saveReadIds(key: string, ids: Set<string>) {
     /* ignore */
   }
   readStateListeners.forEach((l) => l());
+  const bc = getReadStateBC();
+  if (bc) {
+    try {
+      bc.postMessage({ key, ts: Date.now() });
+    } catch {
+      /* ignore */
+    }
+  }
 }
 function useReadIds(storageKey: string) {
   const [ids, setIds] = useState<Set<string>>(() => loadReadIds(storageKey));
   useEffect(() => {
+    // Sync when the same tab updates state.
     const refresh = () => setIds(loadReadIds(storageKey));
     readStateListeners.add(refresh);
-    window.addEventListener("storage", refresh);
+
+    // Sync when another tab writes to localStorage (older/fallback path).
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === null || e.key === storageKey) refresh();
+    };
+    window.addEventListener("storage", onStorage);
+
+    // Sync instantly via BroadcastChannel when another tab flips read state.
+    const bc = getReadStateBC();
+    const onBC = (e: MessageEvent) => {
+      if (!e?.data || e.data.key === storageKey) refresh();
+    };
+    bc?.addEventListener("message", onBC);
+
+    // Re-check when the tab regains focus, in case events were missed
+    // while the tab was backgrounded.
+    const onFocus = () => refresh();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+
     return () => {
       readStateListeners.delete(refresh);
-      window.removeEventListener("storage", refresh);
+      window.removeEventListener("storage", onStorage);
+      bc?.removeEventListener("message", onBC);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
     };
   }, [storageKey]);
   const persist = (next: Set<string>) => {
@@ -597,6 +642,7 @@ function useReadIds(storageKey: string) {
   };
   return [ids, persist] as const;
 }
+
 
 function computeNotifItems(
   ann: any[] | undefined,
