@@ -343,14 +343,50 @@ function PrincipalSidebar({
   onNav,
   mobileOpen,
   onCloseMobile,
+  collapsed = false,
+  onExpand,
 }: {
   active: View;
   onNav: (v: View) => void;
   mobileOpen: boolean;
   onCloseMobile: () => void;
+  collapsed?: boolean;
+  onExpand?: () => void;
 }) {
   const [principalOpen, setPrincipalOpen] = useState(true);
   const [tpoOpen, setTpoOpen] = useState(false);
+
+  // Collapsed rail (desktop only): icon-only nav, no group headers.
+  const collapsedRail = (
+    <nav className="bg-white border border-gray-200 rounded-xl shadow-sm p-2 flex flex-col items-center gap-1">
+      {[...PRINCIPAL_NAV, ...TPO_NAV].map((item) => {
+        const isActive = active === item.view;
+        return (
+          <button
+            key={item.view}
+            onClick={() => onNav(item.view)}
+            title={item.label}
+            aria-label={item.label}
+            className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${
+              isActive ? "bg-[#7b1f4c]/10 text-[#7b1f4c]" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            <item.icon className="w-5 h-5" />
+          </button>
+        );
+      })}
+      {onExpand && (
+        <button
+          onClick={onExpand}
+          title="Expand sidebar"
+          aria-label="Expand sidebar"
+          className="mt-1 w-10 h-10 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-700 border-t border-gray-100"
+        >
+          <PanelLeftOpen className="w-5 h-5" />
+        </button>
+      )}
+    </nav>
+  );
 
   const inner = (
     <nav className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2">
@@ -472,10 +508,14 @@ function PrincipalSidebar({
   return (
     <>
       {/* Desktop */}
-      <aside className="hidden lg:block w-64 shrink-0 sticky top-[76px] self-start">
-        {inner}
+      <aside
+        className={`hidden lg:block shrink-0 sticky top-[76px] self-start transition-[width] ${
+          collapsed ? "w-14" : "w-64"
+        }`}
+      >
+        {collapsed ? collapsedRail : inner}
       </aside>
-      {/* Mobile drawer */}
+      {/* Mobile drawer — always full nav */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/40" onClick={onCloseMobile}>
           <div
