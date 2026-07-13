@@ -58,7 +58,7 @@ import {
   ChevronDown,
   Home,
   LayoutDashboard,
-  GraduationCap,
+  
   Factory,
   ClipboardList,
 } from "lucide-react";
