@@ -798,6 +798,37 @@ function SessionalReportsView({ ay, onBack }: { ay: string; onBack: () => void }
   );
 }
 
+function ProvenanceBadge({ row, status }: { row: any; status: "pending" | "approved" | "returned" }) {
+  const when = row.reviewed_at ? new Date(row.reviewed_at).toLocaleString() : null;
+  const who = row.reviewer?.name || row.reviewer?.username;
+  const cls =
+    status === "approved"
+      ? "bg-green-50 text-green-700 border-green-200"
+      : status === "returned"
+        ? "bg-amber-50 text-amber-800 border-amber-200"
+        : "bg-slate-50 text-slate-600 border-slate-200";
+  const label = status === "pending" ? "Pending" : status === "approved" ? "Approved" : "Returned";
+  const tooltip =
+    status === "pending"
+      ? "Awaiting HOD review"
+      : `${label}${who ? ` by ${who}` : ""}${when ? ` · ${when}` : ""}`;
+  return (
+    <span
+      title={tooltip}
+      className={`inline-flex flex-col items-start gap-0.5 px-2 py-1 rounded border text-[10px] leading-tight ${cls}`}
+    >
+      <span className="font-semibold uppercase tracking-wide">{label}</span>
+      {status !== "pending" && (who || when) && (
+        <span className="text-[9px] opacity-80">
+          {who ? `by ${who}` : ""}
+          {who && when ? " · " : ""}
+          {when ?? ""}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved" | "returned" }) {
   const qc = useQueryClient();
   const q = useQuery({
@@ -830,6 +861,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
               <th className="text-left px-4 py-3 text-gray-400 font-medium">Exam</th>
               <th className="text-left px-4 py-3 text-gray-400 font-medium">Faculty</th>
               <th className="text-left px-4 py-3 text-gray-400 font-medium">#</th>
+              <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
               <th></th>
             </tr>
           </thead>
@@ -845,6 +877,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                 <td className="px-4 py-3 text-xs">{b.exam_type}</td>
                 <td className="px-4 py-3">{b.staff_users?.name || b.staff_users?.username}</td>
                 <td className="px-4 py-3 text-center">{b.count}</td>
+                <td className="px-4 py-3"><ProvenanceBadge row={b} status={status} /></td>
                 <td className="px-4 py-3 text-right">
                   <button onClick={() => setOpen(b)} className="text-xs underline text-indigo-700">
                     {status === "pending" ? "Review" : "View"}
@@ -854,7 +887,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
             ))}
             {q.data && q.data.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                   {status === "pending"
                     ? "No marks pending approval."
                     : status === "approved"

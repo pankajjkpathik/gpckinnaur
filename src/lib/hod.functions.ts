@@ -92,14 +92,15 @@ export const hodReviewMarks = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(hodRoles);
+    const me = await requireRole(hodRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const now = new Date().toISOString();
     const update = data.decision === "approved"
-      ? { approved_by_hod: true, locked: true, returned_remarks: null }
-      : { submitted_to_hod: false, approved_by_hod: false, returned_remarks: data.remarks ?? "Please revise." };
+      ? { approved_by_hod: true, locked: true, returned_remarks: null, reviewed_by: me.id, reviewed_at: now }
+      : { submitted_to_hod: false, approved_by_hod: false, returned_remarks: data.remarks ?? "Please revise.", reviewed_by: me.id, reviewed_at: now };
     const { error } = await supabaseAdmin
       .from("marks")
-      .update({ ...update, updated_at: new Date().toISOString() })
+      .update({ ...update, updated_at: now })
       .eq("subject_id", data.subject_id)
       .eq("exam_type", data.exam_type)
       .eq("academic_year", data.academic_year);
@@ -238,7 +239,7 @@ export const hodMarksGroups = createServerFn({ method: "GET" })
     let q = supabaseAdmin
       .from("marks")
       .select(
-        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, subjects(code,name,branch,semester), staff_users:entered_by(username,name)",
+        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, reviewed_at, updated_at, subjects(code,name,branch,semester), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
       )
       .eq("academic_year", data.academic_year);
     if (data.status === "approved") q = q.eq("approved_by_hod", true);

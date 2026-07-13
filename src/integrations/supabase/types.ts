@@ -970,6 +970,8 @@ export type Database = {
           obtained: number | null
           remarks: string | null
           returned_remarks: string | null
+          reviewed_at: string | null
+          reviewed_by: number | null
           student_id: number
           subject_id: number
           submitted_to_hod: boolean
@@ -987,6 +989,8 @@ export type Database = {
           obtained?: number | null
           remarks?: string | null
           returned_remarks?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: number | null
           student_id: number
           subject_id: number
           submitted_to_hod?: boolean
@@ -1004,6 +1008,8 @@ export type Database = {
           obtained?: number | null
           remarks?: string | null
           returned_remarks?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: number | null
           student_id?: number
           subject_id?: number
           submitted_to_hod?: boolean
@@ -1013,6 +1019,13 @@ export type Database = {
           {
             foreignKeyName: "marks_entered_by_fkey"
             columns: ["entered_by"]
+            isOneToOne: false
+            referencedRelation: "staff_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marks_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "staff_users"
             referencedColumns: ["id"]
