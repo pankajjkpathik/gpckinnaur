@@ -839,6 +839,11 @@ function useFacultyNotifRealtime(ay: string, userId?: string | number) {
             const due = new Date(a.due_date).getTime();
             const days = Math.ceil((due - Date.now()) / (24 * 3600 * 1000));
             if (days < -3 || days > 14) return;
+            const prefs = getFacNotifPrefs(userId);
+            if (!prefs.toasts) return;
+            const overdue = days < 0;
+            if (overdue ? !prefs.overdue : !prefs.deadlines) return;
+
             const rel =
               days < 0
                 ? `Overdue by ${Math.abs(days)}d`
