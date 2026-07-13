@@ -239,7 +239,7 @@ export const hodMarksGroups = createServerFn({ method: "GET" })
     let q = supabaseAdmin
       .from("marks")
       .select(
-        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, subjects(code,name,branch,semester), staff_users:entered_by(username,name)",
+        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, reviewed_at, updated_at, subjects(code,name,branch,semester), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
       )
       .eq("academic_year", data.academic_year);
     if (data.status === "approved") q = q.eq("approved_by_hod", true);
