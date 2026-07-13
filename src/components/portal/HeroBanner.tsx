@@ -18,6 +18,8 @@ export function HeroBanner({
   stats,
   emoji = "👋",
   avatarSrc,
+  onAvatarChange,
+  avatarUploading = false,
 }: {
   name: string;
   role?: string;
@@ -28,6 +30,9 @@ export function HeroBanner({
   emoji?: string;
   /** Optional user photo shown as a circular avatar inside the hero. */
   avatarSrc?: string | null;
+  /** When provided, a camera badge appears on the avatar to pick a new image. */
+  onAvatarChange?: (file: File) => void;
+  avatarUploading?: boolean;
 }) {
 
   const p = resolveHeroPalette(palette);
@@ -50,7 +55,7 @@ export function HeroBanner({
         <div className={`absolute -bottom-32 -left-16 w-96 h-96 rounded-full blur-3xl ${p.blob}`} />
       </div>
       <div className="relative p-5 sm:p-8 grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)_auto] items-start sm:items-center gap-4 sm:gap-5">
-        <div className="shrink-0">
+        <div className="shrink-0 relative">
           {avatarSrc ? (
             <img
               src={avatarSrc}
@@ -62,7 +67,31 @@ export function HeroBanner({
               {initialsOf(name)}
             </div>
           )}
+          {onAvatarChange && (
+            <label
+              className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-slate-800 flex items-center justify-center shadow-md ring-2 ring-white cursor-pointer hover:bg-slate-100"
+              title="Change profile photo"
+            >
+              {avatarUploading ? (
+                <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M22 12a10 10 0 0 1-10 10"/></svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              )}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                disabled={avatarUploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onAvatarChange(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          )}
         </div>
+
         <div className="min-w-0">
           <p className={`${HERO_TYPOGRAPHY.eyebrow} ${p.eyebrowColor}`}>
             {dateLabel}
