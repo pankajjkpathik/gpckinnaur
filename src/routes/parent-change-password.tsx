@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { parentChangePassword, parentMe } from "@/lib/parent.functions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { parentChangePassword, parentMe, parentLogout } from "@/lib/parent.functions";
+import { checkPasswordStrength, firstPasswordStrengthError } from "@/lib/password-strength";
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/parent-change-password")({
@@ -16,20 +17,23 @@ export const Route = createFileRoute("/parent-change-password")({
 
 function ParentChangePassword() {
   const nav = useNavigate();
+  const qc = useQueryClient();
   const { data: me, isLoading } = useQuery({ queryKey: ["parent-me"], queryFn: () => parentMe() });
   const [current, setCurrent] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
 
   const save = useMutation({
     mutationFn: () =>
       parentChangePassword({ data: { currentPassword: current, newPassword: pw } }),
-    onSuccess: () => {
-      setCurrent("");
-      setPw("");
-      setPw2("");
+    onSuccess: async () => {
       setErr(null);
+      setOkMsg("Password updated. Signing you out…");
+      try { await parentLogout(); } catch { /* ignore */ }
+      qc.clear();
+      setTimeout(() => nav({ to: "/parent-login" }), 1200);
     },
     onError: (e: any) => setErr(e.message),
   });
@@ -74,13 +78,12 @@ function ParentChangePassword() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600 font-medium mb-1 block">New Password (min 6 chars)</label>
+              <label className="text-xs text-gray-600 font-medium mb-1 block">New Password</label>
               <input
                 type="password"
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 className="border rounded w-full px-3 py-2"
-                minLength={6}
               />
             </div>
             <div>
@@ -92,13 +95,21 @@ function ParentChangePassword() {
                 className="border rounded w-full px-3 py-2"
               />
             </div>
+            <ul className="text-xs space-y-1 bg-gray-50 rounded p-2">
+              {checkPasswordStrength(pw, current).map((c) => (
+                <li key={c.key} className={c.ok ? "text-emerald-700" : "text-gray-500"}>
+                  {c.ok ? "✓" : "○"} {c.label}
+                </li>
+              ))}
+            </ul>
             {err && <p className="text-xs text-rose-700">{err}</p>}
-            {save.isSuccess && <p className="text-xs text-emerald-700">Password updated successfully.</p>}
+            {okMsg && <p className="text-xs text-emerald-700">{okMsg}</p>}
             <button
               onClick={() => {
                 setErr(null);
-                if (pw.length < 6) return setErr("New password must be at least 6 characters.");
                 if (pw !== pw2) return setErr("New passwords do not match.");
+                const s = firstPasswordStrengthError(pw, current);
+                if (s) return setErr(s);
                 save.mutate();
               }}
               disabled={save.isPending || !current || !pw}

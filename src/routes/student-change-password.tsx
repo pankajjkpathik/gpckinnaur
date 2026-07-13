@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { studentMe } from "@/lib/auth.functions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { studentMe, studentLogout } from "@/lib/auth.functions";
 import { studentChangePassword } from "@/lib/admin.functions";
+import { checkPasswordStrength, firstPasswordStrengthError } from "@/lib/password-strength";
 
 export const Route = createFileRoute("/student-change-password")({
   head: () => ({ meta: [{ title: "Change Password — Student" }, { name: "description", content: "Change Password — Student at Government Polytechnic, Kinnaur — internal portal page." }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -11,18 +12,29 @@ export const Route = createFileRoute("/student-change-password")({
 
 function Page() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: me, isLoading } = useQuery({ queryKey: ["student-me"], queryFn: () => studentMe() });
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [current, setCurrent] = useState("");
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
 
   useEffect(() => { if (!isLoading && !me) navigate({ to: "/student-login" }); }, [me, isLoading, navigate]);
 
   const m = useMutation({
     mutationFn: (d: { currentPassword: string; newPassword: string }) => studentChangePassword({ data: d }),
-    onSuccess: () => setMsg({ kind: "ok", text: "Password updated successfully." }),
+    onSuccess: async () => {
+      setMsg({ kind: "ok", text: "Password updated. Signing you out…" });
+      try { await studentLogout(); } catch { /* ignore */ }
+      qc.clear();
+      setTimeout(() => navigate({ to: "/student-login" }), 1200);
+    },
     onError: (e: any) => setMsg({ kind: "err", text: e.message || "Failed to update" }),
   });
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
+
+  const checks = checkPasswordStrength(pw, current);
 
   return (
     <div className="min-h-screen bg-secondary/40 flex items-center justify-center px-4 py-8">
@@ -32,16 +44,21 @@ function Page() {
         <form onSubmit={(e) => {
           e.preventDefault();
           setMsg(null);
-          const f = new FormData(e.currentTarget);
-          const np = String(f.get("newPassword"));
-          const cp = String(f.get("confirmPassword"));
-          if (np !== cp) { setMsg({ kind: "err", text: "Passwords do not match" }); return; }
-          m.mutate({ currentPassword: String(f.get("currentPassword")), newPassword: np });
-          (e.currentTarget as HTMLFormElement).reset();
+          if (pw !== pw2) { setMsg({ kind: "err", text: "Passwords do not match" }); return; }
+          const err = firstPasswordStrengthError(pw, current);
+          if (err) { setMsg({ kind: "err", text: err }); return; }
+          m.mutate({ currentPassword: current, newPassword: pw });
         }} className="space-y-3">
-          <input name="currentPassword" type="password" required placeholder="Current password" className="w-full border rounded px-3 py-2 text-sm" />
-          <input name="newPassword" type="password" required minLength={6} placeholder="New password (min 6 chars)" className="w-full border rounded px-3 py-2 text-sm" />
-          <input name="confirmPassword" type="password" required placeholder="Confirm new password" className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={current} onChange={(e) => setCurrent(e.target.value)} type="password" required placeholder="Current password" className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={pw} onChange={(e) => setPw(e.target.value)} type="password" required placeholder="New password" className="w-full border rounded px-3 py-2 text-sm" />
+          <input value={pw2} onChange={(e) => setPw2(e.target.value)} type="password" required placeholder="Confirm new password" className="w-full border rounded px-3 py-2 text-sm" />
+          <ul className="text-xs space-y-1 bg-secondary/40 rounded p-2">
+            {checks.map((c) => (
+              <li key={c.key} className={c.ok ? "text-green-700" : "text-muted-foreground"}>
+                {c.ok ? "✓" : "○"} {c.label}
+              </li>
+            ))}
+          </ul>
           {msg && <p className={`text-sm ${msg.kind === "ok" ? "text-green-700" : "text-destructive"}`}>{msg.text}</p>}
           <button disabled={m.isPending} className="w-full bg-[color:var(--student)] text-white py-2.5 rounded font-semibold disabled:opacity-50">
             {m.isPending ? "Updating…" : "Update Password"}
