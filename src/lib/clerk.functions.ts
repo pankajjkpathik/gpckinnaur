@@ -125,7 +125,7 @@ export const clerkPromoteStudents = createServerFn({ method: "POST" })
     z.object({ branch: z.string(), fromSemester: z.number().int().min(1).max(7) }).parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(clerkAccess);
+    const me = await requireRole(clerkAccess);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("students")
@@ -135,5 +135,47 @@ export const clerkPromoteStudents = createServerFn({ method: "POST" })
       .eq("is_active", true)
       .select("id");
     if (error) throw new Error(error.message);
-    return { promoted: rows?.length ?? 0 };
+    const promoted = rows?.length ?? 0;
+    if (promoted > 0) {
+      await supabaseAdmin.from("audit_log").insert({
+        actor_type: "staff",
+        actor_id: me.id,
+        action: "student_promote",
+        entity: "students",
+        entity_id: `${data.branch}:${data.fromSemester}->${data.fromSemester + 1}`,
+        details: {
+          actor_name: me.username,
+          branch: data.branch,
+          from_semester: data.fromSemester,
+          to_semester: data.fromSemester + 1,
+          promoted,
+        },
+      });
+    }
+    return { promoted };
+  });
+
+// =====================================================================
+// AUDIT / ACTIVITY (read)
+// =====================================================================
+
+export const clerkRecentActivity = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ limit: z.number().int().min(1).max(100).optional() }).parse(d ?? {}))
+  .handler(async ({ data }) => {
+    await requireRole(clerkAccess);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const limit = data.limit ?? 25;
+    const { data: rows, error } = await supabaseAdmin
+      .from("audit_log")
+      .select("id, actor_type, actor_id, action, entity, entity_id, details, created_at")
+      .in("action", [
+        "student_update",
+        "student_promote",
+        "salary_upsert",
+        "salary_delete",
+      ])
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
   });
