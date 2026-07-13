@@ -3,12 +3,12 @@ import { Sunrise, Sun, Sunset } from "lucide-react";
 import {
   HERO_TYPOGRAPHY,
   resolveHeroPalette,
-  type HeroPalette,
   type HeroPaletteName,
 } from "./hero-tokens";
 import { initialsOf } from "@/lib/portal-identity";
 
 export type { HeroPalette, HeroPaletteName } from "./hero-tokens";
+export { HERO_PALETTE_NAMES, isHeroPaletteName } from "./hero-tokens";
 export type HeroStat = { value: ReactNode; label: string };
 
 export function HeroBanner({
@@ -25,8 +25,12 @@ export function HeroBanner({
   name: string;
   role?: string;
   subtitle?: ReactNode;
-  /** Named token (recommended) or an inline palette override. */
-  palette: HeroPaletteName | HeroPalette;
+  /**
+   * Registered palette name. Only the 8 names in `HERO_PALETTE_NAMES`
+   * (faculty / principal / hod / tpo / clerk / student / parent / staff)
+   * are accepted — add a new entry to `hero-tokens.ts` before using it here.
+   */
+  palette: HeroPaletteName;
   stats?: HeroStat[];
   emoji?: string;
   /** Optional user photo shown as a circular avatar inside the hero. */

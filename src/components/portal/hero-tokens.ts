@@ -36,8 +36,8 @@
  * ## Example — adding a new "librarian" palette
  *
  * ```ts
- * // 1. Extend the name union.
- * export type HeroPaletteName = ... | "librarian";
+ * // 1. Add the name to the single source of truth.
+ * export const HERO_PALETTE_NAMES = [..., "librarian"] as const;
  *
  * // 2. Add the palette. Match the shape of an existing entry.
  * librarian: {
@@ -93,18 +93,36 @@ export type HeroPalette = {
 };
 
 /**
- * Named palettes shipped by the app. Adding a new role means extending this
- * union and adding a matching entry to `HERO_PALETTES` below.
+ * Single source of truth for the set of registered palette names.
+ * Iterated by the dev preview + visual regression harness so new palettes
+ * flow into both automatically.
  */
-export type HeroPaletteName =
-  | "faculty"
-  | "principal"
-  | "hod"
-  | "tpo"
-  | "clerk"
-  | "student"
-  | "parent"
-  | "staff";
+export const HERO_PALETTE_NAMES = [
+  "faculty",
+  "principal",
+  "hod",
+  "tpo",
+  "clerk",
+  "student",
+  "parent",
+  "staff",
+] as const;
+
+/**
+ * Named palettes shipped by the app. Derived from `HERO_PALETTE_NAMES` so the
+ * union and the runtime list can never drift apart. Adding a new role means
+ * adding one string to the array — TypeScript will then flag `HERO_PALETTES`
+ * until the matching palette entry exists.
+ */
+export type HeroPaletteName = (typeof HERO_PALETTE_NAMES)[number];
+
+/** Runtime guard — narrow a `string` to a `HeroPaletteName`. */
+export function isHeroPaletteName(value: unknown): value is HeroPaletteName {
+  return (
+    typeof value === "string" &&
+    (HERO_PALETTE_NAMES as readonly string[]).includes(value)
+  );
+}
 
 /**
  * The canonical palette map. Keys are `HeroPaletteName` values so TypeScript
@@ -234,15 +252,19 @@ export const HERO_TYPOGRAPHY = {
 } as const;
 
 /**
- * Resolve either a palette name (looked up in `HERO_PALETTES`) or an inline
- * palette object into a concrete `HeroPalette`. `<HeroBanner />` calls this
- * so callers can pass either shape:
+ * Look up a registered palette by name. The `HeroBanner` prop is typed as
+ * `HeroPaletteName`, so callers can only pass one of the registered names —
+ * inline `HeroPalette` objects are intentionally rejected at compile time so
+ * every dashboard uses the shared design tokens.
  *
  * ```tsx
- * <HeroBanner palette="faculty" ... />           // named token — preferred
- * <HeroBanner palette={{ gradient: "...", ... }} ... />  // one-off override
+ * <HeroBanner palette="faculty" ... />   // ✅ named token
+ * <HeroBanner palette="banana"  ... />   // ✗ Type '"banana"' is not assignable
  * ```
+ *
+ * If you need a truly one-off look, add the palette to `HERO_PALETTES` first
+ * (with an entry in `HERO_PALETTE_NAMES`) rather than passing raw classes.
  */
-export function resolveHeroPalette(p: HeroPaletteName | HeroPalette): HeroPalette {
-  return typeof p === "string" ? HERO_PALETTES[p] : p;
+export function resolveHeroPalette(name: HeroPaletteName): HeroPalette {
+  return HERO_PALETTES[name];
 }
