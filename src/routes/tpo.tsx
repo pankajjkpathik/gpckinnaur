@@ -672,6 +672,7 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
   const [branch, setBranch] = useState("");
   const [semester, setSemester] = useState<number | "">("");
   const [picked, setPicked] = useState<Record<number, string>>({});
+  const [studentQuery, setStudentQuery] = useState("");
 
   const studentsQ = useQuery({
     enabled: open && !!branch && !!semester,
@@ -888,33 +889,60 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                 ) : (studentsQ.data ?? []).length === 0 ? (
                   <p className="text-xs text-gray-400">No active students found for this branch &amp; semester.</p>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                    {(studentsQ.data ?? []).map((s: any) => (
-                      <label
-                        key={s.id}
-                        className={`flex items-center gap-2 text-sm ${s.already_assigned ? "text-gray-500" : ""}`}
-                        title={s.already_assigned ? "This student already has a training assigned for this branch & semester." : undefined}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={!!picked[s.id]}
-                          onChange={(e) => {
-                            const next = { ...picked };
-                            if (e.target.checked) next[s.id] = s.name;
-                            else delete next[s.id];
-                            setPicked(next);
-                          }}
-                          className="accent-[#7b1f4c]"
-                        />
-                        <span className="truncate">{s.name}</span>
-                        {s.already_assigned && (
-                          <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5">
-                            Assigned
-                          </span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
+                  <>
+                    <input
+                      type="search"
+                      value={studentQuery}
+                      onChange={(e) => setStudentQuery(e.target.value)}
+                      placeholder="Search by name or enrollment number…"
+                      className="border rounded w-full px-3 py-1.5 text-sm mb-2"
+                    />
+                    {(() => {
+                      const q = studentQuery.trim().toLowerCase();
+                      const filtered = (studentsQ.data as any[]).filter((s) =>
+                        !q ||
+                        s.name?.toLowerCase().includes(q) ||
+                        String(s.enrollment_no ?? "").toLowerCase().includes(q),
+                      );
+                      if (filtered.length === 0) {
+                        return <p className="text-xs text-gray-400">No students match “{studentQuery}”.</p>;
+                      }
+                      return (
+                        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                          {filtered.map((s: any) => (
+                            <label
+                              key={s.id}
+                              className={`flex items-center gap-2 text-sm ${s.already_assigned ? "text-gray-500" : ""}`}
+                              title={s.already_assigned ? "This student already has a training assigned for this branch & semester." : undefined}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={!!picked[s.id]}
+                                onChange={(e) => {
+                                  const next = { ...picked };
+                                  if (e.target.checked) next[s.id] = s.name;
+                                  else delete next[s.id];
+                                  setPicked(next);
+                                }}
+                                className="accent-[#7b1f4c]"
+                              />
+                              <span className="truncate">
+                                {s.name}
+                                {s.enrollment_no && (
+                                  <span className="ml-1 text-[10px] text-gray-400">· {s.enrollment_no}</span>
+                                )}
+                              </span>
+                              {s.already_assigned && (
+                                <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5">
+                                  Assigned
+                                </span>
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </>
                 )}
                 <p className="text-[11px] text-gray-500 mt-2">
                   All selected students will be assigned to the same company and dates in one training record. The generated Training Letter and Undertakings will include every selected student.
