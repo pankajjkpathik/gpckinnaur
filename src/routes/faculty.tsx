@@ -1162,7 +1162,15 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
               <CheckCheck className="w-3 h-3" /> Mark all read
             </button>
           )}
+          <Link
+            to="/faculty-notification-settings"
+            className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 text-gray-700"
+            title="Notification settings"
+          >
+            <Settings className="w-3 h-3" /> Settings
+          </Link>
         </div>
+
       </div>
       {rtStatus !== "connected" && rtStatus !== "connecting" && (
         <div
