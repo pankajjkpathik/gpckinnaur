@@ -69,6 +69,7 @@ import {
 } from "@/lib/assignments.functions";
 import { listNotices } from "@/lib/notices.functions";
 import { listAnnouncements } from "@/lib/admin-extras.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
@@ -398,6 +399,7 @@ type NotifItem = {
 };
 
 function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
+  const qc = useQueryClient();
   const noticesQ = useQuery({ queryKey: ["fac-notif-notices"], queryFn: () => listNotices(), retry: false });
   const annQ = useQuery({ queryKey: ["fac-notif-ann"], queryFn: () => listAnnouncements(), retry: false });
   const asgQ = useQuery({
@@ -405,6 +407,29 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
     queryFn: () => facultyListAssignmentsCreated({ data: { academic_year: ay } }),
     retry: false,
   });
+  const [liveTick, setLiveTick] = useState(0);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("fac-notif-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
+        qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+        setLiveTick((t) => t + 1);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () => {
+        qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+        setLiveTick((t) => t + 1);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () => {
+        qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+        setLiveTick((t) => t + 1);
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc, ay]);
+
 
   const storageKey = `fac-notif-read:${me.id}`;
   const [readIds, setReadIds] = useState<Set<string>>(() => {
@@ -502,9 +527,17 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
             )}
           </div>
           <p className="font-semibold text-gray-800">Notifications</p>
+          <span
+            key={liveTick}
+            className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200"
+            title="Live updates enabled"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+          </span>
           <span className="text-xs text-gray-500">
             {unread.length} unread · {items.length} total
           </span>
+
         </div>
         <div className="flex items-center gap-2">
           <button
