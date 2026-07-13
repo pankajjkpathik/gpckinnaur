@@ -21,6 +21,8 @@ import {
   KeyRound,
   Camera,
   Loader2,
+  Activity,
+  History,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { staffMe, uploadStaffAvatar, staffChangePassword, staffUpdateProfile } from "@/lib/auth.functions";
