@@ -1041,6 +1041,8 @@ function UnreadBadgePreview({
 function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
 
   const { items, unread, readIds, setReadIds, loading } = useFacultyNotifications(me, ay);
+  const { prefs } = useFacNotifPrefs(me.id);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [active, setActive] = useState<NotifItem | null>(null);
   const [tab, setTab] = useState<"all" | "announcement" | "deadline" | "overdue">("all");
