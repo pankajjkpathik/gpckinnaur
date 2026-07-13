@@ -279,7 +279,8 @@ function PortalLanding() {
                 Email{" "}
                 <a
                   href="mailto:gpckinnaur@gmail.com?subject=Portal%20support%20request"
-                  className="text-[color:var(--gold)] hover:underline font-medium"
+                  className="inline-flex items-baseline font-medium text-[color:var(--gold)] underline underline-offset-2 decoration-[color:var(--gold)]/40 hover:decoration-[color:var(--gold)] hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
+                  aria-label="Email support at gpckinnaur@gmail.com"
                 >
                   gpckinnaur@gmail.com
                 </a>{" "}
