@@ -23,7 +23,8 @@ import {
   AlarmClock,
   CheckCheck,
 } from "lucide-react";
-import { staffMe } from "@/lib/auth.functions";
+import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { QuickCard } from "@/components/portal/QuickCard";
 import { HeroBanner } from "@/components/portal/HeroBanner";
@@ -326,6 +327,29 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
     queryFn: () => facultyDashboard({ data: { academic_year: ay } }),
   });
   const d = dash.data;
+  const qc = useQueryClient();
+  const uploadFn = useServerFn(uploadStaffAvatar);
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      if (file.size > 5 * 1024 * 1024) throw new Error("Image must be 5 MB or smaller");
+      const b64: string = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onerror = () => reject(new Error("Failed to read file"));
+        r.onload = () => {
+          const s = String(r.result || "");
+          const i = s.indexOf(",");
+          resolve(i >= 0 ? s.slice(i + 1) : s);
+        };
+        r.readAsDataURL(file);
+      });
+      return uploadFn({ data: { filename: file.name, contentType: file.type || "image/png", contentBase64: b64 } });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["staff-me"] });
+      qc.invalidateQueries({ queryKey: ["staff-me-profile"] });
+    },
+  });
+
 
   const totalClassesToday = d?.today_classes?.length ?? 0;
   const totalSubjects = d?.assignments?.length ?? 0;
@@ -345,6 +369,8 @@ function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => 
       <HeroBanner
         name={me.name || "Faculty"}
         avatarSrc={avatarUrl(me as any)}
+        onAvatarChange={(f) => uploadAvatar.mutate(f)}
+        avatarUploading={uploadAvatar.isPending}
         palette="faculty"
         subtitle={
           <>
