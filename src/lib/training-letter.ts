@@ -19,11 +19,15 @@ type TrainingRecord = {
   end_date?: string | null;
 };
 
-let _logoCache: string | null = null;
-async function loadLogo(): Promise<string | null> {
-  if (_logoCache) return _logoCache;
+const _logoCache = new Map<string, string>();
+async function loadLogo(override?: string | null): Promise<string | null> {
+  // If admin uploaded a custom logo, it's already a data URL — use as-is.
+  if (override && override.startsWith("data:")) return override;
+  const src = override && override.length > 0 ? override : logoAsset.url;
+  const cached = _logoCache.get(src);
+  if (cached) return cached;
   try {
-    const res = await fetch(logoAsset.url);
+    const res = await fetch(src);
     const blob = await res.blob();
     const dataUrl: string = await new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -31,17 +35,23 @@ async function loadLogo(): Promise<string | null> {
       r.onerror = reject;
       r.readAsDataURL(blob);
     });
-    _logoCache = dataUrl;
+    _logoCache.set(src, dataUrl);
     return dataUrl;
   } catch {
     return null;
   }
 }
 
+function detectImageFormat(dataUrl: string): "PNG" | "JPEG" | "WEBP" {
+  if (dataUrl.startsWith("data:image/jpeg") || dataUrl.startsWith("data:image/jpg")) return "JPEG";
+  if (dataUrl.startsWith("data:image/webp")) return "WEBP";
+  return "PNG";
+}
+
 function letterhead(doc: jsPDF, logo: string | null, address: string) {
   const w = doc.internal.pageSize.getWidth();
   if (logo) {
-    try { doc.addImage(logo, "PNG", 40, 30, 60, 60); } catch { /* ignore */ }
+    try { doc.addImage(logo, detectImageFormat(logo), 40, 30, 60, 60); } catch { /* ignore */ }
   }
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
@@ -74,12 +84,12 @@ export type PdfBuild = { blob: Blob; filename: string; url: string };
 
 export async function generateTrainingLetter(
   r: TrainingRecord,
-  opts?: { instituteAddress?: string },
+  opts?: { instituteAddress?: string; instituteLogo?: string | null },
 ): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   const margin = 50;
-  const logo = await loadLogo();
+  const logo = await loadLogo(opts?.instituteLogo);
   const address = opts?.instituteAddress?.trim() || DEFAULT_INSTITUTE_ADDRESS;
   letterhead(doc, logo, address);
 
@@ -189,10 +199,10 @@ function undertakingPage(
 
 export async function generateUndertakings(
   r: TrainingRecord,
-  opts?: { instituteAddress?: string },
+  opts?: { instituteAddress?: string; instituteLogo?: string | null },
 ): Promise<PdfBuild> {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-  const logo = await loadLogo();
+  const logo = await loadLogo(opts?.instituteLogo);
   const address = opts?.instituteAddress?.trim() || DEFAULT_INSTITUTE_ADDRESS;
   const names = (r.student_names ?? []).filter(Boolean);
   const sem = r.semester ? `${ordinal(r.semester)} semester` : "____ semester";
