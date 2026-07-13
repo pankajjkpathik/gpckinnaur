@@ -128,6 +128,50 @@ export const staffChangePassword = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+// Upload a profile photo for the authenticated staff user (all roles),
+// store the object in the private `avatars` bucket, persist a long-lived
+// signed URL on staff_users.image_url, and return the new URL so the UI
+// can refresh the hero avatar immediately.
+const AVATAR_SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10; // 10 years
+
+export const uploadStaffAvatar = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        filename: z.string().min(1).max(200),
+        contentType: z
+          .string()
+          .regex(/^image\/(png|jpe?g|webp|gif)$/i, "Only PNG, JPEG, WEBP or GIF images are allowed"),
+        contentBase64: z.string().min(1),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const session = await useSession<StaffSession>(staffSessionConfig);
+    if (!session.data?.id) throw new Error("Not authenticated");
+    const bytes = Buffer.from(data.contentBase64, "base64");
+    if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Image must be 5 MB or smaller");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const safe = data.filename.replace(/[^\w.\-]+/g, "_");
+    const path = `staff/${session.data.id}/${Date.now()}-${safe}`;
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("avatars")
+      .upload(path, bytes, { contentType: data.contentType, upsert: false });
+    if (upErr) throw new Error(upErr.message);
+    const { data: signed, error: sErr } = await supabaseAdmin.storage
+      .from("avatars")
+      .createSignedUrl(path, AVATAR_SIGNED_URL_TTL);
+    if (sErr || !signed) throw new Error(sErr?.message || "Failed to sign URL");
+    const { error: updErr } = await supabaseAdmin
+      .from("staff_users")
+      .update({ image_url: signed.signedUrl })
+      .eq("id", session.data.id);
+    if (updErr) throw new Error(updErr.message);
+    return { image_url: signed.signedUrl };
+  });
+
+
+
 // ---------- STUDENT ----------
 
 export const studentLogin = createServerFn({ method: "POST" })
