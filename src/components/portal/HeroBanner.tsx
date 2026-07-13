@@ -77,7 +77,7 @@ export function HeroBanner({
 
 export function HeroStatTile({ value, label }: { value: ReactNode; label: string }) {
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/15 text-center min-w-[70px]">
+    <div className={HERO_TYPOGRAPHY.statTile}>
       <p className={HERO_TYPOGRAPHY.statValue}>{value}</p>
       <p className={HERO_TYPOGRAPHY.statLabel}>{label}</p>
     </div>
