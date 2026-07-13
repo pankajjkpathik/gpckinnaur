@@ -1,21 +1,101 @@
-// Shared portal hero design tokens.
-// Each palette carries a light variant plus optional `dark:`-prefixed classes
-// that Tailwind applies when the root has the `.dark` class. Prefixes are
-// baked into the strings so the v4 JIT scanner can see them at build time.
+/**
+ * Shared portal hero design tokens.
+ * ---------------------------------
+ * Every dashboard hero (`<HeroBanner />`) reads its colours and typography
+ * from this file. Palettes come in matched **light + dark** pairs so a single
+ * palette name renders correctly under both `.dark` and default themes.
+ *
+ * ## When to edit this file
+ *
+ * 1. **Tweak an existing role's colours** → edit that entry in `HERO_PALETTES`.
+ * 2. **Adjust heading / stat / eyebrow sizing globally** → edit `HERO_TYPOGRAPHY`.
+ * 3. **Add a brand new role** → add a name to `HeroPaletteName`, add its
+ *    palette to `HERO_PALETTES`, done. `resolveHeroPalette` picks it up
+ *    automatically and TypeScript flags any consumer that forgot the new name.
+ *
+ * ## Class-name rules (important — Tailwind v4 JIT)
+ *
+ * The Tailwind v4 scanner only ships classes it can see as complete string
+ * literals at build time. That means:
+ *
+ * - Never build class names by string concatenation
+ *   (`` `text-${colour}-300` `` will not ship).
+ * - Always inline the full `dark:` variant in the same string
+ *   (`"text-amber-300 dark:text-amber-200"`), not via a runtime branch.
+ * - Arbitrary hex stops (`from-[#7b1f4c]`) are fine — the scanner sees them
+ *   verbatim in this file.
+ *
+ * ## Contrast target
+ *
+ * Text sits on the darkest gradient stop. Aim for ≥ 4.5:1 for the greeting
+ * (white) and ≥ 4.5:1 for the highlighted name against every stop, in both
+ * themes. The current palettes all clear 6:1 — see
+ * `tests/visual/hero-banner.mjs` for the regression harness that captures
+ * each palette across mobile / tablet / desktop.
+ *
+ * ## Example — adding a new "librarian" palette
+ *
+ * ```ts
+ * // 1. Extend the name union.
+ * export type HeroPaletteName = ... | "librarian";
+ *
+ * // 2. Add the palette. Match the shape of an existing entry.
+ * librarian: {
+ *   gradient:
+ *     "from-[#7c2d12] via-[#57180d] to-[#2b0a05] " +
+ *     "dark:from-[#571a09] dark:via-[#3a1006] dark:to-[#1a0603]",
+ *   nameColor:    "text-orange-200 dark:text-orange-100",
+ *   eyebrowColor: "text-orange-200/90 dark:text-orange-100/90",
+ *   metaColor:    "text-orange-200 dark:text-orange-100",
+ *   blob:         "bg-orange-300 dark:bg-orange-500/60",
+ * },
+ *
+ * // 3. Use it from a route.
+ * <HeroBanner palette="librarian" name={me.name} role="Librarian" />
+ * ```
+ *
+ * See `HeroBanner.tsx` for the render sites of each token and
+ * `src/routes/dev.hero-preview.tsx` for a live storybook-style preview.
+ */
 
+/**
+ * One hero look. Every field is a Tailwind class string; `dark:` variants
+ * are inlined so the v4 scanner can see them.
+ */
 export type HeroPalette = {
-  /** Tailwind gradient stops (light) + optional dark: prefixed additions. */
+  /**
+   * Tailwind gradient stops for `bg-gradient-to-br`. Include both light
+   * stops (`from-... via-... to-...`) and their `dark:`-prefixed twins
+   * inside a single space-separated string.
+   */
   gradient: string;
-  /** Tailwind color class for the highlighted user name. */
+  /**
+   * Colour of the highlighted user name in the greeting.
+   * Use a light shade (e.g. `text-amber-300`) that clears 4.5:1 against
+   * the darkest gradient stop in both themes.
+   */
   nameColor: string;
-  /** Tailwind color class for the uppercase eyebrow (date · role). */
+  /**
+   * Colour of the uppercase eyebrow line (date · role) above the greeting.
+   * Slightly dimmer than `nameColor` — usually the `/90` variant of the same hue.
+   */
   eyebrowColor: string;
-  /** Tailwind color class for the highlighted meta word inside the subtitle. */
+  /**
+   * Colour of the highlighted meta word inside the subtitle line
+   * (e.g. the `today` inside "Here's your snapshot for today").
+   */
   metaColor: string;
-  /** Tailwind bg-* class for the decorative blur blob (accent side). */
+  /**
+   * Background colour for the decorative blur blob on the accent side of the
+   * banner. Typically a `bg-<hue>-300` in light and `bg-<hue>-500/60` in dark.
+   */
   blob: string;
 };
 
+/**
+ * Named palettes shipped by the app. Adding a new role means extending this
+ * union and adding a matching entry to `HERO_PALETTES` below.
+ */
 export type HeroPaletteName =
   | "faculty"
   | "principal"
@@ -26,9 +106,12 @@ export type HeroPaletteName =
   | "parent"
   | "staff";
 
-// Light + dark literals live side-by-side in the same string. Dark values
-// are chosen to keep contrast comfortable on `.dark` surfaces: slightly
-// deeper gradient stops and one-shade-brighter accent text.
+/**
+ * The canonical palette map. Keys are `HeroPaletteName` values so TypeScript
+ * fails the build if a role is added to the union without a matching entry
+ * (and vice versa). Dark values sit right next to their light siblings in
+ * each class string.
+ */
 export const HERO_PALETTES: Record<HeroPaletteName, HeroPalette> = {
   faculty: {
     gradient:
@@ -96,9 +179,45 @@ export const HERO_PALETTES: Record<HeroPaletteName, HeroPalette> = {
   },
 };
 
-// Typography tokens shared across every hero banner. Tweak once here to
-// re-tune the greeting rhythm globally. Text stays white in both themes;
-// the outer surface already dims via the dark gradient stops.
+/**
+ * Typography + surface tokens shared across every hero banner.
+ *
+ * Tweak values here to re-tune the greeting rhythm globally — every portal
+ * dashboard picks up the change on the next render. Text stays white in both
+ * themes; the darker gradient stops in each palette dim the surface itself.
+ *
+ * ### Field guide
+ *
+ * | Key         | Rendered as                                | Change to…                          |
+ * | ----------- | ------------------------------------------ | ----------------------------------- |
+ * | `eyebrow`   | Uppercase "MONDAY 13 JULY · FACULTY" line  | Adjust date/role line size + tracking |
+ * | `heading`   | "Good evening, Dr. Kumar 👋"               | Adjust greeting font-size / weight  |
+ * | `subtitle`  | Free-form line below the greeting          | Adjust body text under the greeting |
+ * | `statValue` | Big number in each stat tile               | Resize the tile numerals            |
+ * | `statLabel` | Uppercase caption under each stat value    | Resize the tile captions            |
+ * | `blobLayer` | Wrapper for the two blur blobs             | Change decorative blob intensity    |
+ * | `statTile`  | The rounded surface each stat sits on      | Change tile padding / border tone   |
+ *
+ * ### Example — make headings a touch larger on desktop
+ *
+ * ```ts
+ * heading:
+ *   "mt-1.5 font-extrabold text-white leading-tight tracking-tight " +
+ *   "drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] dark:drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] " +
+ *   "text-[clamp(1.35rem,4.5vw,2rem)] sm:text-4xl break-words", // ← was sm:text-3xl
+ * ```
+ *
+ * ### Example — softer stat tiles in dark mode
+ *
+ * ```ts
+ * statTile:
+ *   "bg-white/10 dark:bg-white/[0.03] backdrop-blur-sm rounded-lg " + // ← dimmer dark surface
+ *   "px-3 py-2 sm:px-4 sm:py-3 border border-white/15 dark:border-white/5 text-center min-w-[70px]",
+ * ```
+ *
+ * Reminder: keep every class string as a single literal — do not build class
+ * names by interpolation, or Tailwind v4 will silently drop them at build.
+ */
 export const HERO_TYPOGRAPHY = {
   eyebrow:
     "text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.22em] font-semibold truncate",
@@ -107,13 +226,23 @@ export const HERO_TYPOGRAPHY = {
   subtitle: "mt-2 text-[13px] sm:text-sm text-white/95 dark:text-white/85 leading-relaxed",
   statValue: "text-lg sm:text-2xl font-bold text-white leading-none",
   statLabel: "text-[9px] sm:text-[10px] uppercase tracking-wider text-white/80 dark:text-white/70 mt-1",
-  // Decorative blob wrapper opacity — softer in dark to avoid hot glow.
+  /** Decorative blob wrapper opacity — softer in dark to avoid hot glow. */
   blobLayer: "absolute inset-0 opacity-10 dark:opacity-20 pointer-events-none",
-  // Stat tile surface tuning per theme.
+  /** Stat tile surface tuning per theme. */
   statTile:
     "bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/15 dark:border-white/10 text-center min-w-[70px]",
 } as const;
 
+/**
+ * Resolve either a palette name (looked up in `HERO_PALETTES`) or an inline
+ * palette object into a concrete `HeroPalette`. `<HeroBanner />` calls this
+ * so callers can pass either shape:
+ *
+ * ```tsx
+ * <HeroBanner palette="faculty" ... />           // named token — preferred
+ * <HeroBanner palette={{ gradient: "...", ... }} ... />  // one-off override
+ * ```
+ */
 export function resolveHeroPalette(p: HeroPaletteName | HeroPalette): HeroPalette {
   return typeof p === "string" ? HERO_PALETTES[p] : p;
 }
