@@ -37,6 +37,7 @@ function StaffLoginPage() {
       if (!s?.id) return;
       if (s.role === "super_admin") window.location.href = "/admin";
       else if (s.role === "clerk") window.location.href = "/clerk";
+      else if (s.role === "tpo") window.location.href = "/tpo";
       else navigate({ to: "/staff-dashboard" });
     }).catch(() => {});
   }, [navigate]);
@@ -44,7 +45,7 @@ function StaffLoginPage() {
   const m = useMutation({
     mutationFn: (d: { username: string; password: string }) =>
       staffLogin({ data: { ...d, allowedRoles: [role] } }),
-    onSuccess: () => (window.location.href = role === "clerk" ? "/clerk" : "/staff-dashboard"),
+    onSuccess: () => (window.location.href = role === "clerk" ? "/clerk" : role === "tpo" ? "/tpo" : "/staff-dashboard"),
     onError: (e: any) => setErr(e?.message?.includes("not permitted")
       ? `This account is not a ${role.toUpperCase()} user. Pick the correct tab.`
       : "Invalid username or password"),
