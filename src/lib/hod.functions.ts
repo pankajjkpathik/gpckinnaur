@@ -257,6 +257,57 @@ export const hodMarksGroups = createServerFn({ method: "GET" })
     return Array.from(groups.values());
   });
 
+// ============ EXPORT: Approved sessional marks (student-level) ============
+export const hodExportApprovedMarks = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z
+      .object({
+        academic_year: z.string().regex(yearRe),
+        branch: z.string().trim().min(1).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(hodRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("marks")
+      .select(
+        "id, subject_id, exam_type, obtained, max_marks, remarks, reviewed_at, subjects!inner(code,name,branch,semester), students(enrollment_no,name), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
+      )
+      .eq("academic_year", data.academic_year)
+      .eq("approved_by_hod", true);
+    if (error) throw new Error(error.message);
+    let list = rows ?? [];
+    if (data.branch) {
+      const b = data.branch.toLowerCase();
+      list = list.filter((r: any) => (r.subjects?.branch || "").toLowerCase() === b);
+    }
+    return list
+      .map((r: any) => ({
+        subject_code: r.subjects?.code ?? "",
+        subject_name: r.subjects?.name ?? "",
+        branch: r.subjects?.branch ?? "",
+        semester: r.subjects?.semester ?? "",
+        exam_type: r.exam_type ?? "",
+        enrollment_no: r.students?.enrollment_no ?? "",
+        student_name: r.students?.name ?? "",
+        obtained: r.obtained ?? null,
+        max_marks: r.max_marks ?? null,
+        remarks: r.remarks ?? "",
+        faculty: r.staff_users?.name || r.staff_users?.username || "",
+        approved_by: r.reviewer?.name || r.reviewer?.username || "",
+        approved_at: r.reviewed_at ?? "",
+      }))
+      .sort((a, b) => {
+        const s = a.subject_code.localeCompare(b.subject_code);
+        if (s !== 0) return s;
+        const e = a.exam_type.localeCompare(b.exam_type);
+        if (e !== 0) return e;
+        return a.enrollment_no.localeCompare(b.enrollment_no);
+      });
+  });
+
 // ============ HOD-SCOPED FACULTY ASSIGNMENTS (subject allotment) ============
 async function assertHodBranch(branch: string) {
   const me = await requireRole(hodRoles);
