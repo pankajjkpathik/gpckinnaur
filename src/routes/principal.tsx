@@ -1002,6 +1002,7 @@ function PlacementDataView({ onBack }: { onBack: () => void }) {
         <BackBtn onClick={onBack} />
         <button onClick={() => window.print()} className="border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5 bg-white">🖨️ Print</button>
       </div>
+      <TpoReadOnlyBanner />
       <div className="bg-white border rounded-lg p-5">
         <h1 className="text-xl font-bold text-gray-800 mb-1">Placement Data (Read-only)</h1>
         <p className="text-xs text-gray-400 mb-4">View and analyze student placement records.</p>
