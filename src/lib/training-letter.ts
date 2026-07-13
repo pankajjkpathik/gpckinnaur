@@ -220,7 +220,9 @@ export async function generateUndertakings(
       ],
       "Signature of Student",
       logo,
+      address,
     );
+
 
     // ── Parent Undertaking ──────────────────────────────
     doc.addPage();
