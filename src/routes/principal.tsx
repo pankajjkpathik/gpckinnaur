@@ -7,6 +7,7 @@ import {
   instituteAttendance,
   syllabusCompliance,
   instituteResults,
+  instituteExamTypes,
   listCirculars,
   createCircular,
   deleteCircular,
@@ -1490,8 +1491,13 @@ function AttendanceMonitor() {
 }
 
 function ResultsMonitor({ year }: { year: string }) {
-  const [examType, setExamType] = useState("internal_1");
+  const [examType, setExamType] = useState<string>("");
   const fn = useServerFn(instituteResults);
+  const typesFn = useServerFn(instituteExamTypes);
+  const { data: examTypes = [] } = useQuery({
+    queryKey: ["inst-exam-types", year],
+    queryFn: () => typesFn({ data: { academic_year: year } }),
+  });
   const { data = [] } = useQuery({
     queryKey: ["inst-results", year, examType],
     queryFn: () => fn({ data: { academic_year: year, exam_type: examType } }),
@@ -1499,8 +1505,8 @@ function ResultsMonitor({ year }: { year: string }) {
 
   function dl(fmt: "pdf" | "xlsx" | "csv") {
     exportRows({
-      filename: `institute-results-${year}-${examType}`,
-      title: `Institute Results ${year} (${examType})`,
+      filename: `institute-results-${year}-${examType || "all"}`,
+      title: `Institute Results ${year} (${examType || "All Exams"})`,
       columns: [
         { key: "branch", label: "Branch" },
         { key: "semester", label: "Sem" },
@@ -1523,13 +1529,15 @@ function ResultsMonitor({ year }: { year: string }) {
             onChange={(e) => setExamType(e.target.value)}
             className="border rounded px-2 py-1 text-sm bg-white"
           >
-            {["internal_1", "internal_2", "mid_term", "sessional", "final"].map((e) => (
+            <option value="">All exams</option>
+            {(examTypes as string[]).map((e) => (
               <option key={e} value={e}>
-                {e}
+                {e.replaceAll("_", " ")}
               </option>
             ))}
           </select>
         </div>
+
         <div className="ml-auto flex gap-2">
           {(["pdf", "xlsx", "csv"] as const).map((f) => (
             <button

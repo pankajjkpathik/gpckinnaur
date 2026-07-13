@@ -109,7 +109,7 @@ export function SyllabusCoverage({
               >
                 <option value="">All branches</option>
                 {BRANCHES.map((b) => (
-                  <option key={b.code} value={b.label}>{b.label}</option>
+                  <option key={b.code} value={b.code}>{b.label}</option>
                 ))}
               </select>
             )}
