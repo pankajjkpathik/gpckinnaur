@@ -735,18 +735,74 @@ function useFacultyNotifRealtime(ay: string) {
       setFacNotifRtStatus(retry === 0 ? "connecting" : "reconnecting");
       channel = supabase
         .channel(`fac-notif-live-${Date.now()}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
+        .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, (payload: any) => {
           facNotifRtLastEvent = Date.now();
           qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+          if (payload?.eventType === "INSERT" && payload?.new) {
+            const n = payload.new;
+            toast.info(n.title || "New notice posted", {
+              description: n.category ? `Category: ${n.category}` : undefined,
+              action: {
+                label: "View",
+                onClick: () => {
+                  focusNotifications();
+                },
+              },
+            });
+          }
         })
-        .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () => {
+        .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, (payload: any) => {
           facNotifRtLastEvent = Date.now();
           qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+          if (payload?.eventType === "INSERT" && payload?.new) {
+            const a = payload.new;
+            const preview = (a.content ?? "").toString().slice(0, 120);
+            toast.info("New announcement", {
+              description: preview || undefined,
+              action: {
+                label: "View",
+                onClick: () => {
+                  focusNotifications();
+                },
+              },
+            });
+          }
         })
-        .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () => {
+        .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, (payload: any) => {
           facNotifRtLastEvent = Date.now();
           qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+          if ((payload?.eventType === "INSERT" || payload?.eventType === "UPDATE") && payload?.new?.due_date) {
+            const a = payload.new;
+            const prevDue = payload.old?.due_date;
+            const isNew = payload.eventType === "INSERT";
+            const dueChanged = payload.eventType === "UPDATE" && prevDue !== a.due_date;
+            if (!isNew && !dueChanged) return;
+            const due = new Date(a.due_date).getTime();
+            const days = Math.ceil((due - Date.now()) / (24 * 3600 * 1000));
+            if (days < -3 || days > 14) return;
+            const rel =
+              days < 0
+                ? `Overdue by ${Math.abs(days)}d`
+                : days === 0
+                ? "Due today"
+                : days === 1
+                ? "Due tomorrow"
+                : `Due in ${days}d`;
+            const urgent = days <= 1;
+            const fn = urgent ? toast.warning : toast.info;
+            fn(isNew ? `New assignment deadline · ${rel}` : `Assignment deadline updated · ${rel}`, {
+              description: a.title || undefined,
+              action: {
+                label: "View",
+                onClick: () => {
+                  navigate({ to: "/faculty", search: { view: "assignments" } as any }).catch(() => {});
+                  focusNotifications();
+                },
+              },
+            });
+          }
         })
+
         .subscribe((status) => {
           if (cancelled) return;
           if (status === "SUBSCRIBED") {
