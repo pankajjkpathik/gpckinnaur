@@ -686,15 +686,15 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => generateTrainingLetter(r)}
-                        title="Download Training Letter"
+                        onClick={() => openPreview("Industrial Training Letter", generateTrainingLetter(r))}
+                        title="Preview Training Letter"
                         className="inline-flex items-center gap-1 text-xs text-cyan-700 border border-cyan-200 hover:bg-cyan-50 rounded px-2 py-1"
                       >
                         <FileText className="w-3.5 h-3.5" /> Letter
                       </button>
                       <button
-                        onClick={() => generateUndertakings(r)}
-                        title="Download Student & Parent Undertakings"
+                        onClick={() => openPreview("Student & Parent Undertakings", generateUndertakings(r))}
+                        title="Preview Student & Parent Undertakings"
                         className="inline-flex items-center gap-1 text-xs text-amber-700 border border-amber-200 hover:bg-amber-50 rounded px-2 py-1"
                       >
                         <FileSignature className="w-3.5 h-3.5" /> Undertakings
