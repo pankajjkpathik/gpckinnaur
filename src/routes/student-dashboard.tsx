@@ -270,7 +270,28 @@ function StudentDashboard() {
 // ─── HOME (summary) ───────────────────────────────────────────────────────────
 function HomeView({ me }: { me: any }) {
   const dashFn = useServerFn(studentDashboard);
+  const assignFn = useServerFn(studentListAssignments);
+  const feesFn = useServerFn(studentMyFees);
   const { data } = useQuery({ queryKey: ["student-dash"], queryFn: () => dashFn() });
+  const { data: assignments = [] } = useQuery({ queryKey: ["student-assignments-home"], queryFn: () => assignFn() });
+  const { data: fees = [] } = useQuery({ queryKey: ["student-fees-home"], queryFn: () => feesFn() });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingAssignments = (assignments as any[])
+    .filter((a) => a.due_date && new Date(a.due_date) >= today)
+    .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+    .slice(0, 5);
+  const pendingFees = (fees as any[]).filter(
+    (f) => Number(f.total_amount || 0) - Number(f.paid_amount || 0) > 0,
+  );
+  const totalDue = pendingFees.reduce(
+    (s, f) => s + (Number(f.total_amount || 0) - Number(f.paid_amount || 0)),
+    0,
+  );
+  const daysUntil = (d: string) =>
+    Math.ceil((new Date(d).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold text-gray-800">
@@ -300,6 +321,116 @@ function HomeView({ me }: { me: any }) {
           <p className="text-xs uppercase tracking-wide text-gray-400">Pending Leaves</p>
           <p className="text-3xl font-bold text-amber-600 mt-1">{data?.pending_leaves ?? 0}</p>
           <p className="text-xs text-gray-500 mt-1">Applications awaiting approval</p>
+        </Card>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-4">
+        {/* Today's classes */}
+        <Card className="lg:col-span-1">
+          <div className="flex items-center gap-2 mb-3">
+            <CalendarClock className="w-4 h-4 text-[#7b1f4c]" />
+            <h2 className="font-semibold text-gray-800">Today's Classes</h2>
+          </div>
+          {(data?.today_periods?.length ?? 0) === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">No classes scheduled today.</p>
+          ) : (
+            <ul className="divide-y">
+              {data!.today_periods.map((p: any) => (
+                <li key={p.period_no} className="py-2 flex items-start gap-3">
+                  <span className="w-8 h-8 rounded-full bg-[#7b1f4c]/10 text-[#7b1f4c] text-xs font-bold flex items-center justify-center shrink-0">
+                    P{p.period_no}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-800 truncate">
+                      {p.subjects?.name || p.subjects?.code || "—"}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {p.staff_users?.username || "TBA"}
+                      {p.room ? ` · Room ${p.room}` : ""}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        {/* Assignment reminders */}
+        <Card className="lg:col-span-1">
+          <div className="flex items-center gap-2 mb-3">
+            <NotebookPen className="w-4 h-4 text-indigo-600" />
+            <h2 className="font-semibold text-gray-800">Assignment Reminders</h2>
+          </div>
+          {upcomingAssignments.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">No upcoming assignments.</p>
+          ) : (
+            <ul className="divide-y">
+              {upcomingAssignments.map((a: any) => {
+                const dn = daysUntil(a.due_date);
+                const urgent = dn <= 2;
+                return (
+                  <li key={a.id} className="py-2 flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-800 truncate">{a.title}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {a.subjects?.code || a.subject_name || ""} · Due{" "}
+                        {new Date(a.due_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${
+                        urgent ? "bg-rose-100 text-rose-700" : "bg-indigo-100 text-indigo-700"
+                      }`}
+                    >
+                      {dn === 0 ? "Today" : `${dn}d`}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
+        {/* Fees reminder */}
+        <Card className="lg:col-span-1">
+          <div className="flex items-center gap-2 mb-3">
+            <DollarSign className="w-4 h-4 text-emerald-600" />
+            <h2 className="font-semibold text-gray-800">Fees Reminder</h2>
+          </div>
+          {pendingFees.length === 0 ? (
+            <p className="text-sm text-emerald-700 py-4 text-center">
+              All fees are paid. Thank you!
+            </p>
+          ) : (
+            <>
+              <div className="bg-rose-50 border border-rose-200 rounded p-3 mb-3">
+                <p className="text-xs text-rose-700 uppercase tracking-wide">Total Outstanding</p>
+                <p className="text-2xl font-bold text-rose-700">₹{totalDue.toLocaleString()}</p>
+              </div>
+              <ul className="divide-y">
+                {pendingFees.slice(0, 4).map((f: any) => {
+                  const due = Number(f.total_amount || 0) - Number(f.paid_amount || 0);
+                  return (
+                    <li key={f.id} className="py-2 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-800 truncate">
+                          Sem {f.semester} · {f.academic_year}
+                        </p>
+                        {f.due_date && (
+                          <p className="text-xs text-gray-500">
+                            Due {new Date(f.due_date).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-sm font-semibold text-rose-600 shrink-0">
+                        ₹{due.toLocaleString()}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
         </Card>
       </div>
     </div>
