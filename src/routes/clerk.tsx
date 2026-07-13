@@ -1159,7 +1159,32 @@ function ProfileRow({ k, v }: { k: string; v: any }) {
 function ProfileTab({ me }: { me: any }) {
   const qc = useQueryClient();
   const uploadFn = useServerFn(uploadStaffAvatar);
+  const updateFn = useServerFn(staffUpdateProfile);
   const [error, setError] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  const toDateInput = (v: any) => {
+    if (!v) return "";
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return typeof v === "string" ? v.slice(0, 10) : "";
+    return d.toISOString().slice(0, 10);
+  };
+
+  const [form, setForm] = useState({
+    name: me.name ?? "",
+    designation: me.designation ?? "",
+    dob: toDateInput(me.dob),
+    phone: me.phone ?? "",
+    email: me.email ?? "",
+    address: me.address ?? "",
+    ip_number: me.ip_number ?? "",
+    pmis_number: me.pmis_number ?? "",
+    date_of_joining: toDateInput(me.date_of_joining),
+    date_of_retirement: toDateInput(me.date_of_retirement),
+  });
+  const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  const [errs, setErrs] = useState<Record<string, string>>({});
+
   const upload = useMutation({
     mutationFn: async (file: File) => {
       if (file.size > 5 * 1024 * 1024) throw new Error("Image must be 5 MB or smaller");
@@ -1182,8 +1207,75 @@ function ProfileTab({ me }: { me: any }) {
     },
     onError: (e: any) => setError(e?.message || "Upload failed"),
   });
+
+  const save = useMutation({
+    mutationFn: (data: any) => updateFn({ data }),
+    onSuccess: () => {
+      setMsg({ kind: "ok", text: "Profile updated." });
+      qc.invalidateQueries({ queryKey: ["staff-me"] });
+      qc.invalidateQueries({ queryKey: ["staff-me-profile"] });
+    },
+    onError: (e: any) => setMsg({ kind: "err", text: e?.message || "Failed to save" }),
+  });
+
+  function validate(): boolean {
+    const e: Record<string, string> = {};
+    if (!form.name.trim() || form.name.trim().length < 2) e.name = "Name must be at least 2 characters.";
+    if (form.name.length > 100) e.name = "Name must be under 100 characters.";
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Enter a valid email.";
+    if (form.phone && !/^[0-9+\-\s()]{6,15}$/.test(form.phone.trim())) e.phone = "Phone must be 6–15 digits/symbols.";
+    if (form.address.length > 500) e.address = "Address must be under 500 characters.";
+    if (form.designation.length > 100) e.designation = "Designation too long.";
+    if (form.ip_number.length > 50) e.ip_number = "Too long.";
+    if (form.pmis_number.length > 50) e.pmis_number = "Too long.";
+    if (form.dob && isNaN(new Date(form.dob).getTime())) e.dob = "Invalid date.";
+    if (form.date_of_joining && isNaN(new Date(form.date_of_joining).getTime())) e.date_of_joining = "Invalid date.";
+    if (form.date_of_retirement && isNaN(new Date(form.date_of_retirement).getTime())) e.date_of_retirement = "Invalid date.";
+    setErrs(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function onSubmit(ev: React.FormEvent) {
+    ev.preventDefault();
+    setMsg(null);
+    if (!validate()) { setMsg({ kind: "err", text: "Please fix the highlighted fields." }); return; }
+    const payload = {
+      name: form.name.trim(),
+      designation: form.designation.trim() || null,
+      dob: form.dob || null,
+      phone: form.phone.trim() || null,
+      email: form.email.trim() || null,
+      address: form.address.trim() || null,
+      ip_number: form.ip_number.trim() || null,
+      pmis_number: form.pmis_number.trim() || null,
+      date_of_joining: form.date_of_joining || null,
+      date_of_retirement: form.date_of_retirement || null,
+    };
+    save.mutate(payload);
+  }
+
   const photo = avatarUrl(me);
-  const fullName = displayName(me);
+  const fullName = displayName({ ...me, name: form.name || me.name });
+
+  const Field = ({
+    label, name, type = "text", value, err, ...rest
+  }: {
+    label: string; name: keyof typeof form; type?: string; value: string; err?: string;
+  } & React.InputHTMLAttributes<HTMLInputElement>) => (
+    <label className="block">
+      <span className="text-[11px] uppercase tracking-wide text-slate-500">{label}</span>
+      <input
+        {...rest}
+        name={String(name)}
+        type={type}
+        value={value}
+        onChange={(e) => set(name, e.target.value)}
+        className={`mt-1 w-full border rounded px-3 py-2 text-sm ${err ? "border-rose-400" : "border-slate-300"}`}
+      />
+      {err && <span className="text-[11px] text-rose-600">{err}</span>}
+    </label>
+  );
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border shadow-sm flex items-center gap-6">
@@ -1211,39 +1303,66 @@ function ProfileTab({ me }: { me: any }) {
         </div>
         <div className="min-w-0">
           <h1 className="text-3xl font-extrabold text-amber-800 tracking-wide uppercase break-words">{fullName}</h1>
-          <p className="text-sm text-slate-600 mt-1">{me.designation || me.role}</p>
+          <p className="text-sm text-slate-600 mt-1">{form.designation || me.role}</p>
           <p className="text-xs text-slate-500 mt-1">Department: <strong>{me.department || "—"}</strong></p>
           <p className="text-xs text-slate-500 mt-2">Click the camera to update your profile photo · PNG, JPG, WEBP or GIF · up to 5 MB</p>
           {error && <p className="text-xs text-rose-600 mt-1">{error}</p>}
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mt-6">
-        <div className="bg-white rounded-xl border p-5 shadow-sm">
-          <h2 className="text-sm font-bold text-amber-800 mb-3">Account</h2>
+      <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-6 mt-6">
+        <div className="bg-white rounded-xl border p-5 shadow-sm space-y-3">
+          <h2 className="text-sm font-bold text-amber-800 mb-1">Account (read-only)</h2>
           <ProfileRow k="Username" v={me.username} />
           <ProfileRow k="Role" v={me.role} />
           <ProfileRow k="Staff ID" v={me.staff_id} />
           <ProfileRow k="Department" v={me.department} />
-          <ProfileRow k="Designation" v={me.designation} />
           <ProfileRow k="Last Login" v={me.last_login ? new Date(me.last_login).toLocaleString() : "—"} />
           <ProfileRow k="Member Since" v={me.created_at ? new Date(me.created_at).toLocaleDateString() : "—"} />
+          <Field label="Full Name" name="name" value={form.name} err={errs.name} required maxLength={100} />
+          <Field label="Designation" name="designation" value={form.designation} err={errs.designation} maxLength={100} />
         </div>
-        <div className="bg-white rounded-xl border p-5 shadow-sm">
-          <h2 className="text-sm font-bold text-amber-800 mb-3">Personal & Contact</h2>
-          <ProfileRow k="Date of Birth" v={me.dob ? new Date(me.dob).toLocaleDateString() : "—"} />
-          <ProfileRow k="Phone" v={me.phone} />
-          <ProfileRow k="Email" v={me.email} />
-          <ProfileRow k="Address" v={me.address} />
-          <ProfileRow k="IP Number" v={me.ip_number} />
-          <ProfileRow k="PMIS Number" v={me.pmis_number} />
-          <ProfileRow k="Date of Joining" v={me.date_of_joining ? new Date(me.date_of_joining).toLocaleDateString() : "—"} />
-          <ProfileRow k="Date of Retirement" v={me.date_of_retirement ? new Date(me.date_of_retirement).toLocaleDateString() : "—"} />
+
+        <div className="bg-white rounded-xl border p-5 shadow-sm space-y-3">
+          <h2 className="text-sm font-bold text-amber-800 mb-1">Personal & Contact</h2>
+          <Field label="Date of Birth" name="dob" type="date" value={form.dob} err={errs.dob} />
+          <Field label="Phone" name="phone" value={form.phone} err={errs.phone} maxLength={15} inputMode="tel" />
+          <Field label="Email" name="email" type="email" value={form.email} err={errs.email} maxLength={255} />
+          <label className="block">
+            <span className="text-[11px] uppercase tracking-wide text-slate-500">Address</span>
+            <textarea
+              value={form.address}
+              onChange={(e) => set("address", e.target.value)}
+              maxLength={500}
+              rows={2}
+              className={`mt-1 w-full border rounded px-3 py-2 text-sm ${errs.address ? "border-rose-400" : "border-slate-300"}`}
+            />
+            {errs.address && <span className="text-[11px] text-rose-600">{errs.address}</span>}
+          </label>
+          <Field label="IP Number" name="ip_number" value={form.ip_number} err={errs.ip_number} maxLength={50} />
+          <Field label="PMIS Number" name="pmis_number" value={form.pmis_number} err={errs.pmis_number} maxLength={50} />
+          <Field label="Date of Joining" name="date_of_joining" type="date" value={form.date_of_joining} err={errs.date_of_joining} />
+          <Field label="Date of Retirement" name="date_of_retirement" type="date" value={form.date_of_retirement} err={errs.date_of_retirement} />
         </div>
-      </div>
+
+        <div className="md:col-span-2 flex items-center justify-end gap-3">
+          {msg && (
+            <span className={`text-sm ${msg.kind === "ok" ? "text-green-700" : "text-rose-600"}`}>{msg.text}</span>
+          )}
+          <button
+            type="submit"
+            disabled={save.isPending}
+            className="bg-amber-700 text-white px-5 py-2 rounded font-semibold disabled:opacity-50"
+          >
+            {save.isPending ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
+
+
 
 function PasswordTab({ me }: { me: any }) {
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
