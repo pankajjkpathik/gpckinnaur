@@ -52,36 +52,77 @@ function ClerkPortal() {
   const [tab, setTab] = useState<Tab>("home");
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
+  const NAV: { icon: any; label: string; tab: Tab }[] = [
+    { icon: UsersRound, label: "Dashboard", tab: "home" },
+    { icon: Users, label: "Students", tab: "students" },
+    { icon: Upload, label: "Bulk Import", tab: "import" },
+    { icon: ArrowUpCircle, label: "Promote", tab: "promote" },
+    { icon: Wallet, label: "Salary", tab: "salary" },
+  ];
+
   return (
     <PortalShell title="Clerk Portal" subtitle="Master Records" me={me as any} accent="amber">
-      <div className="container mx-auto px-4 py-6 space-y-4">
-        <div className="flex gap-1 border-b flex-wrap">
-          {(
-            [
-              ["home", "Home"],
-              ["students", "Students"],
-              ["import", "Bulk Import"],
-              ["promote", "Promote"],
-              ["salary", "Salary"],
-            ] as [Tab, string][]
-          ).map(([k, l]) => (
-            <button
-              key={k}
-              onClick={() => setTab(k)}
-              className={`px-4 py-2 text-sm border-b-2 -mb-px ${tab === k ? "border-amber-600 text-amber-700 font-semibold" : "border-transparent text-muted-foreground"}`}
+      <div className="flex">
+        {/* LHS sidebar */}
+        <aside className="w-60 shrink-0 bg-white border-r min-h-[calc(100vh-65px)] sticky top-0 self-start hidden md:block">
+          <nav className="py-3">
+            {NAV.map((item) => {
+              const active = tab === item.tab;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.tab}
+                  onClick={() => setTab(item.tab)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left border-l-4 transition ${
+                    active
+                      ? "border-amber-600 bg-amber-50 text-amber-700 font-semibold"
+                      : "border-transparent text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate flex-1">{item.label}</span>
+                </button>
+              );
+            })}
+            <Link
+              to="/admin-users"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left border-l-4 border-transparent text-amber-700 hover:bg-amber-50 mt-2 border-t pt-3"
             >
-              {l}
-            </button>
-          ))}
-          <Link to="/admin-users" className="ml-auto text-sm text-amber-700 underline px-3 py-2">
-            User accounts →
+              <UserPlus className="w-4 h-4 shrink-0" />
+              <span className="truncate flex-1">User Accounts →</span>
+            </Link>
+          </nav>
+        </aside>
+
+        {/* Mobile nav */}
+        <div className="md:hidden w-full border-b bg-white overflow-x-auto flex whitespace-nowrap">
+          {NAV.map((item) => {
+            const active = tab === item.tab;
+            return (
+              <button
+                key={item.tab}
+                onClick={() => setTab(item.tab)}
+                className={`px-3 py-2 text-xs ${
+                  active ? "border-b-2 border-amber-600 text-amber-700 font-semibold" : "text-gray-600"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+          <Link to="/admin-users" className="px-3 py-2 text-xs text-amber-700">
+            Users →
           </Link>
         </div>
-        {tab === "home" && <HomeTab me={me as any} onNav={setTab} />}
-        {tab === "students" && <StudentsTab />}
-        {tab === "import" && <ImportTab />}
-        {tab === "promote" && <PromoteTab />}
-        {tab === "salary" && <SalaryTab />}
+
+        {/* RHS output */}
+        <main className="flex-1 min-w-0 p-4 md:p-6 space-y-4">
+          {tab === "home" && <HomeTab me={me as any} onNav={setTab} />}
+          {tab === "students" && <StudentsTab />}
+          {tab === "import" && <ImportTab />}
+          {tab === "promote" && <PromoteTab />}
+          {tab === "salary" && <SalaryTab />}
+        </main>
       </div>
     </PortalShell>
   );
