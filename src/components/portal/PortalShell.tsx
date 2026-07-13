@@ -52,6 +52,14 @@ const accentToScheme: Record<string, PortalScheme> = {
   amber: "staff",
 };
 
+function dashboardHref(role: string): any {
+  if (role === "principal" || role === "super_admin") return "/principal";
+  if (role === "hod") return "/hod";
+  if (role === "tpo") return "/tpo";
+  if (role === "clerk") return "/clerk";
+  return "/staff-dashboard";
+}
+
 export function PortalShell({
   title,
   subtitle,
@@ -103,7 +111,7 @@ export function PortalShell({
             <Link to="/staff-profile" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1" title="My Profile">
               👤 <span className="hidden sm:inline">Profile</span>
             </Link>
-            <Link to="/staff-dashboard" className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1">
+            <Link to={dashboardHref(me.role)} className="text-xs px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded inline-flex items-center gap-1">
               <ArrowLeft className="w-3 h-3" /> Dashboard
             </Link>
             <button onClick={logout} className="text-xs px-3 py-1.5 bg-slate-800 text-white hover:bg-slate-700 rounded inline-flex items-center gap-1">
