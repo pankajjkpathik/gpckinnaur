@@ -168,16 +168,15 @@ function FacultyPortal() {
 function FacultyPortalInner({
   me,
   ay,
-  setAy: _setAy,
   view,
   setView,
 }: {
   me: any;
   ay: string;
-  setAy: (v: string) => void;
   view: View;
   setView: (v: View) => void;
 }) {
+
   // Keep realtime live for all faculty views, so the sidebar badge stays fresh.
   useFacultyNotifRealtime(ay);
   const { unreadCount } = useFacultyNotifications(me, ay);
