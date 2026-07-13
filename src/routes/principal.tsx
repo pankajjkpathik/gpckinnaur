@@ -178,7 +178,19 @@ function PrincipalPortal() {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("principal:sidebarCollapsed", sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
-  const { data: me } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
+  const nav = useNavigate();
+  const { data: me, isLoading: meLoading } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
+
+  // Gate the entire Principal portal: only principal/super_admin may enter.
+  // Anyone else is bounced to the staff dashboard; unauthenticated → staff-login.
+  useEffect(() => {
+    if (meLoading) return;
+    if (!me) {
+      nav({ to: "/staff-login" });
+    } else if (!hasRole(me, principalRoles)) {
+      nav({ to: "/staff-dashboard" });
+    }
+  }, [me, meLoading, nav]);
 
   // Keep ?view= in sync so refresh/back-forward preserves the selected section.
   useEffect(() => {
