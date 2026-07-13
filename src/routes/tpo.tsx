@@ -346,9 +346,43 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
         </div>
 
         <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
-            <p className="font-semibold text-gray-800">Recent Placements</p>
-            <p className="text-[11px] text-gray-500">Latest offers on record.</p>
+          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="font-semibold text-gray-800">Recent Placements</p>
+                <p className="text-[11px] text-gray-500">Latest offers on record.</p>
+              </div>
+              {(placeCompany || placeYear) && (
+                <button
+                  onClick={() => { setPlaceCompany(""); setPlaceYear(""); }}
+                  className="text-[10px] text-gray-500 hover:text-cyan-700 underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={placeCompany}
+                onChange={(e) => setPlaceCompany(e.target.value)}
+                className="flex-1 min-w-0 border rounded px-2 py-1 text-[11px] bg-white"
+              >
+                <option value="">All companies</option>
+                {companyOptions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <select
+                value={placeYear}
+                onChange={(e) => setPlaceYear(e.target.value)}
+                className="w-24 border rounded px-2 py-1 text-[11px] bg-white"
+              >
+                <option value="">All years</option>
+                {yearOptions.map((y: any) => (
+                  <option key={y} value={String(y)}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <ul className="divide-y">
             {recentPlacements.length === 0 ? (
