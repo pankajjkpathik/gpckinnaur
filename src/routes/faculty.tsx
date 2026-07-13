@@ -1045,7 +1045,7 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [active, setActive] = useState<NotifItem | null>(null);
-  const [tab, setTab] = useState<"all" | "announcement" | "deadline" | "overdue">("all");
+  const [tab, setTab] = useState<"unread" | "all" | "announcement" | "deadline" | "overdue">("unread");
   const rtStatus = useFacNotifRtStatus();
   const qc = useQueryClient();
   const refetchAll = () => {
@@ -1056,21 +1056,23 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   const now = Date.now();
   const isOverdue = (it: NotifItem) => it.kind === "deadline" && it.timestamp < now;
   const tabCounts = useMemo(() => {
-    let ann = 0, dead = 0, over = 0;
+    let ann = 0, dead = 0, over = 0, un = 0;
     for (const it of items) {
       if (it.kind === "announcement" || it.kind === "notice") ann++;
       if (it.kind === "deadline") dead++;
       if (isOverdue(it)) over++;
+      if (!readIds.has(it.key)) un++;
     }
-    return { all: items.length, announcement: ann, deadline: dead, overdue: over };
-  }, [items, now]);
+    return { unread: un, all: items.length, announcement: ann, deadline: dead, overdue: over };
+  }, [items, now, readIds]);
   const scoped = items.filter((it) => {
     if (tab === "all") return true;
+    if (tab === "unread") return !readIds.has(it.key);
     if (tab === "announcement") return it.kind === "announcement" || it.kind === "notice";
     if (tab === "overdue") return isOverdue(it);
     return it.kind === "deadline";
   });
-  const visible = showAll ? scoped : scoped.filter((i) => !readIds.has(i.key));
+  const visible = tab === "unread" || showAll ? scoped : scoped.filter((i) => !readIds.has(i.key));
 
 
 
@@ -1262,6 +1264,7 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
 
       <div className="px-2 pt-2 pb-1 border-b bg-gray-50/50 flex items-center gap-1 overflow-x-auto">
         {([
+          { id: "unread", label: "Unread", count: tabCounts.unread },
           { id: "all", label: "All", count: tabCounts.all },
           { id: "announcement", label: "Announcements", count: tabCounts.announcement },
           { id: "deadline", label: "Deadlines", count: tabCounts.deadline },
@@ -1269,6 +1272,7 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
         ] as const).map((t) => {
           const activeTab = tab === t.id;
           const isOver = t.id === "overdue";
+          const isUnreadTab = t.id === "unread";
           return (
             <button
               key={t.id}
@@ -1278,9 +1282,13 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
                 activeTab
                   ? isOver
                     ? "bg-rose-600 text-white border-rose-600"
+                    : isUnreadTab
+                    ? "bg-emerald-600 text-white border-emerald-600"
                     : "bg-[#7b1f4c] text-white border-[#7b1f4c]"
                   : isOver && t.count > 0
                   ? "bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
+                  : isUnreadTab && t.count > 0
+                  ? "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
               }`}
             >
@@ -1304,7 +1312,9 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
         ) : visible.length === 0 ? (
           <div className="text-center py-8 text-gray-400 text-sm">
             <Bell className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            {tab !== "all"
+            {tab === "unread"
+              ? "You're all caught up!"
+              : tab !== "all"
               ? showAll
                 ? `No ${tab === "announcement" ? "announcements" : tab === "deadline" ? "deadlines" : "overdue items"} yet.`
                 : `No unread ${tab === "announcement" ? "announcements" : tab === "deadline" ? "deadlines" : "overdue items"}.`
