@@ -201,16 +201,42 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
       .sort((a, b) => b.value - a.value)
       .slice(0, 6);
   }, [placements, currentYear]);
-  const recentPlacements = useMemo(
-    () => [...placements].sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0)).slice(0, 5),
+  // Filter state for Recent Placements & Guest Lectures panels
+  const [placeCompany, setPlaceCompany] = useState<string>("");
+  const [placeYear, setPlaceYear] = useState<string>("");
+  const [lectureDept, setLectureDept] = useState<string>("");
+
+  const companyOptions = useMemo(
+    () => Array.from(new Set(placements.map((r: any) => r.company).filter(Boolean))).sort(),
     [placements],
+  );
+  const yearOptions = useMemo(
+    () =>
+      Array.from(new Set(placements.map((r: any) => r.year).filter(Boolean)))
+        .sort((a: any, b: any) => b - a),
+    [placements],
+  );
+  const deptOptions = useMemo(
+    () => Array.from(new Set(lectures.map((r: any) => r.department).filter(Boolean))).sort(),
+    [lectures],
+  );
+
+  const recentPlacements = useMemo(
+    () =>
+      [...placements]
+        .filter((r: any) => (placeCompany ? r.company === placeCompany : true))
+        .filter((r: any) => (placeYear ? String(r.year) === placeYear : true))
+        .sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0))
+        .slice(0, 5),
+    [placements, placeCompany, placeYear],
   );
   const recentLectures = useMemo(
     () =>
       [...lectures]
+        .filter((r: any) => (lectureDept ? r.department === lectureDept : true))
         .sort((a: any, b: any) => (b.lecture_date ?? "").localeCompare(a.lecture_date ?? ""))
         .slice(0, 4),
-    [lectures],
+    [lectures, lectureDept],
   );
 
   const quickActions: { view: View; icon: any; label: string; desc: string; color: string; border: string; stat: number; statLabel: string }[] = [
@@ -320,9 +346,43 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
         </div>
 
         <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
-            <p className="font-semibold text-gray-800">Recent Placements</p>
-            <p className="text-[11px] text-gray-500">Latest offers on record.</p>
+          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="font-semibold text-gray-800">Recent Placements</p>
+                <p className="text-[11px] text-gray-500">Latest offers on record.</p>
+              </div>
+              {(placeCompany || placeYear) && (
+                <button
+                  onClick={() => { setPlaceCompany(""); setPlaceYear(""); }}
+                  className="text-[10px] text-gray-500 hover:text-cyan-700 underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={placeCompany}
+                onChange={(e) => setPlaceCompany(e.target.value)}
+                className="flex-1 min-w-0 border rounded px-2 py-1 text-[11px] bg-white"
+              >
+                <option value="">All companies</option>
+                {companyOptions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <select
+                value={placeYear}
+                onChange={(e) => setPlaceYear(e.target.value)}
+                className="w-24 border rounded px-2 py-1 text-[11px] bg-white"
+              >
+                <option value="">All years</option>
+                {yearOptions.map((y: any) => (
+                  <option key={y} value={String(y)}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <ul className="divide-y">
             {recentPlacements.length === 0 ? (
@@ -352,16 +412,30 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
       </div>
 
       <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
-          <div>
-            <p className="font-semibold text-gray-800 flex items-center gap-2">
-              <Mic className="w-4 h-4 text-cyan-700" /> Recent Guest Lectures
-            </p>
-            <p className="text-[11px] text-gray-500">Latest expert sessions organised.</p>
+        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="font-semibold text-gray-800 flex items-center gap-2">
+                <Mic className="w-4 h-4 text-cyan-700" /> Recent Guest Lectures
+              </p>
+              <p className="text-[11px] text-gray-500">Latest expert sessions organised.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={lectureDept}
+                onChange={(e) => setLectureDept(e.target.value)}
+                className="border rounded px-2 py-1 text-[11px] bg-white"
+              >
+                <option value="">All departments</option>
+                {deptOptions.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              <button onClick={() => onNav("lectures")} className="text-[11px] text-cyan-700 hover:underline whitespace-nowrap">
+                All lectures →
+              </button>
+            </div>
           </div>
-          <button onClick={() => onNav("lectures")} className="text-[11px] text-cyan-700 hover:underline">
-            All lectures →
-          </button>
         </div>
         <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {recentLectures.length === 0 ? (
