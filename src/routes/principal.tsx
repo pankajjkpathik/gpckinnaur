@@ -1850,3 +1850,113 @@ function ordinalSuffix(n: number) {
   if (n % 10 === 3 && n !== 13) return "rd";
   return "th";
 }
+
+// ─── TPO INFORMATION (read-only views inside Principal Portal) ────────────────
+function TpoTrainingDetailsView({ onBack }: { onBack: () => void }) {
+  const { data = [] } = useQuery({
+    queryKey: ["principal-tpo-training"],
+    queryFn: () => listIndustrialTraining({ data: {} }),
+  });
+  const rows = data as any[];
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-white border rounded-lg p-5">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Industrial Training Details</h1>
+        <p className="text-xs text-gray-400 mb-4">
+          Read-only view of all industrial training records. Managed by the Training &amp; Placement Officer.
+        </p>
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Training Type</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Branch</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Semester</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Students</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Company</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Period</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="px-4 py-3">{r.training_type}</td>
+                  <td className="px-4 py-3 capitalize">{r.branch ?? "—"}</td>
+                  <td className="px-4 py-3">{r.semester ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {Array.isArray(r.student_names) && r.student_names.length > 0
+                      ? (r.student_names as string[]).join(", ")
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3">{r.company ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">
+                    {r.start_date ?? "—"}
+                    {r.end_date ? ` → ${r.end_date}` : ""}
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                    No industrial training records yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TpoLecturesDetailsView({ onBack }: { onBack: () => void }) {
+  const { data = [] } = useQuery({
+    queryKey: ["principal-tpo-lectures"],
+    queryFn: () => listGuestLectures(),
+  });
+  const rows = data as any[];
+  return (
+    <div className="space-y-4">
+      <BackBtn onClick={onBack} />
+      <div className="bg-white border rounded-lg p-5">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">Guest Lecture Details</h1>
+        <p className="text-xs text-gray-400 mb-4">
+          Read-only view of all guest lectures. Managed by the Training &amp; Placement Officer.
+        </p>
+        <div className="border rounded overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Topic</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Speaker</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Department</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="px-4 py-3 text-xs text-gray-500">{r.lecture_date ?? "—"}</td>
+                  <td className="px-4 py-3 font-medium">{r.topic}</td>
+                  <td className="px-4 py-3">{r.speaker}</td>
+                  <td className="px-4 py-3">{r.department ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">{r.detail ?? "—"}</td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                    No guest lecture records yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
