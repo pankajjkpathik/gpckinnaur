@@ -735,7 +735,7 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => openPreview("Industrial Training Letter", generateTrainingLetter(r))}
+                        onClick={() => openPreview("Industrial Training Letter", generateTrainingLetter(r, { instituteAddress }))}
                         title="Preview Training Letter"
                         className="inline-flex items-center gap-1 text-xs text-cyan-700 border border-cyan-200 hover:bg-cyan-50 rounded px-2 py-1"
                       >
