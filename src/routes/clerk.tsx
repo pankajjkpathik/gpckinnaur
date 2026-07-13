@@ -1044,9 +1044,16 @@ function ImportTab() {
 }
 
 function PromoteTab() {
+  const qc = useQueryClient();
   const [branch, setBranch] = useState("civil");
   const [from, setFrom] = useState(1);
-  const m = useMutation({ mutationFn: (d: any) => clerkPromoteStudents({ data: d }) });
+  const m = useMutation({
+    mutationFn: (d: any) => clerkPromoteStudents({ data: d }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["clerk-students"] });
+      qc.invalidateQueries({ queryKey: ["clerk-activity"] });
+    },
+  });
   return (
     <div className="max-w-md space-y-3">
       <p className="text-sm text-muted-foreground">
