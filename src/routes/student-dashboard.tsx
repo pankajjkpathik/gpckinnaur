@@ -270,6 +270,67 @@ function StudentDashboard() {
   );
 }
 
+// ─── Assignment status buttons (shared: dashboard + assignments page) ────────
+function useMySubmissions() {
+  const fn = useServerFn(studentMySubmissions);
+  return useQuery({ queryKey: ["student-my-submissions"], queryFn: () => fn() });
+}
+
+function useSetAssignmentStatus() {
+  const qc = useQueryClient();
+  const fn = useServerFn(studentSetAssignmentStatus);
+  return useMutation({
+    mutationFn: (v: { assignment_id: number; status: "noted" | "submitted" }) => fn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["student-my-submissions"] });
+      qc.invalidateQueries({ queryKey: ["student-assignments-home"] });
+      qc.invalidateQueries({ queryKey: ["student-assignments-list"] });
+    },
+  });
+}
+
+function AssignmentStatusButtons({
+  assignmentId,
+  currentStatus,
+  size = "sm",
+}: {
+  assignmentId: number;
+  currentStatus: string | null;
+  size?: "xs" | "sm";
+}) {
+  const m = useSetAssignmentStatus();
+  const disabled = m.isPending;
+  const pad = size === "xs" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs";
+  const btn = (active: boolean) =>
+    `${pad} rounded font-semibold border transition disabled:opacity-50 ${
+      active
+        ? "bg-emerald-600 text-white border-emerald-600"
+        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+    }`;
+  return (
+    <div className="flex gap-1.5">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => m.mutate({ assignment_id: assignmentId, status: "noted" })}
+        className={btn(currentStatus === "noted")}
+        title="Mark as noted"
+      >
+        {currentStatus === "noted" ? "✓ Noted" : "Noted"}
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => m.mutate({ assignment_id: assignmentId, status: "submitted" })}
+        className={btn(currentStatus === "submitted" || currentStatus === "graded")}
+        title="Mark as submitted"
+      >
+        {currentStatus === "submitted" || currentStatus === "graded" ? "✓ Submitted" : "Submitted"}
+      </button>
+    </div>
+  );
+}
+
 // ─── HOME (summary) ───────────────────────────────────────────────────────────
 function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const [openClass, setOpenClass] = useState<any | null>(null);
