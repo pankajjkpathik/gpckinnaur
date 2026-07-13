@@ -67,6 +67,9 @@ function StaffDashboard() {
     } else if (me.role === "faculty") {
       // Faculty has a single unified dashboard at /faculty
       window.location.replace("/faculty");
+    } else if (me.role === "tpo") {
+      // TPO has a single unified dashboard at /tpo
+      window.location.replace("/tpo");
     }
   }, [me, isLoading, navigate]);
 
