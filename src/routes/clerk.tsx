@@ -1114,12 +1114,16 @@ function SalaryTab() {
     mutationFn: (d: any) => salaryUpsert({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["salary-list"] });
+      qc.invalidateQueries({ queryKey: ["clerk-activity"] });
       setAdding(false);
     },
   });
   const del = useMutation({
     mutationFn: (d: any) => salaryDelete({ data: d }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["salary-list"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["salary-list"] });
+      qc.invalidateQueries({ queryKey: ["clerk-activity"] });
+    },
   });
 
   const total = useMemo(
