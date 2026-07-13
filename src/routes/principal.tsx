@@ -354,8 +354,8 @@ function PrincipalSidebar({
   );
 }
 
-// ─── HOME (card grid) ─────────────────────────────────────────────────────────
-function HomeView({ year, onNav, me }: { year: string; onNav: (v: View) => void; me: any }) {
+// ─── HOME (single unified dashboard — navigation lives in the sidebar) ───────
+function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: any }) {
   const fn = useServerFn(principalDashboard);
 
   const { data } = useQuery({
@@ -363,90 +363,43 @@ function HomeView({ year, onNav, me }: { year: string; onNav: (v: View) => void;
     queryFn: () => fn({ data: { academic_year: year } }),
   });
 
-  const cards: { icon: any; label: string; desc: string; color: string; border: string; view: View; badge?: number }[] =
-    [
-      {
-        icon: BarChart3,
-        label: "Department Overview",
-        desc: "Department-wise stats & analytics",
-        color: "bg-[#5b1138]",
-        border: "border-[#5b1138]",
-        view: "department",
-      },
-      {
-        icon: ClipboardCheck,
-        label: "Attendance Reports",
-        desc: "View student attendance summaries",
-        color: "bg-[#7b1f4c]",
-        border: "border-[#7b1f4c]",
-        view: "attendance",
-      },
-      {
-        icon: FileSpreadsheet,
-        label: "Sessional Reports",
-        desc: "Generate final internal marks reports",
-        color: "bg-orange-500",
-        border: "border-orange-500",
-        view: "sessional",
-        badge: data?.pending_marks,
-      },
-      {
-        icon: BookMarked,
-        label: "Syllabus Status",
-        desc: "Monitor syllabus completion",
-        color: "bg-gray-500",
-        border: "border-gray-500",
-        view: "syllabus",
-      },
-      {
-        icon: Calendar,
-        label: "View Timetable",
-        desc: "Look up class schedules",
-        color: "bg-green-600",
-        border: "border-green-600",
-        view: "timetable",
-      },
-      {
-        icon: Briefcase,
-        label: "Placement Data",
-        desc: "Analyze student placement statistics",
-        color: "bg-rose-600",
-        border: "border-rose-600",
-        view: "placements",
-      },
-      {
-        icon: Mail,
-        label: "Parents Messages",
-        desc: "Review messages from parents",
-        color: "bg-purple-600",
-        border: "border-purple-600",
-        view: "messages",
-      },
-      {
-        icon: CalendarCheck,
-        label: "PTM Information",
-        desc: "Manage PTM details",
-        color: "bg-cyan-500",
-        border: "border-cyan-500",
-        view: "ptm",
-      },
-      {
-        icon: FileText,
-        label: "Circulars",
-        desc: "Publish institute circulars",
-        color: "bg-[#4a0e2e]",
-        border: "border-[#4a0e2e]",
-        view: "circulars",
-      },
-      {
-        icon: Shield,
-        label: "Disciplinary Actions",
-        desc: "Issue official student notices",
-        color: "bg-gray-600",
-        border: "border-gray-600",
-        view: "disciplinary",
-      },
-    ];
+  const placementsQ = useQuery({
+    queryKey: ["principal-home-placements"],
+    queryFn: () => listPlacements({ data: {} }),
+  });
+  const trainingQ = useQuery({
+    queryKey: ["principal-home-training"],
+    queryFn: () => listIndustrialTraining({ data: {} }),
+  });
+  const lecturesQ = useQuery({
+    queryKey: ["principal-home-lectures"],
+    queryFn: () => listGuestLectures(),
+  });
+
+  const placements = (placementsQ.data ?? []) as any[];
+  const trainings = (trainingQ.data ?? []) as any[];
+  const lectures = (lecturesQ.data ?? []) as any[];
+
+  const currentYear = new Date().getFullYear();
+  const placedThisYear = placements.filter((p) => p.year === currentYear).length;
+  const traineeCount = trainings.reduce(
+    (n, t) => n + (Array.isArray(t.student_ids) ? t.student_ids.length : 0),
+    0,
+  );
+
+  const snapshots: {
+    label: string;
+    value: number | string;
+    tint: string;
+    ring: string;
+  }[] = [
+    { label: "Total Students", value: data?.students ?? "—", tint: "bg-[#7b1f4c]/5", ring: "text-[#7b1f4c]" },
+    { label: "Total Staff", value: data?.staff ?? "—", tint: "bg-indigo-500/5", ring: "text-indigo-600" },
+    { label: "Circulars", value: data?.circulars ?? "—", tint: "bg-amber-500/5", ring: "text-amber-600" },
+    { label: "Pending Marks Approval", value: data?.pending_marks ?? "—", tint: "bg-orange-500/5", ring: "text-orange-600" },
+    { label: `Placements (${currentYear})`, value: placedThisYear, tint: "bg-rose-500/5", ring: "text-rose-600" },
+    { label: "Students in Training", value: traineeCount, tint: "bg-cyan-500/5", ring: "text-cyan-600" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -467,20 +420,74 @@ function HomeView({ year, onNav, me }: { year: string; onNav: (v: View) => void;
         ]}
       />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((c) => (
-          <QuickCard
-            key={c.view}
-            icon={c.icon}
-            label={c.label}
-            desc={c.desc}
-            color={c.color}
-            border={c.border}
-            badge={c.badge}
-            onClick={() => onNav(c.view)}
-          />
-        ))}
+      {/* Snapshot tiles — read-only KPIs, sidebar handles navigation */}
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Institute Snapshot</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {snapshots.map((s) => (
+            <div key={s.label} className={`rounded-xl border p-4 ${s.tint}`}>
+              <p className="text-[11px] text-gray-500 leading-tight">{s.label}</p>
+              <p className={`text-2xl font-bold mt-1 ${s.ring}`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
       </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        {/* Recent placements */}
+        <div className="bg-white border rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Briefcase className="w-4 h-4 text-[#7b1f4c]" />
+            <p className="font-semibold text-gray-800">Recent Placements</p>
+          </div>
+          {placements.length === 0 ? (
+            <p className="text-sm text-gray-400">No placements recorded yet.</p>
+          ) : (
+            <ul className="divide-y text-sm">
+              {placements.slice(0, 5).map((p) => (
+                <li key={p.id} className="py-2 flex items-center justify-between gap-3">
+                  <span className="min-w-0 truncate">
+                    <span className="font-medium">{p.student_name}</span>
+                    <span className="text-gray-500"> · {p.company}</span>
+                  </span>
+                  <span className="text-xs text-gray-500 shrink-0">
+                    {p.year}
+                    {p.package_lpa != null ? ` · ${p.package_lpa} LPA` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Recent guest lectures */}
+        <div className="bg-white border rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <ClipboardList className="w-4 h-4 text-[#7b1f4c]" />
+            <p className="font-semibold text-gray-800">Recent Guest Lectures</p>
+          </div>
+          {lectures.length === 0 ? (
+            <p className="text-sm text-gray-400">No guest lectures recorded yet.</p>
+          ) : (
+            <ul className="divide-y text-sm">
+              {lectures.slice(0, 5).map((l) => (
+                <li key={l.id} className="py-2 flex items-center justify-between gap-3">
+                  <span className="min-w-0 truncate">
+                    <span className="font-medium">{l.topic}</span>
+                    <span className="text-gray-500"> · {l.speaker}</span>
+                  </span>
+                  <span className="text-xs text-gray-500 shrink-0">{l.lecture_date ?? "—"}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <p className="text-xs text-gray-400 text-center">
+        Use the left panel to navigate to Attendance, Sessional, Syllabus, Timetable, Placements,
+        Parents Messages, PTM, Circulars, Disciplinary Actions, and TPO information.
+      </p>
     </div>
   );
 }
