@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Download,
@@ -43,6 +43,8 @@ import {
   studentListAssignments,
   studentMyFees,
   studentMyDisciplinary,
+  studentMySubmissions,
+  studentSetAssignmentStatus,
 } from "@/lib/assignments.functions";
 
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
@@ -268,6 +270,67 @@ function StudentDashboard() {
   );
 }
 
+// ─── Assignment status buttons (shared: dashboard + assignments page) ────────
+function useMySubmissions() {
+  const fn = useServerFn(studentMySubmissions);
+  return useQuery({ queryKey: ["student-my-submissions"], queryFn: () => fn() });
+}
+
+function useSetAssignmentStatus() {
+  const qc = useQueryClient();
+  const fn = useServerFn(studentSetAssignmentStatus);
+  return useMutation({
+    mutationFn: (v: { assignment_id: number; status: "noted" | "submitted" }) => fn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["student-my-submissions"] });
+      qc.invalidateQueries({ queryKey: ["student-assignments-home"] });
+      qc.invalidateQueries({ queryKey: ["student-assignments-list"] });
+    },
+  });
+}
+
+function AssignmentStatusButtons({
+  assignmentId,
+  currentStatus,
+  size = "sm",
+}: {
+  assignmentId: number;
+  currentStatus: string | null;
+  size?: "xs" | "sm";
+}) {
+  const m = useSetAssignmentStatus();
+  const disabled = m.isPending;
+  const pad = size === "xs" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs";
+  const btn = (active: boolean) =>
+    `${pad} rounded font-semibold border transition disabled:opacity-50 ${
+      active
+        ? "bg-emerald-600 text-white border-emerald-600"
+        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+    }`;
+  return (
+    <div className="flex gap-1.5">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => m.mutate({ assignment_id: assignmentId, status: "noted" })}
+        className={btn(currentStatus === "noted")}
+        title="Mark as noted"
+      >
+        {currentStatus === "noted" ? "✓ Noted" : "Noted"}
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => m.mutate({ assignment_id: assignmentId, status: "submitted" })}
+        className={btn(currentStatus === "submitted" || currentStatus === "graded")}
+        title="Mark as submitted"
+      >
+        {currentStatus === "submitted" || currentStatus === "graded" ? "✓ Submitted" : "Submitted"}
+      </button>
+    </div>
+  );
+}
+
 // ─── HOME (summary) ───────────────────────────────────────────────────────────
 function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const [openClass, setOpenClass] = useState<any | null>(null);
@@ -277,6 +340,9 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const { data } = useQuery({ queryKey: ["student-dash"], queryFn: () => dashFn() });
   const { data: assignments = [] } = useQuery({ queryKey: ["student-assignments-home"], queryFn: () => assignFn() });
   const { data: fees = [] } = useQuery({ queryKey: ["student-fees-home"], queryFn: () => feesFn() });
+  const { data: mySubs = [] } = useMySubmissions();
+  const subStatus = (aid: number) =>
+    (mySubs as any[]).find((s) => s.assignment_id === aid)?.status ?? null;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -389,21 +455,24 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
                 const dn = daysUntil(a.due_date);
                 const urgent = dn <= 2;
                 return (
-                  <li key={a.id} className="py-2 flex items-start gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-800 truncate">{a.title}</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {a.subjects?.code || a.subject_name || ""} · Due{" "}
-                        {new Date(a.due_date).toLocaleDateString()}
-                      </p>
+                  <li key={a.id} className="py-2 space-y-1.5">
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-800 truncate">{a.title}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {a.subjects?.code || a.subject_name || ""} · Due{" "}
+                          {new Date(a.due_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${
+                          urgent ? "bg-rose-100 text-rose-700" : "bg-indigo-100 text-indigo-700"
+                        }`}
+                      >
+                        {dn === 0 ? "Today" : `${dn}d`}
+                      </span>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${
-                        urgent ? "bg-rose-100 text-rose-700" : "bg-indigo-100 text-indigo-700"
-                      }`}
-                    >
-                      {dn === 0 ? "Today" : `${dn}d`}
-                    </span>
+                    <AssignmentStatusButtons assignmentId={a.id} currentStatus={subStatus(a.id)} size="xs" />
                   </li>
                 );
               })}
@@ -971,6 +1040,9 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
     queryKey: ["student-assignments-list"],
     queryFn: () => fn(),
   });
+  const { data: mySubs = [] } = useMySubmissions();
+  const subStatus = (aid: number) =>
+    (mySubs as any[]).find((s) => s.assignment_id === aid)?.status ?? null;
   const rows = data as any[];
   const today = new Date().toISOString().slice(0, 10);
 
@@ -979,10 +1051,10 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Assignments</h1>
         <p className="text-xs text-gray-400 mb-4">
-          Download the assignment brief. Submit your completed work directly to your faculty as instructed on the
-          brief (email or in person).
+          Download the assignment brief. Mark it as <b>Noted</b> once you've read it, and as{" "}
+          <b>Submitted</b> after handing your work to your faculty.
         </p>
-        <div className="border rounded overflow-hidden">
+        <div className="border rounded overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
@@ -990,11 +1062,13 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">File</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((a: any) => {
                 const overdue = a.due_date && a.due_date < today;
+                const st = subStatus(a.id);
                 return (
                   <tr key={a.id} className="border-t">
                     <td className="px-4 py-3">{a.subjects?.name || a.subject_name || "—"}</td>
@@ -1020,12 +1094,15 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
                         <span className="text-xs text-gray-400">No file</span>
                       )}
                     </td>
+                    <td className="px-4 py-3">
+                      <AssignmentStatusButtons assignmentId={a.id} currentStatus={st} />
+                    </td>
                   </tr>
                 );
               })}
               {!isLoading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
                     No assignments posted for your class yet.
                   </td>
                 </tr>

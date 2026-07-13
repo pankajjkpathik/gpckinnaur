@@ -1,0 +1,1 @@
+ALTER TABLE public.assignment_submissions ALTER COLUMN file_url DROP NOT NULL;

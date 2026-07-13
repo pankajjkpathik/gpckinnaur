@@ -151,7 +151,7 @@ export type Database = {
           assignment_id: number
           comments: string | null
           feedback: string | null
-          file_url: string
+          file_url: string | null
           grade: string | null
           graded_at: string | null
           graded_by: number | null
@@ -164,7 +164,7 @@ export type Database = {
           assignment_id: number
           comments?: string | null
           feedback?: string | null
-          file_url: string
+          file_url?: string | null
           grade?: string | null
           graded_at?: string | null
           graded_by?: number | null
@@ -177,7 +177,7 @@ export type Database = {
           assignment_id?: number
           comments?: string | null
           feedback?: string | null
-          file_url?: string
+          file_url?: string | null
           grade?: string | null
           graded_at?: string | null
           graded_by?: number | null
