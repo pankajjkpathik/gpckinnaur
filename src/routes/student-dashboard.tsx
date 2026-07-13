@@ -834,6 +834,194 @@ function FeesDetailDialog({
   );
 }
 
+function NotificationPrefsDialog({
+  open,
+  onClose,
+  initial,
+}: {
+  open: boolean;
+  onClose: () => void;
+  initial: {
+    assignments_enabled: boolean;
+    fees_enabled: boolean;
+    assignments_lead_days: number;
+    fees_lead_days: number;
+  };
+}) {
+  const qc = useQueryClient();
+  const updateFn = useServerFn(studentUpdateNotificationPrefs);
+  const [form, setForm] = useState(initial);
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setForm(initial);
+      setMsg(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const save = useMutation({
+    mutationFn: (v: typeof form) => updateFn({ data: v }),
+    onSuccess: () => {
+      setMsg({ type: "ok", text: "Preferences saved." });
+      qc.invalidateQueries({ queryKey: ["student-notif-prefs"] });
+      setTimeout(onClose, 600);
+    },
+    onError: (e: any) =>
+      setMsg({ type: "err", text: e?.message ?? "Failed to save preferences" }),
+  });
+
+  if (!open) return null;
+
+  const ASSIGN_OPTIONS = [1, 3, 7, 14, 30];
+  const FEES_OPTIONS = [3, 7, 14, 30, 60];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 border-b bg-[#7b1f4c] text-white flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <Bell className="w-5 h-5" /> Notification Preferences
+            </h3>
+            <p className="text-xs text-white/80">
+              Choose which reminders appear on your dashboard and how soon.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white/80 hover:text-white text-xl leading-none"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-5 overflow-y-auto space-y-5">
+          {/* Assignments */}
+          <section className="border rounded-lg p-4 space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.assignments_enabled}
+                onChange={(e) =>
+                  setForm({ ...form, assignments_enabled: e.target.checked })
+                }
+                className="mt-1 h-4 w-4 accent-indigo-600"
+              />
+              <div className="flex-1">
+                <p className="font-medium text-gray-800 flex items-center gap-2">
+                  <NotebookPen className="w-4 h-4 text-indigo-600" />
+                  Assignment reminders
+                </p>
+                <p className="text-xs text-gray-500">
+                  Show assignments approaching their due date.
+                </p>
+              </div>
+            </label>
+            <div className={form.assignments_enabled ? "" : "opacity-50 pointer-events-none"}>
+              <label className="text-xs font-medium text-gray-600 block mb-1.5">
+                Alert me this many days before the due date
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {ASSIGN_OPTIONS.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setForm({ ...form, assignments_lead_days: n })}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                      form.assignments_lead_days === n
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {n} day{n === 1 ? "" : "s"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Fees */}
+          <section className="border rounded-lg p-4 space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.fees_enabled}
+                onChange={(e) => setForm({ ...form, fees_enabled: e.target.checked })}
+                className="mt-1 h-4 w-4 accent-emerald-600"
+              />
+              <div className="flex-1">
+                <p className="font-medium text-gray-800 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-emerald-600" />
+                  Fees reminders
+                </p>
+                <p className="text-xs text-gray-500">
+                  Show outstanding fee records with an approaching due date.
+                </p>
+              </div>
+            </label>
+            <div className={form.fees_enabled ? "" : "opacity-50 pointer-events-none"}>
+              <label className="text-xs font-medium text-gray-600 block mb-1.5">
+                Alert me this many days before the due date
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {FEES_OPTIONS.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setForm({ ...form, fees_lead_days: n })}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                      form.fees_lead_days === n
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {n} day{n === 1 ? "" : "s"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {msg && (
+            <p className={`text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-rose-600"}`}>
+              {msg.text}
+            </p>
+          )}
+        </div>
+
+        <div className="px-5 py-3 border-t bg-gray-50 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm px-4 py-2 rounded border"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={save.isPending}
+            onClick={() => save.mutate(form)}
+            className="text-sm px-4 py-2 rounded bg-[#7b1f4c] text-white hover:bg-[#621a3f] disabled:opacity-60"
+          >
+            {save.isPending ? "Saving…" : "Save preferences"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
