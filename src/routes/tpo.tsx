@@ -101,7 +101,18 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
   ];
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Welcome, Training and Placement Officer</h1>
+      <HeroBanner
+        name={me?.name || "TPO"}
+        role="Training & Placement"
+        palette={{
+          gradient: "from-[#0e7490] via-[#155e75] to-[#083344]",
+          nameColor: "text-cyan-200",
+          eyebrowColor: "text-cyan-200/90",
+          metaColor: "text-cyan-200",
+          blob: "bg-cyan-300",
+        }}
+        subtitle={<span className="text-white/80">Placements · Internships · Guest Lectures</span>}
+      />
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((c) => (
           <button
