@@ -1337,6 +1337,35 @@ function SalaryTab({ preset }: { preset?: { month: number; year: number; key: nu
     XLSX.writeFile(wb, `salary_${year}_${String(month).padStart(2, "0")}.xlsx`);
   };
 
+  const exportCsv = () => {
+    const header = ["Staff", "Role", "Dept", "Month", "Year", "Basic", "DA", "HRA", "Other Allow", "Deductions", "Net Pay", "Paid On", "Remarks"];
+    const rows = (listQ.data ?? []).map((r: any) => [
+      r.staff_users?.username,
+      r.staff_users?.role,
+      r.staff_users?.department,
+      r.month,
+      r.year,
+      r.basic,
+      r.da,
+      r.hra,
+      r.other_allow,
+      r.deductions,
+      r.net_pay,
+      r.paid_on,
+      r.remarks,
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `salary_${year}_${String(month).padStart(2, "0")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2 items-center">
@@ -1366,12 +1395,20 @@ function SalaryTab({ preset }: { preset?: { month: number; year: number; key: nu
           <Plus className="w-4 h-4" /> Salary Entry
         </button>
         <button
+          onClick={exportCsv}
+          disabled={!listQ.data?.length}
+          className="border px-3 py-2 rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
+        >
+          <Download className="w-4 h-4" /> CSV
+        </button>
+        <button
           onClick={exportXlsx}
           disabled={!listQ.data?.length}
           className="border px-3 py-2 rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
         >
-          <Download className="w-4 h-4" /> Export
+          <Download className="w-4 h-4" /> XLSX
         </button>
+
         <span className="ml-auto text-sm">
           Total Net: <b>₹{total.toLocaleString("en-IN")}</b>
         </span>
