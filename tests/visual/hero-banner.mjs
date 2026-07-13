@@ -88,17 +88,13 @@ async function run() {
           await page.waitForTimeout(150);
         }
 
-        // Section that matches this viewport width (nearest available).
-        // The preview page renders three fixed widths regardless of viewport,
-        // so we screenshot the section whose data-viewport most closely
-        // matches the current viewport width.
-        const targetWidth =
-          vp.width <= 500 ? 375 : vp.width <= 900 ? 768 : 1280;
-
+        // Preview page renders each palette full-width; the browser
+        // viewport we set above is what drives the responsive layout.
         for (const palette of PALETTES) {
-          const selector = `section[data-viewport="${targetWidth}"] div[data-palette="${palette}"]`;
+          const selector = `section[data-palette="${palette}"]`;
           const el = await page.locator(selector).first();
           await el.waitFor({ state: "visible", timeout: 5000 });
+          await el.scrollIntoViewIfNeeded();
           const buf = await el.screenshot({ animations: "disabled" });
           const name = `${theme}-${vp.name}-${palette}.png`;
           const basePath = join(BASE_DIR, name);
