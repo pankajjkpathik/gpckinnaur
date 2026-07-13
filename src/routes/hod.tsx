@@ -96,14 +96,20 @@ function BackBtn({ onClick }: { onClick: () => void }) {
 }
 
 /* ─── Sidebar navigation config ──────────────────────────────────────────── */
-type NavItem = { view: View; label: string; icon: ComponentType<{ className?: string }> };
+type NavItem = {
+  view: View;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  /** Requires actual `hod` role — hidden from viewer roles (principal/super_admin). */
+  writeOnly?: boolean;
+};
 
 // Core HOD workflows — management & approvals
 const HOD_NAV: NavItem[] = [
   { view: "home", label: "Dashboard", icon: Home },
   { view: "overview", label: "Department Overview", icon: BarChart3 },
-  { view: "faculty", label: "Manage Faculty", icon: Users },
-  { view: "lessons", label: "Lesson Plan Reviews", icon: GraduationCap },
+  { view: "faculty", label: "Manage Faculty", icon: Users, writeOnly: true },
+  { view: "lessons", label: "Lesson Plan Reviews", icon: GraduationCap, writeOnly: true },
 ];
 
 // Read-only monitoring across the branch
@@ -122,6 +128,7 @@ function SidebarGroup({
   active,
   onNav,
   defaultOpen,
+  canWrite,
 }: {
   title: string;
   icon: ComponentType<{ className?: string }>;
@@ -130,9 +137,12 @@ function SidebarGroup({
   active: View;
   onNav: (v: View) => void;
   defaultOpen?: boolean;
+  canWrite: boolean;
 }) {
-  const containsActive = items.some((i) => i.view === active);
+  const visible = items.filter((i) => canWrite || !i.writeOnly);
+  const containsActive = visible.some((i) => i.view === active);
   const [open, setOpen] = useState<boolean>(defaultOpen ?? containsActive);
+  if (visible.length === 0) return null;
   return (
     <div>
       <button
@@ -146,7 +156,7 @@ function SidebarGroup({
       </button>
       {open && (
         <ul className="mt-1.5 space-y-0.5">
-          {items.map((item) => {
+          {visible.map((item) => {
             const isActive = active === item.view;
             return (
               <li key={item.view}>
@@ -168,6 +178,7 @@ function SidebarGroup({
       )}
     </div>
   );
+
 }
 
 function HodSidebar({
