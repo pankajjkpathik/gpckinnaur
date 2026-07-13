@@ -1037,9 +1037,15 @@ function ClassDetailDialog({
   setView: (v: any) => void;
 }) {
   const sylFn = useServerFn(studentSyllabus);
+  const ttFn = useServerFn(studentTimetable);
   const { data: syllabus = [], isLoading } = useQuery({
     queryKey: ["student-syllabus-modal"],
     queryFn: () => sylFn(),
+    enabled: !!openClass,
+  });
+  const { data: tt } = useQuery({
+    queryKey: ["student-tt-modal"],
+    queryFn: () => ttFn(),
     enabled: !!openClass,
   });
 
@@ -1048,6 +1054,14 @@ function ClassDetailDialog({
   const subj = (syllabus as any[]).find((s) => s.id === subjectId);
   const att = attBySubject[String(subjectId)];
   const pct = att && att.total ? Math.round((att.present / att.total) * 1000) / 10 : null;
+
+  const periodsMap = new Map<number, any>();
+  ((tt as any)?.periods ?? []).forEach((p: any) => periodsMap.set(p.period_no, p));
+  const subjectSlots = (((tt as any)?.entries ?? []) as any[])
+    .filter((e) => (e.subjects?.id ?? e.subject_id) === subjectId)
+    .sort((a, b) => a.day_of_week - b.day_of_week || a.period_no - b.period_no);
+  const weeklyHours = subjectSlots.length;
+
 
   return (
     <div
