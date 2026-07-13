@@ -5,6 +5,7 @@ import {
   type HeroPalette,
   type HeroPaletteName,
 } from "./hero-tokens";
+import { initialsOf } from "@/lib/portal-identity";
 
 export type { HeroPalette, HeroPaletteName } from "./hero-tokens";
 export type HeroStat = { value: ReactNode; label: string };
@@ -16,6 +17,7 @@ export function HeroBanner({
   palette,
   stats,
   emoji = "👋",
+  avatarSrc,
 }: {
   name: string;
   role?: string;
@@ -24,7 +26,10 @@ export function HeroBanner({
   palette: HeroPaletteName | HeroPalette;
   stats?: HeroStat[];
   emoji?: string;
+  /** Optional user photo shown as a circular avatar inside the hero. */
+  avatarSrc?: string | null;
 }) {
+
   const p = resolveHeroPalette(palette);
   const today = new Date();
   const dateLabel = today.toLocaleDateString("en-IN", {
