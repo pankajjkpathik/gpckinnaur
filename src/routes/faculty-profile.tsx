@@ -7,6 +7,7 @@ import { hasRole, facultyRoles } from "@/lib/roles";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { avatarUrl, displayName, initialsOf } from "@/lib/portal-identity";
 import { Camera, Loader2, Save, ArrowLeft, User, Phone, Mail, MapPin, Building2, IdCard } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/faculty-profile")({
   head: () => ({
