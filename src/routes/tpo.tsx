@@ -846,8 +846,8 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                   Cancel
                 </button>
                 <button
-                  disabled={create.isPending}
-                  className="bg-[#7b1f4c] text-white px-4 py-1.5 rounded disabled:opacity-50"
+                  disabled={create.isPending || !branch || !semester || Object.keys(picked).length === 0}
+                  className="bg-[#7b1f4c] text-white px-4 py-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {create.isPending ? "Saving…" : "Assign Training"}
                 </button>
