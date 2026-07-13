@@ -345,6 +345,7 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
   const [openClass, setOpenClass] = useState<any | null>(null);
   const [feesOpen, setFeesOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const [detailAssignment, setDetailAssignment] = useState<any | null>(null);
   const dashFn = useServerFn(studentDashboard);
   const assignFn = useServerFn(studentListAssignments);
   const feesFn = useServerFn(studentMyFees);
