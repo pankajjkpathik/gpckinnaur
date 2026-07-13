@@ -40,8 +40,8 @@ export function HeroBanner({
     <div
       className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${p.gradient} text-white shadow-lg`}
     >
-      <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden>
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl bg-white" />
+      <div className={HERO_TYPOGRAPHY.blobLayer} aria-hidden>
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl bg-white dark:bg-white/40" />
         <div className={`absolute -bottom-32 -left-16 w-96 h-96 rounded-full blur-3xl ${p.blob}`} />
       </div>
       <div className="relative p-5 sm:p-8 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] items-start sm:items-center gap-5">
