@@ -319,7 +319,7 @@ function FacultyPortalInner({
 
 
 // ─── HOME: card grid ──────────────────────────────────────────────────────────
-function HomeView({ me, ay, onNav: _onNav }: { me: any; ay: string; onNav: (v: View) => void }) {
+function HomeView({ me, ay, onNav }: { me: any; ay: string; onNav: (v: View) => void }) {
   const dash = useQuery({
     queryKey: ["fac-dash", ay],
     queryFn: () => facultyDashboard({ data: { academic_year: ay } }),
@@ -330,12 +330,20 @@ function HomeView({ me, ay, onNav: _onNav }: { me: any; ay: string; onNav: (v: V
   const totalSubjects = d?.assignments?.length ?? 0;
   const uniqueClasses = new Set((d?.assignments ?? []).map((a: any) => `${a.branch}-${a.semester}`)).size;
 
-
+  const quickActions: { view: View; icon: any; label: string; desc: string; color: string; border: string }[] = [
+    { view: "attendance", icon: ClipboardCheck, label: "Attendance", desc: "Mark today's attendance", color: "bg-emerald-500", border: "border-emerald-500" },
+    { view: "marks", icon: FileSpreadsheet, label: "Marks Entry", desc: "Class tests & assignments", color: "bg-sky-500", border: "border-sky-500" },
+    { view: "assignments", icon: ClipboardList, label: "Assignments", desc: "Create & track work", color: "bg-amber-500", border: "border-amber-500" },
+    { view: "lesson-plans", icon: BookOpen, label: "Lesson Plans", desc: "Weekly & unit plans", color: "bg-violet-500", border: "border-violet-500" },
+    { view: "syllabus", icon: BookMarked, label: "Syllabus", desc: "Coverage & units", color: "bg-rose-500", border: "border-rose-500" },
+    { view: "reports", icon: BarChart2, label: "Reports", desc: "Export & analytics", color: "bg-indigo-500", border: "border-indigo-500" },
+  ];
 
   return (
     <div className="space-y-6">
       <HeroBanner
         name={me.name || "Faculty"}
+        avatarSrc={me.image_url ?? null}
         palette="faculty"
         subtitle={
           <>
@@ -349,6 +357,62 @@ function HomeView({ me, ay, onNav: _onNav }: { me: any; ay: string; onNav: (v: V
           { value: uniqueClasses, label: "Sections" },
         ]}
       />
+
+      {/* Quick Actions */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
+          <p className="font-semibold text-gray-800">Quick Actions</p>
+          <p className="text-[11px] text-gray-500">Jump straight into your most-used modules.</p>
+        </div>
+        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {quickActions.map((q) => (
+            <QuickCard
+              key={q.view}
+              icon={q.icon}
+              label={q.label}
+              desc={q.desc}
+              color={q.color}
+              border={q.border}
+              onClick={() => onNav(q.view)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Weekly timetable placeholder */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-gray-800 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#7b1f4c]" /> Week at a Glance
+            </p>
+            <p className="text-[11px] text-gray-500">Mon – Sat overview · Full timetable coming from admin.</p>
+          </div>
+          <span className="text-[10px] uppercase tracking-wider text-gray-400">Placeholder</span>
+        </div>
+        <div className="p-4 grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {[1, 2, 3, 4, 5, 6].map((dow) => {
+            const isToday = d?.day_of_week === dow;
+            const count = isToday ? totalClassesToday : null;
+            return (
+              <div
+                key={dow}
+                className={`rounded-lg border p-3 text-center ${
+                  isToday ? "border-[#7b1f4c] bg-rose-50/50" : "border-dashed border-gray-200 bg-gray-50/50"
+                }`}
+              >
+                <p className={`text-[10px] uppercase tracking-wider ${isToday ? "text-[#7b1f4c] font-semibold" : "text-gray-400"}`}>
+                  {DAY_LABELS[dow]}
+                </p>
+                <p className={`mt-1 text-lg font-bold ${isToday ? "text-[#7b1f4c]" : "text-gray-300"}`}>
+                  {count ?? "—"}
+                </p>
+                <p className="text-[10px] text-gray-400">{isToday ? "classes" : "TBD"}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
 
 
