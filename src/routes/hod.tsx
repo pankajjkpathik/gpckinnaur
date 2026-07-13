@@ -175,14 +175,90 @@ function HodSidebar({
   onNav,
   mobileOpen,
   onCloseMobile,
+  collapsed,
+  onToggleCollapsed,
 }: {
   active: View;
   onNav: (v: View) => void;
   mobileOpen: boolean;
   onCloseMobile: () => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }) {
+  // Flat icon-only rail shown when the sidebar is collapsed on desktop.
+  const collapsedRail = (
+    <nav
+      className="bg-white border border-gray-200 rounded-xl shadow-sm p-2 flex flex-col items-center gap-1"
+      aria-label="HOD navigation (collapsed)"
+    >
+      <button
+        onClick={onToggleCollapsed}
+        className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100"
+        title="Expand sidebar"
+        aria-label="Expand sidebar"
+      >
+        <PanelLeftOpen className="w-4 h-4" />
+      </button>
+      <div className="w-8 border-t border-gray-100 my-1" />
+      {[...HOD_NAV, ...MONITORING_NAV].map((item) => {
+        const isActive = active === item.view;
+        return (
+          <button
+            key={item.view}
+            onClick={() => onNav(item.view)}
+            title={item.label}
+            aria-label={item.label}
+            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+              isActive
+                ? "bg-[#7b1f4c]/10 text-[#7b1f4c]"
+                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            <item.icon className="w-4 h-4" />
+          </button>
+        );
+      })}
+      <div className="w-8 border-t border-gray-100 my-1" />
+      <Link
+        to="/faculty"
+        title="Faculty Portal"
+        aria-label="Faculty Portal"
+        className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+      >
+        <GraduationCap className="w-4 h-4" />
+      </Link>
+      <a
+        href="/staff-profile"
+        title="My Profile"
+        aria-label="My Profile"
+        className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+      >
+        <LayoutDashboard className="w-4 h-4" />
+      </a>
+      <a
+        href="/messages"
+        title="Internal Messages"
+        aria-label="Internal Messages"
+        className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+      >
+        <Mail className="w-4 h-4" />
+      </a>
+    </nav>
+  );
+
   const inner = (
     <nav className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2">
+      <div className="hidden lg:flex justify-end -mt-1 -mr-1 mb-1">
+        <button
+          onClick={onToggleCollapsed}
+          className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+          title="Collapse sidebar"
+          aria-label="Collapse sidebar"
+        >
+          <PanelLeftClose className="w-4 h-4" />
+        </button>
+      </div>
+
       <SidebarGroup
         title="HOD Portal"
         icon={LayoutDashboard}
@@ -254,13 +330,20 @@ function HodSidebar({
 
   return (
     <>
-      <aside className="hidden lg:block w-64 shrink-0 sticky top-[76px] self-start">{inner}</aside>
+      <aside
+        className={`hidden lg:block shrink-0 sticky top-[76px] self-start transition-[width] duration-200 ${
+          collapsed ? "w-14" : "w-64"
+        }`}
+      >
+        {collapsed ? collapsedRail : inner}
+      </aside>
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/40" onClick={onCloseMobile}>
           <div
             className="absolute left-0 top-0 h-full w-72 bg-[#f7f7fb] p-4 overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Mobile drawer always shows the full sidebar */}
             {inner}
           </div>
         </div>
@@ -268,6 +351,9 @@ function HodSidebar({
     </>
   );
 }
+
+
+
 
 
 function HodPortal() {
