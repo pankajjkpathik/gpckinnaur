@@ -64,11 +64,26 @@ import {
   PanelLeftOpen,
   Factory,
   ClipboardList,
+  Search,
+  Users,
+  GraduationCap,
 } from "lucide-react";
 
 import { BarStats, PieStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
+import { listNotices } from "@/lib/notices.functions";
+import { principalListStudents } from "@/lib/assignments.functions";
+import { BRANCH_TO_DEPT } from "@/lib/branch";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
 
 export const Route = createFileRoute("/principal")({
   head: () => ({
