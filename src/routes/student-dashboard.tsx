@@ -586,8 +586,7 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
               No fees due in the next {effectivePrefs.fees_lead_days} day
               {effectivePrefs.fees_lead_days === 1 ? "" : "s"}.
             </p>
-          ) : null}
-
+          ) : (
             <>
               <div className="bg-rose-50 border border-rose-200 rounded p-3 mb-3">
                 <p className="text-xs text-rose-700 uppercase tracking-wide">Total Outstanding</p>
@@ -632,6 +631,13 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
         onClose={() => setFeesOpen(false)}
         fees={fees as any[]}
       />
+
+      <NotificationPrefsDialog
+        open={prefsOpen}
+        onClose={() => setPrefsOpen(false)}
+        initial={effectivePrefs}
+      />
+
 
 
 
