@@ -826,7 +826,7 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
 }
 
 // ─── GUEST LECTURES ───────────────────────────────────────────────────────────
-function LecturesView({ onBack }: { onBack: () => void }) {
+function LecturesView({ onBack }: { onBack?: () => void }) {
   const qc = useQueryClient();
   const listQ = useQuery({ queryKey: ["tpo-lectures"], queryFn: () => listGuestLectures() });
   const [open, setOpen] = useState(false);
