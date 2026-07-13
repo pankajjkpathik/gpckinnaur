@@ -412,16 +412,30 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
       </div>
 
       <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
-          <div>
-            <p className="font-semibold text-gray-800 flex items-center gap-2">
-              <Mic className="w-4 h-4 text-cyan-700" /> Recent Guest Lectures
-            </p>
-            <p className="text-[11px] text-gray-500">Latest expert sessions organised.</p>
+        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="font-semibold text-gray-800 flex items-center gap-2">
+                <Mic className="w-4 h-4 text-cyan-700" /> Recent Guest Lectures
+              </p>
+              <p className="text-[11px] text-gray-500">Latest expert sessions organised.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={lectureDept}
+                onChange={(e) => setLectureDept(e.target.value)}
+                className="border rounded px-2 py-1 text-[11px] bg-white"
+              >
+                <option value="">All departments</option>
+                {deptOptions.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              <button onClick={() => onNav("lectures")} className="text-[11px] text-cyan-700 hover:underline whitespace-nowrap">
+                All lectures →
+              </button>
+            </div>
           </div>
-          <button onClick={() => onNav("lectures")} className="text-[11px] text-cyan-700 hover:underline">
-            All lectures →
-          </button>
         </div>
         <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {recentLectures.length === 0 ? (
