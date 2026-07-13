@@ -1,11 +1,29 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Upload, ArrowUpCircle, Download, FileSpreadsheet, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  Plus,
+  Pencil,
+  Upload,
+  ArrowUpCircle,
+  Download,
+  FileSpreadsheet,
+  Trash2,
+  Users,
+  UserPlus,
+  Wallet,
+  UsersRound,
+  Landmark,
+  Wrench,
+  Beaker,
+} from "lucide-react";
 import * as XLSX from "xlsx";
-import { staffMe } from "@/lib/auth.functions";
+import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { HeroBanner } from "@/components/portal/HeroBanner";
+import { QuickCard } from "@/components/portal/QuickCard";
+import { avatarUrl } from "@/lib/portal-identity";
 import { clerkRoles, hasRole } from "@/lib/roles";
 import {
   clerkListStudents,
@@ -21,7 +39,7 @@ export const Route = createFileRoute("/clerk")({
   component: ClerkPortal,
 });
 
-type Tab = "students" | "import" | "promote" | "salary";
+type Tab = "home" | "students" | "import" | "promote" | "salary";
 
 function ClerkPortal() {
   const nav = useNavigate();
@@ -31,21 +49,16 @@ function ClerkPortal() {
     if (!me) nav({ to: "/staff-login" });
     else if (!hasRole(me, clerkRoles)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
-  const [tab, setTab] = useState<Tab>("students");
+  const [tab, setTab] = useState<Tab>("home");
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
   return (
     <PortalShell title="Clerk Portal" subtitle="Master Records" me={me as any} accent="amber">
       <div className="container mx-auto px-4 py-6 space-y-4">
-        <HeroBanner
-          name={(me as any).name || (me as any).username || "Clerk"}
-          role="Office & Records"
-          palette="clerk"
-          subtitle={<span className="text-white/80">Master student records · Bulk import · Salary</span>}
-        />
         <div className="flex gap-1 border-b flex-wrap">
           {(
             [
+              ["home", "Home"],
               ["students", "Students"],
               ["import", "Bulk Import"],
               ["promote", "Promote"],
@@ -64,6 +77,7 @@ function ClerkPortal() {
             User accounts →
           </Link>
         </div>
+        {tab === "home" && <HomeTab me={me as any} onNav={setTab} />}
         {tab === "students" && <StudentsTab />}
         {tab === "import" && <ImportTab />}
         {tab === "promote" && <PromoteTab />}
@@ -72,6 +86,267 @@ function ClerkPortal() {
     </PortalShell>
   );
 }
+
+function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
+  const qc = useQueryClient();
+  const uploadFn = useServerFn(uploadStaffAvatar);
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      if (file.size > 5 * 1024 * 1024) throw new Error("Image must be 5 MB or smaller");
+      const b64: string = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onerror = () => reject(new Error("Failed to read file"));
+        r.onload = () => {
+          const s = String(r.result || "");
+          const i = s.indexOf(",");
+          resolve(i >= 0 ? s.slice(i + 1) : s);
+        };
+        r.readAsDataURL(file);
+      });
+      return uploadFn({ data: { filename: file.name, contentType: file.type || "image/png", contentBase64: b64 } });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["staff-me"] });
+      qc.invalidateQueries({ queryKey: ["staff-me-profile"] });
+    },
+  });
+
+  const studentsQ = useQuery({
+    queryKey: ["clerk-students", "", "", ""],
+    queryFn: () => clerkListStudents({ data: {} as any }),
+  });
+  const staffQ = useQuery({ queryKey: ["salary-staff"], queryFn: () => salaryStaffList() });
+  const now = new Date();
+  const salaryQ = useQuery({
+    queryKey: ["salary-list", now.getMonth() + 1, now.getFullYear()],
+    queryFn: () => salaryList({ data: { month: now.getMonth() + 1, year: now.getFullYear() } }),
+  });
+
+  const students = studentsQ.data ?? [];
+  const staff = staffQ.data ?? [];
+  const salary = salaryQ.data ?? [];
+  const totalStudents = students.length;
+  const totalStaff = staff.length;
+  const monthlyNet = salary.reduce((s: number, r: any) => s + Number(r.net_pay || 0), 0);
+  const paidStaffThisMonth = salary.length;
+
+  const byBranch = useMemo(() => {
+    const agg = new Map<string, number>();
+    students.forEach((r: any) => agg.set(r.branch, (agg.get(r.branch) ?? 0) + 1));
+    return agg;
+  }, [students]);
+
+  const branchTiles = [
+    { key: "civil", label: "Civil", icon: Landmark, tone: "from-sky-500 to-blue-600" },
+    { key: "mechanical", label: "Mechanical", icon: Wrench, tone: "from-orange-500 to-red-500" },
+    { key: "applied_science", label: "Applied Science", icon: Beaker, tone: "from-emerald-500 to-teal-600" },
+  ];
+
+  const quickActions: {
+    tab: Tab;
+    icon: any;
+    label: string;
+    desc: string;
+    color: string;
+    border: string;
+    stat: string | number;
+    statLabel: string;
+  }[] = [
+    {
+      tab: "students",
+      icon: Users,
+      label: "Students",
+      desc: "Master records — search, edit, export",
+      color: "bg-amber-600",
+      border: "border-amber-600",
+      stat: totalStudents,
+      statLabel: "On roll",
+    },
+    {
+      tab: "import",
+      icon: Upload,
+      label: "Bulk Import",
+      desc: "Upload Excel / paste CSV",
+      color: "bg-emerald-600",
+      border: "border-emerald-600",
+      stat: "XLSX",
+      statLabel: "Sample ready",
+    },
+    {
+      tab: "promote",
+      icon: ArrowUpCircle,
+      label: "Promote",
+      desc: "Roll semester forward branch-wise",
+      color: "bg-sky-600",
+      border: "border-sky-600",
+      stat: `${Array.from(byBranch.values()).length}`,
+      statLabel: "Branches",
+    },
+    {
+      tab: "salary",
+      icon: Wallet,
+      label: "Salary",
+      desc: "Enter monthly pay & export sheet",
+      color: "bg-rose-600",
+      border: "border-rose-600",
+      stat: paidStaffThisMonth,
+      statLabel: `Paid ${now.toLocaleString("en", { month: "short" })}`,
+    },
+  ];
+
+  const monthLabel = now.toLocaleString("en", { month: "long", year: "numeric" });
+
+  return (
+    <div className="space-y-6">
+      <HeroBanner
+        name={me?.name || me?.username || "Clerk"}
+        role="Office & Records"
+        avatarSrc={avatarUrl(me)}
+        onAvatarChange={(f) => uploadAvatar.mutate(f)}
+        avatarUploading={uploadAvatar.isPending}
+        palette="clerk"
+        subtitle={
+          <>
+            <span className="text-white/80">Master records · Admissions · Payroll</span>
+            <span className="text-white/60"> · {monthLabel}</span>
+          </>
+        }
+        stats={[
+          { value: totalStudents, label: "Students" },
+          { value: totalStaff, label: "Staff" },
+          { value: paidStaffThisMonth, label: "Paid this month" },
+        ]}
+      />
+
+      {/* Quick Actions */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-3 bg-gradient-to-r from-amber-50 to-white border-b">
+          <p className="font-semibold text-gray-800">Quick Actions</p>
+          <p className="text-[11px] text-gray-500">Everything the office needs, one click away.</p>
+        </div>
+        <div className="p-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {quickActions.map((q) => (
+            <QuickCard
+              key={q.tab}
+              icon={q.icon}
+              label={q.label}
+              desc={q.desc}
+              color={q.color}
+              border={q.border}
+              stat={q.stat}
+              statLabel={q.statLabel}
+              onClick={() => onNav(q.tab)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiTile icon={Users} label="Total Students" value={totalStudents} tone="from-amber-500 to-orange-600" />
+        <KpiTile icon={UsersRound} label="Staff Members" value={totalStaff} tone="from-sky-500 to-indigo-600" />
+        <KpiTile icon={Wallet} label={`Net Payroll (${now.toLocaleString("en", { month: "short" })})`} value={`₹${monthlyNet.toLocaleString("en-IN")}`} tone="from-emerald-500 to-teal-600" />
+        <KpiTile icon={UserPlus} label="Salary Entries" value={paidStaffThisMonth} tone="from-rose-500 to-fuchsia-600" />
+      </div>
+
+      {/* Branch strength + Recent additions */}
+      <div className="grid lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3 bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
+            <p className="font-semibold text-gray-800">Branch Strength</p>
+            <p className="text-[11px] text-gray-500">Active students grouped by department.</p>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {branchTiles.map((b) => {
+              const count = byBranch.get(b.key) ?? 0;
+              const pct = totalStudents > 0 ? Math.round((count / totalStudents) * 100) : 0;
+              return (
+                <div key={b.key} className="relative overflow-hidden rounded-lg border p-4">
+                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full bg-gradient-to-br ${b.tone} opacity-15 blur-2xl`} />
+                  <div className="relative flex items-start gap-3">
+                    <span className={`w-9 h-9 rounded-lg bg-gradient-to-br ${b.tone} text-white flex items-center justify-center shadow`}>
+                      <b.icon className="w-4 h-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">{b.label}</p>
+                      <p className="text-2xl font-bold text-gray-900 leading-none mt-0.5">{count}</p>
+                      <p className="text-[10px] text-gray-400 mt-1">{pct}% of total</p>
+                    </div>
+                  </div>
+                  <div className="relative mt-3 h-1.5 bg-gray-100 rounded overflow-hidden">
+                    <div className={`h-full bg-gradient-to-r ${b.tone}`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-gray-800">Recently Added</p>
+              <p className="text-[11px] text-gray-500">Latest student records.</p>
+            </div>
+            <button onClick={() => onNav("students")} className="text-[11px] text-amber-700 hover:underline">
+              All students →
+            </button>
+          </div>
+          <ul className="divide-y">
+            {students.length === 0 ? (
+              <li className="p-5 text-xs text-gray-400 text-center">No students on roll yet.</li>
+            ) : (
+              [...students]
+                .sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0))
+                .slice(0, 5)
+                .map((s: any) => (
+                  <li key={s.id} className="px-4 py-3 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-xs font-bold shadow">
+                      {(s.name || "?").slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-800 truncate">{s.name}</p>
+                      <p className="text-[11px] text-gray-500 truncate">
+                        <span className="font-mono">{s.enrollment_no}</span> · <span className="capitalize">{s.branch}</span> · Sem {s.semester}
+                      </p>
+                    </div>
+                  </li>
+                ))
+            )}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: any;
+  label: string;
+  value: React.ReactNode;
+  tone: string;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-xl bg-white border shadow-sm p-4">
+      <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full bg-gradient-to-br ${tone} opacity-15 blur-2xl`} />
+      <div className="relative flex items-center gap-3">
+        <span className={`w-10 h-10 rounded-lg bg-gradient-to-br ${tone} text-white flex items-center justify-center shadow`}>
+          <Icon className="w-5 h-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xl font-bold text-gray-900 leading-none truncate">{value}</p>
+          <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function StudentsTab() {
   const qc = useQueryClient();
