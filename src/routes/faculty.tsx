@@ -811,6 +811,8 @@ function useFacultyNotifRealtime(ay: string, userId?: string | number) {
           facNotifRtLastEvent = Date.now();
           qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
           if (payload?.eventType === "INSERT" && payload?.new) {
+            const prefs = getFacNotifPrefs(userId);
+            if (!prefs.toasts || !prefs.announcements) return;
             const a = payload.new;
             const preview = (a.content ?? "").toString().slice(0, 120);
             toast.info("New announcement", {
@@ -823,6 +825,7 @@ function useFacultyNotifRealtime(ay: string, userId?: string | number) {
               },
             });
           }
+
         })
         .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, (payload: any) => {
           facNotifRtLastEvent = Date.now();
