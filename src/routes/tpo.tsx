@@ -13,7 +13,10 @@ import {
   Building2,
   GraduationCap,
   Mic,
+  FileText,
+  FileSignature,
 } from "lucide-react";
+import { generateTrainingLetter, generateUndertakings } from "@/lib/training-letter";
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { tpoRoles, hasRole } from "@/lib/roles";
@@ -675,14 +678,30 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                     {r.end_date ? ` → ${r.end_date}` : ""}
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => {
-                        if (confirm("Delete training record?")) del.mutate(r.id);
-                      }}
-                      className="text-rose-500 hover:text-rose-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => generateTrainingLetter(r)}
+                        title="Download Training Letter"
+                        className="inline-flex items-center gap-1 text-xs text-cyan-700 border border-cyan-200 hover:bg-cyan-50 rounded px-2 py-1"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Letter
+                      </button>
+                      <button
+                        onClick={() => generateUndertakings(r)}
+                        title="Download Student & Parent Undertakings"
+                        className="inline-flex items-center gap-1 text-xs text-amber-700 border border-amber-200 hover:bg-amber-50 rounded px-2 py-1"
+                      >
+                        <FileSignature className="w-3.5 h-3.5" /> Undertakings
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm("Delete training record?")) del.mutate(r.id);
+                        }}
+                        className="text-rose-500 hover:text-rose-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -804,9 +823,9 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
               </div>
               {create.error && <p className="text-xs text-rose-700">{(create.error as Error).message}</p>}
               <div className="flex justify-end gap-2">
-                <button type="button" className="border px-4 py-1.5 rounded text-gray-600">
-                  Generate Training Letter
-                </button>
+                <p className="text-[11px] text-gray-500 mr-auto">
+                  After saving, download the Training Letter and Undertakings from the table below.
+                </p>
                 <button type="button" onClick={() => setOpen(false)} className="border px-4 py-1.5 rounded">
                   Cancel
                 </button>
