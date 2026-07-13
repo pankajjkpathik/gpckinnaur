@@ -128,6 +128,44 @@ export const staffChangePassword = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const staffUpdateProfile = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        name: z.string().trim().min(2).max(100).optional().nullable(),
+        designation: z.string().trim().max(100).optional().nullable(),
+        dob: z.string().trim().max(20).optional().nullable(),
+        ip_number: z.string().trim().max(50).optional().nullable(),
+        pmis_number: z.string().trim().max(50).optional().nullable(),
+        phone: z
+          .string()
+          .trim()
+          .max(15)
+          .regex(/^[0-9+\-\s()]*$/, "Phone may only contain digits, spaces, +, -, ( or )")
+          .optional()
+          .nullable(),
+        email: z.string().trim().email().max(255).optional().nullable().or(z.literal("")),
+        address: z.string().trim().max(500).optional().nullable(),
+        date_of_joining: z.string().trim().max(20).optional().nullable(),
+        date_of_retirement: z.string().trim().max(20).optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const session = await useSession<StaffSession>(staffSessionConfig);
+    if (!session.data?.id) throw new Error("Not authenticated");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, any> = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (v === undefined) continue;
+      patch[k] = v === "" ? null : v;
+    }
+    if (Object.keys(patch).length === 0) return { success: true };
+    const { error } = await supabaseAdmin.from("staff_users").update(patch).eq("id", session.data.id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  });
+
 // Upload a profile photo for the authenticated staff user (all roles),
 // store the object in the private `avatars` bucket, persist a long-lived
 // signed URL on staff_users.image_url, and return the new URL so the UI
