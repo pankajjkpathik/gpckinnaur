@@ -61,11 +61,12 @@ function StaffDashboard() {
     if (!me) {
       navigate({ to: "/staff-login" });
     } else if (me.role === "principal") {
-      // Principal has a single unified dashboard at /principal
       window.location.replace("/principal");
     } else if (me.role === "hod") {
-      // HOD has a single unified dashboard at /hod
       window.location.replace("/hod");
+    } else if (me.role === "faculty") {
+      // Faculty has a single unified dashboard at /faculty
+      window.location.replace("/faculty");
     }
   }, [me, isLoading, navigate]);
 
