@@ -105,7 +105,7 @@ test("PortalShell dashboardHref() targets all exist", () => {
   // this test.
   const ROLE_TARGETS = {
     principal: "/principal",
-    super_admin: "/principal",
+    super_admin: "/admin",
     hod: "/hod",
     tpo: "/tpo",
     clerk: "/clerk",
