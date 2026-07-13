@@ -268,6 +268,18 @@ function PrincipalPortal() {
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 text-sm shrink-0">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="inline-flex items-center gap-1.5 border rounded px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50"
+              aria-label="Open global search"
+              title="Search (Ctrl/⌘ K)"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Search…</span>
+              <kbd className="hidden md:inline text-[10px] font-mono bg-gray-100 border rounded px-1 py-0.5 ml-1">
+                ⌘K
+              </kbd>
+            </button>
             <label htmlFor="principal-ay" className="text-xs text-gray-400 hidden md:block">AY</label>
             <input
               id="principal-ay"
