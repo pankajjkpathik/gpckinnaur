@@ -282,6 +282,7 @@ function HodSidebar({
         active={active}
         onNav={onNav}
         defaultOpen
+        canWrite={canWrite}
       />
 
       <SidebarGroup
@@ -291,6 +292,7 @@ function HodSidebar({
         items={MONITORING_NAV}
         active={active}
         onNav={onNav}
+        canWrite={canWrite}
       />
 
       <div className="pt-1 border-t border-gray-100">
