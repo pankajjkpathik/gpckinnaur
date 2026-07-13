@@ -17,6 +17,18 @@ const httpUrl = z
   .url()
   .refine((v) => /^https?:\/\//i.test(v), { message: "File URL must be http(s)" });
 
+const ASSIGNMENT_BUCKET = "assignments";
+// Signed URLs live in `file_url` as `.../object/sign/assignments/<path>?token=...`
+// so we can recover the storage path from the URL and clean up on delete.
+function extractAssignmentPath(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/\/assignments\/([^?]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+// 10 years — signed URLs are effectively permanent for portal downloads.
+const SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10;
+
+
 // =====================================================================
 // ASSIGNMENTS  (faculty create / list / delete; students list their class)
 // =====================================================================
