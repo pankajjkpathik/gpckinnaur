@@ -292,9 +292,9 @@ function HomeView({ year, onNav, me }: { year: string; onNav: (v: View) => void;
           </>
         }
         stats={[
-          { value: data?.total_students ?? "—", label: "Students" },
-          { value: data?.total_faculty ?? "—", label: "Faculty" },
-          { value: data?.total_branches ?? "—", label: "Branches" },
+          { value: data?.students ?? "—", label: "Students" },
+          { value: data?.staff ?? "—", label: "Staff" },
+          { value: data?.circulars ?? "—", label: "Circulars" },
         ]}
       />
 
