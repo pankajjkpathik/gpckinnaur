@@ -1395,12 +1395,20 @@ function SalaryTab({ preset }: { preset?: { month: number; year: number; key: nu
           <Plus className="w-4 h-4" /> Salary Entry
         </button>
         <button
+          onClick={exportCsv}
+          disabled={!listQ.data?.length}
+          className="border px-3 py-2 rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
+        >
+          <Download className="w-4 h-4" /> CSV
+        </button>
+        <button
           onClick={exportXlsx}
           disabled={!listQ.data?.length}
           className="border px-3 py-2 rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
         >
-          <Download className="w-4 h-4" /> Export
+          <Download className="w-4 h-4" /> XLSX
         </button>
+
         <span className="ml-auto text-sm">
           Total Net: <b>₹{total.toLocaleString("en-IN")}</b>
         </span>
