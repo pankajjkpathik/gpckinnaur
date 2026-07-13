@@ -1282,9 +1282,13 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
                 activeTab
                   ? isOver
                     ? "bg-rose-600 text-white border-rose-600"
+                    : isUnreadTab
+                    ? "bg-emerald-600 text-white border-emerald-600"
                     : "bg-[#7b1f4c] text-white border-[#7b1f4c]"
                   : isOver && t.count > 0
                   ? "bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
+                  : isUnreadTab && t.count > 0
+                  ? "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
               }`}
             >
