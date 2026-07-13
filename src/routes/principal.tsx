@@ -349,6 +349,16 @@ function PrincipalPortal() {
           {view === "tpo_lectures" && <TpoLecturesDetailsView onBack={() => setView("home")} />}
         </main>
       </div>
+
+      <PrincipalSearch
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        onNavigate={(v) => {
+          setView(v);
+          setSearchOpen(false);
+          setMobileNavOpen(false);
+        }}
+      />
     </div>
   );
 }
