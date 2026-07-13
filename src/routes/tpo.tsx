@@ -738,10 +738,13 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
                 const ids = Object.keys(picked).map(Number);
+                if (!branch) { alert("Please select a Branch."); return; }
+                if (!semester) { alert("Please select a Semester."); return; }
+                if (ids.length === 0) { alert("Please select at least one student."); return; }
                 create.mutate({
                   training_type: fd.get("training_type"),
-                  branch: branch || null,
-                  semester: semester || null,
+                  branch,
+                  semester,
                   student_ids: ids,
                   student_names: ids.map((id) => picked[id]),
                   company: fd.get("company") || null,
@@ -843,8 +846,8 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                   Cancel
                 </button>
                 <button
-                  disabled={create.isPending}
-                  className="bg-[#7b1f4c] text-white px-4 py-1.5 rounded disabled:opacity-50"
+                  disabled={create.isPending || !branch || !semester || Object.keys(picked).length === 0}
+                  className="bg-[#7b1f4c] text-white px-4 py-1.5 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {create.isPending ? "Saving…" : "Assign Training"}
                 </button>
