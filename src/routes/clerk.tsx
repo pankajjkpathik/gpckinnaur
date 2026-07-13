@@ -62,6 +62,8 @@ function ClerkPortal() {
     { icon: Upload, label: "Bulk Import", tab: "import" },
     { icon: ArrowUpCircle, label: "Promote", tab: "promote" },
     { icon: Wallet, label: "Salary", tab: "salary" },
+    { icon: User, label: "My Profile", tab: "profile" },
+    { icon: KeyRound, label: "Change Password", tab: "password" },
   ];
 
   return (
