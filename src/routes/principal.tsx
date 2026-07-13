@@ -338,8 +338,10 @@ function PrincipalSidebar({
   );
 }
 
-
+// ─── HOME (card grid) ─────────────────────────────────────────────────────────
+function HomeView({ year, onNav, me }: { year: string; onNav: (v: View) => void; me: any }) {
   const fn = useServerFn(principalDashboard);
+
   const { data } = useQuery({
     queryKey: ["principal-dash", year],
     queryFn: () => fn({ data: { academic_year: year } }),
