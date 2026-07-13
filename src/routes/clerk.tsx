@@ -197,61 +197,62 @@ function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
   const monthLabel = now.toLocaleString("en", { month: "long", year: "numeric" });
 
   return (
-    <div className="space-y-6">
-      <HeroBanner
-        name={me?.name || me?.username || "Clerk"}
-        role="Office & Records"
-        avatarSrc={avatarUrl(me)}
-        onAvatarChange={(f) => uploadAvatar.mutate(f)}
-        avatarUploading={uploadAvatar.isPending}
-        palette="clerk"
-        subtitle={
-          <>
-            <span className="text-white/80">Master records · Admissions · Payroll</span>
-            <span className="text-white/60"> · {monthLabel}</span>
-          </>
-        }
-        stats={[
-          { value: totalStudents, label: "Students" },
-          { value: totalStaff, label: "Staff" },
-          { value: paidStaffThisMonth, label: "Paid this month" },
-        ]}
-      />
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      {/* ── LEFT PANEL: Hero + Quick Actions ─────────────────────────── */}
+      <div className="xl:col-span-5 space-y-6">
+        <HeroBanner
+          name={me?.name || me?.username || "Clerk"}
+          role="Office & Records"
+          avatarSrc={avatarUrl(me)}
+          onAvatarChange={(f) => uploadAvatar.mutate(f)}
+          avatarUploading={uploadAvatar.isPending}
+          palette="clerk"
+          subtitle={
+            <>
+              <span className="text-white/80">Master records · Admissions · Payroll</span>
+              <span className="text-white/60"> · {monthLabel}</span>
+            </>
+          }
+          stats={[
+            { value: totalStudents, label: "Students" },
+            { value: totalStaff, label: "Staff" },
+            { value: paidStaffThisMonth, label: "Paid this month" },
+          ]}
+        />
 
-      {/* Quick Actions */}
-      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-amber-50 to-white border-b">
-          <p className="font-semibold text-gray-800">Quick Actions</p>
-          <p className="text-[11px] text-gray-500">Everything the office needs, one click away.</p>
-        </div>
-        <div className="p-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {quickActions.map((q) => (
-            <QuickCard
-              key={q.tab}
-              icon={q.icon}
-              label={q.label}
-              desc={q.desc}
-              color={q.color}
-              border={q.border}
-              stat={q.stat}
-              statLabel={q.statLabel}
-              onClick={() => onNav(q.tab)}
-            />
-          ))}
+        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-amber-50 to-white border-b">
+            <p className="font-semibold text-gray-800">Quick Actions</p>
+            <p className="text-[11px] text-gray-500">Everything the office needs, one click away.</p>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {quickActions.map((q) => (
+              <QuickCard
+                key={q.tab}
+                icon={q.icon}
+                label={q.label}
+                desc={q.desc}
+                color={q.color}
+                border={q.border}
+                stat={q.stat}
+                statLabel={q.statLabel}
+                onClick={() => onNav(q.tab)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiTile icon={Users} label="Total Students" value={totalStudents} tone="from-amber-500 to-orange-600" />
-        <KpiTile icon={UsersRound} label="Staff Members" value={totalStaff} tone="from-sky-500 to-indigo-600" />
-        <KpiTile icon={Wallet} label={`Net Payroll (${now.toLocaleString("en", { month: "short" })})`} value={`₹${monthlyNet.toLocaleString("en-IN")}`} tone="from-emerald-500 to-teal-600" />
-        <KpiTile icon={UserPlus} label="Salary Entries" value={paidStaffThisMonth} tone="from-rose-500 to-fuchsia-600" />
-      </div>
+      {/* ── RIGHT PANEL: KPIs + Branch Strength + Recent ─────────────── */}
+      <div className="xl:col-span-7 space-y-6">
+        <div className="grid grid-cols-2 gap-3">
+          <KpiTile icon={Users} label="Total Students" value={totalStudents} tone="from-amber-500 to-orange-600" />
+          <KpiTile icon={UsersRound} label="Staff Members" value={totalStaff} tone="from-sky-500 to-indigo-600" />
+          <KpiTile icon={Wallet} label={`Net Payroll (${now.toLocaleString("en", { month: "short" })})`} value={`₹${monthlyNet.toLocaleString("en-IN")}`} tone="from-emerald-500 to-teal-600" />
+          <KpiTile icon={UserPlus} label="Salary Entries" value={paidStaffThisMonth} tone="from-rose-500 to-fuchsia-600" />
+        </div>
 
-      {/* Branch strength + Recent additions */}
-      <div className="grid lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
           <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
             <p className="font-semibold text-gray-800">Branch Strength</p>
             <p className="text-[11px] text-gray-500">Active students grouped by department.</p>
@@ -282,7 +283,7 @@ function HomeTab({ me, onNav }: { me: any; onNav: (t: Tab) => void }) {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
           <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
             <div>
               <p className="font-semibold text-gray-800">Recently Added</p>
