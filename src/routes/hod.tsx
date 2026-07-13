@@ -225,9 +225,35 @@ function HodPortal() {
     else if (!hasRole(me, hodRoles)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
-  const [view, setView] = useState<View>("home");
+  const VALID_VIEWS: View[] = ["home", "overview", "faculty", "attendance", "sessional", "syllabus", "timetable", "lessons"];
+  const initialView: View = (() => {
+    if (typeof window === "undefined") return "home";
+    const v = new URLSearchParams(window.location.search).get("view") as View | null;
+    return v && VALID_VIEWS.includes(v) ? v : "home";
+  })();
+  const [view, setView] = useState<View>(initialView);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const ay = defaultAY();
+
+  // Keep ?view= in sync with current view so refresh/back-forward preserves selection.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (view === "home") url.searchParams.delete("view");
+    else url.searchParams.set("view", view);
+    window.history.replaceState(null, "", url.toString());
+  }, [view]);
+
+  // Respond to back/forward navigation.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onPop = () => {
+      const v = new URLSearchParams(window.location.search).get("view") as View | null;
+      setView(v && VALID_VIEWS.includes(v) ? v : "home");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   async function logout() {
     await staffLogout({});
