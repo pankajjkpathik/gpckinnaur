@@ -58,8 +58,6 @@ function StaffDashboard() {
 
   useEffect(() => {
     if (!isLoading && !me) navigate({ to: "/staff-login" });
-    // Principal has a dedicated single-entry dashboard — bypass the staff hub.
-    else if (me && me.role === "principal") window.location.replace("/principal");
   }, [me, isLoading, navigate]);
 
   if (isLoading || !me || !me.role)
