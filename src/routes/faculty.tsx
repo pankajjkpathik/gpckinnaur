@@ -73,6 +73,7 @@ import {
 import { listNotices } from "@/lib/notices.functions";
 import { listAnnouncements } from "@/lib/admin-extras.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
