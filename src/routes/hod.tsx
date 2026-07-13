@@ -914,8 +914,76 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
 }
 
 /* ─── SESSIONAL REPORTS (marks) — tabs: pending / approved ───────────────── */
-function SessionalReportsView({ ay, onBack }: { ay: string; onBack: () => void }) {
+function SessionalReportsView({
+  ay,
+  branch,
+  deptLabel,
+  onBack,
+}: {
+  ay: string;
+  branch: string;
+  deptLabel: string;
+  onBack: () => void;
+}) {
   const [tab, setTab] = useState<"pending" | "approved" | "returned">("pending");
+  const [exporting, setExporting] = useState<null | "csv" | "pdf">(null);
+
+  const runExport = async (format: "csv" | "pdf") => {
+    setExporting(format);
+    try {
+      const rows = await hodExportApprovedMarks({ data: { academic_year: ay, branch } });
+      if (!rows.length) {
+        alert("No approved sessional marks to export for this session and department.");
+        return;
+      }
+      const header = [
+        "Subject Code",
+        "Subject",
+        "Sem",
+        "Exam",
+        "Enrollment No.",
+        "Student",
+        "Obtained",
+        "Max",
+        "Remarks",
+        "Faculty",
+        "Approved By",
+        "Approved At",
+      ];
+      const body = rows.map((r) => [
+        r.subject_code,
+        r.subject_name,
+        r.semester,
+        r.exam_type,
+        r.enrollment_no,
+        r.student_name,
+        r.obtained,
+        r.max_marks,
+        r.remarks,
+        r.faculty,
+        r.approved_by,
+        r.approved_at ? new Date(r.approved_at).toLocaleString() : "",
+      ]);
+      const safeDept = deptLabel.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+      const filename = `sessional-approved_${safeDept}_${ay}`;
+      if (format === "csv") {
+        exportCSV(filename, header, body);
+      } else {
+        exportPDF(
+          filename,
+          `Approved Sessional Marks — ${deptLabel}`,
+          `Session ${ay} · ${rows.length} record${rows.length === 1 ? "" : "s"}`,
+          header,
+          body,
+        );
+      }
+    } catch (e: any) {
+      alert(e?.message || "Export failed.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
@@ -927,18 +995,40 @@ function SessionalReportsView({ ay, onBack }: { ay: string; onBack: () => void }
               Validate internal marks sheets submitted by faculty. Approved sheets remain visible for reference.
             </p>
           </div>
-          <div className="inline-flex rounded-lg border overflow-hidden text-xs">
-            {(["pending", "approved", "returned"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-3 py-1.5 capitalize ${
-                  tab === t ? "bg-[#7b1f4c] text-white" : "bg-white text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 flex-wrap">
+            {tab === "approved" && (
+              <div className="inline-flex items-center gap-1.5">
+                <button
+                  onClick={() => runExport("csv")}
+                  disabled={exporting !== null}
+                  title={`Download approved sessional marks for ${deptLabel} · ${ay} as CSV`}
+                  className="text-xs px-3 py-1.5 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {exporting === "csv" ? "Exporting…" : "Export CSV"}
+                </button>
+                <button
+                  onClick={() => runExport("pdf")}
+                  disabled={exporting !== null}
+                  title={`Download approved sessional marks for ${deptLabel} · ${ay} as PDF`}
+                  className="text-xs px-3 py-1.5 rounded bg-[#7b1f4c] text-white hover:bg-[#651841] disabled:opacity-50"
+                >
+                  {exporting === "pdf" ? "Exporting…" : "Export PDF"}
+                </button>
+              </div>
+            )}
+            <div className="inline-flex rounded-lg border overflow-hidden text-xs">
+              {(["pending", "approved", "returned"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`px-3 py-1.5 capitalize ${
+                    tab === t ? "bg-[#7b1f4c] text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         <MarksTable ay={ay} status={tab} />
