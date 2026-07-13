@@ -738,10 +738,13 @@ function TrainingView({ onBack }: { onBack?: () => void }) {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
                 const ids = Object.keys(picked).map(Number);
+                if (!branch) { alert("Please select a Branch."); return; }
+                if (!semester) { alert("Please select a Semester."); return; }
+                if (ids.length === 0) { alert("Please select at least one student."); return; }
                 create.mutate({
                   training_type: fd.get("training_type"),
-                  branch: branch || null,
-                  semester: semester || null,
+                  branch,
+                  semester,
                   student_ids: ids,
                   student_names: ids.map((id) => picked[id]),
                   company: fd.get("company") || null,
