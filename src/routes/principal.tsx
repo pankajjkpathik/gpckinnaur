@@ -31,6 +31,8 @@ import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { QuickCard } from "@/components/portal/QuickCard";
 import { HeroBanner } from "@/components/portal/HeroBanner";
+import { avatarUrl } from "@/lib/portal-identity";
+
 import {
   listParentMessages,
   markParentMessageRead,
@@ -451,6 +453,8 @@ function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: an
         name={me?.name || "Principal"}
         role="Principal"
         palette="principal"
+        avatarSrc={avatarUrl(me)}
+
         subtitle={
           <>
             Academic Year <span className="font-semibold text-amber-200">{year}</span>
