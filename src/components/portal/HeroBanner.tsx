@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Sunrise, Sun, Sunset } from "lucide-react";
 import {
   HERO_TYPOGRAPHY,
   resolveHeroPalette,
