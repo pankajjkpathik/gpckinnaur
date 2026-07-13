@@ -22,7 +22,7 @@ export const studentDashboard = createServerFn({ method: "GET" }).handler(async 
     supabaseAdmin.from("attendance").select("status").eq("student_id", me.id),
     supabaseAdmin
       .from("timetable")
-      .select("period_no, room, subjects(code,name), staff_users:staff_id(username)")
+      .select("period_no, room, day_of_week, subject_id, subjects(id,code,name), staff_users:staff_id(username)")
       .eq("branch", me.branch)
       .eq("semester", me.semester)
       .eq("day_of_week", dow)
