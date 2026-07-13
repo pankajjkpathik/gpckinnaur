@@ -276,7 +276,17 @@ function FacultyPortalInner({
               >
                 {item.label}
                 {item.badge && item.badge > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold align-middle">
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setView("home");
+                      focusNotifications();
+                    }}
+                    className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[9px] font-bold align-middle cursor-pointer"
+                    title={`${item.badge} unread — jump to notifications`}
+                  >
                     {item.badge > 9 ? "9+" : item.badge}
                   </span>
                 )}
