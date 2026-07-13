@@ -36,6 +36,7 @@ import {
   clerkUpdateStudent,
   clerkBulkImportStudents,
   clerkPromoteStudents,
+  clerkRecentActivity,
 } from "@/lib/clerk.functions";
 import { adminCreateStudent } from "@/lib/admin.functions";
 import { salaryList, salaryUpsert, salaryDelete, salaryStaffList } from "@/lib/salary.functions";
