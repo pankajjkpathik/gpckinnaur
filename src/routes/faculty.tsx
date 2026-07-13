@@ -69,6 +69,7 @@ import {
 } from "@/lib/assignments.functions";
 import { listNotices } from "@/lib/notices.functions";
 import { listAnnouncements } from "@/lib/admin-extras.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
