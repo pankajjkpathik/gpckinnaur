@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -24,6 +24,7 @@ import {
   Megaphone,
   AlarmClock,
   CheckCheck,
+  Settings,
 } from "lucide-react";
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { useServerFn } from "@tanstack/react-start";
@@ -78,6 +79,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useFacNotifPrefs, getFacNotifPrefs } from "@/lib/faculty-notif-prefs";
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
@@ -186,7 +188,7 @@ function FacultyPortalInner({
 }) {
 
   // Keep realtime live for all faculty views, so the sidebar badge stays fresh.
-  useFacultyNotifRealtime(ay);
+  useFacultyNotifRealtime(ay, me.id);
   const { unreadCount, items: notifItems, unread: notifUnread, readIds: notifReadIds, setReadIds: setNotifReadIds } =
     useFacultyNotifications(me, ay);
 
@@ -706,11 +708,22 @@ function useFacultyNotifications(me: any, ay: string) {
     retry: false,
   });
   const [readIds, setReadIds] = useReadIds(`fac-notif-read:${me.id}`);
-  const items = useMemo(
-    () => computeNotifItems(annQ.data, noticesQ.data, asgQ.data),
-    [annQ.data, noticesQ.data, asgQ.data],
-  );
+  const { prefs } = useFacNotifPrefs(me.id);
+  const items = useMemo(() => {
+    const all = computeNotifItems(annQ.data, noticesQ.data, asgQ.data);
+    const now = Date.now();
+    return all.filter((it) => {
+      if (it.kind === "announcement" || it.kind === "notice") return prefs.announcements;
+      if (it.kind === "deadline") {
+        const overdue = it.timestamp < now;
+        if (overdue) return prefs.overdue;
+        return prefs.deadlines;
+      }
+      return true;
+    });
+  }, [annQ.data, noticesQ.data, asgQ.data, prefs]);
   const unread = items.filter((i) => !readIds.has(i.key));
+
   return {
     items,
     unread,
@@ -743,7 +756,7 @@ function useFacNotifRtStatus() {
   );
 }
 
-function useFacultyNotifRealtime(ay: string) {
+function useFacultyNotifRealtime(ay: string, userId?: string | number) {
   const qc = useQueryClient();
   const navigate = useNavigate();
 
@@ -780,6 +793,8 @@ function useFacultyNotifRealtime(ay: string) {
           facNotifRtLastEvent = Date.now();
           qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
           if (payload?.eventType === "INSERT" && payload?.new) {
+            const prefs = getFacNotifPrefs(userId);
+            if (!prefs.toasts || !prefs.announcements) return;
             const n = payload.new;
             toast.info(n.title || "New notice posted", {
               description: n.category ? `Category: ${n.category}` : undefined,
@@ -791,11 +806,14 @@ function useFacultyNotifRealtime(ay: string) {
               },
             });
           }
+
         })
         .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, (payload: any) => {
           facNotifRtLastEvent = Date.now();
           qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
           if (payload?.eventType === "INSERT" && payload?.new) {
+            const prefs = getFacNotifPrefs(userId);
+            if (!prefs.toasts || !prefs.announcements) return;
             const a = payload.new;
             const preview = (a.content ?? "").toString().slice(0, 120);
             toast.info("New announcement", {
@@ -808,6 +826,7 @@ function useFacultyNotifRealtime(ay: string) {
               },
             });
           }
+
         })
         .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, (payload: any) => {
           facNotifRtLastEvent = Date.now();
@@ -821,6 +840,11 @@ function useFacultyNotifRealtime(ay: string) {
             const due = new Date(a.due_date).getTime();
             const days = Math.ceil((due - Date.now()) / (24 * 3600 * 1000));
             if (days < -3 || days > 14) return;
+            const prefs = getFacNotifPrefs(userId);
+            if (!prefs.toasts) return;
+            const overdue = days < 0;
+            if (overdue ? !prefs.overdue : !prefs.deadlines) return;
+
             const rel =
               days < 0
                 ? `Overdue by ${Math.abs(days)}d`
@@ -874,7 +898,7 @@ function useFacultyNotifRealtime(ay: string) {
       stopPolling();
       if (channel) supabase.removeChannel(channel);
     };
-  }, [qc, ay, navigate]);
+  }, [qc, ay, navigate, userId]);
 }
 
 
@@ -1139,7 +1163,15 @@ function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
               <CheckCheck className="w-3 h-3" /> Mark all read
             </button>
           )}
+          <Link
+            to="/faculty-notification-settings"
+            className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 text-gray-700"
+            title="Notification settings"
+          >
+            <Settings className="w-3 h-3" /> Settings
+          </Link>
         </div>
+
       </div>
       {rtStatus !== "connected" && rtStatus !== "connecting" && (
         <div
