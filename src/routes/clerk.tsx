@@ -17,6 +17,10 @@ import {
   Landmark,
   Wrench,
   Beaker,
+  User,
+  KeyRound,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
