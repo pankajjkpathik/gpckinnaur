@@ -17,20 +17,23 @@ export const Route = createFileRoute("/parent-change-password")({
 
 function ParentChangePassword() {
   const nav = useNavigate();
+  const qc = useQueryClient();
   const { data: me, isLoading } = useQuery({ queryKey: ["parent-me"], queryFn: () => parentMe() });
   const [current, setCurrent] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
 
   const save = useMutation({
     mutationFn: () =>
       parentChangePassword({ data: { currentPassword: current, newPassword: pw } }),
-    onSuccess: () => {
-      setCurrent("");
-      setPw("");
-      setPw2("");
+    onSuccess: async () => {
       setErr(null);
+      setOkMsg("Password updated. Signing you out…");
+      try { await parentLogout(); } catch { /* ignore */ }
+      qc.clear();
+      setTimeout(() => nav({ to: "/parent-login" }), 1200);
     },
     onError: (e: any) => setErr(e.message),
   });
