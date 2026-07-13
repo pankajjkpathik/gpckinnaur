@@ -679,26 +679,104 @@ function useFacultyNotifications(me: any, ay: string) {
   };
 }
 
+type RealtimeStatus = "connecting" | "connected" | "reconnecting" | "error";
+let facNotifRtStatus: RealtimeStatus = "connecting";
+let facNotifRtLastEvent = 0;
+const facNotifRtListeners = new Set<() => void>();
+function setFacNotifRtStatus(s: RealtimeStatus) {
+  facNotifRtStatus = s;
+  facNotifRtListeners.forEach((l) => l());
+}
+function subscribeFacNotifRt(cb: () => void) {
+  facNotifRtListeners.add(cb);
+  return () => {
+    facNotifRtListeners.delete(cb);
+  };
+}
+function useFacNotifRtStatus() {
+  return useSyncExternalStore(
+    subscribeFacNotifRt,
+    () => facNotifRtStatus,
+    () => "connecting" as RealtimeStatus,
+  );
+}
+
 function useFacultyNotifRealtime(ay: string) {
   const qc = useQueryClient();
   useEffect(() => {
-    const channel = supabase
-      .channel("fac-notif-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () =>
-        qc.invalidateQueries({ queryKey: ["fac-notif-notices"] }),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () =>
-        qc.invalidateQueries({ queryKey: ["fac-notif-ann"] }),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () =>
-        qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] }),
-      )
-      .subscribe();
+    let cancelled = false;
+    let retry = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const invalidateAll = () => {
+      qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+      qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+      qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+    };
+
+    const startPolling = () => {
+      if (pollTimer) return;
+      pollTimer = setInterval(invalidateAll, 60_000);
+    };
+    const stopPolling = () => {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    };
+
+    const connect = () => {
+      if (cancelled) return;
+      setFacNotifRtStatus(retry === 0 ? "connecting" : "reconnecting");
+      channel = supabase
+        .channel(`fac-notif-live-${Date.now()}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
+          facNotifRtLastEvent = Date.now();
+          qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () => {
+          facNotifRtLastEvent = Date.now();
+          qc.invalidateQueries({ queryKey: ["fac-notif-ann"] });
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "assignments" }, () => {
+          facNotifRtLastEvent = Date.now();
+          qc.invalidateQueries({ queryKey: ["fac-notif-asg", ay] });
+        })
+        .subscribe((status) => {
+          if (cancelled) return;
+          if (status === "SUBSCRIBED") {
+            const wasReconnecting = retry > 0;
+            retry = 0;
+            setFacNotifRtStatus("connected");
+            stopPolling();
+            if (wasReconnecting) invalidateAll();
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            setFacNotifRtStatus(retry === 0 ? "error" : "reconnecting");
+            startPolling();
+            invalidateAll();
+            if (channel) {
+              supabase.removeChannel(channel);
+              channel = null;
+            }
+            const delay = Math.min(30_000, 2000 * 2 ** retry);
+            retry += 1;
+            retryTimer = setTimeout(connect, delay);
+          }
+        });
+    };
+
+    connect();
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      stopPolling();
+      if (channel) supabase.removeChannel(channel);
     };
   }, [qc, ay]);
 }
+
 
 function NotificationsPanel({ me, ay }: { me: any; ay: string }) {
   const { items, unread, readIds, setReadIds, loading } = useFacultyNotifications(me, ay);
