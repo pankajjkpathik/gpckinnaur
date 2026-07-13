@@ -179,9 +179,45 @@ export const HERO_PALETTES: Record<HeroPaletteName, HeroPalette> = {
   },
 };
 
-// Typography tokens shared across every hero banner. Tweak once here to
-// re-tune the greeting rhythm globally. Text stays white in both themes;
-// the outer surface already dims via the dark gradient stops.
+/**
+ * Typography + surface tokens shared across every hero banner.
+ *
+ * Tweak values here to re-tune the greeting rhythm globally — every portal
+ * dashboard picks up the change on the next render. Text stays white in both
+ * themes; the darker gradient stops in each palette dim the surface itself.
+ *
+ * ### Field guide
+ *
+ * | Key         | Rendered as                                | Change to…                          |
+ * | ----------- | ------------------------------------------ | ----------------------------------- |
+ * | `eyebrow`   | Uppercase "MONDAY 13 JULY · FACULTY" line  | Adjust date/role line size + tracking |
+ * | `heading`   | "Good evening, Dr. Kumar 👋"               | Adjust greeting font-size / weight  |
+ * | `subtitle`  | Free-form line below the greeting          | Adjust body text under the greeting |
+ * | `statValue` | Big number in each stat tile               | Resize the tile numerals            |
+ * | `statLabel` | Uppercase caption under each stat value    | Resize the tile captions            |
+ * | `blobLayer` | Wrapper for the two blur blobs             | Change decorative blob intensity    |
+ * | `statTile`  | The rounded surface each stat sits on      | Change tile padding / border tone   |
+ *
+ * ### Example — make headings a touch larger on desktop
+ *
+ * ```ts
+ * heading:
+ *   "mt-1.5 font-extrabold text-white leading-tight tracking-tight " +
+ *   "drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] dark:drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] " +
+ *   "text-[clamp(1.35rem,4.5vw,2rem)] sm:text-4xl break-words", // ← was sm:text-3xl
+ * ```
+ *
+ * ### Example — softer stat tiles in dark mode
+ *
+ * ```ts
+ * statTile:
+ *   "bg-white/10 dark:bg-white/[0.03] backdrop-blur-sm rounded-lg " + // ← dimmer dark surface
+ *   "px-3 py-2 sm:px-4 sm:py-3 border border-white/15 dark:border-white/5 text-center min-w-[70px]",
+ * ```
+ *
+ * Reminder: keep every class string as a single literal — do not build class
+ * names by interpolation, or Tailwind v4 will silently drop them at build.
+ */
 export const HERO_TYPOGRAPHY = {
   eyebrow:
     "text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.22em] font-semibold truncate",
@@ -190,13 +226,23 @@ export const HERO_TYPOGRAPHY = {
   subtitle: "mt-2 text-[13px] sm:text-sm text-white/95 dark:text-white/85 leading-relaxed",
   statValue: "text-lg sm:text-2xl font-bold text-white leading-none",
   statLabel: "text-[9px] sm:text-[10px] uppercase tracking-wider text-white/80 dark:text-white/70 mt-1",
-  // Decorative blob wrapper opacity — softer in dark to avoid hot glow.
+  /** Decorative blob wrapper opacity — softer in dark to avoid hot glow. */
   blobLayer: "absolute inset-0 opacity-10 dark:opacity-20 pointer-events-none",
-  // Stat tile surface tuning per theme.
+  /** Stat tile surface tuning per theme. */
   statTile:
     "bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 sm:px-4 sm:py-3 border border-white/15 dark:border-white/10 text-center min-w-[70px]",
 } as const;
 
+/**
+ * Resolve either a palette name (looked up in `HERO_PALETTES`) or an inline
+ * palette object into a concrete `HeroPalette`. `<HeroBanner />` calls this
+ * so callers can pass either shape:
+ *
+ * ```tsx
+ * <HeroBanner palette="faculty" ... />           // named token — preferred
+ * <HeroBanner palette={{ gradient: "...", ... }} ... />  // one-off override
+ * ```
+ */
 export function resolveHeroPalette(p: HeroPaletteName | HeroPalette): HeroPalette {
   return typeof p === "string" ? HERO_PALETTES[p] : p;
 }
