@@ -195,70 +195,68 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
   ];
 
   return (
-    <div className="space-y-6">
-      <HeroBanner
-        name={me?.name || me?.username || "TPO"}
-        role="Training & Placement Officer"
-        avatarSrc={avatarUrl(me)}
-        onAvatarChange={(f) => uploadAvatar.mutate(f)}
-        avatarUploading={uploadAvatar.isPending}
-        palette="tpo"
-        subtitle={
-          <>
-            Placement Year <span className="font-semibold text-cyan-200">{currentYear}</span>
-            <span className="text-white/70"> · Drive student outcomes & industry outreach.</span>
-          </>
-        }
-        stats={[
-          { value: placementsThisYear, label: "Placed" },
-          { value: trainings.length, label: "Trainings" },
-          { value: avgPackage ? `${avgPackage}L` : "—", label: "Avg CTC" },
-        ]}
-      />
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      {/* ── LEFT PANEL: Hero + Quick Actions ─────────────────────────── */}
+      <div className="xl:col-span-5 space-y-6">
+        <HeroBanner
+          name={me?.name || me?.username || "TPO"}
+          role="Training & Placement Officer"
+          avatarSrc={avatarUrl(me)}
+          onAvatarChange={(f) => uploadAvatar.mutate(f)}
+          avatarUploading={uploadAvatar.isPending}
+          palette="tpo"
+          subtitle={
+            <>
+              Placement Year <span className="font-semibold text-cyan-200">{currentYear}</span>
+              <span className="text-white/70"> · Drive student outcomes & industry outreach.</span>
+            </>
+          }
+          stats={[
+            { value: placementsThisYear, label: "Placed" },
+            { value: trainings.length, label: "Trainings" },
+            { value: avgPackage ? `${avgPackage}L` : "—", label: "Avg CTC" },
+          ]}
+        />
 
-      {/* Quick Actions */}
-      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-cyan-50 to-white border-b">
-          <p className="font-semibold text-gray-800">Quick Actions</p>
-          <p className="text-[11px] text-gray-500">Jump straight into placements, internships, or lectures.</p>
-        </div>
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {quickActions.map((q) => (
-            <QuickCard
-              key={q.view}
-              icon={q.icon}
-              label={q.label}
-              desc={q.desc}
-              color={q.color}
-              border={q.border}
-              stat={q.stat}
-              statLabel={q.statLabel}
-              onClick={() => onNav(q.view)}
-            />
-          ))}
+        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-cyan-50 to-white border-b">
+            <p className="font-semibold text-gray-800">Quick Actions</p>
+            <p className="text-[11px] text-gray-500">Jump straight into placements, internships, or lectures.</p>
+          </div>
+          <div className="p-4 grid grid-cols-1 gap-3">
+            {quickActions.map((q) => (
+              <QuickCard
+                key={q.view}
+                icon={q.icon}
+                label={q.label}
+                desc={q.desc}
+                color={q.color}
+                border={q.border}
+                stat={q.stat}
+                statLabel={q.statLabel}
+                onClick={() => onNav(q.view)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiTile icon={TrendingUp} label="Total Placements" value={placements.length} tone="from-fuchsia-500 to-rose-500" />
-        <KpiTile icon={GraduationCap} label={`Placed in ${currentYear}`} value={placementsThisYear} tone="from-cyan-500 to-sky-600" />
-        <KpiTile icon={Building2} label="Unique Companies" value={new Set(placements.map((p: any) => p.company)).size} tone="from-amber-500 to-orange-600" />
-        <KpiTile icon={Mic} label="Guest Lectures" value={lectures.length} tone="from-emerald-500 to-teal-600" />
-      </div>
+      {/* ── RIGHT PANEL: KPIs + Recruiters + Recent ──────────────────── */}
+      <div className="xl:col-span-7 space-y-6">
+        <div className="grid grid-cols-2 gap-3">
+          <KpiTile icon={TrendingUp} label="Total Placements" value={placements.length} tone="from-fuchsia-500 to-rose-500" />
+          <KpiTile icon={GraduationCap} label={`Placed in ${currentYear}`} value={placementsThisYear} tone="from-cyan-500 to-sky-600" />
+          <KpiTile icon={Building2} label="Unique Companies" value={new Set(placements.map((p: any) => p.company)).size} tone="from-amber-500 to-orange-600" />
+          <KpiTile icon={Mic} label="Guest Lectures" value={lectures.length} tone="from-emerald-500 to-teal-600" />
+        </div>
 
-      {/* Chart + Recent */}
-      <div className="grid lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
           <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
             <div>
               <p className="font-semibold text-gray-800">Top Recruiters ({currentYear})</p>
               <p className="text-[11px] text-gray-500">Placement count by company this year.</p>
             </div>
-            <button
-              onClick={() => onNav("placements")}
-              className="text-[11px] text-cyan-700 hover:underline"
-            >
+            <button onClick={() => onNav("placements")} className="text-[11px] text-cyan-700 hover:underline">
               View all →
             </button>
           </div>
@@ -273,7 +271,7 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
           <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b">
             <p className="font-semibold text-gray-800">Recent Placements</p>
             <p className="text-[11px] text-gray-500">Latest offers on record.</p>
@@ -303,40 +301,39 @@ function HomeView({ onNav, me }: { onNav: (v: View) => void; me: any }) {
             )}
           </ul>
         </div>
-      </div>
 
-      {/* Recent Lectures */}
-      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
-          <div>
-            <p className="font-semibold text-gray-800 flex items-center gap-2">
-              <Mic className="w-4 h-4 text-cyan-700" /> Recent Guest Lectures
-            </p>
-            <p className="text-[11px] text-gray-500">Latest expert sessions organised.</p>
+        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-gray-800 flex items-center gap-2">
+                <Mic className="w-4 h-4 text-cyan-700" /> Recent Guest Lectures
+              </p>
+              <p className="text-[11px] text-gray-500">Latest expert sessions organised.</p>
+            </div>
+            <button onClick={() => onNav("lectures")} className="text-[11px] text-cyan-700 hover:underline">
+              All lectures →
+            </button>
           </div>
-          <button onClick={() => onNav("lectures")} className="text-[11px] text-cyan-700 hover:underline">
-            All lectures →
-          </button>
-        </div>
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {recentLectures.length === 0 ? (
-            <p className="col-span-full text-xs text-gray-400 py-6 text-center">
-              No guest lectures logged yet.
-            </p>
-          ) : (
-            recentLectures.map((l: any) => (
-              <div key={l.id} className="border rounded-lg p-3 hover:shadow-sm transition-shadow">
-                <p className="text-sm font-semibold text-gray-800 truncate">{l.topic}</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">
-                  <span className="text-gray-700 font-medium">{l.speaker}</span>
-                  {l.department ? ` · ${l.department}` : ""}
-                </p>
-                <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">
-                  {l.lecture_date ?? "Date TBD"}
-                </p>
-              </div>
-            ))
-          )}
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {recentLectures.length === 0 ? (
+              <p className="col-span-full text-xs text-gray-400 py-6 text-center">
+                No guest lectures logged yet.
+              </p>
+            ) : (
+              recentLectures.map((l: any) => (
+                <div key={l.id} className="border rounded-lg p-3 hover:shadow-sm transition-shadow">
+                  <p className="text-sm font-semibold text-gray-800 truncate">{l.topic}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    <span className="text-gray-700 font-medium">{l.speaker}</span>
+                    {l.department ? ` · ${l.department}` : ""}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">
+                    {l.lecture_date ?? "Date TBD"}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
