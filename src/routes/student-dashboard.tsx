@@ -444,7 +444,9 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
               </ul>
             </>
           )}
+        </Card>
       </div>
+
 
       <ClassDetailDialog
         openClass={openClass}
