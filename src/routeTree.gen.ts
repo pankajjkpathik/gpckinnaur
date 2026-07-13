@@ -52,6 +52,7 @@ import { Route as StaffCommitteesRouteImport } from './routes/staff.committees'
 import { Route as StaffAdminRouteImport } from './routes/staff.admin'
 import { Route as RtiSuoMotuRouteImport } from './routes/rti.suo-motu'
 import { Route as RtiDisclosureSection41bRouteImport } from './routes/rti.disclosure-section-4-1b'
+import { Route as DevHeroPreviewRouteImport } from './routes/dev.hero-preview'
 import { Route as DepartmentsIdRouteImport } from './routes/departments.$id'
 import { Route as AlumniRegisterRouteImport } from './routes/alumni.register'
 import { Route as AdminTimetableRouteImport } from './routes/admin.timetable'
@@ -284,6 +285,11 @@ const RtiDisclosureSection41bRoute = RtiDisclosureSection41bRouteImport.update({
   path: '/rti/disclosure-section-4-1b',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevHeroPreviewRoute = DevHeroPreviewRouteImport.update({
+  id: '/dev/hero-preview',
+  path: '/dev/hero-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DepartmentsIdRoute = DepartmentsIdRouteImport.update({
   id: '/departments/$id',
   path: '/departments/$id',
@@ -410,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/dev/hero-preview': typeof DevHeroPreviewRoute
   '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
   '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
@@ -469,6 +476,7 @@ export interface FileRoutesByTo {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/dev/hero-preview': typeof DevHeroPreviewRoute
   '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
   '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
@@ -530,6 +538,7 @@ export interface FileRoutesById {
   '/admin/timetable': typeof AdminTimetableRoute
   '/alumni/register': typeof AlumniRegisterRoute
   '/departments/$id': typeof DepartmentsIdRoute
+  '/dev/hero-preview': typeof DevHeroPreviewRoute
   '/rti/disclosure-section-4-1b': typeof RtiDisclosureSection41bRoute
   '/rti/suo-motu': typeof RtiSuoMotuRoute
   '/staff/admin': typeof StaffAdminRoute
@@ -592,6 +601,7 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/dev/hero-preview'
     | '/rti/disclosure-section-4-1b'
     | '/rti/suo-motu'
     | '/staff/admin'
@@ -651,6 +661,7 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/dev/hero-preview'
     | '/rti/disclosure-section-4-1b'
     | '/rti/suo-motu'
     | '/staff/admin'
@@ -711,6 +722,7 @@ export interface FileRouteTypes {
     | '/admin/timetable'
     | '/alumni/register'
     | '/departments/$id'
+    | '/dev/hero-preview'
     | '/rti/disclosure-section-4-1b'
     | '/rti/suo-motu'
     | '/staff/admin'
@@ -759,6 +771,7 @@ export interface RootRouteChildren {
   TrainingPlacementRoute: typeof TrainingPlacementRoute
   AlumniRegisterRoute: typeof AlumniRegisterRoute
   DepartmentsIdRoute: typeof DepartmentsIdRoute
+  DevHeroPreviewRoute: typeof DevHeroPreviewRoute
   RtiDisclosureSection41bRoute: typeof RtiDisclosureSection41bRoute
   RtiSuoMotuRoute: typeof RtiSuoMotuRoute
   StaffAdminRoute: typeof StaffAdminRoute
@@ -1072,6 +1085,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RtiDisclosureSection41bRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/hero-preview': {
+      id: '/dev/hero-preview'
+      path: '/dev/hero-preview'
+      fullPath: '/dev/hero-preview'
+      preLoaderRoute: typeof DevHeroPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/departments/$id': {
       id: '/departments/$id'
       path: '/departments/$id'
@@ -1253,6 +1273,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrainingPlacementRoute: TrainingPlacementRoute,
   AlumniRegisterRoute: AlumniRegisterRoute,
   DepartmentsIdRoute: DepartmentsIdRoute,
+  DevHeroPreviewRoute: DevHeroPreviewRoute,
   RtiDisclosureSection41bRoute: RtiDisclosureSection41bRoute,
   RtiSuoMotuRoute: RtiSuoMotuRoute,
   StaffAdminRoute: StaffAdminRoute,
