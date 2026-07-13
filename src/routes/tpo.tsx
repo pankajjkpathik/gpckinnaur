@@ -490,18 +490,46 @@ function PlacementsView({ onBack }: { onBack?: () => void }) {
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-gray-800">Placement Data</h1>
           <p className="text-xs text-gray-400">View and analyze student placement records.</p>
         </div>
-        <button
-          onClick={() => setOpen(true)}
-          className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1.5"
-        >
-          <Plus className="w-4 h-4" /> Add Placement
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const header = ["student_name", "roll_number", "company", "year", "package_lpa", "branch", "offer_date"];
+              const csv = [header.join(",")]
+                .concat(
+                  rows.map((r: any) =>
+                    header
+                      .map((h) => `"${String(r[h] ?? "").replace(/"/g, '""')}"`)
+                      .join(","),
+                  ),
+                )
+                .join("\n");
+              const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `placements_${Date.now()}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            disabled={rows.length === 0}
+            className="border px-3 py-2 rounded text-sm inline-flex items-center gap-1 disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" /> Export CSV
+          </button>
+          <button
+            onClick={() => setOpen(true)}
+            className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" /> Add Placement
+          </button>
+        </div>
       </div>
+
 
       {byCompany.length > 0 && (
         <Card>
