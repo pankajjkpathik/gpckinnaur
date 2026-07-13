@@ -82,7 +82,7 @@ function TpoPortal() {
     return () => window.removeEventListener("hashchange", scrollToHash);
   }, []);
 
-  if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
+  if (isLoading || !me || !hasRole(me, tpoRoles)) return <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading…</div>;
 
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
