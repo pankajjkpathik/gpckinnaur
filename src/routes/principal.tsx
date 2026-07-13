@@ -491,7 +491,6 @@ function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: an
     </div>
   );
 }
-}
 
 // ─── PLACEMENT DATA ───────────────────────────────────────────────────────────
 function PlacementDataView({ onBack }: { onBack: () => void }) {
