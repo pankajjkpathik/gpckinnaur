@@ -255,12 +255,18 @@ function FacultyPortalInner({
               <button
                 key={item.view}
                 onClick={() => setView(item.view)}
-                className={`px-3 py-2 text-xs ${
+                className={`relative px-3 py-2 text-xs ${
                   active ? "border-b-2 border-[#7b1f4c] text-[#7b1f4c] font-semibold" : "text-gray-600"
                 }`}
               >
                 {item.label}
+                {item.badge && item.badge > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold align-middle">
+                    {item.badge > 9 ? "9+" : item.badge}
+                  </span>
+                )}
               </button>
+
             );
           })}
         </div>
