@@ -25,11 +25,16 @@ function Page() {
     mutationFn: (d: { currentPassword: string; newPassword: string }) => staffChangePassword({ data: d }),
     onSuccess: async () => {
       setMsg({ kind: "ok", text: "Password updated. Signing you out…" });
+      toast.success("Password updated", { description: "Signing you out for security…" });
       try { await staffLogout(); } catch { /* ignore */ }
       qc.clear();
       setTimeout(() => navigate({ to: "/staff-login" }), 1200);
     },
-    onError: (e: any) => setMsg({ kind: "err", text: e.message || "Failed to update" }),
+    onError: (e: any) => {
+      const text = e?.message || "Failed to update";
+      setMsg({ kind: "err", text });
+      toast.error("Could not update password", { description: text });
+    },
   });
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
