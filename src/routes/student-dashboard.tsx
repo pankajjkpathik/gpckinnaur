@@ -45,6 +45,7 @@ import {
   studentMyDisciplinary,
   studentMySubmissions,
   studentSetAssignmentStatus,
+  studentRequestFeeReceipt,
 } from "@/lib/assignments.functions";
 
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
