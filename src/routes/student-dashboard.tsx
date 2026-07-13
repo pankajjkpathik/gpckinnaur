@@ -781,6 +781,126 @@ function HomeView({ me, setView }: { me: any; setView: (v: any) => void }) {
         </Card>
       </div>
 
+      {/* Next Deadlines — upcoming submissions grouped by subject */}
+      {(() => {
+        const nowMs = today.getTime();
+        const horizonMs = nowMs + 60 * 24 * 60 * 60 * 1000; // 60 days
+        const upcoming = (assignments as any[])
+          .filter((a) => {
+            if (!a.due_date) return false;
+            const t = new Date(a.due_date).getTime();
+            if (Number.isNaN(t)) return false;
+            if (t < nowMs) return false;
+            if (t > horizonMs) return false;
+            const st = subStatus(a.id);
+            return st !== "submitted" && st !== "graded";
+          })
+          .sort(
+            (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
+          );
+
+        const groups = new Map<string, any[]>();
+        for (const a of upcoming) {
+          const key = a.subjects?.name || a.subject_name || a.subjects?.code || "Other";
+          const arr = groups.get(key) ?? [];
+          arr.push(a);
+          groups.set(key, arr);
+        }
+        const groupList = Array.from(groups.entries()).sort(
+          (a, b) =>
+            new Date(a[1][0].due_date).getTime() - new Date(b[1][0].due_date).getTime(),
+        );
+
+        return (
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <CalendarClock className="w-4 h-4 text-[#7b1f4c]" />
+                <h2 className="font-semibold text-gray-800">Next Deadlines</h2>
+                {upcoming.length > 0 && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7b1f4c]/10 text-[#7b1f4c]">
+                    {upcoming.length}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setView("assignments-docs")}
+                className="text-xs font-medium text-[#7b1f4c] hover:underline"
+              >
+                View all →
+              </button>
+            </div>
+            {upcoming.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">
+                No upcoming submissions in the next 60 days.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {groupList.map(([subject, items]) => (
+                  <div key={subject}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <BookMarked className="w-3.5 h-3.5 text-gray-500" />
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        {subject}
+                      </h3>
+                      <span className="text-[10px] text-gray-400">
+                        {items.length} pending
+                      </span>
+                    </div>
+                    <ul className="divide-y border rounded">
+                      {items.map((a: any) => {
+                        const due = new Date(a.due_date);
+                        const dn = Math.ceil((due.getTime() - nowMs) / (1000 * 60 * 60 * 24));
+                        const urgent = dn <= 2;
+                        const soon = dn > 2 && dn <= 7;
+                        const st = subStatus(a.id);
+                        return (
+                          <li key={a.id} className="px-3 py-2 flex items-center gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-gray-800 truncate">
+                                {a.title}
+                              </p>
+                              <p className="text-[11px] text-gray-500 truncate">
+                                Due {due.toLocaleDateString(undefined, {
+                                  weekday: "short",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                                {st ? ` · ${st}` : ""}
+                              </p>
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${
+                                urgent
+                                  ? "bg-rose-100 text-rose-700"
+                                  : soon
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-indigo-100 text-indigo-700"
+                              }`}
+                            >
+                              {dn === 0 ? "Today" : `${dn}d`}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setDetailAssignment(a)}
+                              className="text-[11px] font-medium text-[#7b1f4c] hover:underline shrink-0"
+                            >
+                              Open
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        );
+      })()}
+
+
       <FeesDetailDialog
         open={feesOpen}
         onClose={() => setFeesOpen(false)}
