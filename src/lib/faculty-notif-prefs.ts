@@ -5,6 +5,8 @@ export type FacNotifPrefs = {
   deadlines: boolean;
   overdue: boolean;
   toasts: boolean;
+  autoReadOnFocus: boolean;
+  autoReadOnScroll: boolean;
 };
 
 export const DEFAULT_FAC_NOTIF_PREFS: FacNotifPrefs = {
@@ -12,6 +14,8 @@ export const DEFAULT_FAC_NOTIF_PREFS: FacNotifPrefs = {
   deadlines: true,
   overdue: true,
   toasts: true,
+  autoReadOnFocus: false,
+  autoReadOnScroll: false,
 };
 
 const CHANNEL = "fac-notif-prefs-sync";
