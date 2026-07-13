@@ -53,6 +53,19 @@ function TpoPortal() {
 
   const [view, setView] = useState<View>("home");
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const applyHash = () => {
+      const h = window.location.hash.replace(/^#/, "");
+      if (h === "placements" || h === "training" || h === "lectures") setView(h);
+      else if (h === "" || h === "home") setView("home");
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
+
+
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
   return (
