@@ -453,6 +453,8 @@ function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: an
         name={me?.name || "Principal"}
         role="Principal"
         palette="principal"
+        avatarSrc={avatarUrl(me)}
+
         subtitle={
           <>
             Academic Year <span className="font-semibold text-amber-200">{year}</span>
