@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Briefcase, GraduationCap, LifeBuoy, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, Briefcase, GraduationCap, LifeBuoy, Megaphone, ShieldCheck, Users } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { listNotices } from "@/lib/notices.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,6 +17,20 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Sign in to the GP Kinnaur institute portal." },
     ],
   }),
+  loader: async () => {
+    try {
+      const all = await listNotices();
+      return { notices: (all ?? []).slice(0, 3) };
+    } catch {
+      return { notices: [] as Awaited<ReturnType<typeof listNotices>> };
+    }
+  },
+  errorComponent: ({ error }) => (
+    <div role="alert" className="p-6 text-sm text-red-600">
+      {error.message}
+    </div>
+  ),
+  notFoundComponent: () => <div className="p-6 text-sm">Page not found.</div>,
   component: PortalLanding,
 });
 
