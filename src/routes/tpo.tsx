@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 
 import { generateTrainingLetter, generateUndertakings } from "@/lib/training-letter";
+import { getInstituteAddress } from "@/lib/settings.functions";
+
 import { staffMe, uploadStaffAvatar } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { tpoRoles, hasRole } from "@/lib/roles";
