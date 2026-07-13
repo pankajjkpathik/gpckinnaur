@@ -657,6 +657,9 @@ function PlacementsView({ onBack }: { onBack?: () => void }) {
 function TrainingView({ onBack }: { onBack?: () => void }) {
   const qc = useQueryClient();
   const listQ = useQuery({ queryKey: ["tpo-training"], queryFn: () => listIndustrialTraining({ data: {} }) });
+  const addrQ = useQuery({ queryKey: ["institute-address"], queryFn: () => getInstituteAddress() });
+  const instituteAddress = addrQ.data?.value;
+
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<{ url: string; filename: string; title: string } | null>(null);
   const openPreview = async (title: string, builder: Promise<{ url: string; filename: string }>) => {
