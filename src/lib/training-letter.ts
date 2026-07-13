@@ -215,6 +215,7 @@ export async function generateUndertakings(r: TrainingRecord) {
         "As the training is part of the curriculum and is entirely on our will, if my child joins a training organization where a fee is charged for the same, I or my child will not claim any reimbursement of training money paid, if any, and it will be purely on our own expenditure. My child will also not claim any TA/DA for the training.",
       ],
       "Signature of Parent",
+      logo,
     );
   });
 
