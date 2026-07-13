@@ -792,6 +792,8 @@ function useFacultyNotifRealtime(ay: string, userId?: string | number) {
           facNotifRtLastEvent = Date.now();
           qc.invalidateQueries({ queryKey: ["fac-notif-notices"] });
           if (payload?.eventType === "INSERT" && payload?.new) {
+            const prefs = getFacNotifPrefs(userId);
+            if (!prefs.toasts || !prefs.announcements) return;
             const n = payload.new;
             toast.info(n.title || "New notice posted", {
               description: n.category ? `Category: ${n.category}` : undefined,
@@ -803,6 +805,7 @@ function useFacultyNotifRealtime(ay: string, userId?: string | number) {
               },
             });
           }
+
         })
         .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, (payload: any) => {
           facNotifRtLastEvent = Date.now();
