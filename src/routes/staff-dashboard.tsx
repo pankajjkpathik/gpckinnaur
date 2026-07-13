@@ -283,14 +283,8 @@ const portalForRole: Record<string, { href: string; title: string; desc: string;
     {
       href: "/principal",
       title: "Principal Portal",
-      desc: "Institute-wide monitoring & circulars",
+      desc: "Institute-wide monitoring, TPO oversight & circulars",
       accent: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-    },
-    {
-      href: "/tpo",
-      title: "Training & Placement",
-      desc: "Placements, internships, guest lectures",
-      accent: "bg-orange-50 text-orange-700 ring-orange-200",
     },
   ],
   hod: [
