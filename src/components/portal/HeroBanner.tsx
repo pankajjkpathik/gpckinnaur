@@ -62,17 +62,7 @@ export function HeroBanner({
       </div>
       <div className="relative p-5 sm:p-8 grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)_auto] items-start sm:items-center gap-4 sm:gap-5">
         <div className="shrink-0 relative">
-          {avatarSrc ? (
-            <img
-              src={avatarSrc}
-              alt={name}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-white/40 shadow-lg bg-white/10"
-            />
-          ) : (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full ring-2 ring-white/40 shadow-lg bg-white/15 backdrop-blur flex items-center justify-center text-white font-bold text-xl sm:text-2xl">
-              {initialsOf(name)}
-            </div>
-          )}
+          <HeroAvatar src={avatarSrc} name={name} />
           {onAvatarChange && (
             <label
               className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-slate-800 flex items-center justify-center shadow-md ring-2 ring-white cursor-pointer hover:bg-slate-100"
