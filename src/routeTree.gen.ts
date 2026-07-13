@@ -62,6 +62,7 @@ import { Route as AdminSyllabusUnitsRouteImport } from './routes/admin.syllabus-
 import { Route as AdminSyllabusRouteImport } from './routes/admin.syllabus'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminReportTemplatesRouteImport } from './routes/admin.report-templates'
 import { Route as AdminPeriodsRouteImport } from './routes/admin.periods'
 import { Route as AdminParentAccountsRouteImport } from './routes/admin.parent-accounts'
@@ -337,6 +338,11 @@ const AdminStudentsRoute = AdminStudentsRouteImport.update({
   path: '/students',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminReportTemplatesRoute = AdminReportTemplatesRouteImport.update({
   id: '/report-templates',
   path: '/report-templates',
@@ -423,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/admin/parent-accounts': typeof AdminParentAccountsRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
@@ -485,6 +492,7 @@ export interface FileRoutesByTo {
   '/admin/parent-accounts': typeof AdminParentAccountsRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
@@ -549,6 +557,7 @@ export interface FileRoutesById {
   '/admin/parent-accounts': typeof AdminParentAccountsRoute
   '/admin/periods': typeof AdminPeriodsRoute
   '/admin/report-templates': typeof AdminReportTemplatesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/syllabus': typeof AdminSyllabusRoute
@@ -614,6 +623,7 @@ export interface FileRouteTypes {
     | '/admin/parent-accounts'
     | '/admin/periods'
     | '/admin/report-templates'
+    | '/admin/settings'
     | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
@@ -676,6 +686,7 @@ export interface FileRouteTypes {
     | '/admin/parent-accounts'
     | '/admin/periods'
     | '/admin/report-templates'
+    | '/admin/settings'
     | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
@@ -739,6 +750,7 @@ export interface FileRouteTypes {
     | '/admin/parent-accounts'
     | '/admin/periods'
     | '/admin/report-templates'
+    | '/admin/settings'
     | '/admin/students'
     | '/admin/subjects'
     | '/admin/syllabus'
@@ -1181,6 +1193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStudentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/report-templates': {
       id: '/admin/report-templates'
       path: '/report-templates'
@@ -1249,6 +1268,7 @@ interface AdminRouteChildren {
   AdminParentAccountsRoute: typeof AdminParentAccountsRoute
   AdminPeriodsRoute: typeof AdminPeriodsRoute
   AdminReportTemplatesRoute: typeof AdminReportTemplatesRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminSubjectsRoute: typeof AdminSubjectsRoute
   AdminSyllabusRoute: typeof AdminSyllabusRoute
@@ -1266,6 +1286,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminParentAccountsRoute: AdminParentAccountsRoute,
   AdminPeriodsRoute: AdminPeriodsRoute,
   AdminReportTemplatesRoute: AdminReportTemplatesRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminSubjectsRoute: AdminSubjectsRoute,
   AdminSyllabusRoute: AdminSyllabusRoute,
