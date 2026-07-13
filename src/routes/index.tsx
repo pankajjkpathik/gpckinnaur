@@ -46,16 +46,8 @@ const cards = [
   },
 ] as const;
 
-const bottomLinks: { label: string; to: string; external?: boolean }[] = [
-  { label: "Admissions", to: "/admissions" },
-  { label: "Contact", to: "/contact" },
-  { label: "Anti-Ragging", to: "/anti-ragging" },
-  { label: "Mandatory Disclosure", to: "/mandatory-disclosure" },
-  { label: "AICTE Approval", to: "/aicte-approval" },
-  { label: "HPTSB Affiliation", to: "/hptsb-affiliation" },
-  { label: "RTI", to: "/rti" },
-  { label: "Grievance", to: "/grievance" },
-];
+
+
 
 function PortalLanding() {
   return (
@@ -186,20 +178,20 @@ function PortalLanding() {
         </div>
       </main>
 
-      {/* Bottom strip: public info links */}
+      {/* Bottom strip: contact for help */}
       <div className="relative z-10 border-t border-white/10 bg-black/25 backdrop-blur">
-        <div className="container mx-auto px-6 py-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
-          {bottomLinks.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="text-white/70 hover:text-[color:var(--gold)] transition-colors"
-            >
-              {l.label}
-            </Link>
-          ))}
+        <div className="container mx-auto px-6 py-4 text-center text-xs text-white/75">
+          Contact{" "}
+          <a
+            href="mailto:gpckinnaur@gmail.com"
+            className="text-[color:var(--gold)] hover:underline font-medium"
+          >
+            gpckinnaur@gmail.com
+          </a>{" "}
+          for any query or help.
         </div>
       </div>
+
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/10">
