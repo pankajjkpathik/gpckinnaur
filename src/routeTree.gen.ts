@@ -22,6 +22,7 @@ import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as StaffDashboardRouteImport } from './routes/staff-dashboard'
 import { Route as StaffChangePasswordRouteImport } from './routes/staff-change-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ProfileSettingsRouteImport } from './routes/profile-settings'
 import { Route as PrincipalRouteImport } from './routes/principal'
 import { Route as ParentLoginRouteImport } from './routes/parent-login'
 import { Route as ParentDashboardRouteImport } from './routes/parent-dashboard'
@@ -132,6 +133,11 @@ const StaffChangePasswordRoute = StaffChangePasswordRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileSettingsRoute = ProfileSettingsRouteImport.update({
+  id: '/profile-settings',
+  path: '/profile-settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrincipalRoute = PrincipalRouteImport.update({
@@ -388,6 +394,7 @@ export interface FileRoutesByFullPath {
   '/parent-dashboard': typeof ParentDashboardRoute
   '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
+  '/profile-settings': typeof ProfileSettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -448,6 +455,7 @@ export interface FileRoutesByTo {
   '/parent-dashboard': typeof ParentDashboardRoute
   '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
+  '/profile-settings': typeof ProfileSettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -510,6 +518,7 @@ export interface FileRoutesById {
   '/parent-dashboard': typeof ParentDashboardRoute
   '/parent-login': typeof ParentLoginRoute
   '/principal': typeof PrincipalRoute
+  '/profile-settings': typeof ProfileSettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff-change-password': typeof StaffChangePasswordRoute
   '/staff-dashboard': typeof StaffDashboardRoute
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/parent-dashboard'
     | '/parent-login'
     | '/principal'
+    | '/profile-settings'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -633,6 +643,7 @@ export interface FileRouteTypes {
     | '/parent-dashboard'
     | '/parent-login'
     | '/principal'
+    | '/profile-settings'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -694,6 +705,7 @@ export interface FileRouteTypes {
     | '/parent-dashboard'
     | '/parent-login'
     | '/principal'
+    | '/profile-settings'
     | '/sitemap.xml'
     | '/staff-change-password'
     | '/staff-dashboard'
@@ -756,6 +768,7 @@ export interface RootRouteChildren {
   ParentDashboardRoute: typeof ParentDashboardRoute
   ParentLoginRoute: typeof ParentLoginRoute
   PrincipalRoute: typeof PrincipalRoute
+  ProfileSettingsRoute: typeof ProfileSettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffChangePasswordRoute: typeof StaffChangePasswordRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
@@ -873,6 +886,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile-settings': {
+      id: '/profile-settings'
+      path: '/profile-settings'
+      fullPath: '/profile-settings'
+      preLoaderRoute: typeof ProfileSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/principal': {
@@ -1258,6 +1278,7 @@ const rootRouteChildren: RootRouteChildren = {
   ParentDashboardRoute: ParentDashboardRoute,
   ParentLoginRoute: ParentLoginRoute,
   PrincipalRoute: PrincipalRoute,
+  ProfileSettingsRoute: ProfileSettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffChangePasswordRoute: StaffChangePasswordRoute,
   StaffDashboardRoute: StaffDashboardRoute,
