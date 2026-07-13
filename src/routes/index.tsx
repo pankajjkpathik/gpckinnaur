@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Briefcase, GraduationCap, LifeBuoy, Megaphone, ShieldCheck, Users } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
-import { listNotices } from "@/lib/notices.functions";
+import { listNotices, type NoticeRow } from "@/lib/notices.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
