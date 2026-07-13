@@ -892,6 +892,7 @@ function HomeView({ year, me }: { year: string; onNav: (v: View) => void; me: an
         role="Principal"
         palette="principal"
         avatarSrc={avatarUrl(me)}
+        fallbackAvatarSrc={placeholderAvatar}
 
         subtitle={
           <>
