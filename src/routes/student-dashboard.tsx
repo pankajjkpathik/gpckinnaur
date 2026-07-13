@@ -1105,9 +1105,20 @@ function ClassDetailDialog({
         <div className="overflow-y-auto p-5 space-y-5">
           {/* Attendance summary */}
           <section>
-            <div className="flex items-center gap-2 mb-2">
-              <ClipboardCheck className="w-4 h-4 text-emerald-600" />
-              <h4 className="font-semibold text-gray-800 text-sm">Your Attendance in this Subject</h4>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <ClipboardCheck className="w-4 h-4 text-emerald-600" />
+                <h4 className="font-semibold text-gray-800 text-sm">Your Attendance in this Subject</h4>
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  setView("attendance");
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700"
+              >
+                <ClipboardCheck className="w-3.5 h-3.5" /> Mark / View Attendance
+              </button>
             </div>
             {att ? (
               <div className="flex items-center gap-4">
