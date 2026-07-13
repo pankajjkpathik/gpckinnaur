@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -114,11 +114,75 @@ function BackBtn({ onClick }: { onClick: () => void }) {
 }
 
 
+const VALID_VIEWS: View[] = [
+  "home",
+  "attendance",
+  "sessional",
+  "syllabus",
+  "timetable",
+  "placements",
+  "messages",
+  "ptm",
+  "circulars",
+  "disciplinary",
+  "department",
+  "tpo_placements",
+  "tpo_training",
+  "tpo_lectures",
+];
+
 function PrincipalPortal() {
-  const [view, setView] = useState<View>("home");
+  const initialView: View = (() => {
+    if (typeof window === "undefined") return "home";
+    const v = new URLSearchParams(window.location.search).get("view") as View | null;
+    return v && VALID_VIEWS.includes(v) ? v : "home";
+  })();
+  const [view, setView] = useState<View>(initialView);
   const [year, setYear] = useState(defaultYear());
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { data: me } = useQuery({ queryKey: ["staff-me"], queryFn: () => staffMe() });
+
+  // Keep ?view= in sync so refresh/back-forward preserves the selected section.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (view === "home") url.searchParams.delete("view");
+    else url.searchParams.set("view", view);
+    window.history.replaceState(null, "", url.toString());
+  }, [view]);
+
+  // Respond to browser back/forward.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onPop = () => {
+      const v = new URLSearchParams(window.location.search).get("view") as View | null;
+      setView(v && VALID_VIEWS.includes(v) ? v : "home");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // Close the mobile drawer on Escape, and when growing past the lg breakpoint.
+  useEffect(() => {
+    if (!mobileNavOpen || typeof window === "undefined") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileNavOpen(false);
+    };
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const onMql = (e: MediaQueryListEvent) => {
+      if (e.matches) setMobileNavOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    mql.addEventListener("change", onMql);
+    // Lock body scroll while the drawer is open.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      mql.removeEventListener("change", onMql);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileNavOpen]);
 
   async function logout() {
     await staffLogout({});
