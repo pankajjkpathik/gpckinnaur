@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Download,
   FileText,
   BookOpen,
   GraduationCap,
-  Upload,
   BookMarked,
   DollarSign,
   Users,
@@ -42,8 +41,6 @@ import {
 
 import {
   studentListAssignments,
-  studentSubmitAssignment,
-  studentMySubmissions,
   studentMyFees,
   studentMyDisciplinary,
 } from "@/lib/assignments.functions";
@@ -51,7 +48,7 @@ import {
 import { LessonPlanLibrary } from "@/components/portal/LessonPlanLibrary";
 import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
-import { listPeriods } from "@/lib/academic.functions";
+
 import { branchToDept } from "@/lib/branch";
 import logoAsset from "@/assets/logo.png.asset.json";
 
@@ -75,7 +72,7 @@ type View =
   | "attendance"
   | "marks"
   | "results"
-  | "upload"
+  
   | "assignments-docs"
   | "lesson-plans"
   | "exam-schedule"
@@ -148,7 +145,7 @@ function StudentDashboard() {
     { icon: Calendar, label: "Timetable", view: "timetable" },
     { icon: CalendarClock, label: "Exam Schedule", view: "exam-schedule" },
     { icon: BookOpen, label: "Assignments", view: "assignments-docs" },
-    { icon: Upload, label: "Upload Assignment", view: "upload" },
+    
     { icon: DollarSign, label: "Fees Payment", view: "fees" },
     { icon: Users, label: "My Faculty", view: "faculty" },
     { icon: Shield, label: "Disciplinary Actions", view: "disciplinary" },
@@ -251,7 +248,7 @@ function StudentDashboard() {
                 {view === "attendance" && <AttendanceView onBack={goHome} />}
                 {view === "marks" && <MarksView onBack={goHome} />}
                 {view === "results" && <ResultsView me={me} onBack={goHome} />}
-                {view === "upload" && <UploadAssignmentView onBack={goHome} />}
+                
                 {view === "assignments-docs" && <AssignmentDocsView onBack={goHome} />}
                 {view === "lesson-plans" && <LessonPlansView me={me} onBack={goHome} />}
                 {view === "exam-schedule" && <ExamScheduleView me={me} onBack={goHome} />}
@@ -588,123 +585,6 @@ function ResultsView({ me, onBack }: { me: any; onBack: () => void }) {
 // ─── MY ASSIGNMENTS ───────────────────────────────────────────────────────────
 
 
-// ─── UPLOAD ASSIGNMENT ────────────────────────────────────────────────────────
-function UploadAssignmentView({ onBack }: { onBack: () => void }) {
-  const qc = useQueryClient();
-  const fn = useServerFn(studentListAssignments);
-  const mySubsFn = useServerFn(studentMySubmissions);
-  const submitFn = useServerFn(studentSubmitAssignment);
-  const { data = [] } = useQuery({ queryKey: ["student-assignments"], queryFn: () => fn() });
-  const { data: mySubs = [] } = useQuery({ queryKey: ["student-my-subs"], queryFn: () => mySubsFn() });
-  const submittedIds = new Set((mySubs as any[]).map((s: any) => s.assignment_id));
-  const today = new Date().toISOString().slice(0, 10);
-  const pending = (data as any[]).filter(
-    (a: any) => (!a.due_date || a.due_date >= today) && !submittedIds.has(a.id),
-  );
-  const [selected, setSelected] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
-  const [comments, setComments] = useState("");
-
-  const submit = useMutation({
-    mutationFn: () =>
-      submitFn({ data: { assignment_id: Number(selected), file_url: fileUrl, comments: comments || null } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["student-my-subs"] });
-      setSelected("");
-      setFileUrl("");
-      setComments("");
-    },
-  });
-
-  return (
-    <div className="space-y-4">
-      
-      <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Upload Assignment</h1>
-        <p className="text-xs text-gray-400 mb-4">Submit your completed assignment files directly to your faculty.</p>
-
-        <div className="max-w-lg mx-auto space-y-4">
-          <div className="border rounded-lg divide-y bg-gray-50/50">
-            <p className="px-3 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              📌 Pending Assignments ({pending.length})
-            </p>
-            {pending.length === 0 ? (
-              <p className="px-3 py-4 text-sm text-emerald-700 text-center">
-                No pending assignments. You’re all caught up! ✅
-              </p>
-            ) : (
-              pending.map((a: any) => (
-                <div key={a.id} className="px-3 py-2 text-xs flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-800 truncate">{a.title}</p>
-                    <p className="text-gray-500 truncate">
-                      {a.subject_name || "—"}
-                      {a.due_date ? ` · Due ${a.due_date}` : ""}
-                    </p>
-                  </div>
-                  {a.file_url && (
-                    <a href={a.file_url} target="_blank" rel="noreferrer" className="text-emerald-700 font-semibold hover:underline shrink-0">
-                      Download PDF
-                    </a>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-700 mb-1 block">Select Assignment</label>
-            <select
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-              className="border rounded w-full px-3 py-2 text-sm"
-            >
-              <option value="">Select a pending assignment</option>
-              {pending.map((a: any) => (
-                <option key={a.id} value={a.id}>
-                  {a.subject_name ? `${a.subject_name} — ` : ""}
-                  {a.title}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-400 mt-1">Only assignments with future due dates are shown here.</p>
-          </div>
-          <div>
-            <label className="text-sm text-gray-700 mb-1 block">Assignment File URL (PDF)</label>
-            <input
-              value={fileUrl}
-              onChange={(e) => setFileUrl(e.target.value)}
-              placeholder="https://…/my-submission.pdf"
-              className="border rounded w-full px-3 py-2 text-sm"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Upload your PDF to Drive/storage and paste the shareable link here.
-            </p>
-          </div>
-          <div>
-            <label className="text-sm text-gray-700 mb-1 block">Comments (Optional)</label>
-            <textarea
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              rows={4}
-              placeholder="Add any comments for your teacher…"
-              className="border rounded w-full px-3 py-2 text-sm resize-y"
-            />
-          </div>
-          <button
-            onClick={() => submit.mutate()}
-            disabled={!selected || !fileUrl || submit.isPending}
-            className="bg-[#7b1f4c] text-white w-full py-2.5 rounded font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            <Upload className="w-4 h-4" /> {submit.isPending ? "Submitting…" : "Submit Assignment"}
-          </button>
-          {submit.isSuccess && <p className="text-sm text-green-700 text-center">Submitted successfully!</p>}
-          {submit.error && <p className="text-sm text-rose-700 text-center">{(submit.error as Error).message}</p>}
-        </div>
-      </Card>
-    </div>
-  );
-}
 
 // ─── DOCS: Assignments & Exam Schedule (shared table) ────────────────────────
 function DocsListView({
@@ -776,36 +656,11 @@ function DocsListView({
 
 function AssignmentDocsView({ onBack }: { onBack: () => void }) {
   void onBack;
-  const qc = useQueryClient();
   const fn = useServerFn(studentListAssignments);
-  const mySubsFn = useServerFn(studentMySubmissions);
-  const submitFn = useServerFn(studentSubmitAssignment);
   const { data = [], isLoading } = useQuery({
     queryKey: ["student-assignments-list"],
     queryFn: () => fn(),
   });
-  const { data: mySubs = [] } = useQuery({
-    queryKey: ["student-my-subs"],
-    queryFn: () => mySubsFn(),
-  });
-  const subMap = new Map<number, any>();
-  (mySubs as any[]).forEach((s) => subMap.set(s.assignment_id, s));
-
-  const [openId, setOpenId] = useState<number | null>(null);
-  const [fileUrl, setFileUrl] = useState("");
-  const [comments, setComments] = useState("");
-
-  const submit = useMutation({
-    mutationFn: (assignment_id: number) =>
-      submitFn({ data: { assignment_id, file_url: fileUrl, comments: comments || null } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["student-my-subs"] });
-      setOpenId(null);
-      setFileUrl("");
-      setComments("");
-    },
-  });
-
   const rows = data as any[];
   const today = new Date().toISOString().slice(0, 10);
 
@@ -813,7 +668,10 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
     <div className="space-y-4">
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Assignments</h1>
-        <p className="text-xs text-gray-400 mb-4">Download the assignment brief and upload your submission below.</p>
+        <p className="text-xs text-gray-400 mb-4">
+          Download the assignment brief. Submit your completed work directly to your faculty as instructed on the
+          brief (email or in person).
+        </p>
         <div className="border rounded overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
@@ -822,104 +680,42 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Title</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">File</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Submission</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((a: any) => {
-                const sub = subMap.get(a.id);
                 const overdue = a.due_date && a.due_date < today;
                 return (
-                  <React.Fragment key={a.id}>
-                    <tr className="border-t">
-                      <td className="px-4 py-3">{a.subjects?.name || a.subject_name || "—"}</td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium">{a.title}</p>
-                        {a.description && <p className="text-xs text-gray-500 mt-0.5">{a.description}</p>}
-                      </td>
-                      <td className="px-4 py-3">
-                        {a.due_date ?? "—"}
-                        {overdue && !sub && <span className="ml-1 text-[10px] text-rose-600 font-semibold">OVERDUE</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        {a.file_url ? (
-                          <a
-                            href={a.file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
-                          >
-                            <Download className="w-4 h-4" /> Download
-                          </a>
-                        ) : (
-                          <span className="text-xs text-gray-400">No file</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {sub ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-emerald-700 font-semibold">✓ Submitted</span>
-                            {sub.file_url && (
-                              <a href={sub.file_url} target="_blank" rel="noreferrer" className="text-xs text-emerald-700 underline">
-                                View
-                              </a>
-                            )}
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setOpenId(openId === a.id ? null : a.id);
-                              setFileUrl("");
-                              setComments("");
-                            }}
-                            className="inline-flex items-center gap-2 bg-[#7b1f4c] text-white rounded px-3 py-1.5 text-xs font-semibold"
-                          >
-                            <Upload className="w-3.5 h-3.5" /> {openId === a.id ? "Cancel" : "Upload"}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                    {openId === a.id && !sub && (
-                      <tr className="bg-gray-50 border-t">
-                        <td colSpan={5} className="px-4 py-3">
-                          <div className="space-y-2 max-w-2xl">
-                            <div>
-                              <label className="text-xs text-gray-600 mb-1 block">Submission File URL (PDF)</label>
-                              <input
-                                value={fileUrl}
-                                onChange={(e) => setFileUrl(e.target.value)}
-                                placeholder="https://…/my-submission.pdf"
-                                className="border rounded w-full px-3 py-2 text-sm"
-                              />
-                              <p className="text-[11px] text-gray-400 mt-1">Upload your PDF to Drive/storage and paste the shareable link.</p>
-                            </div>
-                            <div>
-                              <label className="text-xs text-gray-600 mb-1 block">Comments (Optional)</label>
-                              <textarea
-                                value={comments}
-                                onChange={(e) => setComments(e.target.value)}
-                                rows={2}
-                                className="border rounded w-full px-3 py-2 text-sm resize-y"
-                              />
-                            </div>
-                            <button
-                              onClick={() => submit.mutate(a.id)}
-                              disabled={!fileUrl || submit.isPending}
-                              className="bg-[#7b1f4c] text-white px-4 py-2 rounded font-semibold text-sm inline-flex items-center gap-2 disabled:opacity-50"
-                            >
-                              <Upload className="w-4 h-4" /> {submit.isPending ? "Submitting…" : "Submit"}
-                            </button>
-                            {submit.error && <p className="text-xs text-rose-700">{(submit.error as Error).message}</p>}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
+                  <tr key={a.id} className="border-t">
+                    <td className="px-4 py-3">{a.subjects?.name || a.subject_name || "—"}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium">{a.title}</p>
+                      {a.description && <p className="text-xs text-gray-500 mt-0.5">{a.description}</p>}
+                    </td>
+                    <td className="px-4 py-3">
+                      {a.due_date ?? "—"}
+                      {overdue && <span className="ml-1 text-[10px] text-rose-600 font-semibold">OVERDUE</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      {a.file_url ? (
+                        <a
+                          href={a.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 border rounded px-3 py-1.5 text-sm hover:bg-gray-50"
+                        >
+                          <Download className="w-4 h-4" /> Download
+                        </a>
+                      ) : (
+                        <span className="text-xs text-gray-400">No file</span>
+                      )}
+                    </td>
+                  </tr>
                 );
               })}
               {!isLoading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
                     No assignments posted for your class yet.
                   </td>
                 </tr>
@@ -931,6 +727,7 @@ function AssignmentDocsView({ onBack }: { onBack: () => void }) {
     </div>
   );
 }
+
 
 function ExamScheduleView({ me, onBack }: { me: any; onBack: () => void }) {
   void onBack;
@@ -973,12 +770,8 @@ function LessonPlansView({ me, onBack }: { me: any; onBack: () => void }) {
 function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
   void onBack;
   const ttFn = useServerFn(studentTimetable);
-  const periodsFn = useServerFn(listPeriods);
   const { data: tt } = useQuery({ queryKey: ["student-tt"], queryFn: () => ttFn() });
-  const { data: periods = [] } = useQuery({
-    queryKey: ["periods-master"],
-    queryFn: () => periodsFn(),
-  });
+  const periods = (tt?.periods ?? []) as any[];
 
   const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
 
@@ -998,10 +791,12 @@ function TimetableView({ me, onBack }: { me: any; onBack: () => void }) {
           </button>
         </div>
 
-        {!tt || (periods as any[]).length === 0 ? (
+        {!tt ? (
           <p className="p-6 text-center text-sm text-gray-400">Loading…</p>
+        ) : periods.length === 0 ? (
+          <p className="p-6 text-center text-sm text-gray-400">Timetable periods not configured yet.</p>
         ) : (tt.entries as any[]).length === 0 ? (
-          <p className="p-6 text-center text-sm text-gray-400">No timetable published yet.</p>
+          <p className="p-6 text-center text-sm text-gray-400">No timetable published yet for your class.</p>
         ) : (
           <TimetableGrid
             periods={periods as any}
