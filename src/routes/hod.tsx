@@ -373,6 +373,20 @@ function HodPortal() {
   })();
   const [view, setView] = useState<View>(initialView);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Hydrate collapsed state from localStorage after mount to avoid SSR mismatch.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      setSidebarCollapsed(window.localStorage.getItem("hod:sidebar:collapsed") === "1");
+    } catch {}
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem("hod:sidebar:collapsed", sidebarCollapsed ? "1" : "0");
+    } catch {}
+  }, [sidebarCollapsed]);
   const ay = defaultAY();
 
   // Keep ?view= in sync with current view so refresh/back-forward preserves selection.
