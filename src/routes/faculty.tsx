@@ -159,8 +159,11 @@ function FacultyPortal() {
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
-  return <FacultyPortalInner me={me as any} ay={ay} setAy={setAy} view={view} setView={setView} />;
+  return <FacultyPortalInner me={me as any} ay={ay} view={view} setView={setView} />;
 }
+
+// (setAy removed; ay is derived once and passed through)
+
 
 function FacultyPortalInner({
   me,
