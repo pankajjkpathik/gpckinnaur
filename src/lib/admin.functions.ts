@@ -805,9 +805,12 @@ export const bulkImportTimetable = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(5000) }).parse(d))
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
+    const { readActiveSessionYear } = await import("./settings.server");
+    const activeYear = await readActiveSessionYear();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const errors: { row: number; error: string }[] = [];
     const parsed: z.infer<typeof ttRowSchema>[] = [];
+
     data.rows.forEach((raw, i) => {
       try {
         const dayRaw = String(raw.day_of_week ?? raw.day ?? raw.Day ?? "")
