@@ -1,5 +1,6 @@
 // PDF generators for Industrial Training letter and per-student Undertakings.
 import jsPDF from "jspdf";
+import { sessionHeaderLine } from "./pdf-session";
 import autoTable from "jspdf-autotable";
 import logoAsset from "@/assets/logo.png.asset.json";
 
@@ -62,9 +63,14 @@ function letterhead(doc: jsPDF, logo: string | null, address: string) {
   doc.setFontSize(10);
   doc.text(address, w / 2, 84, { align: "center", maxWidth: w - 80 });
   doc.text(INSTITUTE_PHONE, w / 2, 98, { align: "center" });
+  doc.setFontSize(9);
+  doc.setTextColor(90);
+  doc.text(sessionHeaderLine(), w / 2, 112, { align: "center" });
+  doc.setTextColor(0);
   doc.setLineWidth(0.8);
-  doc.line(40, 108, w - 40, 108);
+  doc.line(40, 120, w - 40, 120);
 }
+
 
 
 function fmtDate(iso?: string | null) {
