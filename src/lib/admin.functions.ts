@@ -831,10 +831,19 @@ export const bulkImportTimetable = createServerFn({ method: "POST" })
             room: raw.room ? String(raw.room).trim() : null,
           }),
         );
+        const last = parsed[parsed.length - 1];
+        if (last.academic_year !== activeYear) {
+          parsed.pop();
+          errors.push({
+            row: i + 2,
+            error: `academic_year must match active session ${activeYear} (got ${last.academic_year})`,
+          });
+        }
       } catch (e: any) {
         errors.push({ row: i + 2, error: e?.message ?? "Invalid row" });
       }
     });
+
 
     const codes = Array.from(new Set(parsed.map((r) => r.subject_code).filter(Boolean) as string[]));
     const usernames = Array.from(new Set(parsed.map((r) => r.username).filter(Boolean) as string[]));
