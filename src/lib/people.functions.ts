@@ -233,6 +233,106 @@ export const studentDelete = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const studentBulkDelete = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ ids: z.array(z.number().int()).min(1).max(1000) }).parse(d))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error, count } = await supabaseAdmin
+      .from("students")
+      .delete({ count: "exact" })
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? 0 };
+  });
+
+// Bulk upload students from a spreadsheet. Accepts either short branch codes
+// ("civil"/"mechanical"/"applied_science") or full department names
+// ("Civil Engineering", "Mechanical Engineering", "Applied Sciences").
+const BRANCH_ALIASES: Record<string, string> = {
+  civil: "civil",
+  "civil engineering": "civil",
+  mechanical: "mechanical",
+  "mechanical engineering": "mechanical",
+  applied_science: "applied_science",
+  "applied science": "applied_science",
+  "applied sciences": "applied_science",
+};
+
+export const studentBulkCreate = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        defaultPassword: z.string().min(6).max(100).default("Welcome@123"),
+        rows: z
+          .array(
+            z
+              .object({
+                enrollment_no: z.union([z.string(), z.number()]).transform((v) => String(v).trim()),
+                name: z.string().min(1).max(100),
+                father_name: z.string().optional().nullable(),
+                guardian_name: z.string().optional().nullable(),
+                branch: z.string().min(2),
+                semester: z.coerce.number().int().min(1).max(8),
+                batch_year: z.coerce.number().int().min(2000).max(2100),
+                email: z.string().optional().nullable(),
+                phone: z.union([z.string(), z.number()]).optional().nullable(),
+                parent_phone: z.union([z.string(), z.number()]).optional().nullable(),
+                gender: z.string().optional().nullable(),
+                category: z.string().optional().nullable(),
+                dob: z.string().optional().nullable(),
+                address: z.string().optional().nullable(),
+                aadhaar_number: z.union([z.string(), z.number()]).optional().nullable(),
+                bank_account_number: z.union([z.string(), z.number()]).optional().nullable(),
+              })
+              .passthrough(),
+          )
+          .min(1)
+          .max(1000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const bcrypt = (await import("bcryptjs")).default;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const hash = await bcrypt.hash(data.defaultPassword, 12);
+    const errors: { row: number; error: string }[] = [];
+    let inserted = 0;
+    for (let i = 0; i < data.rows.length; i++) {
+      const r = data.rows[i];
+      const branchKey = String(r.branch).trim().toLowerCase();
+      const branch = BRANCH_ALIASES[branchKey] ?? branchKey;
+      const emailRaw = (r.email ?? "").toString().trim();
+      const payload: any = {
+        enrollment_no: r.enrollment_no.toUpperCase(),
+        name: r.name,
+        father_name: r.father_name || null,
+        guardian_name: r.guardian_name || null,
+        branch,
+        semester: r.semester,
+        batch_year: r.batch_year,
+        email: emailRaw || null,
+        phone: r.phone != null && r.phone !== "" ? String(r.phone) : null,
+        parent_phone: r.parent_phone != null && r.parent_phone !== "" ? String(r.parent_phone) : null,
+        gender: r.gender || null,
+        category: r.category || null,
+        dob: r.dob || null,
+        address: r.address || null,
+        aadhaar_number: r.aadhaar_number != null && r.aadhaar_number !== "" ? String(r.aadhaar_number) : null,
+        bank_account_number:
+          r.bank_account_number != null && r.bank_account_number !== "" ? String(r.bank_account_number) : null,
+        password_hash: hash,
+        is_active: true,
+      };
+      const { error } = await supabaseAdmin.from("students").upsert(payload, { onConflict: "enrollment_no" });
+      if (error) errors.push({ row: i + 2, error: error.message });
+      else inserted++;
+    }
+    return { inserted, errors };
+  });
+
+
 // Reset password (shared helper for both, since profile pages own this now)
 export const facultyResetPassword = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ id: z.number().int(), newPassword: z.string().min(8).max(100) }).parse(d))
