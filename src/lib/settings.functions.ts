@@ -83,3 +83,36 @@ export const setInstituteLogo = createServerFn({ method: "POST" })
     await writeSetting(SETTING_KEYS.INSTITUTE_LOGO, v);
     return { ok: true };
   });
+
+// Active academic session — used as the default across timetable, syllabus,
+// admissions, and attendance rollovers. Public read so every portal (and SSR
+// loaders) can access without a bearer token.
+export const getActiveSession = createServerFn({ method: "GET" }).handler(async () => {
+  const [year, start] = await Promise.all([
+    readSetting(SETTING_KEYS.ACTIVE_SESSION_YEAR),
+    readSetting(SETTING_KEYS.ACTIVE_SESSION_START),
+  ]);
+  return { year, startDate: start };
+});
+
+const yearRe = /^\d{4}-\d{2}$/;
+
+export const setActiveSession = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        year: z.string().regex(yearRe, "Year must look like 2026-27"),
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be YYYY-MM-DD"),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    await requireRole(adminRoles);
+    // Cross-check: the YY suffix should match year+1 for consistency.
+    const [y1, y2] = data.year.split("-");
+    const expected = String((Number(y1) + 1) % 100).padStart(2, "0");
+    if (y2 !== expected) throw new Error(`Year suffix should be ${expected} for ${y1}-`);
+    await writeSetting(SETTING_KEYS.ACTIVE_SESSION_YEAR, data.year);
+    await writeSetting(SETTING_KEYS.ACTIVE_SESSION_START, data.startDate);
+    return { ok: true };
+  });
