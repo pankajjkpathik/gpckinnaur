@@ -364,7 +364,15 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
+    const { readActiveSessionYear } = await import("./settings.server");
+    const activeYear = await readActiveSessionYear();
+    if (data.academic_year !== activeYear) {
+      throw new Error(
+        `Timetable entries must use the active session (${activeYear}). Got ${data.academic_year}.`,
+      );
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     // Conflict check: same faculty in same day/period elsewhere
     if (data.staff_id) {
       const { data: conflict } = await supabaseAdmin
@@ -797,9 +805,12 @@ export const bulkImportTimetable = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(5000) }).parse(d))
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
+    const { readActiveSessionYear } = await import("./settings.server");
+    const activeYear = await readActiveSessionYear();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const errors: { row: number; error: string }[] = [];
     const parsed: z.infer<typeof ttRowSchema>[] = [];
+
     data.rows.forEach((raw, i) => {
       try {
         const dayRaw = String(raw.day_of_week ?? raw.day ?? raw.Day ?? "")
@@ -820,10 +831,19 @@ export const bulkImportTimetable = createServerFn({ method: "POST" })
             room: raw.room ? String(raw.room).trim() : null,
           }),
         );
+        const last = parsed[parsed.length - 1];
+        if (last.academic_year !== activeYear) {
+          parsed.pop();
+          errors.push({
+            row: i + 2,
+            error: `academic_year must match active session ${activeYear} (got ${last.academic_year})`,
+          });
+        }
       } catch (e: any) {
         errors.push({ row: i + 2, error: e?.message ?? "Invalid row" });
       }
     });
+
 
     const codes = Array.from(new Set(parsed.map((r) => r.subject_code).filter(Boolean) as string[]));
     const usernames = Array.from(new Set(parsed.map((r) => r.username).filter(Boolean) as string[]));

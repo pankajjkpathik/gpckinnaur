@@ -42,8 +42,11 @@ function TimetablePage() {
 
   const [branch, setBranch] = useState("mechanical");
   const [sem, setSem] = useState(3);
-  const [year, setYear] = useState(useActiveSession().year);
+  const activeSession = useActiveSession();
+  const [year, setYear] = useState(activeSession.year);
   const [ciId, setCiId] = useState<number | "">("");
+  const yearMismatch = year !== activeSession.year;
+
 
 
   const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods(), enabled: !!me });
@@ -67,9 +70,19 @@ function TimetablePage() {
   });
 
   const save = useMutation({
-    mutationFn: (d: any) => upsertTimetableSlot({ data: { branch, semester: sem, academic_year: year, ...d } }),
+    mutationFn: (d: any) => {
+      if (yearMismatch) {
+        return Promise.reject(
+          new Error(
+            `Timetable entries must be saved into the active session (${activeSession.year}). Switch back to save.`,
+          ),
+        );
+      }
+      return upsertTimetableSlot({ data: { branch, semester: sem, academic_year: year, ...d } });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["timetable"] }),
   });
+
   const pub = useMutation({
     mutationFn: (p: boolean) =>
       publishTimetable({ data: { branch, semester: sem, academic_year: year, published: p } }),
@@ -171,7 +184,13 @@ function TimetablePage() {
           </p>
         </div>
 
+        {yearMismatch && (
+          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2">
+            You are viewing session {year}, but the active session is {activeSession.year} (starts {activeSession.startDate}). Saving is disabled until you switch back.
+          </p>
+        )}
         {save.error && (
+
           <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>
         )}
 
