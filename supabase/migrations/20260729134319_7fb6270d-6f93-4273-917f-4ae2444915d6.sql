@@ -1,0 +1,1 @@
+DELETE FROM public.timetable WHERE branch IN ('applied_science', 'Applied Science', 'Applied Sciences');
