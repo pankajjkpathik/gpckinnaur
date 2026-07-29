@@ -325,15 +325,20 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
   onSave: (p: {
     subject_id: number | null; staff_id: number | null; room: string | null;
     group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
+    combined: boolean;
   }) => void;
 }) {
+  const initialCombined = editing.slot?.group_label === "CMB";
   const [subjId, setSubjId] = useState<number | "">(editing.slot?.subject_id ?? "");
   const [staffId, setStaffId] = useState<number | "">(editing.slot?.staff_id ?? "");
   const [room, setRoom] = useState(editing.slot?.room ?? "");
-  const [groupLabel, setGroupLabel] = useState<string>(editing.slot?.group_label ?? editing.group ?? "");
+  const [groupLabel, setGroupLabel] = useState<string>(
+    initialCombined ? "" : (editing.slot?.group_label ?? editing.group ?? ""),
+  );
   const [span, setSpan] = useState<number>(editing.slot?.span_periods || 1);
   const [coIds, setCoIds] = useState<number[]>(editing.slot?.co_staff_ids ?? []);
   const [guest, setGuest] = useState<string>(editing.slot?.guest_faculty ?? "");
+  const [combined, setCombined] = useState<boolean>(initialCombined);
 
   const dayLabel = DAYS.find((d) => d.v === editing.day)?.label;
   const codeForTitle = subjects.find((s) => s.id === subjId)?.code;
