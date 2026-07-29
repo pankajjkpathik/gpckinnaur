@@ -6,7 +6,8 @@ import * as XLSX from "xlsx";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
-import { studentList, studentCreate, studentUpdate, studentDelete, studentResetPassword } from "@/lib/people.functions";
+import { studentList, studentCreate, studentUpdate, studentDelete, studentResetPassword, studentBulkCreate, studentBulkDelete } from "@/lib/people.functions";
+import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
 
 export const Route = createFileRoute("/admin/students")({
   head: () => portalMeta("Student Management"),
@@ -32,6 +33,7 @@ function StudentManagement() {
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const del = useMutation({
     mutationFn: (id: number) => studentDelete({ data: { id } }),
@@ -65,13 +67,43 @@ function StudentManagement() {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Admin Console
           </Link>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={downloadStudentSampleXlsx}
-              className="border px-3 py-2 rounded text-sm font-semibold flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700"
-            >
-              <FileSpreadsheet className="w-4 h-4" /> Sample .xlsx
-            </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <BulkOpsBar
+              sample={sampleStudentRows()}
+              sampleName="students_sample"
+              importLabel="Bulk Upload Students"
+              onImport={async (raw) => {
+                const rows = raw.map((r: any) => ({
+                  enrollment_no: String(r.enrollment_no ?? "").trim(),
+                  name: String(r.name ?? "").trim(),
+                  father_name: r.father_name ?? null,
+                  guardian_name: r.guardian_name ?? null,
+                  branch: String(r.branch ?? "").trim(),
+                  semester: Number(r.semester),
+                  batch_year: Number(r.batch_year),
+                  email: r.email ?? null,
+                  phone: r.phone ?? null,
+                  parent_phone: r.parent_phone ?? null,
+                  gender: r.gender ?? null,
+                  category: r.category ?? null,
+                  dob: r.dob ?? null,
+                  address: r.address ?? null,
+                  aadhaar_number: r.aadhaar_number ?? null,
+                  bank_account_number: r.bank_account_number ?? null,
+                }));
+                const res = await studentBulkCreate({ data: { defaultPassword: "Welcome@123", rows } as any });
+                await qc.invalidateQueries({ queryKey: ["student-list"] });
+                return { inserted: res.inserted, errors: res.errors };
+              }}
+              selectedCount={selected.size}
+              onBulkDelete={async () => {
+                const ids = Array.from(selected);
+                if (!ids.length) return;
+                await studentBulkDelete({ data: { ids } });
+                setSelected(new Set());
+                await qc.invalidateQueries({ queryKey: ["student-list"] });
+              }}
+            />
             <button
               onClick={() => setCreating(true)}
               className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1.5"
@@ -118,6 +150,18 @@ function StudentManagement() {
             <table className="w-full text-sm whitespace-nowrap">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-3 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={rows.length > 0 && rows.every((r: any) => selected.has(r.id))}
+                      onChange={(e) => {
+                        const next = new Set(selected);
+                        if (e.target.checked) rows.forEach((r: any) => next.add(r.id));
+                        else rows.forEach((r: any) => next.delete(r.id));
+                        setSelected(next);
+                      }}
+                    />
+                  </th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Student</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Father / Guardian</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Class</th>
@@ -130,6 +174,18 @@ function StudentManagement() {
               <tbody>
                 {rows.map((s: any) => (
                   <tr key={s.id} className="border-t">
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(s.id)}
+                        onChange={(e) => {
+                          const next = new Set(selected);
+                          if (e.target.checked) next.add(s.id);
+                          else next.delete(s.id);
+                          setSelected(next);
+                        }}
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <p className="font-medium">{s.name}</p>
                       <p className="text-xs text-gray-400 font-mono">
@@ -178,7 +234,7 @@ function StudentManagement() {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
                       {listQ.isLoading ? "Loading…" : "No students found."}
                     </td>
                   </tr>
@@ -438,13 +494,13 @@ function StudentForm({
   );
 }
 
-function downloadStudentSampleXlsx() {
-  const rows = [
+function sampleStudentRows() {
+  return [
     {
       enrollment_no: "2026CE001",
       name: "Ravi Kumar",
       father_name: "Suresh Kumar",
-      mother_name: "Sita Devi",
+      guardian_name: "Sita Devi",
       dob: "2005-06-15",
       gender: "Male",
       category: "General",
@@ -455,13 +511,12 @@ function downloadStudentSampleXlsx() {
       branch: "Civil Engineering",
       semester: 1,
       batch_year: 2026,
-      admission_date: "2026-07-15",
     },
     {
       enrollment_no: "2026ME002",
       name: "Priya Sharma",
       father_name: "Rakesh Sharma",
-      mother_name: "Kavita Sharma",
+      guardian_name: "Kavita Sharma",
       dob: "2005-09-20",
       gender: "Female",
       category: "OBC",
@@ -472,11 +527,7 @@ function downloadStudentSampleXlsx() {
       branch: "Mechanical Engineering",
       semester: 1,
       batch_year: 2026,
-      admission_date: "2026-07-15",
     },
   ];
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, "Students");
-  XLSX.writeFile(wb, "students_sample.xlsx");
 }
+
