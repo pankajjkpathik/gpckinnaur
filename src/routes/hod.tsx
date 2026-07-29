@@ -27,6 +27,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
+import { useActiveSession } from "@/lib/use-active-session";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { avatarUrl } from "@/lib/portal-identity";
 import placeholderAvatar from "@/assets/placeholder-avatar.png";
