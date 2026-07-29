@@ -120,7 +120,7 @@ function ParentDashboard() {
         </div>
 
 
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-3 mb-5">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -146,6 +146,7 @@ function ParentDashboard() {
           {tab === "board" && <BoardTab />}
           {tab === "disciplinary" && <DiscTab />}
           {tab === "fees" && <FeesTab />}
+          {tab === "message" && <MessagePrincipalTab parentName={st.father_name || st.guardian_name || st.name || "Parent"} studentName={st.name} studentId={st.id} />}
         </div>
       </div>
     </div>
