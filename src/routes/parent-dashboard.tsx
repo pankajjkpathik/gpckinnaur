@@ -37,7 +37,7 @@ export const Route = createFileRoute("/parent-dashboard")({
   component: ParentDashboard,
 });
 
-type Tab = "notices" | "attendance" | "marks" | "board" | "disciplinary" | "fees";
+type Tab = "notices" | "attendance" | "marks" | "board" | "disciplinary" | "fees" | "message";
 
 function ParentDashboard() {
   const nav = useNavigate();
