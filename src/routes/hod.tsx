@@ -707,7 +707,7 @@ function FacultyAllotmentView({
   onBack: () => void;
 }) {
   const qc = useQueryClient();
-  const [year, setYear] = useState(defaultAY());
+  const [year, setYear] = useState(useActiveSession().year);
   const [form, setForm] = useState({ semester: 0, subject_id: 0, staff_id: 0 });
   const [formError, setFormError] = useState<string | null>(null);
 
