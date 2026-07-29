@@ -65,9 +65,6 @@ function SettingsPage() {
   const saveLogo = useMutation({
     mutationFn: (value: string) => setInstituteLogo({ data: { value } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["institute-logo"] }),
-  const saveLogo = useMutation({
-    mutationFn: (value: string) => setInstituteLogo({ data: { value } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["institute-logo"] }),
   });
 
   // Active academic session
