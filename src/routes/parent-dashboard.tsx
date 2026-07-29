@@ -348,3 +348,71 @@ function NoticesTab() {
     </div>
   );
 }
+
+function MessagePrincipalTab({ parentName, studentName, studentId }: { parentName: string; studentName?: string; studentId?: number }) {
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [sent, setSent] = useState<Date | null>(null);
+  const m = useMutation({
+    mutationFn: () => createParentMessage({ data: {
+      from_name: parentName,
+      student_name: studentName || null,
+      student_id: studentId || null,
+      subject: subject || null,
+      body: body || null,
+    } }),
+    onSuccess: () => { setSent(new Date()); setSubject(""); setBody(""); toast.success("Message sent to Principal"); },
+    onError: (e: any) => toast.error(e?.message || "Failed to send"),
+  });
+  return (
+    <div className="max-w-2xl">
+      <h2 className="text-lg font-bold text-gray-800 mb-1">✉️ Message the Principal</h2>
+      <p className="text-xs text-gray-500 mb-4">
+        Write about your ward{studentName ? ` (${studentName})` : ""}. Your message goes directly to the Principal and admin office.
+      </p>
+      <form
+        onSubmit={(e) => { e.preventDefault(); if (!body.trim()) { toast.error("Please write a message"); return; } m.mutate(); }}
+        className="space-y-3"
+      >
+        <div>
+          <label className="text-xs text-gray-500 mb-1 block">Subject (optional)</label>
+          <input
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            maxLength={300}
+            placeholder="e.g. Concern about attendance"
+            className="border rounded w-full px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-1 block">Message</label>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={6}
+            required
+            placeholder="Type your message here…"
+            className="border rounded w-full px-3 py-2 text-sm resize-y"
+          />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] text-gray-400">
+            Sent as: <span className="font-semibold text-gray-600">{parentName}</span>
+          </p>
+          <button
+            type="submit"
+            disabled={m.isPending}
+            className="bg-fuchsia-700 text-white px-5 py-2 rounded font-semibold text-sm disabled:opacity-50"
+          >
+            {m.isPending ? "Sending…" : "Send to Principal"}
+          </button>
+        </div>
+        {sent && (
+          <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded p-2">
+            ✓ Message sent at {sent.toLocaleString()}. The Principal will review it shortly.
+          </p>
+        )}
+      </form>
+    </div>
+  );
+}
