@@ -42,7 +42,7 @@ function TimetablePage() {
 
   const [branch, setBranch] = useState("mechanical");
   const [sem, setSem] = useState(3);
-  const [year, setYear] = useState("2026-27");
+  const [year, setYear] = useState(useActiveSession().year);
   const [ciId, setCiId] = useState<number | "">("");
 
 

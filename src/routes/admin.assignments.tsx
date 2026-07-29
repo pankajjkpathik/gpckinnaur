@@ -37,7 +37,7 @@ function AssignmentsPage() {
     else if (!hasRole(me, adminRoles)) nav({ to: "/staff-dashboard" });
   }, [me, isLoading, nav]);
 
-  const [year, setYear] = useState("2026-27");
+  const [year, setYear] = useState(useActiveSession().year);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [form, setForm] = useState({ branch: "", semester: 0, subject_id: 0, staff_id: 0 });
 
