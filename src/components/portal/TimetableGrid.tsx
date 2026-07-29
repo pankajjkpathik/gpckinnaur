@@ -70,7 +70,7 @@ export function TimetableGrid({
     day_of_week: number; period_no: number;
     subject_id: number | null; staff_id: number | null; room: string | null;
     group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
-
+    combined: boolean;
   }) => void;
   institutionLine?: string;
   classLine?: string;
