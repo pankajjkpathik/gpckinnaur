@@ -2,6 +2,7 @@
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { sessionHeaderLine } from "./pdf-session";
 
 export function exportExcel(filename: string, sheetName: string, header: string[], rows: (string | number | null)[][]) {
   const ws = XLSX.utils.aoa_to_sheet([header, ...rows.map((r) => r.map((v) => (v == null ? "" : v)))]);
@@ -12,14 +13,19 @@ export function exportExcel(filename: string, sheetName: string, header: string[
 
 export function exportPDF(filename: string, title: string, subtitle: string, header: string[], rows: (string | number | null)[][]) {
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const sessionLine = sessionHeaderLine();
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text(sessionLine, 40, 28);
+  doc.setTextColor(0);
   doc.setFontSize(14);
-  doc.text(title, 40, 40);
+  doc.text(title, 40, 50);
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(subtitle, 40, 58);
+  if (subtitle) doc.text(subtitle, 40, 68);
   doc.setTextColor(0);
   autoTable(doc, {
-    startY: 75,
+    startY: subtitle ? 85 : 75,
     head: [header],
     body: rows.map((r) => r.map((v) => (v == null ? "" : String(v)))),
     styles: { fontSize: 9, cellPadding: 4 },
@@ -28,6 +34,7 @@ export function exportPDF(filename: string, title: string, subtitle: string, hea
   });
   doc.save(filename.endsWith(".pdf") ? filename : `${filename}.pdf`);
 }
+
 
 export function exportCSV(filename: string, header: string[], rows: (string | number | null)[][]) {
   const esc = (v: any) => {
