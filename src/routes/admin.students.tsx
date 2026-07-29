@@ -33,6 +33,7 @@ function StudentManagement() {
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const del = useMutation({
     mutationFn: (id: number) => studentDelete({ data: { id } }),
