@@ -68,6 +68,7 @@ function ParentDashboard() {
     { key: "board", label: "Board Marks", icon: GraduationCap, color: "bg-indigo-600" },
     { key: "disciplinary", label: "Disciplinary", icon: Shield, color: "bg-rose-600" },
     { key: "fees", label: "Fees", icon: DollarSign, color: "bg-teal-600" },
+    { key: "message", label: "Message Principal", icon: MessageCircle, color: "bg-fuchsia-600" },
   ];
 
   return (
