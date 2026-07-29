@@ -47,9 +47,14 @@ function TimetablePage() {
 
 
   const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods(), enabled: !!me });
+  // Semesters 1 & 2 share a common subject set across all diplomas (Applied Sci,
+  // Comm. Skills, Engg. Drawing, etc.), even though each branch keeps its own
+  // weekly timetable. Widen the picker so any branch's slot can pick a common
+  // sem-1/2 subject regardless of which branch that subject row belongs to.
+  const isCommonSem = sem <= 2;
   const subjQ = useQuery({
-    queryKey: ["subjects-of", branch, sem],
-    queryFn: () => listSubjects({ data: { branch, semester: sem } as any }),
+    queryKey: ["subjects-of", isCommonSem ? "common" : branch, sem],
+    queryFn: () => listSubjects({ data: (isCommonSem ? { semester: sem } : { branch, semester: sem }) as any }),
     enabled: !!me,
   });
   const staffQ = useQuery({
@@ -165,6 +170,11 @@ function TimetablePage() {
           <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
           <p className="text-xs text-gray-400">
             View and edit the weekly schedule for any class. Click any slot to edit. Effective from 01-08-2025.
+            {isCommonSem && (
+              <span className="ml-1 text-emerald-700">
+                Sem {sem} shows the shared 1st/2nd-year subject pool — each diploma still keeps its own weekly slots.
+              </span>
+            )}
           </p>
         </div>
 

@@ -177,6 +177,8 @@ const studentProfileSchema = z.object({
   parent_phone: optStr,
   email: optStr.refine((v) => v == null || /\S+@\S+\.\S+/.test(v), { message: "Invalid email" }),
   bank_account_number: optStr,
+  gender: z.enum(["Male", "Female", "Other"]).optional().nullable().or(z.literal("").transform(() => null)),
+  category: z.enum(["General", "SC", "ST", "OBC", "TFW", "EWS", "Girl Child", "Others"]).optional().nullable().or(z.literal("").transform(() => null)),
 });
 
 export const studentCreate = createServerFn({ method: "POST" })
