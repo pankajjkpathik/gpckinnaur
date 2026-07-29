@@ -293,6 +293,30 @@ function StudentForm({
             <Field label="Date of Birth">
               <input name="dob" type="date" defaultValue={v.dob ?? ""} className="border rounded w-full px-3 py-2" />
             </Field>
+            <Field label="Gender">
+              <select
+                name="gender"
+                defaultValue={v.gender ?? ""}
+                className="border rounded w-full px-3 py-2 bg-white"
+              >
+                <option value="">— Select —</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </Field>
+            <Field label="Category">
+              <select
+                name="category"
+                defaultValue={v.category ?? ""}
+                className="border rounded w-full px-3 py-2 bg-white"
+              >
+                <option value="">— Select —</option>
+                {["General", "SC", "ST", "OBC", "TFW", "EWS", "Girl Child", "Others"].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </Field>
             <Field label="Department">
               <select
                 name="branch"
