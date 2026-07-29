@@ -26,7 +26,6 @@ export const Route = createFileRoute("/admin/timetable")({
 const BRANCH_LABELS: Record<string, string> = {
   civil: "Civil Engineering",
   mechanical: "Mechanical Engineering",
-  applied_science: "Applied Sciences",
 };
 const ORDINAL = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
 
