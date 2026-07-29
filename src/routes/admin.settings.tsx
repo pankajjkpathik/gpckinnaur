@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Save, Building2, Image as ImageIcon, Upload, Trash2 } from "lucide-react";
+import { Save, Building2, Image as ImageIcon, Upload, Trash2, CalendarClock } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
@@ -10,6 +10,8 @@ import {
   setInstituteAddress,
   getInstituteLogo,
   setInstituteLogo,
+  getActiveSession,
+  setActiveSession,
 } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/admin/settings")({
