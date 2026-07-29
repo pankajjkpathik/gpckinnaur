@@ -78,7 +78,7 @@ export function PdfDocsPage({ docType, title, subtitle }: { docType: "calendar" 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Title</label>
-              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Academic Calendar 2025-26" className="border rounded w-full px-3 py-2 text-sm" />
+              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Academic Calendar 2026-27" className="border rounded w-full px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Branch (optional)</label>

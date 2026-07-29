@@ -760,7 +760,7 @@ function FacultyAllotmentView({
   const allotmentSchema = z.object({
     academic_year: z
       .string()
-      .regex(/^\d{4}-\d{2}$/, "Academic year must look like 2025-26"),
+      .regex(/^\d{4}-\d{2}$/, "Academic year must look like 2026-27"),
     semester: z.number().int().min(1, "Select a semester").max(6, "Invalid semester"),
     subject_id: z.number().int().positive("Select a subject"),
     staff_id: z.number().int().positive("Select a faculty member"),

@@ -928,7 +928,7 @@ function FeeEditor({
               <input
                 value={draft.academic_year}
                 onChange={(e) => onChange({ ...draft, academic_year: e.target.value })}
-                placeholder="e.g. 2025-26"
+                placeholder="e.g. 2026-27"
                 className="border rounded w-full px-3 py-2"
               />
             </div>

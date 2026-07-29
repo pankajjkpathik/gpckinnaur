@@ -86,7 +86,7 @@ function Admissions() {
             <div className="mt-4 flex gap-3 bg-amber-50 border border-amber-200 rounded-md p-4 text-sm">
               <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <p className="text-amber-900">
-                <strong>Admission Open:</strong> Applications for the academic session 2025-26 are now being accepted.
+                <strong>Admission Open:</strong> Applications for the academic session 2026-27 are now being accepted.
                 Please visit the HP Takniki Shiksha Board website for online registration.
               </p>
             </div>
@@ -159,7 +159,7 @@ function Admissions() {
           <div className="bg-white border rounded-lg p-6">
             <div className="flex items-center gap-2 mb-3">
               <CalendarDays className="w-5 h-5 text-[color:var(--navy)]" />
-              <h3 className="font-bold text-[color:var(--navy)]">Important Dates 2025-26</h3>
+              <h3 className="font-bold text-[color:var(--navy)]">Important Dates 2026-27</h3>
             </div>
             <dl className="text-sm divide-y">
               {dates.map((d) => (

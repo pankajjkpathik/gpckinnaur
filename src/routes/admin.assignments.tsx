@@ -22,8 +22,8 @@ export const Route = createFileRoute("/admin/assignments")({
 });
 
 const ASSIGN_SAMPLE = [
-  { username: "prof.sharma", subject_code: "CE301", branch: "civil", semester: 3, academic_year: "2025-26" },
-  { username: "prof.verma", subject_code: "ME201", branch: "mechanical", semester: 2, academic_year: "2025-26" },
+  { username: "prof.sharma", subject_code: "CE301", branch: "civil", semester: 3, academic_year: "2026-27" },
+  { username: "prof.verma", subject_code: "ME201", branch: "mechanical", semester: 2, academic_year: "2026-27" },
 ];
 
 function AssignmentsPage() {
