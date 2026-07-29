@@ -1322,7 +1322,7 @@ function PTMView({ onBack }: { onBack: () => void }) {
 function TimetableView({ onBack }: { onBack: () => void }) {
   const [branch, setBranch] = useState("mechanical");
   const [sem, setSem] = useState(3);
-  const [year, setYear] = useState(defaultYear());
+  const [year, setYear] = useState(useActiveSession().year);
   const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods() });
   const ttQ = useQuery({
     queryKey: ["principal-tt", branch, sem, year],
