@@ -70,7 +70,7 @@ export function TimetableGrid({
     day_of_week: number; period_no: number;
     subject_id: number | null; staff_id: number | null; room: string | null;
     group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
-
+    combined: boolean;
   }) => void;
   institutionLine?: string;
   classLine?: string;
@@ -135,7 +135,9 @@ export function TimetableGrid({
     const guest = (s.guest_faculty || "").trim();
     return (
       <div className="px-1 leading-tight">
-        {s.group_label ? <div className="text-[9px] font-bold text-gray-600">({s.group_label})</div> : null}
+        {s.group_label === "CMB"
+          ? <div className="text-[9px] font-bold text-indigo-700">(Combined)</div>
+          : s.group_label ? <div className="text-[9px] font-bold text-gray-600">({s.group_label})</div> : null}
         <div className="font-semibold text-gray-800 text-[11px]">{code}</div>
         {initList && <div className="text-[10px] text-gray-500">({initList})</div>}
         {guest && <div className="text-[10px] italic text-emerald-700">Guest: {guest}</div>}
@@ -189,7 +191,8 @@ export function TimetableGrid({
                     // Only merge colSpan for a whole-class slot. Grouped (G1/G2) slots
                     // must stay per-period so each group can hold different subjects
                     // in consecutive periods.
-                    const wholeClass = slotsHere.find((s) => !s.group_label);
+                    const isWhole = (s: TTSlot) => !s.group_label || s.group_label === "CMB";
+                    const wholeClass = slotsHere.find(isWhole);
                     const span = Math.max(1, wholeClass?.span_periods || 1);
                     let colSpan = 1;
                     if (span > 1) {
@@ -211,7 +214,7 @@ export function TimetableGrid({
                         </td>
                       );
                     }
-                    if (slotsHere.length === 1 && !slotsHere[0].group_label) {
+                    if (slotsHere.length === 1 && isWhole(slotsHere[0])) {
                       const s = slotsHere[0];
                       return (
                         <td key={p.id}
@@ -227,7 +230,7 @@ export function TimetableGrid({
                     // One or more grouped slots (G1/G2/G3) sharing the same period → stack halves,
                     // with a "+ Gx" affordance for any missing group when editable.
                     const sorted = [...slotsHere]
-                      .filter((s) => s.group_label)
+                      .filter((s) => s.group_label && s.group_label !== "CMB")
                       .sort((a, b) => (a.group_label || "").localeCompare(b.group_label || ""));
                     const usedGroups = new Set(sorted.map((s) => s.group_label as string));
                     const rows: Array<{ slot?: TTSlot; group: string }> = sorted.map((s) => ({ slot: s, group: s.group_label as string }));
@@ -322,15 +325,20 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
   onSave: (p: {
     subject_id: number | null; staff_id: number | null; room: string | null;
     group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
+    combined: boolean;
   }) => void;
 }) {
+  const initialCombined = editing.slot?.group_label === "CMB";
   const [subjId, setSubjId] = useState<number | "">(editing.slot?.subject_id ?? "");
   const [staffId, setStaffId] = useState<number | "">(editing.slot?.staff_id ?? "");
   const [room, setRoom] = useState(editing.slot?.room ?? "");
-  const [groupLabel, setGroupLabel] = useState<string>(editing.slot?.group_label ?? editing.group ?? "");
+  const [groupLabel, setGroupLabel] = useState<string>(
+    initialCombined ? "" : (editing.slot?.group_label ?? editing.group ?? ""),
+  );
   const [span, setSpan] = useState<number>(editing.slot?.span_periods || 1);
   const [coIds, setCoIds] = useState<number[]>(editing.slot?.co_staff_ids ?? []);
   const [guest, setGuest] = useState<string>(editing.slot?.guest_faculty ?? "");
+  const [combined, setCombined] = useState<boolean>(initialCombined);
 
   const dayLabel = DAYS.find((d) => d.v === editing.day)?.label;
   const codeForTitle = subjects.find((s) => s.id === subjId)?.code;
@@ -394,6 +402,19 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
             <label className="text-gray-600">Room</label>
             <input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="optional" className="border rounded px-3 py-2" />
           </div>
+          <label className="flex items-start gap-2 text-xs bg-indigo-50 border border-indigo-200 rounded p-2">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={combined}
+              onChange={(e) => { setCombined(e.target.checked); if (e.target.checked) setGroupLabel(""); }}
+            />
+            <span>
+              <b>Combined class (Civil + Mechanical)</b> — use for common Sem 1 / Sem 2 subjects
+              (EWP, EG, Math, etc.) taught to both diplomas together. The slot will appear in the
+              sibling branch's timetable too, with no faculty conflict.
+            </span>
+          </label>
           <p className="text-[11px] text-gray-500 leading-snug">
             Use <b>Group</b> (G1/G2) to split a practical between two groups in the same period. Use <b>Span</b> for clubbed practical periods (e.g. 2 or 3 consecutive periods). Add <b>Co-Faculty</b> when multiple teachers take the lab together. Use <b>Guest Faculty</b> for external teachers who don't have a login.
           </p>
@@ -407,10 +428,11 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
                 subject_id: subjId || null,
                 staff_id: staffId || null,
                 room: room || null,
-                group_label: groupLabel || "",
+                group_label: combined ? "" : (groupLabel || ""),
                 span_periods: span,
                 co_staff_ids: coIds,
                 guest_faculty: guest.trim() || null,
+                combined,
               })
             }
             className="bg-[#7b1f4c] text-white px-5 py-2 rounded text-sm font-semibold"

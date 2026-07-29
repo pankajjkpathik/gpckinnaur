@@ -473,14 +473,17 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
         span_periods: z.number().int().min(1).max(6).optional().default(1),
         co_staff_ids: z.array(z.number().int()).optional().default([]),
         guest_faculty: z.string().max(100).optional().nullable(),
+        combined: z.boolean().optional().default(false),
       })
       .parse(d),
   )
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const group_label = data.group_label || "";
     const co = data.co_staff_ids ?? [];
+    const SIBLINGS: Record<string, string> = { civil: "mechanical", mechanical: "civil" };
+    const isCombined = !!data.combined && !!SIBLINGS[data.branch];
+    const group_label = isCombined ? "CMB" : (data.group_label || "");
     // Conflict check: same faculty (primary or co) in same day/period elsewhere
     const allStaff = [data.staff_id, ...co].filter(Boolean) as number[];
     if (allStaff.length) {
@@ -490,20 +493,57 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
         .eq("academic_year", data.academic_year)
         .eq("day_of_week", data.day_of_week)
         .eq("period_no", data.period_no);
+      const siblingBranch = SIBLINGS[data.branch];
       const clash = (conflict ?? []).find((c: any) => {
         if (c.branch === data.branch && c.semester === data.semester && (c.group_label || "") === group_label) return false;
+        // Ignore sibling-branch combined mirror at the same slot
+        if (isCombined && c.branch === siblingBranch && c.semester === data.semester && (c.group_label || "") === "CMB") return false;
         const theirs: number[] = [c.staff_id, ...(c.co_staff_ids ?? [])].filter(Boolean);
         return theirs.some((sid) => allStaff.includes(sid));
       });
       if (clash) throw new Error(`Faculty conflict: already teaching ${clash.branch}-Sem${clash.semester} at this slot.`);
     }
-    const { error } = await supabaseAdmin.from("timetable").upsert(
-      { ...data, group_label, co_staff_ids: co, room: data.room || null, guest_faculty: data.guest_faculty || null },
-      { onConflict: "branch,semester,day_of_week,period_no,academic_year,group_label" },
-    );
-
+    const primary = {
+      branch: data.branch,
+      semester: data.semester,
+      day_of_week: data.day_of_week,
+      period_no: data.period_no,
+      subject_id: data.subject_id,
+      staff_id: data.staff_id,
+      academic_year: data.academic_year,
+      span_periods: data.span_periods ?? 1,
+      group_label,
+      co_staff_ids: co,
+      room: data.room || null,
+      guest_faculty: data.guest_faculty || null,
+    };
+    const { error } = await supabaseAdmin.from("timetable").upsert(primary, {
+      onConflict: "branch,semester,day_of_week,period_no,academic_year,group_label",
+    });
     if (error) throw new Error(error.message);
-    return { ok: true };
+
+    // Mirror into sibling branch for combined classes
+    if (isCombined) {
+      const siblingBranch = SIBLINGS[data.branch];
+      let siblingSubjectId: number | null = null;
+      if (data.subject_id) {
+        const { data: subj } = await supabaseAdmin
+          .from("subjects").select("code").eq("id", data.subject_id).maybeSingle();
+        if (subj?.code) {
+          const { data: sib } = await supabaseAdmin
+            .from("subjects").select("id")
+            .eq("code", subj.code).eq("branch", siblingBranch).eq("semester", data.semester)
+            .maybeSingle();
+          siblingSubjectId = sib?.id ?? null;
+        }
+      }
+      const { error: mErr } = await supabaseAdmin.from("timetable").upsert(
+        { ...primary, branch: siblingBranch, subject_id: siblingSubjectId },
+        { onConflict: "branch,semester,day_of_week,period_no,academic_year,group_label" },
+      );
+      if (mErr) throw new Error(`Mirrored slot failed: ${mErr.message}`);
+    }
+    return { ok: true, combined: isCombined };
   });
 
 
