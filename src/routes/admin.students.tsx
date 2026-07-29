@@ -67,13 +67,43 @@ function StudentManagement() {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Admin Console
           </Link>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={downloadStudentSampleXlsx}
-              className="border px-3 py-2 rounded text-sm font-semibold flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700"
-            >
-              <FileSpreadsheet className="w-4 h-4" /> Sample .xlsx
-            </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <BulkOpsBar
+              sample={sampleStudentRows()}
+              sampleName="students_sample"
+              importLabel="Bulk Upload Students"
+              onImport={async (raw) => {
+                const rows = raw.map((r: any) => ({
+                  enrollment_no: String(r.enrollment_no ?? "").trim(),
+                  name: String(r.name ?? "").trim(),
+                  father_name: r.father_name ?? null,
+                  guardian_name: r.guardian_name ?? null,
+                  branch: String(r.branch ?? "").trim(),
+                  semester: Number(r.semester),
+                  batch_year: Number(r.batch_year),
+                  email: r.email ?? null,
+                  phone: r.phone ?? null,
+                  parent_phone: r.parent_phone ?? null,
+                  gender: r.gender ?? null,
+                  category: r.category ?? null,
+                  dob: r.dob ?? null,
+                  address: r.address ?? null,
+                  aadhaar_number: r.aadhaar_number ?? null,
+                  bank_account_number: r.bank_account_number ?? null,
+                }));
+                const res = await studentBulkCreate({ data: { defaultPassword: "Welcome@123", rows } as any });
+                await qc.invalidateQueries({ queryKey: ["student-list"] });
+                return { inserted: res.inserted, errors: res.errors };
+              }}
+              selectedCount={selected.size}
+              onBulkDelete={async () => {
+                const ids = Array.from(selected);
+                if (!ids.length) return;
+                await studentBulkDelete({ data: { ids } });
+                setSelected(new Set());
+                await qc.invalidateQueries({ queryKey: ["student-list"] });
+              }}
+            />
             <button
               onClick={() => setCreating(true)}
               className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1.5"
