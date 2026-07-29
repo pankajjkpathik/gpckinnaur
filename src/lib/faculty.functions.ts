@@ -189,6 +189,12 @@ export const submitAttendance = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
     await assertSubjectAccess(me, { subject_id: data.subject_id });
+    // Enforce active-session floor: attendance can't be marked before session start.
+    const { readActiveSessionStart } = await import("./settings.server");
+    const sessionStart = await readActiveSessionStart();
+    if (data.date < sessionStart) {
+      throw new Error(`Attendance cannot be recorded before the session start date (${sessionStart}).`);
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const today = new Date().toISOString().slice(0, 10);
     const locked = data.date !== today; // lock if not today
@@ -207,6 +213,7 @@ export const submitAttendance = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, count: rows.length };
   });
+
 
 // ============ MARKS ============
 
