@@ -111,6 +111,69 @@ function SettingsPage() {
   return (
     <PortalShell title="Institute Settings" subtitle="Admin · System Configuration" me={me as any} accent="rose">
       <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
+        {/* Active Academic Session */}
+        <div className="bg-white border rounded-lg shadow-sm p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-lg bg-[#7b1f4c] text-white flex items-center justify-center">
+              <CalendarClock className="w-5 h-5" />
+            </span>
+            <div>
+              <h1 className="text-lg font-bold text-gray-800">Active Academic Session</h1>
+              <p className="text-xs text-gray-500">
+                Used as the default across timetable, syllabus, admissions, and attendance rollovers.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Session (YYYY-YY)</label>
+              <input
+                value={sessYear}
+                onChange={(e) => setSessYear(e.target.value.trim())}
+                placeholder="e.g. 2026-27"
+                pattern="\d{4}-\d{2}"
+                className="border rounded w-full px-3 py-2 text-sm"
+                disabled={sessionQ.isLoading}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Session Start Date</label>
+              <input
+                type="date"
+                value={sessStart}
+                onChange={(e) => setSessStart(e.target.value)}
+                className="border rounded w-full px-3 py-2 text-sm"
+                disabled={sessionQ.isLoading}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => saveSession.mutate({ year: sessYear, startDate: sessStart })}
+              disabled={
+                saveSession.isPending ||
+                !/^\d{4}-\d{2}$/.test(sessYear) ||
+                !/^\d{4}-\d{2}-\d{2}$/.test(sessStart) ||
+                (sessYear === sessionQ.data?.year && sessStart === sessionQ.data?.startDate)
+              }
+              className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              {saveSession.isPending ? "Saving…" : "Save Session"}
+            </button>
+            {saveSession.isSuccess && !saveSession.isPending && (
+              <span className="text-xs text-emerald-700">Saved.</span>
+            )}
+            {saveSession.error && (
+              <span className="text-xs text-rose-700">{(saveSession.error as Error).message}</span>
+            )}
+          </div>
+          <p className="text-[11px] text-gray-400">
+            Changing this rolls over defaults for new attendance, timetable, and syllabus entries.
+            Existing records keep their original session tag.
+          </p>
+        </div>
+
         {/* Address */}
         <div className="bg-white border rounded-lg shadow-sm p-6 space-y-4">
           <div className="flex items-center gap-3">
