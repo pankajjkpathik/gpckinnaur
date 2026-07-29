@@ -291,3 +291,59 @@ function SettingsPage() {
     </PortalShell>
   );
 }
+
+function SeedNewSession({ year, startDate }: { year: string; startDate: string }) {
+  const seed = useMutation({
+    mutationFn: () =>
+      initializeSession({
+        data: { targetYear: year, startDate, semesterLabel: `Odd ${year.slice(0, 4)}` },
+      }),
+  });
+  const r = seed.data as
+    | {
+        target: string;
+        source: string | null;
+        syllabus_units_copied: number;
+        timetable_slots_copied: number;
+        calendar_created: boolean;
+        per_branch: Record<string, { units: number; slots: number }>;
+      }
+    | undefined;
+  return (
+    <div className="mt-4 border-t pt-4 space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => seed.mutate()}
+          disabled={seed.isPending}
+          className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2 rounded text-sm disabled:opacity-60"
+        >
+          {seed.isPending ? "Seeding…" : `Initialize ${year} (Civil & Mechanical)`}
+        </button>
+        <span className="text-[11px] text-gray-500">
+          Clones syllabus units & timetable slots from the previous session (unpublished) and ensures an academic calendar row.
+        </span>
+      </div>
+      {seed.error && (
+        <p className="text-xs text-rose-700">{(seed.error as Error).message}</p>
+      )}
+      {r && (
+        <div className="text-xs text-gray-700 bg-emerald-50 border border-emerald-200 rounded p-2">
+          <div>
+            Target <b>{r.target}</b> • Source <b>{r.source ?? "—"}</b> • Units copied{" "}
+            <b>{r.syllabus_units_copied}</b> • Timetable slots copied{" "}
+            <b>{r.timetable_slots_copied}</b> • Calendar{" "}
+            <b>{r.calendar_created ? "created" : "already existed"}</b>
+          </div>
+          <div className="mt-1">
+            {Object.entries(r.per_branch).map(([b, v]) => (
+              <span key={b} className="mr-3">
+                {b}: {v.units}u / {v.slots}s
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
