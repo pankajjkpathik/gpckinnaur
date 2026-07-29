@@ -13,6 +13,7 @@ import {
   getActiveSession,
   setActiveSession,
 } from "@/lib/settings.functions";
+import { initializeSession } from "@/lib/session-seed.functions";
 
 export const Route = createFileRoute("/admin/settings")({
   head: () => portalMeta("Institute Settings"),
