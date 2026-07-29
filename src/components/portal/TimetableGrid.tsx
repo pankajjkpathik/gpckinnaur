@@ -214,7 +214,7 @@ export function TimetableGrid({
                         </td>
                       );
                     }
-                    if (slotsHere.length === 1 && !slotsHere[0].group_label) {
+                    if (slotsHere.length === 1 && isWhole(slotsHere[0])) {
                       const s = slotsHere[0];
                       return (
                         <td key={p.id}
