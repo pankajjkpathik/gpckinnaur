@@ -250,6 +250,8 @@ function StudentForm({
       parent_phone: fd.get("parent_phone") || null,
       email: fd.get("email") || null,
       bank_account_number: fd.get("bank_account_number") || null,
+      gender: fd.get("gender") || null,
+      category: fd.get("category") || null,
     };
     if (isEdit) {
       update.mutate({ id: (initial as any).id, enrollment_no: fd.get("enrollment_no") || undefined, ...base });
