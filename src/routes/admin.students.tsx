@@ -470,13 +470,13 @@ function StudentForm({
   );
 }
 
-function downloadStudentSampleXlsx() {
-  const rows = [
+function sampleStudentRows() {
+  return [
     {
       enrollment_no: "2026CE001",
       name: "Ravi Kumar",
       father_name: "Suresh Kumar",
-      mother_name: "Sita Devi",
+      guardian_name: "Sita Devi",
       dob: "2005-06-15",
       gender: "Male",
       category: "General",
@@ -487,13 +487,12 @@ function downloadStudentSampleXlsx() {
       branch: "Civil Engineering",
       semester: 1,
       batch_year: 2026,
-      admission_date: "2026-07-15",
     },
     {
       enrollment_no: "2026ME002",
       name: "Priya Sharma",
       father_name: "Rakesh Sharma",
-      mother_name: "Kavita Sharma",
+      guardian_name: "Kavita Sharma",
       dob: "2005-09-20",
       gender: "Female",
       category: "OBC",
@@ -504,11 +503,7 @@ function downloadStudentSampleXlsx() {
       branch: "Mechanical Engineering",
       semester: 1,
       batch_year: 2026,
-      admission_date: "2026-07-15",
     },
   ];
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, "Students");
-  XLSX.writeFile(wb, "students_sample.xlsx");
 }
+
