@@ -723,71 +723,317 @@ function AnnouncementsView({ onBack }: { onBack: () => void }) {
 }
 
 // ─── FEES ────────────────────────────────────────────────────────────────────
+type FeeComponent = { label: string; amount: number };
+type FeeDraft = {
+  id?: number;
+  student_id: number | "";
+  academic_year: string;
+  semester: number | "";
+  components: FeeComponent[];
+  paid_amount: number;
+  due_date: string;
+};
+const emptyFee: FeeDraft = {
+  student_id: "",
+  academic_year: "",
+  semester: "",
+  components: [{ label: "Tuition Fee", amount: 0 }],
+  paid_amount: 0,
+  due_date: "",
+};
+
 function FeesView({ onBack }: { onBack: () => void }) {
+  const qc = useQueryClient();
   const feesQ = useQuery({ queryKey: ["admin-fees"], queryFn: () => adminListFees() });
+  const studentsQ = useQuery({ queryKey: ["admin-fee-students"], queryFn: () => adminListStudents({ data: {} as any }) });
   const rows = feesQ.data ?? [];
-  const inr = (n: number) => `₹${Number(n).toLocaleString("en-IN")}`;
+  const inr = (n: number) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+  const [editing, setEditing] = useState<FeeDraft | null>(null);
+  const [search, setSearch] = useState("");
+
+  const save = useMutation({
+    mutationFn: (d: FeeDraft) =>
+      upsertFeeRecord({
+        data: {
+          id: d.id,
+          student_id: Number(d.student_id),
+          academic_year: d.academic_year || null,
+          semester: d.semester === "" ? null : Number(d.semester),
+          components: d.components.map((c) => ({ label: c.label, amount: Number(c.amount || 0) })),
+          paid_amount: Number(d.paid_amount || 0),
+          due_date: d.due_date || null,
+        },
+      }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-fees"] }); setEditing(null); },
+  });
+  const del = useMutation({
+    mutationFn: (id: number) => deleteFeeRecord({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-fees"] }),
+  });
+
+  const filtered = rows.filter((r: any) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      (r.students?.name || "").toLowerCase().includes(q) ||
+      (r.students?.enrollment_no || "").toLowerCase().includes(q) ||
+      (r.status || "").toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
       <Card>
-        <h1 className="text-xl font-bold text-gray-800 mb-1">Manage Fees</h1>
-        <p className="text-xs text-gray-400 mb-4">Manage the fee status of every student.</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800 mb-1">Manage Fees</h1>
+            <p className="text-xs text-gray-400">Update pending, partial or paid fees. Visible instantly to the student, their parent and the Principal.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search student / status…"
+                className="border rounded pl-8 pr-3 py-2 text-sm w-56"
+              />
+            </div>
+            <button
+              onClick={() => setEditing({ ...emptyFee })}
+              className="bg-[#7b1f4c] text-white px-4 py-2 rounded text-sm font-semibold inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> Add / Update
+            </button>
+          </div>
+        </div>
         <div className="border rounded overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Student ID</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Student Name</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Class ID</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Enrollment</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Student</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Year / Sem</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Total</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Paid</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Balance</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Due Date</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Total Amount</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Due</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                    No fee records found.
-                  </td>
-                </tr>
+              {filtered.length === 0 && (
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">No fee records found.</td></tr>
               )}
-              {rows.map((r: any) => {
-                const tone =
-                  r.status === "paid"
-                    ? "bg-green-100 text-green-700"
-                    : r.status === "partial"
-                      ? "bg-amber-100 text-amber-800"
-                      : "bg-rose-100 text-rose-700";
+              {filtered.map((r: any) => {
+                const bal = Number(r.total_amount || 0) - Number(r.paid_amount || 0);
+                const tone = r.status === "paid" ? "bg-green-100 text-green-700"
+                  : r.status === "partial" ? "bg-amber-100 text-amber-800"
+                  : "bg-rose-100 text-rose-700";
                 return (
                   <tr key={r.id} className="border-t">
                     <td className="px-4 py-3 font-mono text-xs">{r.students?.enrollment_no ?? r.student_id}</td>
                     <td className="px-4 py-3">{r.students?.name ?? "—"}</td>
-                    <td className="px-4 py-3 text-xs">
-                      {r.students?.branch?.toUpperCase()}
-                      {r.students?.semester}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded capitalize ${tone}`}>{r.status}</span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">{r.due_date ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs">{r.academic_year ?? "—"}{r.semester ? ` · Sem ${r.semester}` : ""}</td>
                     <td className="px-4 py-3">{inr(r.total_amount)}</td>
+                    <td className="px-4 py-3">{inr(r.paid_amount)}</td>
+                    <td className={`px-4 py-3 font-semibold ${bal > 0 ? "text-rose-700" : "text-emerald-700"}`}>{inr(bal)}</td>
+                    <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded capitalize ${tone}`}>{r.status}</span></td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{r.due_date ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-3 items-center">
+                        <button
+                          onClick={() => setEditing({
+                            id: r.id,
+                            student_id: r.student_id,
+                            academic_year: r.academic_year ?? "",
+                            semester: r.semester ?? "",
+                            components: Array.isArray(r.components) && r.components.length ? r.components : [{ label: "Tuition Fee", amount: 0 }],
+                            paid_amount: Number(r.paid_amount || 0),
+                            due_date: r.due_date ?? "",
+                          })}
+                          className="text-[#7b1f4c] hover:underline text-xs inline-flex items-center gap-1"
+                        ><Pencil className="w-3.5 h-3.5" /> Edit</button>
+                        <button
+                          onClick={() => { if (confirm("Delete this fee record?")) del.mutate(r.id); }}
+                          className="text-rose-500 hover:text-rose-700"
+                        ><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-gray-400 mt-3">
-          Fee records are created via bulk import or the student fee API. Detailed per-student editing can be added on
-          request.
-        </p>
       </Card>
+
+      {editing && (
+        <FeeEditor
+          draft={editing}
+          students={studentsQ.data ?? []}
+          onChange={setEditing}
+          onClose={() => setEditing(null)}
+          onSave={() => save.mutate(editing)}
+          busy={save.isPending}
+          error={save.error as Error | null}
+        />
+      )}
     </div>
   );
 }
+
+function FeeEditor({
+  draft, students, onChange, onClose, onSave, busy, error,
+}: {
+  draft: FeeDraft;
+  students: any[];
+  onChange: (d: FeeDraft) => void;
+  onClose: () => void;
+  onSave: () => void;
+  busy: boolean;
+  error: Error | null;
+}) {
+  const total = draft.components.reduce((s, c) => s + Number(c.amount || 0), 0);
+  const balance = total - Number(draft.paid_amount || 0);
+  const derivedStatus = draft.paid_amount >= total && total > 0 ? "paid" : draft.paid_amount > 0 ? "partial" : "due";
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-lg w-full max-w-2xl my-8" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b sticky top-0 bg-white rounded-t-lg">
+          <h3 className="font-bold text-lg">{draft.id ? "Update Fee Record" : "Add Fee Record"}</h3>
+          <p className="text-xs text-gray-500">Changes are visible to the student, parent and Principal immediately.</p>
+        </div>
+        <div className="p-5 space-y-4 text-sm">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Student</label>
+              <select
+                value={draft.student_id === "" ? "" : String(draft.student_id)}
+                onChange={(e) => onChange({ ...draft, student_id: e.target.value ? Number(e.target.value) : "" })}
+                className="border rounded w-full px-3 py-2 bg-white"
+              >
+                <option value="">— Select student —</option>
+                {students.map((s: any) => (
+                  <option key={s.id} value={s.id}>
+                    {s.enrollment_no} · {s.name} ({s.branch}-Sem{s.semester})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Academic Year</label>
+              <input
+                value={draft.academic_year}
+                onChange={(e) => onChange({ ...draft, academic_year: e.target.value })}
+                placeholder="e.g. 2025-26"
+                className="border rounded w-full px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Semester</label>
+              <select
+                value={draft.semester === "" ? "" : String(draft.semester)}
+                onChange={(e) => onChange({ ...draft, semester: e.target.value ? Number(e.target.value) : "" })}
+                className="border rounded w-full px-3 py-2 bg-white"
+              >
+                <option value="">—</option>
+                {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Due Date</label>
+              <input
+                type="date"
+                value={draft.due_date}
+                onChange={(e) => onChange({ ...draft, due_date: e.target.value })}
+                className="border rounded w-full px-3 py-2"
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-gray-600">Fee Components</label>
+              <button
+                type="button"
+                onClick={() => onChange({ ...draft, components: [...draft.components, { label: "", amount: 0 }] })}
+                className="text-xs text-[#7b1f4c] hover:underline inline-flex items-center gap-1"
+              ><Plus className="w-3 h-3" /> Add row</button>
+            </div>
+            <div className="space-y-2">
+              {draft.components.map((c, i) => (
+                <div key={i} className="grid grid-cols-[1fr_140px_28px] gap-2">
+                  <input
+                    value={c.label}
+                    onChange={(e) => onChange({ ...draft, components: draft.components.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })}
+                    placeholder="Head (e.g. Tuition, Exam, Library)"
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    value={c.amount}
+                    onChange={(e) => onChange({ ...draft, components: draft.components.map((x, j) => j === i ? { ...x, amount: Number(e.target.value) } : x) })}
+                    placeholder="Amount ₹"
+                    className="border rounded px-3 py-2"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => onChange({ ...draft, components: draft.components.filter((_, j) => j !== i) })}
+                    className="text-rose-500 hover:text-rose-700"
+                    title="Remove"
+                  ><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+              {draft.components.length === 0 && (
+                <p className="text-xs text-gray-400">Add at least one fee head.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-4 border-t pt-4">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Total (auto)</label>
+              <p className="font-semibold text-gray-800">₹{total.toLocaleString("en-IN")}</p>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Paid Amount</label>
+              <input
+                type="number"
+                min={0}
+                value={draft.paid_amount}
+                onChange={(e) => onChange({ ...draft, paid_amount: Number(e.target.value) })}
+                className="border rounded w-full px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Balance</label>
+              <p className={`font-semibold ${balance > 0 ? "text-rose-700" : "text-emerald-700"}`}>₹{balance.toLocaleString("en-IN")}</p>
+              <p className="text-[11px] text-gray-400 capitalize mt-0.5">Status will be: <span className="font-semibold">{derivedStatus}</span></p>
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-rose-700">{error.message}</p>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button onClick={onClose} className="border px-4 py-2 rounded">Cancel</button>
+            <button
+              onClick={onSave}
+              disabled={busy || draft.student_id === "" || draft.components.length === 0}
+              className="bg-[#7b1f4c] text-white px-5 py-2 rounded font-semibold disabled:opacity-50"
+            >
+              {busy ? "Saving…" : draft.id ? "Update Fee" : "Save Fee"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 // ─── PTM ────────────────────────────────────────────────────────────────────
 function PTMView({ onBack }: { onBack: () => void }) {
