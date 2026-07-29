@@ -42,8 +42,11 @@ function TimetablePage() {
 
   const [branch, setBranch] = useState("mechanical");
   const [sem, setSem] = useState(3);
-  const [year, setYear] = useState(useActiveSession().year);
+  const activeSession = useActiveSession();
+  const [year, setYear] = useState(activeSession.year);
   const [ciId, setCiId] = useState<number | "">("");
+  const yearMismatch = year !== activeSession.year;
+
 
 
   const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods(), enabled: !!me });
