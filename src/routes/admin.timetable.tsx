@@ -42,7 +42,7 @@ function TimetablePage() {
 
   const [branch, setBranch] = useState("mechanical");
   const [sem, setSem] = useState(3);
-  const [year, setYear] = useState("2025-26");
+  const [year, setYear] = useState("2026-27");
   const [ciId, setCiId] = useState<number | "">("");
 
 
@@ -167,7 +167,7 @@ function TimetablePage() {
         <div>
           <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
           <p className="text-xs text-gray-400">
-            View and edit the weekly schedule for any class. Click any slot to edit. Effective from 01-08-2025.
+            View and edit the weekly schedule for any class. Click any slot to edit. Effective from 01-08-2026.
           </p>
         </div>
 
@@ -182,7 +182,7 @@ function TimetablePage() {
             <div className="text-center">
               <p className="text-[13px] font-bold uppercase tracking-wide">Government of Himachal Pradesh</p>
               <p className="text-[15px] font-extrabold">Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)</p>
-              <p className="text-[12px] font-semibold">Time Table {classLabel} · w.e.f. 01-08-{year.slice(-2) === "26" ? "2026" : year.split("-")[0]}</p>
+              <p className="text-[12px] font-semibold">Time Table {classLabel} · w.e.f. 01-08-{year.split("-")[0]}</p>
             </div>
             <img src={logoAsset.url} alt="GPK" className="w-14 h-14 object-contain" />
           </div>

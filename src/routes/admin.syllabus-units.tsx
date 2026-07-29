@@ -192,7 +192,7 @@ function SyllabusUnitsPage() {
             <input
               value={academicYear}
               onChange={(e) => setAcademicYear(e.target.value)}
-              placeholder="2025-26"
+              placeholder="2026-27"
               pattern="\d{4}-\d{2}"
               title="Format: YYYY-YY (e.g. 2025-26)"
               className="border rounded px-2 py-1.5 text-sm w-24"
