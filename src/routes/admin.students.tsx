@@ -6,7 +6,8 @@ import * as XLSX from "xlsx";
 import { staffMe } from "@/lib/auth.functions";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
-import { studentList, studentCreate, studentUpdate, studentDelete, studentResetPassword } from "@/lib/people.functions";
+import { studentList, studentCreate, studentUpdate, studentDelete, studentResetPassword, studentBulkCreate, studentBulkDelete } from "@/lib/people.functions";
+import { BulkOpsBar } from "@/components/admin/BulkOpsBar";
 
 export const Route = createFileRoute("/admin/students")({
   head: () => portalMeta("Student Management"),
