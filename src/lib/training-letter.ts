@@ -1,5 +1,6 @@
 // PDF generators for Industrial Training letter and per-student Undertakings.
 import jsPDF from "jspdf";
+import { sessionHeaderLine } from "./pdf-session";
 import autoTable from "jspdf-autotable";
 import logoAsset from "@/assets/logo.png.asset.json";
 
