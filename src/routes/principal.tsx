@@ -1331,8 +1331,8 @@ function TimetableView({ onBack }: { onBack: () => void }) {
   const BRANCHES: Record<string, string> = {
     civil: "Civil Engineering",
     mechanical: "Mechanical Engineering",
-    applied_science: "Applied Sciences",
   };
+
   const ORD = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
   return (
     <div className="space-y-4">
