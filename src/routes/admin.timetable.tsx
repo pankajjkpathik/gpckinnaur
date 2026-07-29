@@ -70,9 +70,19 @@ function TimetablePage() {
   });
 
   const save = useMutation({
-    mutationFn: (d: any) => upsertTimetableSlot({ data: { branch, semester: sem, academic_year: year, ...d } }),
+    mutationFn: (d: any) => {
+      if (yearMismatch) {
+        return Promise.reject(
+          new Error(
+            `Timetable entries must be saved into the active session (${activeSession.year}). Switch back to save.`,
+          ),
+        );
+      }
+      return upsertTimetableSlot({ data: { branch, semester: sem, academic_year: year, ...d } });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["timetable"] }),
   });
+
   const pub = useMutation({
     mutationFn: (p: boolean) =>
       publishTimetable({ data: { branch, semester: sem, academic_year: year, published: p } }),
