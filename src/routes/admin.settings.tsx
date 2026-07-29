@@ -173,7 +173,9 @@ function SettingsPage() {
             Changing this rolls over defaults for new attendance, timetable, and syllabus entries.
             Existing records keep their original session tag.
           </p>
+          <SeedNewSession year={sessYear} startDate={sessStart} />
         </div>
+
 
         {/* Address */}
         <div className="bg-white border rounded-lg shadow-sm p-6 space-y-4">
