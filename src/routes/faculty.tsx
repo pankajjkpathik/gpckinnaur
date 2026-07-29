@@ -1570,16 +1570,22 @@ function fmtRelative(ts: number): string {
 function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () => void }) {
   const qc = useQueryClient();
   const today = new Date().toISOString().slice(0, 10);
+  const session = useActiveSession();
+  const sessionStart = session.startDate;
+  // Floor the date picker at the active session start so attendance for the
+  // new session can't be back-dated before 01.08.2026 (or whatever admin sets).
+  const minDate = sessionStart > today ? sessionStart : today;
   const asg = useQuery({
     queryKey: ["fac-asg", me.id, ay],
     queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
   });
   const periods = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods() });
   const [asgId, setAsgId] = useState<number | "">("");
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(minDate);
   const [pno, setPno] = useState<number | "">("");
   const [loaded, setLoaded] = useState(false);
   const a = (asg.data ?? []).find((x: any) => x.id === asgId);
+
 
   const rosterQ = useQuery({
     enabled: !!a && !!pno && loaded,
