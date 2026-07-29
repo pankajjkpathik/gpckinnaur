@@ -47,14 +47,12 @@ function TimetablePage() {
 
 
   const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods(), enabled: !!me });
-  // Semesters 1 & 2 share a common subject set across all diplomas (Applied Sci,
-  // Comm. Skills, Engg. Drawing, etc.), even though each branch keeps its own
-  // weekly timetable. Widen the picker so any branch's slot can pick a common
-  // sem-1/2 subject regardless of which branch that subject row belongs to.
-  const isCommonSem = sem <= 2;
+  // Each branch keeps its own subject set per semester (including semesters 1
+  // and 2, even when subject codes overlap between Civil and Mechanical). Keep
+  // the filter strict on branch+semester so each diploma gets its own picker.
   const subjQ = useQuery({
-    queryKey: ["subjects-of", isCommonSem ? "common" : branch, sem],
-    queryFn: () => listSubjects({ data: (isCommonSem ? { semester: sem } : { branch, semester: sem }) as any }),
+    queryKey: ["subjects-of", branch, sem],
+    queryFn: () => listSubjects({ data: { branch, semester: sem } as any }),
     enabled: !!me,
   });
   const staffQ = useQuery({
