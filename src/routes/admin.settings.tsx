@@ -65,6 +65,28 @@ function SettingsPage() {
   const saveLogo = useMutation({
     mutationFn: (value: string) => setInstituteLogo({ data: { value } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["institute-logo"] }),
+  const saveLogo = useMutation({
+    mutationFn: (value: string) => setInstituteLogo({ data: { value } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["institute-logo"] }),
+  });
+
+  // Active academic session
+  const sessionQ = useQuery({
+    queryKey: ["active-session"],
+    queryFn: () => getActiveSession(),
+    enabled: !!me,
+  });
+  const [sessYear, setSessYear] = useState("");
+  const [sessStart, setSessStart] = useState("");
+  useEffect(() => {
+    if (sessionQ.data) {
+      setSessYear(sessionQ.data.year);
+      setSessStart(sessionQ.data.startDate);
+    }
+  }, [sessionQ.data]);
+  const saveSession = useMutation({
+    mutationFn: (v: { year: string; startDate: string }) => setActiveSession({ data: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["active-session"] }),
   });
 
   const fileRef = useRef<HTMLInputElement>(null);
