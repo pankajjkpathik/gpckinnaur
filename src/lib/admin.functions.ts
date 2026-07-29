@@ -364,7 +364,15 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
+    const { readActiveSessionYear } = await import("./settings.server");
+    const activeYear = await readActiveSessionYear();
+    if (data.academic_year !== activeYear) {
+      throw new Error(
+        `Timetable entries must use the active session (${activeYear}). Got ${data.academic_year}.`,
+      );
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     // Conflict check: same faculty in same day/period elsewhere
     if (data.staff_id) {
       const { data: conflict } = await supabaseAdmin
