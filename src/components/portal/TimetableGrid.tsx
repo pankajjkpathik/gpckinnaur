@@ -230,7 +230,7 @@ export function TimetableGrid({
                     // One or more grouped slots (G1/G2/G3) sharing the same period → stack halves,
                     // with a "+ Gx" affordance for any missing group when editable.
                     const sorted = [...slotsHere]
-                      .filter((s) => s.group_label)
+                      .filter((s) => s.group_label && s.group_label !== "CMB")
                       .sort((a, b) => (a.group_label || "").localeCompare(b.group_label || ""));
                     const usedGroups = new Set(sorted.map((s) => s.group_label as string));
                     const rows: Array<{ slot?: TTSlot; group: string }> = sorted.map((s) => ({ slot: s, group: s.group_label as string }));
