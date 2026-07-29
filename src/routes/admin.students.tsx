@@ -150,6 +150,18 @@ function StudentManagement() {
             <table className="w-full text-sm whitespace-nowrap">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-3 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={rows.length > 0 && rows.every((r: any) => selected.has(r.id))}
+                      onChange={(e) => {
+                        const next = new Set(selected);
+                        if (e.target.checked) rows.forEach((r: any) => next.add(r.id));
+                        else rows.forEach((r: any) => next.delete(r.id));
+                        setSelected(next);
+                      }}
+                    />
+                  </th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Student</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Father / Guardian</th>
                   <th className="text-left px-4 py-3 text-gray-400 font-medium">Class</th>
@@ -162,6 +174,18 @@ function StudentManagement() {
               <tbody>
                 {rows.map((s: any) => (
                   <tr key={s.id} className="border-t">
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(s.id)}
+                        onChange={(e) => {
+                          const next = new Set(selected);
+                          if (e.target.checked) next.add(s.id);
+                          else next.delete(s.id);
+                          setSelected(next);
+                        }}
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <p className="font-medium">{s.name}</p>
                       <p className="text-xs text-gray-400 font-mono">
