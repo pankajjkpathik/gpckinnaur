@@ -191,7 +191,8 @@ export function TimetableGrid({
                     // Only merge colSpan for a whole-class slot. Grouped (G1/G2) slots
                     // must stay per-period so each group can hold different subjects
                     // in consecutive periods.
-                    const wholeClass = slotsHere.find((s) => !s.group_label);
+                    const isWhole = (s: TTSlot) => !s.group_label || s.group_label === "CMB";
+                    const wholeClass = slotsHere.find(isWhole);
                     const span = Math.max(1, wholeClass?.span_periods || 1);
                     let colSpan = 1;
                     if (span > 1) {
