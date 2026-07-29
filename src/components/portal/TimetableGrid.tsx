@@ -402,6 +402,19 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
             <label className="text-gray-600">Room</label>
             <input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="optional" className="border rounded px-3 py-2" />
           </div>
+          <label className="flex items-start gap-2 text-xs bg-indigo-50 border border-indigo-200 rounded p-2">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={combined}
+              onChange={(e) => { setCombined(e.target.checked); if (e.target.checked) setGroupLabel(""); }}
+            />
+            <span>
+              <b>Combined class (Civil + Mechanical)</b> — use for common Sem 1 / Sem 2 subjects
+              (EWP, EG, Math, etc.) taught to both diplomas together. The slot will appear in the
+              sibling branch's timetable too, with no faculty conflict.
+            </span>
+          </label>
           <p className="text-[11px] text-gray-500 leading-snug">
             Use <b>Group</b> (G1/G2) to split a practical between two groups in the same period. Use <b>Span</b> for clubbed practical periods (e.g. 2 or 3 consecutive periods). Add <b>Co-Faculty</b> when multiple teachers take the lab together. Use <b>Guest Faculty</b> for external teachers who don't have a login.
           </p>
@@ -415,10 +428,11 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
                 subject_id: subjId || null,
                 staff_id: staffId || null,
                 room: room || null,
-                group_label: groupLabel || "",
+                group_label: combined ? "" : (groupLabel || ""),
                 span_periods: span,
                 co_staff_ids: coIds,
                 guest_faculty: guest.trim() || null,
+                combined,
               })
             }
             className="bg-[#7b1f4c] text-white px-5 py-2 rounded text-sm font-semibold"
