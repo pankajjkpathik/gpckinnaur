@@ -74,6 +74,7 @@ import {
 import { BarStats, PieStats } from "@/components/portal/Charts";
 import { DepartmentOverviewPanel } from "@/components/portal/DepartmentOverviewPanel";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
+import { useActiveSession } from "@/lib/use-active-session";
 import { hasRole, principalRoles } from "@/lib/roles";
 import { listNotices } from "@/lib/notices.functions";
 import { BRANCH_TO_DEPT } from "@/lib/branch";
@@ -189,7 +190,7 @@ function PrincipalPortal() {
     return v && VALID_VIEWS.includes(v) ? v : "home";
   })();
   const [view, setView] = useState<View>(initialView);
-  const [year, setYear] = useState(defaultYear());
+  const [year, setYear] = useState(useActiveSession().year);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -1321,7 +1322,7 @@ function PTMView({ onBack }: { onBack: () => void }) {
 function TimetableView({ onBack }: { onBack: () => void }) {
   const [branch, setBranch] = useState("mechanical");
   const [sem, setSem] = useState(3);
-  const [year, setYear] = useState(defaultYear());
+  const [year, setYear] = useState(useActiveSession().year);
   const periodsQ = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods() });
   const ttQ = useQuery({
     queryKey: ["principal-tt", branch, sem, year],

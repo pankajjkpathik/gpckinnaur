@@ -27,6 +27,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
+import { useActiveSession } from "@/lib/use-active-session";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 import { avatarUrl } from "@/lib/portal-identity";
 import placeholderAvatar from "@/assets/placeholder-avatar.png";
@@ -405,7 +406,7 @@ function HodPortal() {
       window.localStorage.setItem("hod:sidebar:collapsed", sidebarCollapsed ? "1" : "0");
     } catch {}
   }, [sidebarCollapsed]);
-  const ay = defaultAY();
+  const ay = useActiveSession().year;
 
   // Keep ?view= in sync with current view so refresh/back-forward preserves selection.
   useEffect(() => {
@@ -706,7 +707,7 @@ function FacultyAllotmentView({
   onBack: () => void;
 }) {
   const qc = useQueryClient();
-  const [year, setYear] = useState(defaultAY());
+  const [year, setYear] = useState(useActiveSession().year);
   const [form, setForm] = useState({ semester: 0, subject_id: 0, staff_id: 0 });
   const [formError, setFormError] = useState<string | null>(null);
 

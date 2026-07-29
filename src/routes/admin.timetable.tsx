@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Printer, ArrowLeft } from "lucide-react";
 import { staffMe } from "@/lib/auth.functions";
+import { useActiveSession } from "@/lib/use-active-session";
 import { PortalShell, portalMeta } from "@/components/portal/PortalShell";
 import { adminRoles, hasRole } from "@/lib/roles";
 import {
@@ -41,7 +42,7 @@ function TimetablePage() {
 
   const [branch, setBranch] = useState("mechanical");
   const [sem, setSem] = useState(3);
-  const [year, setYear] = useState("2026-27");
+  const [year, setYear] = useState(useActiveSession().year);
   const [ciId, setCiId] = useState<number | "">("");
 
 
