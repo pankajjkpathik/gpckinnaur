@@ -184,7 +184,13 @@ function TimetablePage() {
           </p>
         </div>
 
+        {yearMismatch && (
+          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2">
+            You are viewing session {year}, but the active session is {activeSession.year} (starts {activeSession.startDate}). Saving is disabled until you switch back.
+          </p>
+        )}
         {save.error && (
+
           <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>
         )}
 
