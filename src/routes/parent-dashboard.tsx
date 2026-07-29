@@ -9,7 +9,9 @@ import {
   DollarSign,
   LogOut,
   Megaphone,
+  MessageCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import logoAsset from "@/assets/logo.png.asset.json";
 import {
   parentMe,
@@ -21,6 +23,7 @@ import {
   parentFees,
   parentNotices,
 } from "@/lib/parent.functions";
+import { createParentMessage } from "@/lib/admin-extras.functions";
 import { pageMeta } from "@/lib/seo";
 import { HeroBanner } from "@/components/portal/HeroBanner";
 
