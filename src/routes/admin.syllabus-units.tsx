@@ -194,7 +194,7 @@ function SyllabusUnitsPage() {
               onChange={(e) => setAcademicYear(e.target.value)}
               placeholder="2026-27"
               pattern="\d{4}-\d{2}"
-              title="Format: YYYY-YY (e.g. 2025-26)"
+              title="Format: YYYY-YY (e.g. 2026-27)"
               className="border rounded px-2 py-1.5 text-sm w-24"
             />
           </label>
@@ -468,7 +468,7 @@ function UnitModal({
               Academic Year
               <input
                 required value={ay} onChange={(e) => setAy(e.target.value)}
-                placeholder="2025-26" pattern="\d{4}-\d{2}"
+                placeholder="2026-27" pattern="\d{4}-\d{2}"
                 className="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
               />
             </label>

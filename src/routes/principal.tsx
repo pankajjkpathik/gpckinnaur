@@ -338,7 +338,7 @@ function PrincipalPortal() {
               value={year}
               onChange={(e) => setYear(e.target.value)}
               className="border rounded px-2 py-1 text-sm w-16 sm:w-20"
-              placeholder="2025-26"
+              placeholder="2026-27"
               aria-label="Academic year"
             />
             <Link to="/messages" className="hidden sm:inline-flex px-3 py-1.5 rounded border hover:bg-gray-50 text-xs text-gray-600">
