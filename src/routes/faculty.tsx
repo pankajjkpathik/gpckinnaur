@@ -1672,7 +1672,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
             <input
               type="date"
               value={date}
-              min={today}
+              min={minDate}
               onChange={(e) => {
                 setDate(e.target.value);
                 setLoaded(false);
