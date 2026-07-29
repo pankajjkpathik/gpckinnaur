@@ -80,6 +80,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFacNotifPrefs, getFacNotifPrefs } from "@/lib/faculty-notif-prefs";
+import { useActiveSession } from "@/lib/use-active-session";
+
 
 export const Route = createFileRoute("/faculty")({
   head: () => portalMeta("Faculty Portal"),
