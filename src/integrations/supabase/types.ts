@@ -1550,11 +1550,13 @@ export type Database = {
           bank_account_number: string | null
           batch_year: number
           branch: string
+          category: string | null
           created_at: string | null
           dob: string | null
           email: string | null
           enrollment_no: string
           father_name: string | null
+          gender: string | null
           guardian_name: string | null
           guardian_phone: string | null
           id: number
@@ -1573,11 +1575,13 @@ export type Database = {
           bank_account_number?: string | null
           batch_year: number
           branch: string
+          category?: string | null
           created_at?: string | null
           dob?: string | null
           email?: string | null
           enrollment_no: string
           father_name?: string | null
+          gender?: string | null
           guardian_name?: string | null
           guardian_phone?: string | null
           id?: never
@@ -1596,11 +1600,13 @@ export type Database = {
           bank_account_number?: string | null
           batch_year?: number
           branch?: string
+          category?: string | null
           created_at?: string | null
           dob?: string | null
           email?: string | null
           enrollment_no?: string
           father_name?: string | null
+          gender?: string | null
           guardian_name?: string | null
           guardian_phone?: string | null
           id?: never
