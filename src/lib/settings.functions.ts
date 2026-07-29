@@ -7,11 +7,20 @@ import { requireRole } from "./roles.server";
 export const SETTING_KEYS = {
   INSTITUTE_ADDRESS: "institute_address",
   INSTITUTE_LOGO: "institute_logo",
+  ACTIVE_SESSION_YEAR: "active_session_year",
+  ACTIVE_SESSION_START: "active_session_start",
 } as const;
+
+function computeDefaultYear(d = new Date()) {
+  const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+  return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
+}
 
 const DEFAULTS: Record<string, string> = {
   [SETTING_KEYS.INSTITUTE_ADDRESS]: "Camp at GP Rohru, Distt. Shimla (H.P.)",
   [SETTING_KEYS.INSTITUTE_LOGO]: "",
+  [SETTING_KEYS.ACTIVE_SESSION_YEAR]: computeDefaultYear(),
+  [SETTING_KEYS.ACTIVE_SESSION_START]: "2026-08-01",
 };
 
 async function readSetting(key: string): Promise<string> {
