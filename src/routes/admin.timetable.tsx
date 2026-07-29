@@ -168,11 +168,6 @@ function TimetablePage() {
           <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
           <p className="text-xs text-gray-400">
             View and edit the weekly schedule for any class. Click any slot to edit. Effective from 01-08-2025.
-            {isCommonSem && (
-              <span className="ml-1 text-emerald-700">
-                Sem {sem} shows the shared 1st/2nd-year subject pool — each diploma still keeps its own weekly slots.
-              </span>
-            )}
           </p>
         </div>
 
