@@ -405,7 +405,7 @@ function HodPortal() {
       window.localStorage.setItem("hod:sidebar:collapsed", sidebarCollapsed ? "1" : "0");
     } catch {}
   }, [sidebarCollapsed]);
-  const ay = defaultAY();
+  const ay = useActiveSession().year;
 
   // Keep ?view= in sync with current view so refresh/back-forward preserves selection.
   useEffect(() => {
