@@ -118,12 +118,44 @@ function AssignmentsPage() {
           </div>
         </div>
 
+        <div className="flex items-center gap-2 flex-wrap text-xs">
+          <span className="text-gray-500">Faculty type:</span>
+          {([
+            ["internal", "Institute faculty"],
+            ["external", "Guest faculty (other polytechnic)"],
+          ] as const).map(([v, l]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() =>
+                setForm({ ...form, mode: v, staff_id: 0, guest_faculty: "", guest_institute: "" })
+              }
+              className={`px-3 py-1.5 rounded border font-semibold ${
+                form.mode === v ? "bg-rose-700 text-white border-rose-700" : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!form.staff_id || !form.subject_id || !form.branch || !form.semester) return;
-            save.mutate({ ...form, academic_year: year });
+            const isExternal = form.mode === "external";
+            if (!form.subject_id || !form.branch || !form.semester) return;
+            if (isExternal ? !form.guest_faculty.trim() : !form.staff_id) return;
+            save.mutate({
+              branch: form.branch,
+              semester: form.semester,
+              subject_id: form.subject_id,
+              staff_id: isExternal ? null : form.staff_id,
+              guest_faculty: isExternal ? form.guest_faculty.trim() : null,
+              guest_institute: isExternal ? form.guest_institute.trim() || null : null,
+              academic_year: year,
+            });
           }}
+
           className="bg-white border rounded p-3 grid sm:grid-cols-5 gap-2 items-end"
         >
           <label className="text-xs">
