@@ -610,6 +610,28 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
         .from("timetable").delete().in("id", Array.from(dissolvingIds));
       if (dErr) throw new Error(`Failed to un-combine: ${dErr.message}`);
     }
+
+    // Auto-allot the subject to the assigned faculty (visible in HOD/Admin portals).
+    const { syncAssignmentFromSlot } = await import("./timetable-sync.server");
+    await syncAssignmentFromSlot(supabaseAdmin, primary);
+    if (isCombined && siblingBranch) {
+      const { data: subj } = data.subject_id
+        ? await supabaseAdmin.from("subjects").select("code").eq("id", data.subject_id).maybeSingle()
+        : { data: null as any };
+      if (subj?.code) {
+        const { data: sib } = await supabaseAdmin
+          .from("subjects").select("id")
+          .eq("code", subj.code).eq("branch", siblingBranch).eq("semester", data.semester)
+          .maybeSingle();
+        if (sib?.id) {
+          await syncAssignmentFromSlot(supabaseAdmin, {
+            ...primary,
+            branch: siblingBranch,
+            subject_id: sib.id,
+          });
+        }
+      }
+    }
     return { ok: true, combined: isCombined, unCombined: !!unCombining };
   });
 
