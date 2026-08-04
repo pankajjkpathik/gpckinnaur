@@ -854,7 +854,7 @@ function FacultyAllotmentView({
             });
           }}
 
-          className="grid sm:grid-cols-5 gap-2 items-end border-t pt-4"
+          className="grid sm:grid-cols-3 lg:grid-cols-6 gap-2 items-end border-t pt-4"
         >
           <label className="text-xs">
             1. Branch
