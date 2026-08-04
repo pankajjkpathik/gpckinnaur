@@ -400,6 +400,9 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
         { onConflict: "branch,semester,day_of_week,period_no,academic_year" },
       );
     if (error) throw new Error(error.message);
+    // Auto-allot the subject to the assigned faculty (HOD/Admin portals).
+    const { syncAssignmentFromSlot } = await import("./timetable-sync.server");
+    await syncAssignmentFromSlot(supabaseAdmin, data);
     return { ok: true };
   });
 
@@ -899,6 +902,8 @@ export const bulkImportTimetable = createServerFn({ method: "POST" })
       });
       if (error) throw new Error(error.message);
       inserted = count ?? payload.length;
+      const { syncAssignmentsFromSlots } = await import("./timetable-sync.server");
+      await syncAssignmentsFromSlots(supabaseAdmin, payload);
     }
     return { inserted, errors };
   });
