@@ -364,7 +364,7 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
             <p className="text-[11px] uppercase tracking-[0.2em] text-white/70 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> Admin Console
             </p>
-            <h1 className="text-2xl md:text-3xl font-bold mt-1">
+            <h1 className="text-2xl md:text-3xl font-bold mt-1 !text-white">
               Welcome back, {(me?.name || me?.username || "Administrator").split(" ")[0]}
             </h1>
             <p className="text-sm text-white/80 mt-1">
