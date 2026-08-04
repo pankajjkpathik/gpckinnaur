@@ -1574,16 +1574,17 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
   const today = new Date().toISOString().slice(0, 10);
   const session = useActiveSession();
   const sessionStart = session.startDate;
-  // Floor the date picker at the active session start so attendance for the
-  // new session can't be back-dated before 01.08.2026 (or whatever admin sets).
-  const minDate = sessionStart > today ? sessionStart : today;
+  // Attendance is open from the active session start (01.08.2026) up to today.
+  const minDate = sessionStart;
+  const maxDate = today > sessionStart ? today : sessionStart;
   const asg = useQuery({
     queryKey: ["fac-asg", me.id, ay],
     queryFn: () => listAssignments({ data: { staff_id: me.id, academic_year: ay } }),
   });
   const periods = useQuery({ queryKey: ["periods"], queryFn: () => listPeriods() });
   const [asgId, setAsgId] = useState<number | "">("");
-  const [date, setDate] = useState(minDate);
+  const [date, setDate] = useState(maxDate);
+
   const [pno, setPno] = useState<number | "">("");
   const [loaded, setLoaded] = useState(false);
   const a = (asg.data ?? []).find((x: any) => x.id === asgId);
