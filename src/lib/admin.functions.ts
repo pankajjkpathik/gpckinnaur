@@ -902,6 +902,8 @@ export const bulkImportTimetable = createServerFn({ method: "POST" })
       });
       if (error) throw new Error(error.message);
       inserted = count ?? payload.length;
+      const { syncAssignmentsFromSlots } = await import("./timetable-sync.server");
+      await syncAssignmentsFromSlots(supabaseAdmin, payload);
     }
     return { inserted, errors };
   });
