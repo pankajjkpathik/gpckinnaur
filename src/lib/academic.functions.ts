@@ -484,25 +484,28 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
     const SIBLINGS: Record<string, string> = { civil: "mechanical", mechanical: "civil" };
     const isCombined = !!data.combined && !!SIBLINGS[data.branch];
     const group_label = isCombined ? "CMB" : (data.group_label || "");
-    // Conflict check: same faculty (primary or co) in same day/period elsewhere
+    // Conflict check: same faculty (primary or co) in same day/period elsewhere.
+    // Combined classes intentionally share one teacher across two classes, so
+    // conflict detection is skipped for them (both when saving a combined slot
+    // and when the existing clashing slot is itself a combined one).
     const allStaff = [data.staff_id, ...co].filter(Boolean) as number[];
-    if (allStaff.length) {
+    if (allStaff.length && !isCombined) {
       const { data: conflict } = await supabaseAdmin
         .from("timetable")
         .select("id, branch, semester, staff_id, co_staff_ids, group_label")
         .eq("academic_year", data.academic_year)
         .eq("day_of_week", data.day_of_week)
         .eq("period_no", data.period_no);
-      const siblingBranch = SIBLINGS[data.branch];
       const clash = (conflict ?? []).find((c: any) => {
         if (c.branch === data.branch && c.semester === data.semester && (c.group_label || "") === group_label) return false;
-        // Ignore sibling-branch combined mirror at the same slot
-        if (isCombined && c.branch === siblingBranch && c.semester === data.semester && (c.group_label || "") === "CMB") return false;
+        // A combined slot is taught to multiple classes at once — never a clash.
+        if ((c.group_label || "") === "CMB") return false;
         const theirs: number[] = [c.staff_id, ...(c.co_staff_ids ?? [])].filter(Boolean);
         return theirs.some((sid) => allStaff.includes(sid));
       });
-      if (clash) throw new Error(`Faculty conflict: already teaching ${clash.branch}-Sem${clash.semester} at this slot.`);
+      if (clash) throw new Error(`Faculty conflict: already teaching ${clash.branch}-Sem${clash.semester} at this slot. Tick "Combined class" if this class is taken jointly.`);
     }
+
     const primary = {
       branch: data.branch,
       semester: data.semester,
