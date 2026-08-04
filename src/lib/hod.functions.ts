@@ -335,7 +335,7 @@ export const hodListAssignments = createServerFn({ method: "GET" })
     const { data: rows, error } = await supabaseAdmin
       .from("faculty_assignments")
       .select(
-        "id, staff_id, subject_id, branch, semester, academic_year, staff_users(username,name,department,role), subjects(code,name,branch,semester)",
+        "id, staff_id, subject_id, branch, semester, academic_year, guest_faculty, guest_institute, staff_users(username,name,department,role), subjects(code,name,branch,semester)",
       )
       .eq("branch", data.branch)
       .eq("academic_year", data.academic_year)
@@ -348,11 +348,16 @@ export const hodUpsertAssignment = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
       .object({
-        staff_id: z.number().int(),
+        staff_id: z.number().int().nullable().optional(),
         subject_id: z.number().int(),
         branch: z.string().min(1),
         semester: z.number().int().min(1).max(8),
         academic_year: z.string().regex(yearRe),
+        guest_faculty: z.string().trim().max(120).optional().nullable(),
+        guest_institute: z.string().trim().max(160).optional().nullable(),
+      })
+      .refine((v) => !!v.staff_id || !!(v.guest_faculty && v.guest_faculty.length > 0), {
+        message: "Select an internal faculty member or enter a guest faculty name.",
       })
       .parse(d),
   )
@@ -369,10 +374,8 @@ export const hodUpsertAssignment = createServerFn({ method: "POST" })
     if (subj.branch !== data.branch || subj.semester !== data.semester) {
       throw new Error("Subject does not match the selected branch/semester.");
     }
-    const { error } = await supabaseAdmin.from("faculty_assignments").upsert(data, {
-      onConflict: "staff_id,subject_id,branch,semester,academic_year",
-    });
-    if (error) throw new Error(error.message);
+    const { saveAssignmentRow } = await import("./assignment-save.server");
+    await saveAssignmentRow(supabaseAdmin, data);
     return { ok: true };
   });
 
