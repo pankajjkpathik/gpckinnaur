@@ -809,6 +809,32 @@ function FacultyAllotmentView({
           </div>
         </div>
 
+        <div className="flex items-center gap-2 flex-wrap text-xs">
+          <span className="text-gray-500">Faculty type:</span>
+          {([
+            ["internal", "Institute faculty"],
+            ["external", "Guest faculty (other polytechnic)"],
+          ] as const).map(([v, l]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => {
+                setFormError(null);
+                setForm((f) => ({ ...f, mode: v, staff_id: 0, guest_faculty: "", guest_institute: "" }));
+              }}
+              className={`px-3 py-1.5 rounded border font-semibold ${
+                form.mode === v
+                  ? "bg-[#7b1f4c] text-white border-[#7b1f4c]"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
+
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
