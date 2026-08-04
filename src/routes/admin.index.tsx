@@ -89,7 +89,9 @@ function QuickCard({
       onClick={onClick}
       className="group relative flex items-start gap-3 p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5 transition-all text-left w-full overflow-hidden"
     >
-      <span className={`flex-shrink-0 w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center ${accent} group-hover:scale-110 transition-transform`}>
+      <span
+        className={`flex-shrink-0 w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center ${accent} group-hover:scale-110 transition-transform`}
+      >
         <Icon className="w-5 h-5" />
       </span>
       <span className="min-w-0 flex-1">
@@ -101,14 +103,24 @@ function QuickCard({
   );
 }
 
-function KpiCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent: string }) {
+function KpiCard({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+  accent: string;
+}) {
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm flex items-center gap-3">
       <span className={`w-11 h-11 rounded-lg flex items-center justify-center ${accent}`}>
         <Icon className="w-5 h-5" />
       </span>
       <div className="min-w-0">
-        <p className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{label}</p>
+        <p className="text-[11px] uppercase tracking-wider text-white font-medium">{label}</p>
         <p className="text-xl font-bold text-slate-800 leading-tight">{value}</p>
       </div>
     </div>
@@ -153,44 +165,164 @@ const GROUPS: { title: string; desc: string; cards: CardDef[] }[] = [
     title: "Academic Structure",
     desc: "Classes, subjects, syllabus and timetable configuration.",
     cards: [
-      { icon: LayoutGrid, label: "Manage Classes", desc: "Define academic structure", accent: "text-rose-600", action: "classes" },
-      { icon: BookOpen, label: "Manage Subjects", desc: "Create and manage subjects", accent: "text-orange-600", action: "/admin/subjects" },
-      { icon: Calendar, label: "Manage Timetable", desc: "Set weekly schedules", accent: "text-purple-600", action: "/admin/timetable" },
-      { icon: BookMarked, label: "Periods Master", desc: "Define daily period slots", accent: "text-indigo-600", action: "/admin/periods" },
-      { icon: BookMarked, label: "Syllabus", desc: "Upload syllabus PDFs", accent: "text-amber-600", action: "/admin/syllabus" },
-      { icon: BookOpen, label: "Planned Unit Hours", desc: "Set unit hours for coverage %", accent: "text-lime-600", action: "/admin/syllabus-units" },
-      { icon: Calendar, label: "Academic Calendar", desc: "Upload calendar PDFs", accent: "text-sky-600", action: "/admin/calendar" },
-      { icon: BookOpen, label: "Grading Scheme", desc: "Configure grade boundaries", accent: "text-teal-600", action: "/admin/grading" },
+      {
+        icon: LayoutGrid,
+        label: "Manage Classes",
+        desc: "Define academic structure",
+        accent: "text-rose-600",
+        action: "classes",
+      },
+      {
+        icon: BookOpen,
+        label: "Manage Subjects",
+        desc: "Create and manage subjects",
+        accent: "text-orange-600",
+        action: "/admin/subjects",
+      },
+      {
+        icon: Calendar,
+        label: "Manage Timetable",
+        desc: "Set weekly schedules",
+        accent: "text-purple-600",
+        action: "/admin/timetable",
+      },
+      {
+        icon: BookMarked,
+        label: "Periods Master",
+        desc: "Define daily period slots",
+        accent: "text-indigo-600",
+        action: "/admin/periods",
+      },
+      {
+        icon: BookMarked,
+        label: "Syllabus",
+        desc: "Upload syllabus PDFs",
+        accent: "text-amber-600",
+        action: "/admin/syllabus",
+      },
+      {
+        icon: BookOpen,
+        label: "Planned Unit Hours",
+        desc: "Set unit hours for coverage %",
+        accent: "text-lime-600",
+        action: "/admin/syllabus-units",
+      },
+      {
+        icon: Calendar,
+        label: "Academic Calendar",
+        desc: "Upload calendar PDFs",
+        accent: "text-sky-600",
+        action: "/admin/calendar",
+      },
+      {
+        icon: BookOpen,
+        label: "Grading Scheme",
+        desc: "Configure grade boundaries",
+        accent: "text-teal-600",
+        action: "/admin/grading",
+      },
     ],
   },
   {
     title: "People & Accounts",
     desc: "Manage faculty, students, parents and system users.",
     cards: [
-      { icon: Users, label: "Manage Faculty", desc: "View and edit faculty members", accent: "text-slate-700", action: "/admin/faculty" },
-      { icon: GraduationCap, label: "Manage Students", desc: "View and edit student records", accent: "text-green-600", action: "/admin/students" },
-      { icon: BookOpen, label: "Faculty Assignments", desc: "Assign subjects to faculty", accent: "text-fuchsia-600", action: "/admin/assignments" },
-      { icon: UserCog, label: "User Management", desc: "Staff & student accounts", accent: "text-slate-700", action: "/admin-users" },
-      { icon: Users, label: "Parent Accounts", desc: "Reset parent portal logins", accent: "text-emerald-700", action: "/admin/parent-accounts" },
+      {
+        icon: Users,
+        label: "Manage Faculty",
+        desc: "View and edit faculty members",
+        accent: "text-slate-700",
+        action: "/admin/faculty",
+      },
+      {
+        icon: GraduationCap,
+        label: "Manage Students",
+        desc: "View and edit student records",
+        accent: "text-green-600",
+        action: "/admin/students",
+      },
+      {
+        icon: BookOpen,
+        label: "Faculty Assignments",
+        desc: "Assign subjects to faculty",
+        accent: "text-fuchsia-600",
+        action: "/admin/assignments",
+      },
+      {
+        icon: UserCog,
+        label: "User Management",
+        desc: "Staff & student accounts",
+        accent: "text-slate-700",
+        action: "/admin-users",
+      },
+      {
+        icon: Users,
+        label: "Parent Accounts",
+        desc: "Reset parent portal logins",
+        accent: "text-emerald-700",
+        action: "/admin/parent-accounts",
+      },
     ],
   },
   {
     title: "Communications & Operations",
     desc: "Day-to-day operations, notices and parent interactions.",
     cards: [
-      { icon: Megaphone, label: "Announcements", desc: "Control marquee text", accent: "text-slate-600", action: "announcements" },
-      { icon: CreditCard, label: "Manage Fees", desc: "Handle student fee status", accent: "text-rose-600", action: "fees" },
-      { icon: CalendarCheck, label: "Manage PTM", desc: "Organize parent-teacher meetings", accent: "text-cyan-600", action: "ptm" },
-      { icon: Mail, label: "Parents Messages", desc: "View messages from parents", accent: "text-[#7b1f4c]", action: "messages" },
+      {
+        icon: Megaphone,
+        label: "Announcements",
+        desc: "Control marquee text",
+        accent: "text-slate-600",
+        action: "announcements",
+      },
+      {
+        icon: CreditCard,
+        label: "Manage Fees",
+        desc: "Handle student fee status",
+        accent: "text-rose-600",
+        action: "fees",
+      },
+      {
+        icon: CalendarCheck,
+        label: "Manage PTM",
+        desc: "Organize parent-teacher meetings",
+        accent: "text-cyan-600",
+        action: "ptm",
+      },
+      {
+        icon: Mail,
+        label: "Parents Messages",
+        desc: "View messages from parents",
+        accent: "text-[#7b1f4c]",
+        action: "messages",
+      },
     ],
   },
   {
     title: "System & Compliance",
     desc: "Reports, audit trail and institute-wide settings.",
     cards: [
-      { icon: Download, label: "Report Templates", desc: "Manage report templates", accent: "text-slate-600", action: "/admin/report-templates" },
-      { icon: ShieldCheck, label: "Audit Log", desc: "Review system activity", accent: "text-stone-600", action: "/admin/audit" },
-      { icon: SettingsIcon, label: "Institute Settings", desc: "Address & logo on official PDFs", accent: "text-neutral-700", action: "/admin/settings" },
+      {
+        icon: Download,
+        label: "Report Templates",
+        desc: "Manage report templates",
+        accent: "text-slate-600",
+        action: "/admin/report-templates",
+      },
+      {
+        icon: ShieldCheck,
+        label: "Audit Log",
+        desc: "Review system activity",
+        accent: "text-stone-600",
+        action: "/admin/audit",
+      },
+      {
+        icon: SettingsIcon,
+        label: "Institute Settings",
+        desc: "Address & logo on official PDFs",
+        accent: "text-neutral-700",
+        action: "/admin/settings",
+      },
     ],
   },
 ];
@@ -199,7 +331,10 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
   const [q, setQ] = useState("");
 
   const staffQ = useQuery({ queryKey: ["admin-staff"], queryFn: () => adminListStaff() });
-  const studentsQ = useQuery({ queryKey: ["admin-students-all"], queryFn: () => adminListStudents({ data: {} as any }) });
+  const studentsQ = useQuery({
+    queryKey: ["admin-students-all"],
+    queryFn: () => adminListStudents({ data: {} as any }),
+  });
   const classesQ = useQuery({ queryKey: ["admin-classes"], queryFn: () => listClasses() });
   const msgsQ = useQuery({ queryKey: ["admin-parent-msgs"], queryFn: () => listParentMessages() });
 
@@ -214,9 +349,7 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
   const displayGroups = filter
     ? GROUPS.map((g) => ({
         ...g,
-        cards: g.cards.filter(
-          (c) => c.label.toLowerCase().includes(filter) || c.desc.toLowerCase().includes(filter),
-        ),
+        cards: g.cards.filter((c) => c.label.toLowerCase().includes(filter) || c.desc.toLowerCase().includes(filter)),
       })).filter((g) => g.cards.length > 0)
     : GROUPS;
 
@@ -239,7 +372,14 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
             </p>
           </div>
           <div className="hidden md:flex flex-col items-end text-xs text-white/80">
-            <span>{new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+            <span>
+              {new Date().toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
             <span className="text-white/60 mt-0.5">{me?.department ?? "System-wide"}</span>
           </div>
         </div>
@@ -247,9 +387,24 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={GraduationCap} label="Students" value={studentsQ.data?.length ?? "—"} accent="bg-emerald-100 text-emerald-700" />
-        <KpiCard icon={Users} label="Faculty & Staff" value={staffQ.data?.length ?? "—"} accent="bg-indigo-100 text-indigo-700" />
-        <KpiCard icon={LayoutGrid} label="Classes" value={classesQ.data?.length ?? "—"} accent="bg-amber-100 text-amber-700" />
+        <KpiCard
+          icon={GraduationCap}
+          label="Students"
+          value={studentsQ.data?.length ?? "—"}
+          accent="bg-emerald-100 text-emerald-700"
+        />
+        <KpiCard
+          icon={Users}
+          label="Faculty & Staff"
+          value={staffQ.data?.length ?? "—"}
+          accent="bg-indigo-100 text-indigo-700"
+        />
+        <KpiCard
+          icon={LayoutGrid}
+          label="Classes"
+          value={classesQ.data?.length ?? "—"}
+          accent="bg-amber-100 text-amber-700"
+        />
         <KpiCard icon={Mail} label="Unread Parent Msgs" value={unreadMsgs} accent="bg-rose-100 text-rose-700" />
       </div>
 
@@ -274,7 +429,14 @@ function HomeView({ me, onNav }: { me: any; onNav: (v: View) => void }) {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {group.cards.map((c) => (
-              <QuickCard key={c.label} icon={c.icon} label={c.label} desc={c.desc} accent={c.accent} onClick={() => go(c.action as string)} />
+              <QuickCard
+                key={c.label}
+                icon={c.icon}
+                label={c.label}
+                desc={c.desc}
+                accent={c.accent}
+                onClick={() => go(c.action as string)}
+              />
             ))}
           </div>
         </section>
@@ -745,7 +907,10 @@ const emptyFee: FeeDraft = {
 function FeesView({ onBack }: { onBack: () => void }) {
   const qc = useQueryClient();
   const feesQ = useQuery({ queryKey: ["admin-fees"], queryFn: () => adminListFees() });
-  const studentsQ = useQuery({ queryKey: ["admin-fee-students"], queryFn: () => adminListStudents({ data: {} as any }) });
+  const studentsQ = useQuery({
+    queryKey: ["admin-fee-students"],
+    queryFn: () => adminListStudents({ data: {} as any }),
+  });
   const rows = feesQ.data ?? [];
   const inr = (n: number) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
   const [editing, setEditing] = useState<FeeDraft | null>(null);
@@ -764,7 +929,10 @@ function FeesView({ onBack }: { onBack: () => void }) {
           due_date: d.due_date || null,
         },
       }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-fees"] }); setEditing(null); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-fees"] });
+      setEditing(null);
+    },
   });
   const del = useMutation({
     mutationFn: (id: number) => deleteFeeRecord({ data: { id } }),
@@ -788,7 +956,9 @@ function FeesView({ onBack }: { onBack: () => void }) {
         <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
           <div>
             <h1 className="text-xl font-bold text-gray-800 mb-1">Manage Fees</h1>
-            <p className="text-xs text-gray-400">Update pending, partial or paid fees. Visible instantly to the student, their parent and the Principal.</p>
+            <p className="text-xs text-gray-400">
+              Update pending, partial or paid fees. Visible instantly to the student, their parent and the Principal.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -825,41 +995,66 @@ function FeesView({ onBack }: { onBack: () => void }) {
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">No fee records found.</td></tr>
+                <tr>
+                  <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
+                    No fee records found.
+                  </td>
+                </tr>
               )}
               {filtered.map((r: any) => {
                 const bal = Number(r.total_amount || 0) - Number(r.paid_amount || 0);
-                const tone = r.status === "paid" ? "bg-green-100 text-green-700"
-                  : r.status === "partial" ? "bg-amber-100 text-amber-800"
-                  : "bg-rose-100 text-rose-700";
+                const tone =
+                  r.status === "paid"
+                    ? "bg-green-100 text-green-700"
+                    : r.status === "partial"
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-rose-100 text-rose-700";
                 return (
                   <tr key={r.id} className="border-t">
                     <td className="px-4 py-3 font-mono text-xs">{r.students?.enrollment_no ?? r.student_id}</td>
                     <td className="px-4 py-3">{r.students?.name ?? "—"}</td>
-                    <td className="px-4 py-3 text-xs">{r.academic_year ?? "—"}{r.semester ? ` · Sem ${r.semester}` : ""}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {r.academic_year ?? "—"}
+                      {r.semester ? ` · Sem ${r.semester}` : ""}
+                    </td>
                     <td className="px-4 py-3">{inr(r.total_amount)}</td>
                     <td className="px-4 py-3">{inr(r.paid_amount)}</td>
-                    <td className={`px-4 py-3 font-semibold ${bal > 0 ? "text-rose-700" : "text-emerald-700"}`}>{inr(bal)}</td>
-                    <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded capitalize ${tone}`}>{r.status}</span></td>
+                    <td className={`px-4 py-3 font-semibold ${bal > 0 ? "text-rose-700" : "text-emerald-700"}`}>
+                      {inr(bal)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded capitalize ${tone}`}>{r.status}</span>
+                    </td>
                     <td className="px-4 py-3 text-xs text-gray-500">{r.due_date ?? "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-3 items-center">
                         <button
-                          onClick={() => setEditing({
-                            id: r.id,
-                            student_id: r.student_id,
-                            academic_year: r.academic_year ?? "",
-                            semester: r.semester ?? "",
-                            components: Array.isArray(r.components) && r.components.length ? r.components : [{ label: "Tuition Fee", amount: 0 }],
-                            paid_amount: Number(r.paid_amount || 0),
-                            due_date: r.due_date ?? "",
-                          })}
+                          onClick={() =>
+                            setEditing({
+                              id: r.id,
+                              student_id: r.student_id,
+                              academic_year: r.academic_year ?? "",
+                              semester: r.semester ?? "",
+                              components:
+                                Array.isArray(r.components) && r.components.length
+                                  ? r.components
+                                  : [{ label: "Tuition Fee", amount: 0 }],
+                              paid_amount: Number(r.paid_amount || 0),
+                              due_date: r.due_date ?? "",
+                            })
+                          }
                           className="text-[#7b1f4c] hover:underline text-xs inline-flex items-center gap-1"
-                        ><Pencil className="w-3.5 h-3.5" /> Edit</button>
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Edit
+                        </button>
                         <button
-                          onClick={() => { if (confirm("Delete this fee record?")) del.mutate(r.id); }}
+                          onClick={() => {
+                            if (confirm("Delete this fee record?")) del.mutate(r.id);
+                          }}
                           className="text-rose-500 hover:text-rose-700"
-                        ><Trash2 className="w-4 h-4" /></button>
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -886,7 +1081,13 @@ function FeesView({ onBack }: { onBack: () => void }) {
 }
 
 function FeeEditor({
-  draft, students, onChange, onClose, onSave, busy, error,
+  draft,
+  students,
+  onChange,
+  onClose,
+  onSave,
+  busy,
+  error,
 }: {
   draft: FeeDraft;
   students: any[];
@@ -900,7 +1101,10 @@ function FeeEditor({
   const balance = total - Number(draft.paid_amount || 0);
   const derivedStatus = draft.paid_amount >= total && total > 0 ? "paid" : draft.paid_amount > 0 ? "partial" : "due";
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+    >
       <div className="bg-white rounded-lg w-full max-w-2xl my-8" onClick={(e) => e.stopPropagation()}>
         <div className="p-5 border-b sticky top-0 bg-white rounded-t-lg">
           <h3 className="font-bold text-lg">{draft.id ? "Update Fee Record" : "Add Fee Record"}</h3>
@@ -940,7 +1144,11 @@ function FeeEditor({
                 className="border rounded w-full px-3 py-2 bg-white"
               >
                 <option value="">—</option>
-                {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n}</option>)}
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -961,14 +1169,21 @@ function FeeEditor({
                 type="button"
                 onClick={() => onChange({ ...draft, components: [...draft.components, { label: "", amount: 0 }] })}
                 className="text-xs text-[#7b1f4c] hover:underline inline-flex items-center gap-1"
-              ><Plus className="w-3 h-3" /> Add row</button>
+              >
+                <Plus className="w-3 h-3" /> Add row
+              </button>
             </div>
             <div className="space-y-2">
               {draft.components.map((c, i) => (
                 <div key={i} className="grid grid-cols-[1fr_140px_28px] gap-2">
                   <input
                     value={c.label}
-                    onChange={(e) => onChange({ ...draft, components: draft.components.map((x, j) => j === i ? { ...x, label: e.target.value } : x) })}
+                    onChange={(e) =>
+                      onChange({
+                        ...draft,
+                        components: draft.components.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)),
+                      })
+                    }
                     placeholder="Head (e.g. Tuition, Exam, Library)"
                     className="border rounded px-3 py-2"
                   />
@@ -976,7 +1191,14 @@ function FeeEditor({
                     type="number"
                     min={0}
                     value={c.amount}
-                    onChange={(e) => onChange({ ...draft, components: draft.components.map((x, j) => j === i ? { ...x, amount: Number(e.target.value) } : x) })}
+                    onChange={(e) =>
+                      onChange({
+                        ...draft,
+                        components: draft.components.map((x, j) =>
+                          j === i ? { ...x, amount: Number(e.target.value) } : x,
+                        ),
+                      })
+                    }
                     placeholder="Amount ₹"
                     className="border rounded px-3 py-2"
                   />
@@ -985,12 +1207,12 @@ function FeeEditor({
                     onClick={() => onChange({ ...draft, components: draft.components.filter((_, j) => j !== i) })}
                     className="text-rose-500 hover:text-rose-700"
                     title="Remove"
-                  ><Trash2 className="w-4 h-4" /></button>
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
-              {draft.components.length === 0 && (
-                <p className="text-xs text-gray-400">Add at least one fee head.</p>
-              )}
+              {draft.components.length === 0 && <p className="text-xs text-gray-400">Add at least one fee head.</p>}
             </div>
           </div>
 
@@ -1011,15 +1233,21 @@ function FeeEditor({
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Balance</label>
-              <p className={`font-semibold ${balance > 0 ? "text-rose-700" : "text-emerald-700"}`}>₹{balance.toLocaleString("en-IN")}</p>
-              <p className="text-[11px] text-gray-400 capitalize mt-0.5">Status will be: <span className="font-semibold">{derivedStatus}</span></p>
+              <p className={`font-semibold ${balance > 0 ? "text-rose-700" : "text-emerald-700"}`}>
+                ₹{balance.toLocaleString("en-IN")}
+              </p>
+              <p className="text-[11px] text-gray-400 capitalize mt-0.5">
+                Status will be: <span className="font-semibold">{derivedStatus}</span>
+              </p>
             </div>
           </div>
 
           {error && <p className="text-xs text-rose-700">{error.message}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
-            <button onClick={onClose} className="border px-4 py-2 rounded">Cancel</button>
+            <button onClick={onClose} className="border px-4 py-2 rounded">
+              Cancel
+            </button>
             <button
               onClick={onSave}
               disabled={busy || draft.student_id === "" || draft.components.length === 0}
@@ -1033,7 +1261,6 @@ function FeeEditor({
     </div>
   );
 }
-
 
 // ─── PTM ────────────────────────────────────────────────────────────────────
 function PTMView({ onBack }: { onBack: () => void }) {
