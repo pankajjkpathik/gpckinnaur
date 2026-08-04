@@ -164,7 +164,7 @@ function AssignmentsPage() {
             });
           }}
 
-          className="bg-white border rounded p-3 grid sm:grid-cols-5 gap-2 items-end"
+          className="bg-white border rounded p-3 grid sm:grid-cols-3 lg:grid-cols-6 gap-2 items-end"
         >
           <label className="text-xs">
             1. Branch
