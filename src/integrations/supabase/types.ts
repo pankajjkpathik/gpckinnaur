@@ -610,27 +610,33 @@ export type Database = {
           academic_year: string
           branch: string
           created_at: string
+          guest_faculty: string | null
+          guest_institute: string | null
           id: number
           semester: number
-          staff_id: number
+          staff_id: number | null
           subject_id: number
         }
         Insert: {
           academic_year: string
           branch: string
           created_at?: string
+          guest_faculty?: string | null
+          guest_institute?: string | null
           id?: number
           semester: number
-          staff_id: number
+          staff_id?: number | null
           subject_id: number
         }
         Update: {
           academic_year?: string
           branch?: string
           created_at?: string
+          guest_faculty?: string | null
+          guest_institute?: string | null
           id?: number
           semester?: number
-          staff_id?: number
+          staff_id?: number | null
           subject_id?: number
         }
         Relationships: [

@@ -39,7 +39,15 @@ function AssignmentsPage() {
 
   const [year, setYear] = useState(useActiveSession().year);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [form, setForm] = useState({ branch: "", semester: 0, subject_id: 0, staff_id: 0 });
+  const [form, setForm] = useState({
+    branch: "",
+    semester: 0,
+    subject_id: 0,
+    staff_id: 0,
+    mode: "internal" as "internal" | "external",
+    guest_faculty: "",
+    guest_institute: "",
+  });
 
   const assignQ = useQuery({
     queryKey: ["assignments", year],
@@ -62,7 +70,7 @@ function AssignmentsPage() {
     mutationFn: (d: any) => upsertAssignment({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["assignments"] });
-      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0 }));
+      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0, guest_faculty: "", guest_institute: "" }));
     },
   });
   const del = useMutation({
@@ -118,13 +126,45 @@ function AssignmentsPage() {
           </div>
         </div>
 
+        <div className="flex items-center gap-2 flex-wrap text-xs">
+          <span className="text-gray-500">Faculty type:</span>
+          {([
+            ["internal", "Institute faculty"],
+            ["external", "Guest faculty (other polytechnic)"],
+          ] as const).map(([v, l]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() =>
+                setForm({ ...form, mode: v, staff_id: 0, guest_faculty: "", guest_institute: "" })
+              }
+              className={`px-3 py-1.5 rounded border font-semibold ${
+                form.mode === v ? "bg-rose-700 text-white border-rose-700" : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!form.staff_id || !form.subject_id || !form.branch || !form.semester) return;
-            save.mutate({ ...form, academic_year: year });
+            const isExternal = form.mode === "external";
+            if (!form.subject_id || !form.branch || !form.semester) return;
+            if (isExternal ? !form.guest_faculty.trim() : !form.staff_id) return;
+            save.mutate({
+              branch: form.branch,
+              semester: form.semester,
+              subject_id: form.subject_id,
+              staff_id: isExternal ? null : form.staff_id,
+              guest_faculty: isExternal ? form.guest_faculty.trim() : null,
+              guest_institute: isExternal ? form.guest_institute.trim() || null : null,
+              academic_year: year,
+            });
           }}
-          className="bg-white border rounded p-3 grid sm:grid-cols-5 gap-2 items-end"
+
+          className="bg-white border rounded p-3 grid sm:grid-cols-3 lg:grid-cols-6 gap-2 items-end"
         >
           <label className="text-xs">
             1. Branch
@@ -182,27 +222,54 @@ function AssignmentsPage() {
               ))}
             </select>
           </label>
-          <label className="text-xs">
-            4. Faculty
-            <select
-              value={form.staff_id}
-              onChange={(e) => setForm({ ...form, staff_id: Number(e.target.value) })}
-              required
-              disabled={!form.subject_id}
-              className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
-            >
-              <option value={0}>— select —</option>
-              {(staffQ.data ?? [])
-                .filter((s: any) => ["faculty", "hod"].includes(s.role) || (s.extra_roles ?? []).includes("faculty"))
-                .map((s: any) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name || s.username} ({s.role})
-                  </option>
-                ))}
-            </select>
-          </label>
+          {form.mode === "internal" ? (
+            <label className="text-xs">
+              4. Faculty
+              <select
+                value={form.staff_id}
+                onChange={(e) => setForm({ ...form, staff_id: Number(e.target.value) })}
+                required
+                disabled={!form.subject_id}
+                className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+              >
+                <option value={0}>— select —</option>
+                {(staffQ.data ?? [])
+                  .filter((s: any) => ["faculty", "hod"].includes(s.role) || (s.extra_roles ?? []).includes("faculty"))
+                  .map((s: any) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name || s.username} ({s.role})
+                    </option>
+                  ))}
+              </select>
+            </label>
+          ) : (
+            <>
+              <label className="text-xs">
+                4. Guest Faculty Name
+                <input
+                  value={form.guest_faculty}
+                  onChange={(e) => setForm({ ...form, guest_faculty: e.target.value })}
+                  placeholder="e.g. Er. R. K. Sharma"
+                  disabled={!form.subject_id}
+                  className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+                />
+              </label>
+              <label className="text-xs">
+                5. Institute / Polytechnic
+                <input
+                  value={form.guest_institute}
+                  onChange={(e) => setForm({ ...form, guest_institute: e.target.value })}
+                  placeholder="e.g. GP Rampur"
+                  disabled={!form.subject_id}
+                  className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+                />
+              </label>
+            </>
+          )}
           <button
-            disabled={save.isPending || !form.staff_id}
+            disabled={
+              save.isPending || (form.mode === "internal" ? !form.staff_id : !form.guest_faculty.trim())
+            }
             className="bg-rose-700 text-white rounded px-3 py-2 text-sm font-semibold inline-flex items-center gap-1 justify-center disabled:opacity-50"
           >
             <Plus className="w-4 h-4" /> Assign
@@ -235,7 +302,18 @@ function AssignmentsPage() {
                   <td className="px-3 py-2">
                     <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggle(a.id)} />
                   </td>
-                  <td className="px-3 py-2">{a.staff_users?.username ?? `#${a.staff_id}`}</td>
+                  <td className="px-3 py-2">
+                    {a.staff_id ? (
+                      (a.staff_users?.username ?? `#${a.staff_id}`)
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5">
+                        {a.guest_faculty}
+                        <span className="text-[10px] font-semibold bg-indigo-100 text-indigo-700 rounded px-1.5 py-0.5">
+                          GUEST{a.guest_institute ? ` · ${a.guest_institute}` : ""}
+                        </span>
+                      </span>
+                    )}
+                  </td>
                   <td className="px-3 py-2">
                     {a.subjects?.code} — {a.subjects?.name}
                   </td>

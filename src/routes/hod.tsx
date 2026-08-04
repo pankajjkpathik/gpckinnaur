@@ -708,7 +708,14 @@ function FacultyAllotmentView({
 }) {
   const qc = useQueryClient();
   const [year, setYear] = useState(useActiveSession().year);
-  const [form, setForm] = useState({ semester: 0, subject_id: 0, staff_id: 0 });
+  const [form, setForm] = useState({
+    semester: 0,
+    subject_id: 0,
+    staff_id: 0,
+    mode: "internal" as "internal" | "external",
+    guest_faculty: "",
+    guest_institute: "",
+  });
   const [formError, setFormError] = useState<string | null>(null);
 
   const assignQ = useQuery({
@@ -730,7 +737,7 @@ function FacultyAllotmentView({
     mutationFn: (d: any) => hodUpsertAssignment({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hod-assignments"] });
-      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0 }));
+      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0, guest_faculty: "", guest_institute: "" }));
       setFormError(null);
       toast.success("Subject allotted successfully");
     },
@@ -758,14 +765,27 @@ function FacultyAllotmentView({
   const own = facultyPool.filter((s: any) => deptToBranch(s.department) === branch);
   const guests = facultyPool.filter((s: any) => deptToBranch(s.department) !== branch);
 
-  const allotmentSchema = z.object({
-    academic_year: z
-      .string()
-      .regex(/^\d{4}-\d{2}$/, "Academic year must look like 2026-27"),
-    semester: z.number().int().min(1, "Select a semester").max(6, "Invalid semester"),
-    subject_id: z.number().int().positive("Select a subject"),
-    staff_id: z.number().int().positive("Select a faculty member"),
-  });
+  const allotmentSchema = z
+    .object({
+      academic_year: z
+        .string()
+        .regex(/^\d{4}-\d{2}$/, "Academic year must look like 2026-27"),
+      semester: z.number().int().min(1, "Select a semester").max(6, "Invalid semester"),
+      subject_id: z.number().int().positive("Select a subject"),
+      mode: z.enum(["internal", "external"]),
+      staff_id: z.number().int(),
+      guest_faculty: z.string(),
+      guest_institute: z.string(),
+    })
+    .refine((v) => v.mode !== "internal" || v.staff_id > 0, {
+      message: "Select a faculty member",
+    })
+    .refine((v) => v.mode !== "external" || v.guest_faculty.trim().length > 1, {
+      message: "Enter the guest faculty name",
+    })
+    .refine((v) => v.mode !== "external" || v.guest_institute.trim().length > 1, {
+      message: "Enter the guest faculty's institute / polytechnic",
+    });
 
   return (
     <div className="space-y-4">
@@ -789,6 +809,32 @@ function FacultyAllotmentView({
           </div>
         </div>
 
+        <div className="flex items-center gap-2 flex-wrap text-xs">
+          <span className="text-gray-500">Faculty type:</span>
+          {([
+            ["internal", "Institute faculty"],
+            ["external", "Guest faculty (other polytechnic)"],
+          ] as const).map(([v, l]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => {
+                setFormError(null);
+                setForm((f) => ({ ...f, mode: v, staff_id: 0, guest_faculty: "", guest_institute: "" }));
+              }}
+              className={`px-3 py-1.5 rounded border font-semibold ${
+                form.mode === v
+                  ? "bg-[#7b1f4c] text-white border-[#7b1f4c]"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
+
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -797,7 +843,10 @@ function FacultyAllotmentView({
               academic_year: year,
               semester: form.semester,
               subject_id: form.subject_id,
+              mode: form.mode,
               staff_id: form.staff_id,
+              guest_faculty: form.guest_faculty,
+              guest_institute: form.guest_institute,
             });
             if (!parsed.success) {
               const msg = parsed.error.issues[0]?.message ?? "Please check the form";
@@ -805,11 +854,14 @@ function FacultyAllotmentView({
               toast.error(msg);
               return;
             }
-            const dupe = (assignQ.data ?? []).some(
-              (a: any) =>
-                a.subject_id === form.subject_id &&
-                a.staff_id === form.staff_id &&
-                a.semester === form.semester,
+            const isExternal = form.mode === "external";
+            const dupe = (assignQ.data ?? []).some((a: any) =>
+              a.subject_id === form.subject_id && a.semester === form.semester
+                ? isExternal
+                  ? (a.guest_faculty ?? "").trim().toLowerCase() ===
+                    form.guest_faculty.trim().toLowerCase()
+                  : a.staff_id === form.staff_id
+                : false,
             );
             if (dupe) {
               const msg = "This faculty is already allotted to that subject";
@@ -817,9 +869,18 @@ function FacultyAllotmentView({
               toast.error(msg);
               return;
             }
-            save.mutate({ ...form, branch, academic_year: year });
+            save.mutate({
+              branch,
+              academic_year: year,
+              semester: form.semester,
+              subject_id: form.subject_id,
+              staff_id: isExternal ? null : form.staff_id,
+              guest_faculty: isExternal ? form.guest_faculty.trim() : null,
+              guest_institute: isExternal ? form.guest_institute.trim() : null,
+            });
           }}
-          className="grid sm:grid-cols-5 gap-2 items-end border-t pt-4"
+
+          className="grid sm:grid-cols-3 lg:grid-cols-6 gap-2 items-end border-t pt-4"
         >
           <label className="text-xs">
             1. Branch
@@ -874,45 +935,77 @@ function FacultyAllotmentView({
               ))}
             </select>
           </label>
-          <label className="text-xs">
-            4. Faculty
-            <select
-              value={form.staff_id}
-              onChange={(e) => {
-                setFormError(null);
-                setForm({ ...form, staff_id: Number(e.target.value) });
-              }}
-              required
-              disabled={!form.subject_id}
-              className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
-            >
-              <option value={0}>— select —</option>
-              {own.length > 0 && (
-                <optgroup label={`Department — ${deptLabel}`}>
-                  {own.map((s: any) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name || s.username} ({s.role})
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              {guests.length > 0 && (
-                <optgroup label="Guest Faculty (other departments)">
-                  {guests.map((s: any) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name || s.username} · {s.department ?? "—"}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </label>
+          {form.mode === "internal" ? (
+            <label className="text-xs">
+              4. Faculty
+              <select
+                value={form.staff_id}
+                onChange={(e) => {
+                  setFormError(null);
+                  setForm({ ...form, staff_id: Number(e.target.value) });
+                }}
+                required
+                disabled={!form.subject_id}
+                className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+              >
+                <option value={0}>— select —</option>
+                {own.length > 0 && (
+                  <optgroup label={`Department — ${deptLabel}`}>
+                    {own.map((s: any) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name || s.username} ({s.role})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {guests.length > 0 && (
+                  <optgroup label="Guest Faculty (other departments)">
+                    {guests.map((s: any) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name || s.username} · {s.department ?? "—"}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </label>
+          ) : (
+            <>
+              <label className="text-xs">
+                4. Guest Faculty Name
+                <input
+                  value={form.guest_faculty}
+                  onChange={(e) => {
+                    setFormError(null);
+                    setForm({ ...form, guest_faculty: e.target.value });
+                  }}
+                  placeholder="e.g. Er. R. K. Sharma"
+                  disabled={!form.subject_id}
+                  className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+                />
+              </label>
+              <label className="text-xs">
+                5. Institute / Polytechnic
+                <input
+                  value={form.guest_institute}
+                  onChange={(e) => setForm({ ...form, guest_institute: e.target.value })}
+                  placeholder="e.g. GP Rampur"
+                  disabled={!form.subject_id}
+                  className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+                />
+              </label>
+            </>
+          )}
           <button
-            disabled={save.isPending || !form.staff_id}
+            disabled={
+              save.isPending ||
+              (form.mode === "internal" ? !form.staff_id : !form.guest_faculty.trim())
+            }
             className="bg-[#7b1f4c] text-white rounded px-3 py-2 text-sm font-semibold inline-flex items-center gap-1 justify-center disabled:opacity-50"
           >
             <Plus className="w-4 h-4" /> {save.isPending ? "Allotting…" : "Allot"}
           </button>
+
           {formError && (
             <p className="col-span-full text-xs text-rose-700" role="alert">
               {formError}
@@ -937,12 +1030,20 @@ function FacultyAllotmentView({
             </thead>
             <tbody>
               {(assignQ.data ?? []).map((a: any) => {
-                const isGuest = deptToBranch(a.staff_users?.department) !== branch;
+                const isExternal = !a.staff_id;
+                const isGuest = !isExternal && deptToBranch(a.staff_users?.department) !== branch;
                 return (
                   <tr key={a.id} className="border-t">
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{a.staff_users?.name || a.staff_users?.username}</span>
+                        <span className="font-medium">
+                          {isExternal ? a.guest_faculty : a.staff_users?.name || a.staff_users?.username}
+                        </span>
+                        {isExternal && (
+                          <span className="text-[10px] font-semibold bg-indigo-100 text-indigo-700 rounded px-1.5 py-0.5">
+                            EXTERNAL GUEST
+                          </span>
+                        )}
                         {isGuest && (
                           <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 rounded px-1.5 py-0.5">
                             GUEST
@@ -950,7 +1051,10 @@ function FacultyAllotmentView({
                         )}
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-600 capitalize">{a.staff_users?.department ?? "—"}</td>
+                    <td className="px-3 py-2 text-xs text-gray-600 capitalize">
+                      {isExternal ? a.guest_institute || "Other polytechnic" : (a.staff_users?.department ?? "—")}
+                    </td>
+
                     <td className="px-3 py-2">
                       <span className="font-mono text-xs">{a.subjects?.code}</span> — {a.subjects?.name}
                     </td>
