@@ -482,28 +482,83 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const co = data.co_staff_ids ?? [];
     const SIBLINGS: Record<string, string> = { civil: "mechanical", mechanical: "civil" };
-    const isCombined = !!data.combined && !!SIBLINGS[data.branch];
+    const siblingBranch = SIBLINGS[data.branch];
+    const isCombined = !!data.combined && !!siblingBranch;
     const group_label = isCombined ? "CMB" : (data.group_label || "");
+
+    const DAY_NAMES = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const where = `${DAY_NAMES[data.day_of_week] ?? `Day ${data.day_of_week}`} period ${data.period_no}`;
+
+    // All slots occupying this day/period in the session (used for conflict checks).
+    const { data: sameSlotRows } = await supabaseAdmin
+      .from("timetable")
+      .select("id, branch, semester, staff_id, co_staff_ids, group_label, subject_id, room")
+      .eq("academic_year", data.academic_year)
+      .eq("day_of_week", data.day_of_week)
+      .eq("period_no", data.period_no);
+    const rows = (sameSlotRows ?? []) as any[];
+
+    // Detect un-combining: an existing CMB pair for this class that we are about
+    // to dissolve because the slot is being saved as a non-combined slot.
+    const existingCombined = rows.filter(
+      (r) =>
+        (r.group_label || "") === "CMB" &&
+        r.semester === data.semester &&
+        (r.branch === data.branch || r.branch === siblingBranch),
+    );
+    const unCombining = !isCombined && siblingBranch && existingCombined.length > 0;
+    // Rows that will disappear as part of this save must not count as conflicts.
+    const dissolvingIds = new Set<number>(unCombining ? existingCombined.map((r) => r.id) : []);
+
+    const describe = async (c: any) => {
+      let subj = "";
+      if (c.subject_id) {
+        const { data: s } = await supabaseAdmin
+          .from("subjects").select("code").eq("id", c.subject_id).maybeSingle();
+        if (s?.code) subj = ` (${s.code})`;
+      }
+      const grp = c.group_label && c.group_label !== "CMB" ? ` ${c.group_label}` : "";
+      return `${String(c.branch).toUpperCase()} Sem${c.semester}${grp}${subj}`;
+    };
+
     // Conflict check: same faculty (primary or co) in same day/period elsewhere.
     // Combined classes intentionally share one teacher across two classes, so
-    // conflict detection is skipped for them (both when saving a combined slot
-    // and when the existing clashing slot is itself a combined one).
+    // conflict detection is skipped for them — except for the pair currently
+    // being dissolved, which is re-validated as two independent slots.
     const allStaff = [data.staff_id, ...co].filter(Boolean) as number[];
     if (allStaff.length && !isCombined) {
-      const { data: conflict } = await supabaseAdmin
-        .from("timetable")
-        .select("id, branch, semester, staff_id, co_staff_ids, group_label")
-        .eq("academic_year", data.academic_year)
-        .eq("day_of_week", data.day_of_week)
-        .eq("period_no", data.period_no);
-      const clash = (conflict ?? []).find((c: any) => {
+      const clash = rows.find((c: any) => {
+        if (dissolvingIds.has(c.id)) return false;
         if (c.branch === data.branch && c.semester === data.semester && (c.group_label || "") === group_label) return false;
         // A combined slot is taught to multiple classes at once — never a clash.
         if ((c.group_label || "") === "CMB") return false;
         const theirs: number[] = [c.staff_id, ...(c.co_staff_ids ?? [])].filter(Boolean);
         return theirs.some((sid) => allStaff.includes(sid));
       });
-      if (clash) throw new Error(`Faculty conflict: already teaching ${clash.branch}-Sem${clash.semester} at this slot. Tick "Combined class" if this class is taken jointly.`);
+      if (clash) {
+        throw new Error(
+          `Faculty conflict at ${where}: this teacher is already assigned to ${await describe(clash)}. ` +
+            `Change the faculty, move the period, or tick "Combined class" if the class is taken jointly.`,
+        );
+      }
+    }
+
+    // Un-combining must not silently overwrite an independent slot that already
+    // exists for this class/group at the same day+period.
+    if (unCombining) {
+      const occupied = rows.find(
+        (c: any) =>
+          !dissolvingIds.has(c.id) &&
+          c.branch === data.branch &&
+          c.semester === data.semester &&
+          (c.group_label || "") === group_label,
+      );
+      if (occupied) {
+        throw new Error(
+          `Cannot un-combine at ${where}: ${await describe(occupied)} already has a separate slot here. ` +
+            `Delete or move that slot first.`,
+        );
+      }
     }
 
     const primary = {
@@ -527,7 +582,6 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
 
     // Mirror into sibling branch for combined classes
     if (isCombined) {
-      const siblingBranch = SIBLINGS[data.branch];
       let siblingSubjectId: number | null = null;
       if (data.subject_id) {
         const { data: subj } = await supabaseAdmin
@@ -546,8 +600,16 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
       );
       if (mErr) throw new Error(`Mirrored slot failed: ${mErr.message}`);
     }
-    return { ok: true, combined: isCombined };
+
+    // Dissolve the old combined pair (both branches) after the standalone slot saved.
+    if (unCombining && dissolvingIds.size) {
+      const { error: dErr } = await supabaseAdmin
+        .from("timetable").delete().in("id", Array.from(dissolvingIds));
+      if (dErr) throw new Error(`Failed to un-combine: ${dErr.message}`);
+    }
+    return { ok: true, combined: isCombined, unCombined: !!unCombining };
   });
+
 
 
 export const publishTimetable = createServerFn({ method: "POST" })
