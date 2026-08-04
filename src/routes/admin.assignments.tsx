@@ -70,7 +70,7 @@ function AssignmentsPage() {
     mutationFn: (d: any) => upsertAssignment({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["assignments"] });
-      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0 }));
+      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0, guest_faculty: "", guest_institute: "" }));
     },
   });
   const del = useMutation({
