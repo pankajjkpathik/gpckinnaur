@@ -708,7 +708,14 @@ function FacultyAllotmentView({
 }) {
   const qc = useQueryClient();
   const [year, setYear] = useState(useActiveSession().year);
-  const [form, setForm] = useState({ semester: 0, subject_id: 0, staff_id: 0 });
+  const [form, setForm] = useState({
+    semester: 0,
+    subject_id: 0,
+    staff_id: 0,
+    mode: "internal" as "internal" | "external",
+    guest_faculty: "",
+    guest_institute: "",
+  });
   const [formError, setFormError] = useState<string | null>(null);
 
   const assignQ = useQuery({
