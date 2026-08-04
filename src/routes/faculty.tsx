@@ -1674,6 +1674,8 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
               type="date"
               value={date}
               min={minDate}
+              max={maxDate}
+
               onChange={(e) => {
                 setDate(e.target.value);
                 setLoaded(false);
