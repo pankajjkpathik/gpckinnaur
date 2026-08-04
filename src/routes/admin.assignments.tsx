@@ -39,7 +39,15 @@ function AssignmentsPage() {
 
   const [year, setYear] = useState(useActiveSession().year);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [form, setForm] = useState({ branch: "", semester: 0, subject_id: 0, staff_id: 0 });
+  const [form, setForm] = useState({
+    branch: "",
+    semester: 0,
+    subject_id: 0,
+    staff_id: 0,
+    mode: "internal" as "internal" | "external",
+    guest_faculty: "",
+    guest_institute: "",
+  });
 
   const assignQ = useQuery({
     queryKey: ["assignments", year],
