@@ -195,6 +195,8 @@ export const hodUpsertTimetableSlot = createServerFn({ method: "POST" })
         { onConflict: "branch,semester,day_of_week,period_no,academic_year" },
       );
     if (error) throw new Error(error.message);
+    const { syncAssignmentFromSlot } = await import("./timetable-sync.server");
+    await syncAssignmentFromSlot(supabaseAdmin, data);
     return { ok: true };
   });
 
