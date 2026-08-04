@@ -937,12 +937,20 @@ function FacultyAllotmentView({
             </thead>
             <tbody>
               {(assignQ.data ?? []).map((a: any) => {
-                const isGuest = deptToBranch(a.staff_users?.department) !== branch;
+                const isExternal = !a.staff_id;
+                const isGuest = !isExternal && deptToBranch(a.staff_users?.department) !== branch;
                 return (
                   <tr key={a.id} className="border-t">
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{a.staff_users?.name || a.staff_users?.username}</span>
+                        <span className="font-medium">
+                          {isExternal ? a.guest_faculty : a.staff_users?.name || a.staff_users?.username}
+                        </span>
+                        {isExternal && (
+                          <span className="text-[10px] font-semibold bg-indigo-100 text-indigo-700 rounded px-1.5 py-0.5">
+                            EXTERNAL GUEST
+                          </span>
+                        )}
                         {isGuest && (
                           <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 rounded px-1.5 py-0.5">
                             GUEST
@@ -950,7 +958,10 @@ function FacultyAllotmentView({
                         )}
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-600 capitalize">{a.staff_users?.department ?? "—"}</td>
+                    <td className="px-3 py-2 text-xs text-gray-600 capitalize">
+                      {isExternal ? a.guest_institute || "Other polytechnic" : (a.staff_users?.department ?? "—")}
+                    </td>
+
                     <td className="px-3 py-2">
                       <span className="font-mono text-xs">{a.subjects?.code}</span> — {a.subjects?.name}
                     </td>
