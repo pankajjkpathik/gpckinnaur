@@ -235,7 +235,18 @@ function AssignmentsPage() {
                   <td className="px-3 py-2">
                     <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggle(a.id)} />
                   </td>
-                  <td className="px-3 py-2">{a.staff_users?.username ?? `#${a.staff_id}`}</td>
+                  <td className="px-3 py-2">
+                    {a.staff_id ? (
+                      (a.staff_users?.username ?? `#${a.staff_id}`)
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5">
+                        {a.guest_faculty}
+                        <span className="text-[10px] font-semibold bg-indigo-100 text-indigo-700 rounded px-1.5 py-0.5">
+                          GUEST{a.guest_institute ? ` · ${a.guest_institute}` : ""}
+                        </span>
+                      </span>
+                    )}
+                  </td>
                   <td className="px-3 py-2">
                     {a.subjects?.code} — {a.subjects?.name}
                   </td>
