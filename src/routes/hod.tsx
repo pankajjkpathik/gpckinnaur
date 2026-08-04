@@ -765,14 +765,27 @@ function FacultyAllotmentView({
   const own = facultyPool.filter((s: any) => deptToBranch(s.department) === branch);
   const guests = facultyPool.filter((s: any) => deptToBranch(s.department) !== branch);
 
-  const allotmentSchema = z.object({
-    academic_year: z
-      .string()
-      .regex(/^\d{4}-\d{2}$/, "Academic year must look like 2026-27"),
-    semester: z.number().int().min(1, "Select a semester").max(6, "Invalid semester"),
-    subject_id: z.number().int().positive("Select a subject"),
-    staff_id: z.number().int().positive("Select a faculty member"),
-  });
+  const allotmentSchema = z
+    .object({
+      academic_year: z
+        .string()
+        .regex(/^\d{4}-\d{2}$/, "Academic year must look like 2026-27"),
+      semester: z.number().int().min(1, "Select a semester").max(6, "Invalid semester"),
+      subject_id: z.number().int().positive("Select a subject"),
+      mode: z.enum(["internal", "external"]),
+      staff_id: z.number().int(),
+      guest_faculty: z.string(),
+      guest_institute: z.string(),
+    })
+    .refine((v) => v.mode !== "internal" || v.staff_id > 0, {
+      message: "Select a faculty member",
+    })
+    .refine((v) => v.mode !== "external" || v.guest_faculty.trim().length > 1, {
+      message: "Enter the guest faculty name",
+    })
+    .refine((v) => v.mode !== "external" || v.guest_institute.trim().length > 1, {
+      message: "Enter the guest faculty's institute / polytechnic",
+    });
 
   return (
     <div className="space-y-4">
