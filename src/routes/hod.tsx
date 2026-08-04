@@ -874,45 +874,77 @@ function FacultyAllotmentView({
               ))}
             </select>
           </label>
-          <label className="text-xs">
-            4. Faculty
-            <select
-              value={form.staff_id}
-              onChange={(e) => {
-                setFormError(null);
-                setForm({ ...form, staff_id: Number(e.target.value) });
-              }}
-              required
-              disabled={!form.subject_id}
-              className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
-            >
-              <option value={0}>— select —</option>
-              {own.length > 0 && (
-                <optgroup label={`Department — ${deptLabel}`}>
-                  {own.map((s: any) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name || s.username} ({s.role})
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              {guests.length > 0 && (
-                <optgroup label="Guest Faculty (other departments)">
-                  {guests.map((s: any) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name || s.username} · {s.department ?? "—"}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </label>
+          {form.mode === "internal" ? (
+            <label className="text-xs">
+              4. Faculty
+              <select
+                value={form.staff_id}
+                onChange={(e) => {
+                  setFormError(null);
+                  setForm({ ...form, staff_id: Number(e.target.value) });
+                }}
+                required
+                disabled={!form.subject_id}
+                className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+              >
+                <option value={0}>— select —</option>
+                {own.length > 0 && (
+                  <optgroup label={`Department — ${deptLabel}`}>
+                    {own.map((s: any) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name || s.username} ({s.role})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {guests.length > 0 && (
+                  <optgroup label="Guest Faculty (other departments)">
+                    {guests.map((s: any) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name || s.username} · {s.department ?? "—"}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </label>
+          ) : (
+            <>
+              <label className="text-xs">
+                4. Guest Faculty Name
+                <input
+                  value={form.guest_faculty}
+                  onChange={(e) => {
+                    setFormError(null);
+                    setForm({ ...form, guest_faculty: e.target.value });
+                  }}
+                  placeholder="e.g. Er. R. K. Sharma"
+                  disabled={!form.subject_id}
+                  className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+                />
+              </label>
+              <label className="text-xs">
+                5. Institute / Polytechnic
+                <input
+                  value={form.guest_institute}
+                  onChange={(e) => setForm({ ...form, guest_institute: e.target.value })}
+                  placeholder="e.g. GP Rampur"
+                  disabled={!form.subject_id}
+                  className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+                />
+              </label>
+            </>
+          )}
           <button
-            disabled={save.isPending || !form.staff_id}
+            disabled={
+              save.isPending ||
+              (form.mode === "internal" ? !form.staff_id : !form.guest_faculty.trim())
+            }
             className="bg-[#7b1f4c] text-white rounded px-3 py-2 text-sm font-semibold inline-flex items-center gap-1 justify-center disabled:opacity-50"
           >
             <Plus className="w-4 h-4" /> {save.isPending ? "Allotting…" : "Allot"}
           </button>
+
           {formError && (
             <p className="col-span-full text-xs text-rose-700" role="alert">
               {formError}
