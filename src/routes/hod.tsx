@@ -737,7 +737,7 @@ function FacultyAllotmentView({
     mutationFn: (d: any) => hodUpsertAssignment({ data: d }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hod-assignments"] });
-      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0 }));
+      setForm((f) => ({ ...f, subject_id: 0, staff_id: 0, guest_faculty: "", guest_institute: "" }));
       setFormError(null);
       toast.success("Subject allotted successfully");
     },
