@@ -817,7 +817,10 @@ function FacultyAllotmentView({
               academic_year: year,
               semester: form.semester,
               subject_id: form.subject_id,
+              mode: form.mode,
               staff_id: form.staff_id,
+              guest_faculty: form.guest_faculty,
+              guest_institute: form.guest_institute,
             });
             if (!parsed.success) {
               const msg = parsed.error.issues[0]?.message ?? "Please check the form";
@@ -825,11 +828,14 @@ function FacultyAllotmentView({
               toast.error(msg);
               return;
             }
-            const dupe = (assignQ.data ?? []).some(
-              (a: any) =>
-                a.subject_id === form.subject_id &&
-                a.staff_id === form.staff_id &&
-                a.semester === form.semester,
+            const isExternal = form.mode === "external";
+            const dupe = (assignQ.data ?? []).some((a: any) =>
+              a.subject_id === form.subject_id && a.semester === form.semester
+                ? isExternal
+                  ? (a.guest_faculty ?? "").trim().toLowerCase() ===
+                    form.guest_faculty.trim().toLowerCase()
+                  : a.staff_id === form.staff_id
+                : false,
             );
             if (dupe) {
               const msg = "This faculty is already allotted to that subject";
@@ -837,8 +843,17 @@ function FacultyAllotmentView({
               toast.error(msg);
               return;
             }
-            save.mutate({ ...form, branch, academic_year: year });
+            save.mutate({
+              branch,
+              academic_year: year,
+              semester: form.semester,
+              subject_id: form.subject_id,
+              staff_id: isExternal ? null : form.staff_id,
+              guest_faculty: isExternal ? form.guest_faculty.trim() : null,
+              guest_institute: isExternal ? form.guest_institute.trim() : null,
+            });
           }}
+
           className="grid sm:grid-cols-5 gap-2 items-end border-t pt-4"
         >
           <label className="text-xs">
