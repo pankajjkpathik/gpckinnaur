@@ -1706,8 +1706,20 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
 
       {rosterQ.data && rosterQ.data.length > 0 && (
         <Card>
-          <div className="flex items-center justify-between mb-4">
-            <p className="font-semibold text-gray-800">Mark Attendance for {selectedSubject}</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+            <div>
+              <p className="font-semibold text-gray-800">Mark Attendance for {selectedSubject}</p>
+              {a?.group_label && (
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                    a.group_label === 'G1' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  }`}>
+                    Group {a.group_label} Roster
+                  </span>
+                  <span className="text-[10px] text-gray-500 italic">Only students assigned to {a.group_label} are listed below</span>
+                </div>
+              )}
+            </div>
             <div className="flex gap-2 text-xs">
               <button
                 onClick={() => {
