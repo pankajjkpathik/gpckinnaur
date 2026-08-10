@@ -635,6 +635,30 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
     return { ok: true, combined: isCombined, unCombined: !!unCombining };
   });
 
+export const deleteTimetableSlot = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({
+      id: z.number().int(),
+      branch: z.string(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const me = await requireRole(adminRoles.concat(hodRoles));
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // HOD branch check
+    if (me.role === "hod") {
+      const { deptToBranch } = await import("./branch");
+      if (deptToBranch(me.department) !== data.branch.toLowerCase()) {
+        throw new Error("You may only delete slots in your own department.");
+      }
+    }
+
+    const { error } = await supabaseAdmin.from("timetable").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 
 
 export const publishTimetable = createServerFn({ method: "POST" })
