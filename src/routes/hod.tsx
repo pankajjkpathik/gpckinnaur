@@ -25,6 +25,7 @@ import {
   RefreshCw,
   PanelLeftClose,
   PanelLeftOpen,
+  Download,
 } from "lucide-react";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
 import { useActiveSession } from "@/lib/use-active-session";
