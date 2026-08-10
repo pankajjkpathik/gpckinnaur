@@ -1269,7 +1269,7 @@ function SessionalReportsView({
       const body = rows.map((r) => [
         r.subject_code,
         r.subject_name,
-        r.semester,
+        r.semester + (r.group_label ? ` ${r.group_label}` : ""),
         r.exam_type,
         r.enrollment_no,
         r.student_name,
@@ -1408,13 +1408,28 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
   const [open, setOpen] = useState<any | null>(null);
   const detail = useQuery({
     enabled: !!open,
-    queryKey: ["hod-marks-detail", open?.subject_id, open?.exam_type, ay],
+    queryKey: ["hod-marks-detail", open?.subject_id, open?.exam_type, ay, open?.group_label],
     queryFn: () =>
-      hodMarksDetail({ data: { subject_id: open.subject_id, exam_type: open.exam_type, academic_year: ay } }),
+      hodMarksDetail({
+        data: {
+          subject_id: open.subject_id,
+          exam_type: open.exam_type,
+          academic_year: ay,
+          group_label: open.group_label,
+        },
+      }),
   });
   const review = useMutation({
     mutationFn: (v: { decision: "approved" | "returned"; remarks?: string }) =>
-      hodReviewMarks({ data: { subject_id: open.subject_id, exam_type: open.exam_type, academic_year: ay, ...v } }),
+      hodReviewMarks({
+        data: {
+          subject_id: open.subject_id,
+          exam_type: open.exam_type,
+          academic_year: ay,
+          group_label: open.group_label,
+          ...v,
+        },
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hod-marks-groups"] });
       setOpen(null);
@@ -1443,6 +1458,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                 </td>
                 <td className="px-4 py-3 text-xs capitalize">
                   {b.subjects?.branch}-Sem{b.subjects?.semester}
+                  {b.group_label ? ` ${b.group_label}` : ""}
                 </td>
                 <td className="px-4 py-3 text-xs">{b.exam_type}</td>
                 <td className="px-4 py-3">{b.staff_users?.name || b.staff_users?.username}</td>
@@ -1696,6 +1712,7 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
                   <td className="px-4 py-3">{p.staff_users?.username}</td>
                   <td className="px-4 py-3 font-mono text-xs">{p.subjects?.code}</td>
                   <td className="px-4 py-3">{p.topic}</td>
+                  <td className="px-4 py-3 text-[10px] text-gray-400">Unit {p.syllabus_units?.unit_no}</td>
                   <td className="px-4 py-3 text-xs">{p.planned_date ?? "—"}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <button

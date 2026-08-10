@@ -308,6 +308,7 @@ function StudentForm({
       bank_account_number: fd.get("bank_account_number") || null,
       gender: fd.get("gender") || null,
       category: fd.get("category") || null,
+      group_label: fd.get("group_label") || null,
     };
     if (isEdit) {
       update.mutate({ id: (initial as any).id, enrollment_no: fd.get("enrollment_no") || undefined, ...base });
@@ -371,6 +372,17 @@ function StudentForm({
                 {["General", "SC", "ST", "OBC", "TFW", "EWS", "Girl Child", "Others"].map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
+              </select>
+            </Field>
+            <Field label="Group (G1/G2)">
+              <select
+                name="group_label"
+                defaultValue={v.group_label ?? ""}
+                className="border rounded w-full px-3 py-2 bg-white"
+              >
+                <option value="">— Whole Class —</option>
+                <option value="G1">Group 1 (G1)</option>
+                <option value="G2">Group 2 (G2)</option>
               </select>
             </Field>
             <Field label="Department">

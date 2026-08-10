@@ -17,6 +17,8 @@ export type TTSlot = {
   staff_id: number | null;
   room?: string | null;
   group_label?: string | null;
+  branch?: string | null;
+  semester?: number | null;
   span_periods?: number | null;
   co_staff_ids?: number[] | null;
   guest_faculty?: string | null;
@@ -352,7 +354,33 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
       <div className="bg-white rounded-lg p-5 w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-1">
           <h3 className="font-bold text-lg">Edit Slot{codeForTitle ? ` — ${codeForTitle}` : ""}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+          <div className="flex items-center gap-2">
+            {editing.slot?.id && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (confirm("Delete this timetable entry?")) {
+                    try {
+                      const { deleteTimetableSlot } = await import("@/lib/academic.functions");
+                      await deleteTimetableSlot({
+                        data: {
+                          id: editing.slot!.id!,
+                          branch: editing.slot!.branch || "",
+                        },
+                      });
+                      window.location.reload();
+                    } catch (e: any) {
+                      alert(e.message);
+                    }
+                  }
+                }}
+                className="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 rounded border border-rose-200 hover:bg-rose-50"
+              >
+                Delete
+              </button>
+            )}
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
         <p className="text-xs text-gray-400 mb-4">{dayLabel}, Period {editing.period.period_no} — {editing.period.start_time}{editing.period.end_time ? ` - ${editing.period.end_time}` : ""}</p>
 

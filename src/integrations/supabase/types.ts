@@ -610,6 +610,7 @@ export type Database = {
           academic_year: string
           branch: string
           created_at: string
+          group_label: string | null
           guest_faculty: string | null
           guest_institute: string | null
           id: number
@@ -621,6 +622,7 @@ export type Database = {
           academic_year: string
           branch: string
           created_at?: string
+          group_label?: string | null
           guest_faculty?: string | null
           guest_institute?: string | null
           id?: number
@@ -632,6 +634,7 @@ export type Database = {
           academic_year?: string
           branch?: string
           created_at?: string
+          group_label?: string | null
           guest_faculty?: string | null
           guest_institute?: string | null
           id?: number
@@ -1563,6 +1566,7 @@ export type Database = {
           enrollment_no: string
           father_name: string | null
           gender: string | null
+          group_label: string | null
           guardian_name: string | null
           guardian_phone: string | null
           id: number
@@ -1588,6 +1592,7 @@ export type Database = {
           enrollment_no: string
           father_name?: string | null
           gender?: string | null
+          group_label?: string | null
           guardian_name?: string | null
           guardian_phone?: string | null
           id?: never
@@ -1613,6 +1618,7 @@ export type Database = {
           enrollment_no?: string
           father_name?: string | null
           gender?: string | null
+          group_label?: string | null
           guardian_name?: string | null
           guardian_phone?: string | null
           id?: never

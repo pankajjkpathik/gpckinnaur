@@ -55,7 +55,7 @@ export const hodPendingMarks = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const groups = new Map<string, any>();
     (rows ?? []).forEach((r: any) => {
-      const k = `${r.subject_id}|${r.exam_type}|${r.entered_by}`;
+      const k = `${r.subject_id}|${r.exam_type}|${r.entered_by}|${r.group_label || ""}`;
       if (!groups.has(k)) groups.set(k, { ...r, count: 0 });
       groups.get(k).count += 1;
     });
@@ -64,7 +64,12 @@ export const hodPendingMarks = createServerFn({ method: "GET" })
 
 export const hodMarksDetail = createServerFn({ method: "GET" })
   .inputValidator((d) =>
-    z.object({ subject_id: z.number().int(), exam_type: z.string(), academic_year: z.string().regex(yearRe) }).parse(d),
+    z.object({
+      subject_id: z.number().int(),
+      exam_type: z.string(),
+      academic_year: z.string().regex(yearRe),
+      group_label: z.string().optional().nullable(),
+    }).parse(d),
   )
   .handler(async ({ data }) => {
     await requireRole(hodRoles);
@@ -74,7 +79,8 @@ export const hodMarksDetail = createServerFn({ method: "GET" })
       .select("id, student_id, obtained, max_marks, remarks, returned_remarks, students(enrollment_no,name)")
       .eq("subject_id", data.subject_id)
       .eq("exam_type", data.exam_type)
-      .eq("academic_year", data.academic_year);
+      .eq("academic_year", data.academic_year)
+      .eq("group_label" as any, data.group_label || null);
     if (error) throw new Error(error.message);
     return (rows ?? []).sort((a: any, b: any) => (a.students?.enrollment_no || "").localeCompare(b.students?.enrollment_no || ""));
   });
@@ -86,6 +92,7 @@ export const hodReviewMarks = createServerFn({ method: "POST" })
         subject_id: z.number().int(),
         exam_type: z.string(),
         academic_year: z.string().regex(yearRe),
+        group_label: z.string().optional().nullable(),
         decision: z.enum(["approved", "returned"]),
         remarks: z.string().optional().nullable(),
       })
@@ -103,7 +110,8 @@ export const hodReviewMarks = createServerFn({ method: "POST" })
       .update({ ...update, updated_at: now })
       .eq("subject_id", data.subject_id)
       .eq("exam_type", data.exam_type)
-      .eq("academic_year", data.academic_year);
+      .eq("academic_year", data.academic_year)
+      .eq("group_label" as any, data.group_label || null);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -241,7 +249,7 @@ export const hodMarksGroups = createServerFn({ method: "GET" })
     let q = supabaseAdmin
       .from("marks")
       .select(
-        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, reviewed_at, updated_at, subjects(code,name,branch,semester), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
+        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, reviewed_at, updated_at, group_label, subjects(code,name,branch,semester), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
       )
       .eq("academic_year", data.academic_year);
     if (data.status === "approved") q = q.eq("approved_by_hod", true);
@@ -252,7 +260,7 @@ export const hodMarksGroups = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const groups = new Map<string, any>();
     (rows ?? []).forEach((r: any) => {
-      const k = `${r.subject_id}|${r.exam_type}|${r.entered_by}`;
+      const k = `${r.subject_id}|${r.exam_type}|${r.entered_by}|${r.group_label || ""}`;
       if (!groups.has(k)) groups.set(k, { ...r, count: 0 });
       groups.get(k).count += 1;
     });
@@ -277,7 +285,7 @@ export const hodExportApprovedMarks = createServerFn({ method: "GET" })
     let q = supabaseAdmin
       .from("marks")
       .select(
-        "id, subject_id, exam_type, obtained, max_marks, remarks, reviewed_at, submitted_to_hod, approved_by_hod, returned_remarks, subjects!inner(code,name,branch,semester), students(enrollment_no,name), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
+        "id, subject_id, exam_type, obtained, max_marks, remarks, reviewed_at, submitted_to_hod, approved_by_hod, returned_remarks, group_label, subjects!inner(code,name,branch,semester), students(enrollment_no,name), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
       )
       .eq("academic_year", data.academic_year);
     if (data.status === "approved") q = q.eq("approved_by_hod", true);
@@ -297,6 +305,7 @@ export const hodExportApprovedMarks = createServerFn({ method: "GET" })
         subject_name: r.subjects?.name ?? "",
         branch: r.subjects?.branch ?? "",
         semester: r.subjects?.semester ?? "",
+        group_label: r.group_label ?? "",
         exam_type: r.exam_type ?? "",
         enrollment_no: r.students?.enrollment_no ?? "",
         student_name: r.students?.name ?? "",

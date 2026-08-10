@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { adminRoles, facultyRoles } from "./roles";
+import { adminRoles, hodRoles, facultyRoles } from "./roles";
 import { requireRole, requireStaff } from "./roles.server";
 
 const yearRe = /^\d{4}-\d{2}$/; // e.g. 2025-26
@@ -395,7 +395,7 @@ export const listAssignments = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("faculty_assignments")
-      .select("id, staff_id, subject_id, branch, semester, academic_year, guest_faculty, guest_institute, staff_users(username,department), subjects(code,name)")
+      .select("id, staff_id, subject_id, branch, semester, academic_year, guest_faculty, guest_institute, group_label, staff_users(username,department), subjects(code,name)")
       .order("academic_year", { ascending: false });
     if (data.staff_id) q = q.eq("staff_id", data.staff_id);
     if (data.academic_year) q = q.eq("academic_year", data.academic_year);
@@ -450,7 +450,7 @@ export const listTimetable = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("timetable")
-      .select("*, subjects(code,name), staff_users(username,name)")
+      .select("*, subjects(code,name,branch,semester), staff_users(username,name), lesson_plans(id,status,unit_no,topic)")
       .eq("branch", data.branch)
       .eq("semester", data.semester)
       .eq("academic_year", data.academic_year)
@@ -633,6 +633,30 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
       }
     }
     return { ok: true, combined: isCombined, unCombined: !!unCombining };
+  });
+
+export const deleteTimetableSlot = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({
+      id: z.number().int(),
+      branch: z.string(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const me = await requireRole(adminRoles.concat(hodRoles));
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // HOD branch check
+    if (me.role === "hod") {
+      const { deptToBranch } = await import("./branch");
+      if (deptToBranch(me.department) !== data.branch.toLowerCase()) {
+        throw new Error("You may only delete slots in your own department.");
+      }
+    }
+
+    const { error } = await supabaseAdmin.from("timetable").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 

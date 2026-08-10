@@ -6,6 +6,7 @@ type AssignmentInput = {
   academic_year: string;
   guest_faculty?: string | null;
   guest_institute?: string | null;
+  group_label?: string | null;
 };
 
 /**
@@ -25,12 +26,13 @@ export async function saveAssignmentRow(supabaseAdmin: any, input: AssignmentInp
     academic_year: input.academic_year,
     guest_faculty: isGuest ? guest : null,
     guest_institute: isGuest ? (input.guest_institute ?? "").trim() || null : null,
+    group_label: input.group_label || null,
   };
 
   if (!isGuest) {
     const { error } = await supabaseAdmin
       .from("faculty_assignments")
-      .upsert(row, { onConflict: "staff_id,subject_id,branch,semester,academic_year" });
+      .upsert(row, { onConflict: "staff_id,subject_id,branch,semester,academic_year,group_label" });
     if (error) throw new Error(error.message);
     return;
   }
@@ -44,7 +46,8 @@ export async function saveAssignmentRow(supabaseAdmin: any, input: AssignmentInp
     .eq("subject_id", row.subject_id)
     .eq("branch", row.branch)
     .eq("semester", row.semester)
-    .eq("academic_year", row.academic_year);
+    .eq("academic_year", row.academic_year)
+    .eq("group_label", row.group_label);
 
   const match = (existing ?? []).find(
     (r: any) => (r.guest_faculty ?? "").trim().toLowerCase() === guest.toLowerCase(),

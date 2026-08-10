@@ -141,6 +141,7 @@ export const getAttendance = createServerFn({ method: "GET" })
         subject_id: z.number().int(),
         date: z.string(),
         period_no: z.number().int(),
+        group_label: z.string().optional().nullable(),
       })
       .parse(d),
   )
@@ -148,13 +149,21 @@ export const getAttendance = createServerFn({ method: "GET" })
     const me = await requireRole(facultyRoles);
     await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: students } = await supabaseAdmin
+
+    let q = supabaseAdmin
       .from("students")
-      .select("id, enrollment_no, name")
+      .select("id, enrollment_no, name, group_label")
       .eq("branch", data.branch)
       .eq("semester", data.semester)
       .eq("is_active", true)
       .order("enrollment_no");
+
+    if (data.group_label && data.group_label !== "" && data.group_label !== "CMB") {
+      q = q.eq("group_label", data.group_label);
+    }
+
+    const { data: students } = await q;
+
     const { data: marks } = await supabaseAdmin
       .from("attendance")
       .select("student_id, status, locked")

@@ -8,6 +8,7 @@ type SlotLike = {
   staff_id?: number | null;
   co_staff_ids?: number[] | null;
   guest_faculty?: string | null;
+  group_label?: string | null;
 };
 
 /**
@@ -22,6 +23,7 @@ export async function syncAssignmentFromSlot(supabaseAdmin: any, slot: SlotLike)
     branch: slot.branch,
     semester: slot.semester,
     academic_year: slot.academic_year,
+    group_label: slot.group_label || null,
   };
 
   const staffIds = Array.from(
