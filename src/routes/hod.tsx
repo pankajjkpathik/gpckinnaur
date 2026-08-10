@@ -1765,6 +1765,8 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
   });
   return (
     <div className="space-y-4">
+      {/* Container div for alignment */}
+      <div>
       <BackBtn onClick={onBack} />
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-4">Pending Lesson Plan Reviews</h1>
@@ -1819,6 +1821,7 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
           </table>
         </div>
       </Card>
+      </div>
     </div>
   );
 }
