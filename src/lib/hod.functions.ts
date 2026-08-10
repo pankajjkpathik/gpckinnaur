@@ -305,6 +305,7 @@ export const hodExportApprovedMarks = createServerFn({ method: "GET" })
         subject_name: r.subjects?.name ?? "",
         branch: r.subjects?.branch ?? "",
         semester: r.subjects?.semester ?? "",
+        group_label: r.group_label ?? "",
         exam_type: r.exam_type ?? "",
         enrollment_no: r.students?.enrollment_no ?? "",
         student_name: r.students?.name ?? "",
