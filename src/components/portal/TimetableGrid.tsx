@@ -359,7 +359,12 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
               <button
                 type="button"
                 onClick={async () => {
-                  if (confirm("Delete this timetable entry?")) {
+                  const dayNames = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                  const day = dayNames[editing.day] || `Day ${editing.day}`;
+                  const period = editing.period.period_no;
+                  const subj = subjects.find(s => s.id === editing.slot?.subject_id)?.code || "this slot";
+                  
+                  if (confirm(`ARE YOU SURE?\n\nThis will permanently delete the timetable entry for:\n- ${subj}\n- ${day}\n- Period ${period}\n\nThis action will be recorded in the audit log.`)) {
                     try {
                       const { deleteTimetableSlot } = await import("@/lib/academic.functions");
                       await deleteTimetableSlot({
