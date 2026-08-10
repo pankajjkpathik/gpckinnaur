@@ -79,7 +79,8 @@ export const hodMarksDetail = createServerFn({ method: "GET" })
       .select("id, student_id, obtained, max_marks, remarks, returned_remarks, students(enrollment_no,name)")
       .eq("subject_id", data.subject_id)
       .eq("exam_type", data.exam_type)
-      .eq("academic_year", data.academic_year);
+      .eq("academic_year", data.academic_year)
+      .eq("group_label", data.group_label || null);
     if (error) throw new Error(error.message);
     return (rows ?? []).sort((a: any, b: any) => (a.students?.enrollment_no || "").localeCompare(b.students?.enrollment_no || ""));
   });
