@@ -6,6 +6,7 @@ type AssignmentInput = {
   academic_year: string;
   guest_faculty?: string | null;
   guest_institute?: string | null;
+  group_label?: string | null;
 };
 
 /**
