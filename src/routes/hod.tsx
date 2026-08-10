@@ -664,7 +664,6 @@ function OverviewView({
       ) : (
         <DepartmentOverviewPanel d={q.data as any} />
       )}
-      </div>
     </div>
   );
 }
