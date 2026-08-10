@@ -23,6 +23,7 @@ export async function syncAssignmentFromSlot(supabaseAdmin: any, slot: SlotLike)
     branch: slot.branch,
     semester: slot.semester,
     academic_year: slot.academic_year,
+    group_label: slot.group_label || null,
   };
 
   const staffIds = Array.from(
