@@ -260,7 +260,7 @@ export const hodMarksGroups = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const groups = new Map<string, any>();
     (rows ?? []).forEach((r: any) => {
-      const k = `${r.subject_id}|${r.exam_type}|${r.entered_by}`;
+      const k = `${r.subject_id}|${r.exam_type}|${r.entered_by}|${r.group_label || ""}`;
       if (!groups.has(k)) groups.set(k, { ...r, count: 0 });
       groups.get(k).count += 1;
     });

@@ -1712,6 +1712,7 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
                   <td className="px-4 py-3">{p.staff_users?.username}</td>
                   <td className="px-4 py-3 font-mono text-xs">{p.subjects?.code}</td>
                   <td className="px-4 py-3">{p.topic}</td>
+                  <td className="px-4 py-3 text-[10px] text-gray-400">Unit {p.syllabus_units?.unit_no}</td>
                   <td className="px-4 py-3 text-xs">{p.planned_date ?? "—"}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <button
