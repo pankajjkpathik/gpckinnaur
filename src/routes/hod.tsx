@@ -147,7 +147,7 @@ function SidebarGroup({
   const [open, setOpen] = useState<boolean>(defaultOpen ?? containsActive);
   if (visible.length === 0) return null;
   return (
-    <div>
+    <div className="fragment-replacement">
       <button
         onClick={() => setOpen((o) => !o)}
         className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg ${gradient} text-white text-sm font-semibold shadow-sm`}
@@ -298,7 +298,7 @@ function HodSidebar({
         canWrite={canWrite}
       />
 
-      <div className="pt-1 border-t border-gray-100">
+      <div className="pt-1 border-t border-gray-100 fragment-replacement">
         <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-[0.18em] text-gray-400 font-semibold">General</p>
         <ul className="space-y-0.5">
           <li>
@@ -568,7 +568,7 @@ function HomeView({ me, deptLabel, ay }: { me: any; deptLabel: string; ay: strin
       />
 
 
-      <div>
+      <div className="fragment-replacement">
         <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Department Snapshot</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {snapshots.map((s) => (
