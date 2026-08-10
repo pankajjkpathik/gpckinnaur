@@ -646,6 +646,15 @@ export const deleteTimetableSlot = createServerFn({ method: "POST" })
     const me = await requireRole(adminRoles.concat(hodRoles));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Fetch details before deletion for the audit log
+    const { data: slot } = await supabaseAdmin
+      .from("timetable")
+      .select("*, subjects(code, name), staff_users(username, name)")
+      .eq("id", data.id)
+      .maybeSingle();
+
+    if (!slot) throw new Error("Slot not found");
+
     // HOD branch check
     if (me.role === "hod") {
       const { deptToBranch } = await import("./branch");
@@ -656,6 +665,26 @@ export const deleteTimetableSlot = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin.from("timetable").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    // Audit log
+    await supabaseAdmin.from("audit_log").insert({
+      actor_type: "staff",
+      actor_id: me.id,
+      action: "timetable_delete",
+      entity: "timetable",
+      entity_id: String(data.id),
+      details: {
+        actor_name: me.username,
+        branch: slot.branch,
+        semester: slot.semester,
+        day: slot.day_of_week,
+        period: slot.period_no,
+        subject: slot.subjects?.code || slot.subject_id,
+        faculty: slot.staff_users?.name || slot.staff_users?.username || slot.staff_id,
+        academic_year: slot.academic_year,
+      },
+    });
+
     return { ok: true };
   });
 
