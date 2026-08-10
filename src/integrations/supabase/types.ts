@@ -610,6 +610,7 @@ export type Database = {
           academic_year: string
           branch: string
           created_at: string
+          group_label: string | null
           guest_faculty: string | null
           guest_institute: string | null
           id: number
@@ -621,6 +622,7 @@ export type Database = {
           academic_year: string
           branch: string
           created_at?: string
+          group_label?: string | null
           guest_faculty?: string | null
           guest_institute?: string | null
           id?: number
@@ -632,6 +634,7 @@ export type Database = {
           academic_year?: string
           branch?: string
           created_at?: string
+          group_label?: string | null
           guest_faculty?: string | null
           guest_institute?: string | null
           id?: number
