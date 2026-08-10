@@ -110,7 +110,8 @@ export const hodReviewMarks = createServerFn({ method: "POST" })
       .update({ ...update, updated_at: now })
       .eq("subject_id", data.subject_id)
       .eq("exam_type", data.exam_type)
-      .eq("academic_year", data.academic_year);
+      .eq("academic_year", data.academic_year)
+      .eq("group_label", data.group_label || null);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
