@@ -612,6 +612,8 @@ function OverviewView({
 
   return (
     <div className="space-y-5">
+      {/* Container div for alignment */}
+      <div>
       <BackBtn onClick={onBack} />
 
       {/* Polished header card -- mirrors Principal's Department Overview chrome */}
@@ -662,6 +664,7 @@ function OverviewView({
       ) : (
         <DepartmentOverviewPanel d={q.data as any} />
       )}
+      </div>
     </div>
   );
 }
@@ -790,6 +793,8 @@ function FacultyAllotmentView({
 
   return (
     <div className="space-y-4">
+      {/* Container div for alignment */}
+      <div>
       <BackBtn onClick={onBack} />
       <Card>
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
@@ -1085,6 +1090,7 @@ function FacultyAllotmentView({
           </table>
         </div>
       </Card>
+      </div>
     </div>
   );
 }
@@ -1118,6 +1124,8 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
 
   return (
     <div className="space-y-4">
+      {/* Container div for alignment */}
+      <div>
       <BackBtn onClick={onBack} />
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Attendance Reports</h1>
@@ -1205,6 +1213,7 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
           </div>
         )}
       </Card>
+      </div>
     </div>
   );
 }
@@ -1304,6 +1313,8 @@ function SessionalReportsView({
 
   return (
     <div className="space-y-4">
+      {/* Container div for alignment */}
+      <div>
       <BackBtn onClick={onBack} />
       <Card>
         <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -1364,6 +1375,7 @@ function SessionalReportsView({
         </div>
         <MarksTable ay={ay} status={tab} />
       </Card>
+      </div>
     </div>
   );
 }
@@ -1437,6 +1449,8 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
   });
   return (
     <div className="space-y-4">
+      {/* Container div for alignment */}
+      <div>
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
@@ -1614,6 +1628,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
