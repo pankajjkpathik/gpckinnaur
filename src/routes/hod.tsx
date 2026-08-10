@@ -1443,6 +1443,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                 </td>
                 <td className="px-4 py-3 text-xs capitalize">
                   {b.subjects?.branch}-Sem{b.subjects?.semester}
+                  {b.group_label ? ` ${b.group_label}` : ""}
                 </td>
                 <td className="px-4 py-3 text-xs">{b.exam_type}</td>
                 <td className="px-4 py-3">{b.staff_users?.name || b.staff_users?.username}</td>
