@@ -46,7 +46,8 @@ export async function saveAssignmentRow(supabaseAdmin: any, input: AssignmentInp
     .eq("subject_id", row.subject_id)
     .eq("branch", row.branch)
     .eq("semester", row.semester)
-    .eq("academic_year", row.academic_year);
+    .eq("academic_year", row.academic_year)
+    .eq("group_label", row.group_label);
 
   const match = (existing ?? []).find(
     (r: any) => (r.guest_faculty ?? "").trim().toLowerCase() === guest.toLowerCase(),
