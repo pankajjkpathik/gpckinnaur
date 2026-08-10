@@ -181,7 +181,6 @@ function SidebarGroup({
       )}
     </div>
   );
-
 }
 
 function HodSidebar({
@@ -612,8 +611,7 @@ function OverviewView({
 
   return (
     <div className="space-y-5">
-      {/* Container div for alignment */}
-      <div>
+      <BackBtn onClick={onBack} />
       <BackBtn onClick={onBack} />
 
       {/* Polished header card -- mirrors Principal's Department Overview chrome */}
@@ -1119,9 +1117,7 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
   const title = `Class Attendance -- ${branch}-Sem${sem}`;
 
   return (
-  return (
     <div className="space-y-4">
-      <BackBtn onClick={onBack} />
       <BackBtn onClick={onBack} />
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Attendance Reports</h1>
