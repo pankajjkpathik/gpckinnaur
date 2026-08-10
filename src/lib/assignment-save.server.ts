@@ -26,6 +26,7 @@ export async function saveAssignmentRow(supabaseAdmin: any, input: AssignmentInp
     academic_year: input.academic_year,
     guest_faculty: isGuest ? guest : null,
     guest_institute: isGuest ? (input.guest_institute ?? "").trim() || null : null,
+    group_label: input.group_label || null,
   };
 
   if (!isGuest) {
