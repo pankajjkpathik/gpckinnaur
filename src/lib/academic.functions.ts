@@ -395,7 +395,7 @@ export const listAssignments = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("faculty_assignments")
-      .select("id, staff_id, subject_id, branch, semester, academic_year, guest_faculty, guest_institute, staff_users(username,department), subjects(code,name)")
+      .select("id, staff_id, subject_id, branch, semester, academic_year, guest_faculty, guest_institute, group_label, staff_users(username,department), subjects(code,name)")
       .order("academic_year", { ascending: false });
     if (data.staff_id) q = q.eq("staff_id", data.staff_id);
     if (data.academic_year) q = q.eq("academic_year", data.academic_year);
