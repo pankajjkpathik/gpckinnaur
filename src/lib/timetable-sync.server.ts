@@ -8,6 +8,7 @@ type SlotLike = {
   staff_id?: number | null;
   co_staff_ids?: number[] | null;
   guest_faculty?: string | null;
+  group_label?: string | null;
 };
 
 /**
