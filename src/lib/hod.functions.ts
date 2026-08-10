@@ -285,7 +285,7 @@ export const hodExportApprovedMarks = createServerFn({ method: "GET" })
     let q = supabaseAdmin
       .from("marks")
       .select(
-        "id, subject_id, exam_type, obtained, max_marks, remarks, reviewed_at, submitted_to_hod, approved_by_hod, returned_remarks, subjects!inner(code,name,branch,semester), students(enrollment_no,name), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
+        "id, subject_id, exam_type, obtained, max_marks, remarks, reviewed_at, submitted_to_hod, approved_by_hod, returned_remarks, group_label, subjects!inner(code,name,branch,semester), students(enrollment_no,name), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
       )
       .eq("academic_year", data.academic_year);
     if (data.status === "approved") q = q.eq("approved_by_hod", true);
