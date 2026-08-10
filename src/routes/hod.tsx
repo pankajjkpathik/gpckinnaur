@@ -971,7 +971,7 @@ function FacultyAllotmentView({
               </select>
             </label>
           ) : (
-            <div className="fragment-replacement">
+            <div className="contents">
               <label className="text-xs">
                 4. Guest Faculty Name
                 <input
