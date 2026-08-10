@@ -308,6 +308,7 @@ function StudentForm({
       bank_account_number: fd.get("bank_account_number") || null,
       gender: fd.get("gender") || null,
       category: fd.get("category") || null,
+      group_label: fd.get("group_label") || null,
     };
     if (isEdit) {
       update.mutate({ id: (initial as any).id, enrollment_no: fd.get("enrollment_no") || undefined, ...base });
