@@ -1408,9 +1408,16 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
   const [open, setOpen] = useState<any | null>(null);
   const detail = useQuery({
     enabled: !!open,
-    queryKey: ["hod-marks-detail", open?.subject_id, open?.exam_type, ay],
+    queryKey: ["hod-marks-detail", open?.subject_id, open?.exam_type, ay, open?.group_label],
     queryFn: () =>
-      hodMarksDetail({ data: { subject_id: open.subject_id, exam_type: open.exam_type, academic_year: ay } }),
+      hodMarksDetail({
+        data: {
+          subject_id: open.subject_id,
+          exam_type: open.exam_type,
+          academic_year: ay,
+          group_label: open.group_label,
+        },
+      }),
   });
   const review = useMutation({
     mutationFn: (v: { decision: "approved" | "returned"; remarks?: string }) =>
