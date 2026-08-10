@@ -64,7 +64,12 @@ export const hodPendingMarks = createServerFn({ method: "GET" })
 
 export const hodMarksDetail = createServerFn({ method: "GET" })
   .inputValidator((d) =>
-    z.object({ subject_id: z.number().int(), exam_type: z.string(), academic_year: z.string().regex(yearRe) }).parse(d),
+    z.object({
+      subject_id: z.number().int(),
+      exam_type: z.string(),
+      academic_year: z.string().regex(yearRe),
+      group_label: z.string().optional().nullable(),
+    }).parse(d),
   )
   .handler(async ({ data }) => {
     await requireRole(hodRoles);
