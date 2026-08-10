@@ -91,6 +91,7 @@ export const hodReviewMarks = createServerFn({ method: "POST" })
         subject_id: z.number().int(),
         exam_type: z.string(),
         academic_year: z.string().regex(yearRe),
+        group_label: z.string().optional().nullable(),
         decision: z.enum(["approved", "returned"]),
         remarks: z.string().optional().nullable(),
       })
