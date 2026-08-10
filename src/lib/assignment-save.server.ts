@@ -32,7 +32,7 @@ export async function saveAssignmentRow(supabaseAdmin: any, input: AssignmentInp
   if (!isGuest) {
     const { error } = await supabaseAdmin
       .from("faculty_assignments")
-      .upsert(row, { onConflict: "staff_id,subject_id,branch,semester,academic_year" });
+      .upsert(row, { onConflict: "staff_id,subject_id,branch,semester,academic_year,group_label" });
     if (error) throw new Error(error.message);
     return;
   }
