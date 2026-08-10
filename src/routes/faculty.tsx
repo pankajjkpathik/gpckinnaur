@@ -1595,7 +1595,14 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
     queryKey: ["att", a?.branch, a?.semester, a?.subject_id, date, pno],
     queryFn: () =>
       getAttendance({
-        data: { branch: a!.branch, semester: a!.semester, subject_id: a!.subject_id, date, period_no: Number(pno) },
+        data: {
+          branch: a!.branch,
+          semester: a!.semester,
+          subject_id: a!.subject_id,
+          date,
+          period_no: Number(pno),
+          group_label: a!.group_label,
+        },
       }),
   });
   const [marks, setMarks] = useState<Record<number, string>>({});
@@ -1643,7 +1650,8 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
               <option value="">Select…</option>
               {(asg.data ?? []).map((x: any) => (
                 <option key={x.id} value={x.id}>
-                  {x.subjects?.code} · {x.branch}-Sem{x.semester}
+                  {x.subjects?.name || x.subjects?.code} ({x.branch}-Sem{x.semester}
+                  {x.group_label ? ` ${x.group_label}` : ""})
                 </option>
               ))}
             </select>

@@ -374,6 +374,17 @@ function StudentForm({
                 ))}
               </select>
             </Field>
+            <Field label="Group (G1/G2)">
+              <select
+                name="group_label"
+                defaultValue={v.group_label ?? ""}
+                className="border rounded w-full px-3 py-2 bg-white"
+              >
+                <option value="">— Whole Class —</option>
+                <option value="G1">Group 1 (G1)</option>
+                <option value="G2">Group 2 (G2)</option>
+              </select>
+            </Field>
             <Field label="Department">
               <select
                 name="branch"
