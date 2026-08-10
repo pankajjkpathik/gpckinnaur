@@ -1090,7 +1090,6 @@ function FacultyAllotmentView({
           </table>
         </div>
       </Card>
-      </div>
     </div>
   );
 }
@@ -1123,9 +1122,9 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
   const title = `Class Attendance -- ${branch}-Sem${sem}`;
 
   return (
+  return (
     <div className="space-y-4">
-      {/* Container div for alignment */}
-      <div>
+      <BackBtn onClick={onBack} />
       <BackBtn onClick={onBack} />
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-1">Attendance Reports</h1>
@@ -1311,9 +1310,9 @@ function SessionalReportsView({
   };
 
   return (
+  return (
     <div className="space-y-4">
-      {/* Container div for alignment */}
-      <div>
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
       <BackBtn onClick={onBack} />
       <Card>
         <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -1446,9 +1445,9 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
     },
   });
   return (
+  return (
     <div className="space-y-4">
-      {/* Container div for alignment */}
-      <div>
+      <div className="border rounded overflow-hidden">
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
@@ -1761,9 +1760,8 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["hod-lessons"] }); },
   });
   return (
+  return (
     <div className="space-y-4">
-      {/* Container div for alignment */}
-      <div>
       <BackBtn onClick={onBack} />
       <Card>
         <h1 className="text-xl font-bold text-gray-800 mb-4">Pending Lesson Plan Reviews</h1>
