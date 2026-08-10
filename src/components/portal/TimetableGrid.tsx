@@ -17,6 +17,8 @@ export type TTSlot = {
   staff_id: number | null;
   room?: string | null;
   group_label?: string | null;
+  branch?: string | null;
+  semester?: number | null;
   span_periods?: number | null;
   co_staff_ids?: number[] | null;
   guest_faculty?: string | null;
