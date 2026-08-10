@@ -59,7 +59,7 @@ import { SyllabusCoverage } from "@/components/portal/SyllabusCoverage";
 export const Route = createFileRoute("/hod")({
   head: () => ({
     meta: [
-      { title: "HOD Portal — GP Kinnaur" },
+      { title: "HOD Portal -- GP Kinnaur" },
       { name: "description", content: "Head of Department console for reviews, monitoring and allotments." },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -103,11 +103,11 @@ type NavItem = {
   view: View;
   label: string;
   icon: ComponentType<{ className?: string }>;
-  /** Requires actual `hod` role — hidden from viewer roles (principal/super_admin). */
+  /** Requires actual `hod` role -- hidden from viewer roles (principal/super_admin). */
   writeOnly?: boolean;
 };
 
-// Core HOD workflows — management & approvals
+// Core HOD workflows -- management & approvals
 const HOD_NAV: NavItem[] = [
   { view: "home", label: "Dashboard", icon: Home },
   { view: "overview", label: "Department Overview", icon: BarChart3 },
@@ -349,7 +349,7 @@ function HodSidebar({
   );
 
   return (
-    <>
+    <div className="flex w-full">
       <aside
         className={`hidden lg:block shrink-0 sticky top-[76px] self-start transition-[width] duration-200 ${
           collapsed ? "w-14" : "w-64"
@@ -368,7 +368,7 @@ function HodSidebar({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -541,9 +541,9 @@ function HomeView({ me, deptLabel, ay }: { me: any; deptLabel: string; ay: strin
   const q = useQuery({ queryKey: ["hod-dash", ay], queryFn: () => hodDashboard({ data: { academic_year: ay } }) });
 
   const snapshots: { label: string; value: number | string; tint: string; ring: string }[] = [
-    { label: "Pending Lesson Plans", value: q.data?.pending_lessons ?? "—", tint: "bg-rose-500/5", ring: "text-rose-600" },
-    { label: "Pending Marks", value: q.data?.pending_marks ?? "—", tint: "bg-orange-500/5", ring: "text-orange-600" },
-    { label: "Pending Leaves", value: q.data?.pending_leaves ?? "—", tint: "bg-indigo-500/5", ring: "text-indigo-600" },
+    { label: "Pending Lesson Plans", value: q.data?.pending_lessons ?? "--", tint: "bg-rose-500/5", ring: "text-rose-600" },
+    { label: "Pending Marks", value: q.data?.pending_marks ?? "--", tint: "bg-orange-500/5", ring: "text-orange-600" },
+    { label: "Pending Leaves", value: q.data?.pending_leaves ?? "--", tint: "bg-indigo-500/5", ring: "text-indigo-600" },
   ];
 
   return (
@@ -555,10 +555,10 @@ function HomeView({ me, deptLabel, ay }: { me: any; deptLabel: string; ay: strin
         avatarSrc={avatarUrl(me)}
         fallbackAvatarSrc={placeholderAvatar}
         subtitle={
-          <>
+          <div className="fragment-replacement">
             Academic Year <span className="font-semibold text-lime-200">{ay}</span>
             <span className="text-white/70"> · Department oversight for {deptLabel}.</span>
-          </>
+          </div>
         }
         stats={[
           { value: q.data?.pending_lessons ?? 0, label: "Pending Lessons" },
@@ -583,7 +583,7 @@ function HomeView({ me, deptLabel, ay }: { me: any; deptLabel: string; ay: strin
       <Card>
         <p className="font-semibold text-gray-800 mb-1">Welcome, {me?.name || me?.username}!</p>
         <p className="text-sm text-gray-500">
-          Use the left navigation to open any HOD section — department analytics, faculty allotment, attendance,
+          Use the left navigation to open any HOD section -- department analytics, faculty allotment, attendance,
           sessional marks, syllabus coverage, timetable and lesson-plan reviews.
         </p>
       </Card>
@@ -614,7 +614,7 @@ function OverviewView({
     <div className="space-y-5">
       <BackBtn onClick={onBack} />
 
-      {/* Polished header card — mirrors Principal's Department Overview chrome */}
+      {/* Polished header card -- mirrors Principal's Department Overview chrome */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#065f46] via-[#064e3b] to-[#052e2b] text-white shadow-lg">
         <div className="absolute inset-0 opacity-10 pointer-events-none" aria-hidden>
           <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full blur-3xl bg-lime-300" />
@@ -794,7 +794,7 @@ function FacultyAllotmentView({
       <Card>
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Manage Faculty — Subject Allotment</h1>
+            <h1 className="text-xl font-bold text-gray-800">Manage Faculty -- Subject Allotment</h1>
             <p className="text-xs text-gray-500">
               Allot subjects to your department faculty and guest faculty. Branch is locked to <strong>{deptLabel}</strong>.
             </p>
@@ -902,7 +902,7 @@ function FacultyAllotmentView({
               required
               className="w-full border rounded px-2 py-1.5 text-sm bg-white"
             >
-              <option value={0}>— select —</option>
+              <option value={0}>-- select --</option>
               {[1, 2, 3, 4, 5, 6].map((s) => (
                 <option key={s} value={s}>
                   Sem {s}
@@ -924,10 +924,10 @@ function FacultyAllotmentView({
             >
               <option value={0}>
                 {!form.semester
-                  ? "— pick semester first —"
+                  ? "-- pick semester first --"
                   : (subjQ.data ?? []).length === 0
-                    ? "— no subjects —"
-                    : "— select —"}
+                    ? "-- no subjects --"
+                    : "-- select --"}
               </option>
               {(subjQ.data ?? []).map((s: any) => (
                 <option key={s.id} value={s.id}>
@@ -949,9 +949,9 @@ function FacultyAllotmentView({
                 disabled={!form.subject_id}
                 className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
               >
-                <option value={0}>— select —</option>
+                <option value={0}>-- select --</option>
                 {own.length > 0 && (
-                  <optgroup label={`Department — ${deptLabel}`}>
+                  <optgroup label={`Department -- ${deptLabel}`}>
                     {own.map((s: any) => (
                       <option key={s.id} value={s.id}>
                         {s.name || s.username} ({s.role})
@@ -963,7 +963,7 @@ function FacultyAllotmentView({
                   <optgroup label="Guest Faculty (other departments)">
                     {guests.map((s: any) => (
                       <option key={s.id} value={s.id}>
-                        {s.name || s.username} · {s.department ?? "—"}
+                        {s.name || s.username} · {s.department ?? "--"}
                       </option>
                     ))}
                   </optgroup>
@@ -971,7 +971,7 @@ function FacultyAllotmentView({
               </select>
             </label>
           ) : (
-            <>
+            <div className="fragment-replacement">
               <label className="text-xs">
                 4. Guest Faculty Name
                 <input
@@ -995,7 +995,7 @@ function FacultyAllotmentView({
                   className="w-full border rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
                 />
               </label>
-            </>
+            </div>
           )}
           <button
             disabled={
@@ -1017,7 +1017,7 @@ function FacultyAllotmentView({
 
 
       <Card>
-        <p className="font-semibold text-gray-800 mb-2">Existing Allotments — {year}</p>
+        <p className="font-semibold text-gray-800 mb-2">Existing Allotments -- {year}</p>
         <div className="border rounded overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
@@ -1053,11 +1053,11 @@ function FacultyAllotmentView({
                       </div>
                     </td>
                     <td className="px-3 py-2 text-xs text-gray-600 capitalize">
-                      {isExternal ? a.guest_institute || "Other polytechnic" : (a.staff_users?.department ?? "—")}
+                      {isExternal ? a.guest_institute || "Other polytechnic" : (a.staff_users?.department ?? "--")}
                     </td>
 
                     <td className="px-3 py-2">
-                      <span className="font-mono text-xs">{a.subjects?.code}</span> — {a.subjects?.name}
+                      <span className="font-mono text-xs">{a.subjects?.code}</span> -- {a.subjects?.name}
                     </td>
                     <td className="px-3 py-2 text-xs capitalize">
                       {a.branch} · Sem {a.semester}
@@ -1102,8 +1102,8 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
     d.setMonth(d.getMonth() - 6);
     return d.toISOString().slice(0, 10);
   }, []);
-  const [branch, setBranch] = useState(defaultBranch);
-  const [sem, setSem] = useState<number | "">("");
+  const [branch, setBranch] = useState<string>(defaultBranch);
+  const [sem, setSem] = useState<number | "">( "");
   const [from, setFrom] = useState(monthAgo);
   const [to, setTo] = useState(today);
   const q = useQuery({
@@ -1114,7 +1114,7 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
   const rows = (q.data ?? []).map((s: any) => [s.enrollment_no, s.name, s.present, s.total, `${s.pct}%`]);
   const header = ["Enrollment", "Name", "Present", "Total", "Percentage"];
   const fileBase = `class_attendance_${branch}_S${sem}`;
-  const title = `Class Attendance — ${branch}-Sem${sem}`;
+  const title = `Class Attendance -- ${branch}-Sem${sem}`;
 
   return (
     <div className="space-y-4">
@@ -1124,17 +1124,16 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
         <p className="text-xs text-gray-400 mb-4">Filter by branch + semester. Use quick ranges for monthly / semester view.</p>
         <div className="grid sm:grid-cols-4 gap-2 text-sm mb-2">
           <select value={branch} onChange={(e) => setBranch(e.target.value)} className="border rounded px-3 py-2 bg-white">
-            <option value="">— Branch —</option>
+            <option value="">-- Branch --</option>
             <option value="civil">Civil Engineering</option>
             <option value="mechanical">Mechanical Engineering</option>
-            <option value="applied_science">Applied Sciences</option>
           </select>
           <select
             value={sem}
             onChange={(e) => setSem(e.target.value ? Number(e.target.value) : "")}
             className="border rounded px-3 py-2 bg-white"
           >
-            <option value="">— Semester —</option>
+            <option value="">-- Semester --</option>
             {[1, 2, 3, 4, 5, 6].map((s) => (
               <option key={s} value={s}>Sem {s}</option>
             ))}
@@ -1210,7 +1209,7 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
   );
 }
 
-/* ─── SESSIONAL REPORTS (marks) — tabs: pending / approved ───────────────── */
+/* ─── SESSIONAL REPORTS (marks) -- tabs: pending / approved ───────────────── */
 function SessionalReportsView({
   ay,
   branch,
@@ -1290,8 +1289,8 @@ function SessionalReportsView({
       } else {
         exportPDF(
           filename,
-          `${tabLabel} Sessional Marks — ${deptLabel}`,
-          `${filterSummary} · ${rows.length} record${rows.length === 1 ? "" : "s"}`,
+          `${tabLabel} Sessional Marks -- ${deptLabel}`,
+          `${filterSummary} - ${rows.length} record${rows.length === 1 ? "" : "s"}`,
           header,
           body,
         );
@@ -1437,7 +1436,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
     },
   });
   return (
-    <>
+    <div className="space-y-4">
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
@@ -1498,7 +1497,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
           >
             <div className="p-4 border-b">
               <h3 className="font-bold">
-                {open.subjects?.code} — {open.exam_type}
+                {open.subjects?.code} -- {open.exam_type}
               </h3>
               <p className="text-xs text-gray-400">
                 Submitted by {open.staff_users?.name || open.staff_users?.username}
@@ -1522,7 +1521,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                       <td className="px-3 py-2 font-mono text-xs">{r.students?.enrollment_no}</td>
                       <td className="px-3 py-2">{r.students?.name}</td>
                       <td className="px-3 py-2 text-center">
-                        {r.obtained ?? "—"} / {r.max_marks}
+                        {r.obtained ?? "--"} / {r.max_marks}
                       </td>
                       <td className="px-3 py-2 text-xs">{r.remarks}</td>
                     </tr>
@@ -1538,7 +1537,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                     const rows = detail.data.map((r: any) => ({
                       enrollment_no: r.students?.enrollment_no,
                       name: r.students?.name,
-                      marks: `${r.obtained ?? "—"} / ${r.max_marks}`,
+                      marks: `${r.obtained ?? "--"} / ${r.max_marks}`,
                       remarks: r.remarks || "",
                     }));
                     const groupText = open.group_label ? ` Group ${open.group_label}` : "";
@@ -1565,7 +1564,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                     const rows = detail.data.map((r: any) => ({
                       enrollment_no: r.students?.enrollment_no,
                       name: r.students?.name,
-                      marks: `${r.obtained ?? "—"} / ${r.max_marks}`,
+                      marks: `${r.obtained ?? "--"} / ${r.max_marks}`,
                       remarks: r.remarks || "",
                     }));
                     const groupText = open.group_label ? ` Group ${open.group_label}` : "";
@@ -1588,33 +1587,34 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                 </button>
               </div>
               <div className="flex gap-2 justify-end">
-              {status === "pending" && (
-                <>
-                  <button
-                    onClick={() => {
-                      const r = prompt("Return remarks?", "Please revise.");
-                      if (r != null) review.mutate({ decision: "returned", remarks: r });
-                    }}
-                    className="text-sm bg-amber-600 text-white px-3 py-1.5 rounded"
-                  >
-                    Return for Revision
-                  </button>
-                  <button
-                    onClick={() => review.mutate({ decision: "approved" })}
-                    className="text-sm bg-green-600 text-white px-3 py-1.5 rounded"
-                  >
-                    Approve &amp; Lock
-                  </button>
-                </>
-              )}
-              <button onClick={() => setOpen(null)} className="text-sm px-3 py-1.5">
-                Close
-              </button>
+                {status === "pending" && (
+                  <div className="fragment-replacement">
+                    <button
+                      onClick={() => {
+                        const r = prompt("Return remarks?", "Please revise.");
+                        if (r != null) review.mutate({ decision: "returned", remarks: r });
+                      }}
+                      className="text-sm bg-amber-600 text-white px-3 py-1.5 rounded"
+                    >
+                      Return for Revision
+                    </button>
+                    <button
+                      onClick={() => review.mutate({ decision: "approved" })}
+                      className="text-sm bg-green-600 text-white px-3 py-1.5 rounded"
+                    >
+                      Approve &amp; Lock
+                    </button>
+                  </div>
+                )}
+                <button onClick={() => setOpen(null)} className="text-sm px-3 py-1.5">
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -1633,7 +1633,7 @@ function SyllabusProgressView({
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
-      <h1 className="text-xl font-bold text-gray-800">Syllabus Coverage — {deptLabel}</h1>
+      <h1 className="text-xl font-bold text-gray-800">Syllabus Coverage -- {deptLabel}</h1>
       <p className="text-xs text-gray-400 -mt-1">
         Lectures delivered per subject in your department. Same view is shown to students and the Principal.
       </p>
@@ -1746,7 +1746,7 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
   const review = useMutation({
     mutationFn: (v: { id: number; decision: "approved" | "returned"; hod_remarks?: string }) =>
       reviewLessonPlan({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hod-lessons"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["hod-lessons"] }); },
   });
   return (
     <div className="space-y-4">
@@ -1771,7 +1771,7 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
                   <td className="px-4 py-3 font-mono text-xs">{p.subjects?.code}</td>
                   <td className="px-4 py-3">{p.topic}</td>
                   <td className="px-4 py-3 text-[10px] text-gray-400">Unit {p.syllabus_units?.unit_no}</td>
-                  <td className="px-4 py-3 text-xs">{p.planned_date ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs">{p.planned_date ?? "--"}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <button
                       onClick={() => review.mutate({ id: p.id, decision: "approved" })}
