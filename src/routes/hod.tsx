@@ -1437,7 +1437,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
     },
   });
   return (
-    <>
+    <div>
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
@@ -1614,7 +1614,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
