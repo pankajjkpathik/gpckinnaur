@@ -1421,7 +1421,15 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
   });
   const review = useMutation({
     mutationFn: (v: { decision: "approved" | "returned"; remarks?: string }) =>
-      hodReviewMarks({ data: { subject_id: open.subject_id, exam_type: open.exam_type, academic_year: ay, ...v } }),
+      hodReviewMarks({
+        data: {
+          subject_id: open.subject_id,
+          exam_type: open.exam_type,
+          academic_year: ay,
+          group_label: open.group_label,
+          ...v,
+        },
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hod-marks-groups"] });
       setOpen(null);
