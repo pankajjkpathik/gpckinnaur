@@ -951,7 +951,7 @@ function MarksTable({ ay, status }) {
             setOpen(null);
         },
     });
-    return (<div>
+    return (<>
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
@@ -1102,7 +1102,7 @@ function MarksTable({ ay, status }) {
           </div>
         </div>
       )}
-    </div>)};
+    </>)};
 }
 
 /* ─── SYLLABUS COVERAGE ──────────────────────────────────────────────────── */
