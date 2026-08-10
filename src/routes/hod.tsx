@@ -612,7 +612,6 @@ function OverviewView({
   return (
     <div className="space-y-5">
       <BackBtn onClick={onBack} />
-      <BackBtn onClick={onBack} />
 
       {/* Polished header card -- mirrors Principal's Department Overview chrome */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#065f46] via-[#064e3b] to-[#052e2b] text-white shadow-lg">
@@ -863,6 +862,7 @@ function FacultyAllotmentView({
                     form.guest_faculty.trim().toLowerCase()
                   : a.staff_id === form.staff_id
                 : false,
+    </div>
             );
             if (dupe) {
               const msg = "This faculty is already allotted to that subject";
@@ -1808,3 +1808,5 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
   );
 }
 
+
+</div></div></div></div></div></div></div></div>
