@@ -1720,7 +1720,59 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                 </div>
               )}
             </div>
-            <div className="flex gap-2 text-xs">
+            <div className="flex flex-wrap gap-2 text-xs">
+              <button
+                onClick={async () => {
+                  if (!rosterQ.data || !a) return;
+                  const { exportRows } = await import("@/lib/report-export");
+                  const rows = rosterQ.data.map((s: any) => ({
+                    enrollment_no: s.enrollment_no,
+                    name: s.name,
+                    status: (marks[s.id] ?? "present").toUpperCase(),
+                  }));
+                  const groupText = a.group_label ? ` Group ${a.group_label}` : "";
+                  exportRows({
+                    filename: `Attendance_${a.branch}_Sem${a.semester}${groupText}_${date}_P${pno}`,
+                    title: `Attendance Report: ${selectedSubject}`,
+                    columns: [
+                      { key: "enrollment_no", label: "Roll Number" },
+                      { key: "name", label: "Student Name" },
+                      { key: "status", label: "Status" },
+                    ],
+                    rows,
+                    format: "csv",
+                  });
+                }}
+                className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 inline-flex items-center gap-1"
+              >
+                <Download className="w-3 h-3" /> CSV
+              </button>
+              <button
+                onClick={async () => {
+                  if (!rosterQ.data || !a) return;
+                  const { exportRows } = await import("@/lib/report-export");
+                  const rows = rosterQ.data.map((s: any) => ({
+                    enrollment_no: s.enrollment_no,
+                    name: s.name,
+                    status: (marks[s.id] ?? "present").toUpperCase(),
+                  }));
+                  const groupText = a.group_label ? ` Group ${a.group_label}` : "";
+                  exportRows({
+                    filename: `Attendance_${a.branch}_Sem${a.semester}${groupText}_${date}_P${pno}`,
+                    title: `Attendance Report: ${selectedSubject}`,
+                    columns: [
+                      { key: "enrollment_no", label: "Roll Number" },
+                      { key: "name", label: "Student Name" },
+                      { key: "status", label: "Status" },
+                    ],
+                    rows,
+                    format: "pdf",
+                  });
+                }}
+                className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 inline-flex items-center gap-1"
+              >
+                <Download className="w-3 h-3" /> PDF
+              </button>
               <button
                 onClick={() => {
                   const m: any = {};

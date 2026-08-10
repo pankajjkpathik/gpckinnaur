@@ -25,6 +25,7 @@ import {
   RefreshCw,
   PanelLeftClose,
   PanelLeftOpen,
+  Download,
 } from "lucide-react";
 import { staffMe, staffLogout } from "@/lib/auth.functions";
 import { useActiveSession } from "@/lib/use-active-session";
@@ -1529,7 +1530,64 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
                 </tbody>
               </table>
             </div>
-            <div className="p-3 border-t flex gap-2 justify-end">
+            <div className="p-3 border-t flex flex-wrap gap-2 justify-between items-center">
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    const { exportRows } = await import("@/lib/report-export");
+                    const rows = detail.data.map((r: any) => ({
+                      enrollment_no: r.students?.enrollment_no,
+                      name: r.students?.name,
+                      marks: `${r.obtained ?? "—"} / ${r.max_marks}`,
+                      remarks: r.remarks || "",
+                    }));
+                    const groupText = open.group_label ? ` Group ${open.group_label}` : "";
+                    exportRows({
+                      filename: `Marks_${open.subjects?.code}_${open.exam_type}${groupText}_${ay}`,
+                      title: `Marks Report: ${open.subjects?.code} - ${open.exam_type}`,
+                      columns: [
+                        { key: "enrollment_no", label: "Enrollment" },
+                        { key: "name", label: "Name" },
+                        { key: "marks", label: "Marks" },
+                        { key: "remarks", label: "Remarks" },
+                      ],
+                      rows,
+                      format: "csv",
+                    });
+                  }}
+                  className="text-xs border px-3 py-1.5 rounded hover:bg-gray-50 flex items-center gap-1"
+                >
+                  <Download className="w-3 h-3" /> CSV
+                </button>
+                <button
+                  onClick={async () => {
+                    const { exportRows } = await import("@/lib/report-export");
+                    const rows = detail.data.map((r: any) => ({
+                      enrollment_no: r.students?.enrollment_no,
+                      name: r.students?.name,
+                      marks: `${r.obtained ?? "—"} / ${r.max_marks}`,
+                      remarks: r.remarks || "",
+                    }));
+                    const groupText = open.group_label ? ` Group ${open.group_label}` : "";
+                    exportRows({
+                      filename: `Marks_${open.subjects?.code}_${open.exam_type}${groupText}_${ay}`,
+                      title: `Marks Report: ${open.subjects?.code} - ${open.exam_type}`,
+                      columns: [
+                        { key: "enrollment_no", label: "Enrollment" },
+                        { key: "name", label: "Name" },
+                        { key: "marks", label: "Marks" },
+                        { key: "remarks", label: "Remarks" },
+                      ],
+                      rows,
+                      format: "pdf",
+                    });
+                  }}
+                  className="text-xs border px-3 py-1.5 rounded hover:bg-gray-50 flex items-center gap-1"
+                >
+                  <Download className="w-3 h-3" /> PDF
+                </button>
+              </div>
+              <div className="flex gap-2 justify-end">
               {status === "pending" && (
                 <>
                   <button
