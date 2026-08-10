@@ -1282,7 +1282,7 @@ function SessionalReportsView({
       ]);
       const safeDept = deptLabel.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
       const safeExam = examType ? `_${examType.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}` : "";
-      const filename = `sessional-${tab}_${safeDept}_${ay}${safeExam}`;
+      const filename = `sessional-${tab}_${safeDept}_${ay}${safeExam}_${r.group_label || ""}`;
       if (format === "csv") {
         // Prepend filter header rows so CSV consumers see the applied filters.
         exportCSV(filename, [], [...filterHeader, header, ...body]);
