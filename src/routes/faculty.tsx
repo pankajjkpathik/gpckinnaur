@@ -1723,14 +1723,14 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
             <div className="flex flex-wrap gap-2 text-xs">
               <button
                 onClick={async () => {
-                  if (!rosterQ.data) return;
+                  if (!rosterQ.data || !a) return;
                   const { exportRows } = await import("@/lib/report-export");
                   const rows = rosterQ.data.map((s: any) => ({
                     enrollment_no: s.enrollment_no,
                     name: s.name,
                     status: (marks[s.id] ?? "present").toUpperCase(),
                   }));
-                  const groupText = a?.group_label ? ` Group ${a.group_label}` : "";
+                  const groupText = a.group_label ? ` Group ${a.group_label}` : "";
                   exportRows({
                     filename: `Attendance_${a.branch}_Sem${a.semester}${groupText}_${date}_P${pno}`,
                     title: `Attendance Report: ${selectedSubject}`,
@@ -1749,14 +1749,14 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
               </button>
               <button
                 onClick={async () => {
-                  if (!rosterQ.data) return;
+                  if (!rosterQ.data || !a) return;
                   const { exportRows } = await import("@/lib/report-export");
                   const rows = rosterQ.data.map((s: any) => ({
                     enrollment_no: s.enrollment_no,
                     name: s.name,
                     status: (marks[s.id] ?? "present").toUpperCase(),
                   }));
-                  const groupText = a?.group_label ? ` Group ${a.group_label}` : "";
+                  const groupText = a.group_label ? ` Group ${a.group_label}` : "";
                   exportRows({
                     filename: `Attendance_${a.branch}_Sem${a.semester}${groupText}_${date}_P${pno}`,
                     title: `Attendance Report: ${selectedSubject}`,
