@@ -793,8 +793,6 @@ function FacultyAllotmentView({
 
   return (
     <div className="space-y-4">
-      {/* Container div for alignment */}
-      <div>
       <BackBtn onClick={onBack} />
       <Card>
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
@@ -1445,9 +1443,7 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
     },
   });
   return (
-  return (
     <div className="space-y-4">
-      <div className="border rounded overflow-hidden">
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
@@ -1759,7 +1755,6 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
       reviewLessonPlan({ data: v }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["hod-lessons"] }); },
   });
-  return (
   return (
     <div className="space-y-4">
       <BackBtn onClick={onBack} />
