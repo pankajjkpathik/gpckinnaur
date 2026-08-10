@@ -1213,7 +1213,6 @@ function AttendanceReportsView({ defaultBranch = "", onBack }: { defaultBranch?:
           </div>
         )}
       </Card>
-      </div>
     </div>
   );
 }
@@ -1375,7 +1374,6 @@ function SessionalReportsView({
         </div>
         <MarksTable ay={ay} status={tab} />
       </Card>
-      </div>
     </div>
   );
 }
@@ -1628,7 +1626,6 @@ function MarksTable({ ay, status }: { ay: string; status: "pending" | "approved"
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
@@ -1821,7 +1818,6 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
           </table>
         </div>
       </Card>
-      </div>
     </div>
   );
 }
