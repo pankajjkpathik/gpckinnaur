@@ -1303,9 +1303,7 @@ function SessionalReportsView({
   };
 
   return (
-  return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
       <BackBtn onClick={onBack} />
       <Card>
         <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
