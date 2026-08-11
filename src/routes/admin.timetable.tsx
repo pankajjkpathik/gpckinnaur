@@ -82,9 +82,11 @@ function TimetablePage() {
       }
       return upsertTimetableSlot({ data: { branch, semester: sem, academic_year: year, ...d } });
     },
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["timetable", branch, sem, year] });
-      await qc.refetchQueries({ queryKey: ["timetable", branch, sem, year] });
+    onSuccess: async (result) => {
+      const timetableKey = ["timetable", branch, sem, year] as const;
+      qc.setQueryData(timetableKey, result.slots);
+      await qc.invalidateQueries({ queryKey: timetableKey, refetchType: "none" });
+      await qc.refetchQueries({ queryKey: timetableKey, type: "active" });
     },
   });
 

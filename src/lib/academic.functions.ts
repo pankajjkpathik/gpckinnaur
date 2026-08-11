@@ -441,7 +441,10 @@ export const deleteAssignment = createServerFn({ method: "POST" })
 
 // ============ TIMETABLE ============
 
-export const listTimetable = createServerFn({ method: "GET" })
+// Use POST for this authenticated, frequently-mutated read. A GET server-fn can
+// be reused from the browser/edge cache immediately after a save, making the
+// database update succeed while the grid continues to receive the old rows.
+export const listTimetable = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z.object({ branch: z.string(), semester: z.number().int(), academic_year: z.string() }).parse(d),
   )
@@ -632,7 +635,25 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
         }
       }
     }
-    return { ok: true, combined: isCombined, unCombined: !!unCombining };
+    // Return the authoritative class timetable with the mutation. The builder
+    // can paint these rows immediately instead of waiting for a second request
+    // that may still be carrying a stale response.
+    const { data: freshRows, error: refreshError } = await supabaseAdmin
+      .from("timetable")
+      .select("*, subjects(code,name,branch,semester), staff_users(username,name)")
+      .eq("branch", data.branch)
+      .eq("semester", data.semester)
+      .eq("academic_year", data.academic_year)
+      .order("day_of_week")
+      .order("period_no");
+    if (refreshError) throw new Error(`Saved, but refresh failed: ${refreshError.message}`);
+
+    return {
+      ok: true,
+      combined: isCombined,
+      unCombined: !!unCombining,
+      slots: freshRows ?? [],
+    };
   });
 
 export const deleteTimetableSlot = createServerFn({ method: "POST" })
