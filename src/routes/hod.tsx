@@ -348,7 +348,7 @@ function HodSidebar({
   );
 
   return (
-    <div className="flex w-full min-h-screen">
+    <>
       <aside
         className={`hidden lg:block shrink-0 sticky top-[76px] self-start transition-[width] duration-200 ${
           collapsed ? "w-14" : "w-64"
@@ -356,6 +356,7 @@ function HodSidebar({
       >
         {collapsed ? collapsedRail : inner}
       </aside>
+
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/40" onClick={onCloseMobile}>
           <div
@@ -367,7 +368,8 @@ function HodSidebar({
           </div>
         </div>
       )}
-    </div>
+    </>
+
   );
 }
 
