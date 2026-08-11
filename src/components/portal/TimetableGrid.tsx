@@ -90,11 +90,43 @@ export function TimetableGrid({
     return m;
   }, [slots]);
 
+  // Column set for the grid. Always render a complete week: start from the
+  // periods master and add a synthetic column for any period that has saved
+  // entries but is missing from the bell schedule, so nothing stored in the
+  // database is ever hidden. With no bell schedule at all, fall back to 1..8.
+  const cols = useMemo<TTPeriod[]>(() => {
+    const byNo = new Map<number, TTPeriod>();
+    periods.forEach((p) => byNo.set(p.period_no, p));
+    slots.forEach((s) => {
+      if (!byNo.has(s.period_no)) {
+        byNo.set(s.period_no, {
+          id: -s.period_no,
+          period_no: s.period_no,
+          start_time: null,
+          end_time: null,
+          label: null,
+          is_break: false,
+        });
+      }
+    });
+    if (byNo.size === 0) {
+      for (let n = 1; n <= 8; n++) {
+        byNo.set(n, { id: -n, period_no: n, start_time: null, end_time: null, label: null, is_break: false });
+      }
+    }
+    return Array.from(byNo.values()).sort((a, b) => a.period_no - b.period_no);
+  }, [periods, slots]);
+
+  // Periods flagged as breaks that nonetheless carry saved entries must show
+  // those entries rather than a BREAK band.
+  const busyPeriodNos = useMemo(() => new Set(slots.map((s) => s.period_no)), [slots]);
+
   const staffById = useMemo(() => {
     const m = new Map<number, TTStaff>();
     (staff ?? []).forEach((s) => m.set(s.id, s));
     return m;
   }, [staff]);
+
 
   const [editing, setEditing] = useState<{ day: number; period: TTPeriod; slot?: TTSlot; group: string } | null>(null);
 
