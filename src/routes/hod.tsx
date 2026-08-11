@@ -1806,6 +1806,3 @@ function LessonsReviewView({ ay, onBack }: { ay: string; onBack: () => void }) {
     </div>
   );
 }
-
-
-</div></div></div></div></div></div></div></div>
