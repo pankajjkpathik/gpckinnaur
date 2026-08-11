@@ -86,11 +86,20 @@ function TimetablePage() {
     },
   });
 
+  const del = useMutation({
+    mutationFn: (p: { id: number; branch: string }) => deleteTimetableSlot({ data: p }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["timetable", branch, sem, year] });
+      await qc.refetchQueries({ queryKey: ["timetable", branch, sem, year] });
+    },
+  });
+
   const pub = useMutation({
     mutationFn: (p: boolean) =>
       publishTimetable({ data: { branch, semester: sem, academic_year: year, published: p } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["timetable"] }),
   });
+
 
   const isPublished = (ttQ.data ?? []).some((s: any) => s.published);
 
