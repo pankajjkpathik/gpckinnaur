@@ -87,17 +87,18 @@ export function PortalShell({
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className={`bg-white text-slate-800 shadow-sm ${s.accent}`}>
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div className="container mx-auto max-w-[1400px] px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:flex lg:justify-between lg:gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 ${s.iconBg}`} aria-hidden>
               {s.emoji}
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{subtitle ?? `GP Kinnaur · ${s.label}`}</p>
-              <h1 className="text-lg font-bold truncate text-slate-800">{title}</h1>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 truncate">{subtitle ?? `GP Kinnaur · ${s.label}`}</p>
+              <h1 className="text-base sm:text-lg font-bold truncate text-slate-800">{title}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="col-span-2 flex flex-wrap items-center justify-end gap-2 lg:col-auto lg:flex-nowrap lg:shrink-0">
+
             <span className={`hidden sm:inline-flex items-center gap-2 text-[11px] font-bold pl-1 pr-2.5 py-1 rounded-full ${s.chip} uppercase tracking-wider`}>
               {avatarUrl(me) ? (
                 <img src={avatarUrl(me)!} alt={displayName(me)} className="w-6 h-6 rounded-full object-cover border border-white" />
