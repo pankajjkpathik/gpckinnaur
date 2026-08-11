@@ -120,7 +120,7 @@ function ParentDashboard() {
         </div>
 
 
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-3 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 mb-5">
           {tabs.map((t) => (
             <button
               key={t.key}
