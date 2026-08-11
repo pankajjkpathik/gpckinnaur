@@ -205,26 +205,26 @@ function TimetablePage() {
             </div>
             <img src={logoAsset.url} alt="GPK" className="w-14 h-14 object-contain" />
           </div>
-          {(periodsQ.data ?? []).length === 0 ? (
-            <p className="text-center py-8 text-gray-400 text-sm">
-              Configure the Periods Master first (Admin → Periods).
+          {(periodsQ.data ?? []).length === 0 && (
+            <p className="mb-3 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2 print:hidden">
+              No bell schedule configured (Admin → Periods). Showing a default 8-period grid so existing entries stay visible.
             </p>
-          ) : (
-            <TimetableGrid
-              periods={periodsQ.data as any}
-              slots={(ttQ.data ?? []) as any}
-              subjects={subjQ.data as any}
-              staff={staffQ.data as any}
-              editable
-              onSaveSlot={(p) => save.mutate(p)}
-              institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
-              classLine={classLabel}
-              classInchargeName={(() => {
-                const s = (staffQ.data ?? []).find((x: any) => x.id === ciId) as any;
-                return s ? (s.name || s.username) : undefined;
-              })()}
-            />
           )}
+          <TimetableGrid
+            periods={(periodsQ.data ?? []) as any}
+            slots={(ttQ.data ?? []) as any}
+            subjects={subjQ.data as any}
+            staff={staffQ.data as any}
+            editable
+            onSaveSlot={(p) => save.mutate(p)}
+            institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
+            classLine={classLabel}
+            classInchargeName={(() => {
+              const s = (staffQ.data ?? []).find((x: any) => x.id === ciId) as any;
+              return s ? (s.name || s.username) : undefined;
+            })()}
+          />
+
         </div>
 
         <style>{`

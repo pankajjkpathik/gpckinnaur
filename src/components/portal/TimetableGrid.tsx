@@ -90,11 +90,43 @@ export function TimetableGrid({
     return m;
   }, [slots]);
 
+  // Column set for the grid. Always render a complete week: start from the
+  // periods master and add a synthetic column for any period that has saved
+  // entries but is missing from the bell schedule, so nothing stored in the
+  // database is ever hidden. With no bell schedule at all, fall back to 1..8.
+  const cols = useMemo<TTPeriod[]>(() => {
+    const byNo = new Map<number, TTPeriod>();
+    periods.forEach((p) => byNo.set(p.period_no, p));
+    slots.forEach((s) => {
+      if (!byNo.has(s.period_no)) {
+        byNo.set(s.period_no, {
+          id: -s.period_no,
+          period_no: s.period_no,
+          start_time: null,
+          end_time: null,
+          label: null,
+          is_break: false,
+        });
+      }
+    });
+    if (byNo.size === 0) {
+      for (let n = 1; n <= 8; n++) {
+        byNo.set(n, { id: -n, period_no: n, start_time: null, end_time: null, label: null, is_break: false });
+      }
+    }
+    return Array.from(byNo.values()).sort((a, b) => a.period_no - b.period_no);
+  }, [periods, slots]);
+
+  // Periods flagged as breaks that nonetheless carry saved entries must show
+  // those entries rather than a BREAK band.
+  const busyPeriodNos = useMemo(() => new Set(slots.map((s) => s.period_no)), [slots]);
+
   const staffById = useMemo(() => {
     const m = new Map<number, TTStaff>();
     (staff ?? []).forEach((s) => m.set(s.id, s));
     return m;
   }, [staff]);
+
 
   const [editing, setEditing] = useState<{ day: number; period: TTPeriod; slot?: TTSlot; group: string } | null>(null);
 
@@ -164,9 +196,9 @@ export function TimetableGrid({
           <thead>
             <tr>
               <th className="border bg-gray-50 px-3 py-2 text-gray-600 font-semibold text-left min-w-[64px]">Day</th>
-              {periods.map((p) => (
+              {cols.map((p) => (
                 <th key={p.id} className="border bg-gray-50 px-2 py-2 text-center font-semibold text-gray-600 min-w-[92px]">
-                  {p.is_break ? "" : <div>{p.period_no}</div>}
+                  {p.is_break && !busyPeriodNos.has(p.period_no) ? "" : <div>{p.period_no}</div>}
                   <div className="text-[10px] font-normal text-gray-400">{p.start_time}{p.end_time ? ` - ${p.end_time}` : ""}</div>
                 </th>
               ))}
@@ -178,9 +210,11 @@ export function TimetableGrid({
               return (
                 <tr key={d.v}>
                   <td className="border bg-gray-50 px-3 py-3 font-medium text-gray-700">{d.label}</td>
-                  {periods.map((p) => {
+                  {cols.map((p) => {
                     if (skip > 0) { skip--; return null; }
-                    if (p.is_break) {
+                    // A break period still shows its entries when classes were
+                    // scheduled in it; otherwise it renders as a break band.
+                    if (p.is_break && !busyPeriodNos.has(p.period_no)) {
                       return (
                         <td key={p.id} className="border bg-gray-100 text-center align-middle">
                           <span className="text-[9px] font-bold text-gray-500 tracking-wider" style={{ writingMode: "vertical-rl" }}>
@@ -199,12 +233,13 @@ export function TimetableGrid({
                     let colSpan = 1;
                     if (span > 1) {
                       let taken = 0;
-                      const startIdx = periods.findIndex((x) => x.id === p.id);
-                      for (let i = startIdx + 1; i < periods.length && taken < span - 1; i++) {
-                        if (!periods[i].is_break) { colSpan++; taken++; }
+                      const startIdx = cols.findIndex((x) => x.id === p.id);
+                      for (let i = startIdx + 1; i < cols.length && taken < span - 1; i++) {
+                        if (!cols[i].is_break) { colSpan++; taken++; }
                       }
                       skip = colSpan - 1;
                     }
+
                     if (slotsHere.length === 0) {
                       const first = slotsHere[0];
                       return (
