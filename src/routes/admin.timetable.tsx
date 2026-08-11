@@ -207,16 +207,28 @@ function TimetablePage() {
 
           <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>
         )}
+        {del.error && (
+          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{del.error.message}</p>
+        )}
         {ttQ.error && (
           <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">
             Could not load timetable entries: {ttQ.error.message}
           </p>
+        )}
+        {(save.isPending || del.isPending || ttQ.isFetching) && (
+          <p className="text-xs text-gray-600 bg-gray-50 border rounded p-2">Refreshing timetable…</p>
         )}
         {save.isSuccess && !save.isPending && (
           <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
             Timetable entry saved and refreshed.
           </p>
         )}
+        {del.isSuccess && !del.isPending && (
+          <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
+            Timetable entry deleted and refreshed.
+          </p>
+        )}
+
 
         <div className="bg-white border rounded-lg p-4 tt-print-area">
           {/* Print-only header with institute logos */}
