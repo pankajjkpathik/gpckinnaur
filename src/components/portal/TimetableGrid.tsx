@@ -405,18 +405,19 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave, onDelete }: 
                   
                   if (confirm(`ARE YOU SURE?\n\nThis will permanently delete the timetable entry for:\n- ${subj}\n- ${day}\n- Period ${period}\n\nThis action will be recorded in the audit log.`)) {
                     try {
-                      const { deleteTimetableSlot } = await import("@/lib/academic.functions");
-                      await deleteTimetableSlot({
-                        data: {
-                          id: editing.slot!.id!,
-                          branch: editing.slot!.branch || "",
-                        },
-                      });
-                      window.location.reload();
+                      const payload = { id: editing.slot!.id!, branch: editing.slot!.branch || "" };
+                      if (onDelete) {
+                        await onDelete(payload);
+                      } else {
+                        const { deleteTimetableSlot } = await import("@/lib/academic.functions");
+                        await deleteTimetableSlot({ data: payload });
+                        window.location.reload();
+                      }
                     } catch (e: any) {
                       alert(e.message);
                     }
                   }
+
                 }}
                 className="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 rounded border border-rose-200 hover:bg-rose-50"
               >
