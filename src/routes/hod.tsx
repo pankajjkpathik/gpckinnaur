@@ -862,7 +862,6 @@ function FacultyAllotmentView({
                     form.guest_faculty.trim().toLowerCase()
                   : a.staff_id === form.staff_id
                 : false,
-    </div>
             );
             if (dupe) {
               const msg = "This faculty is already allotted to that subject";
