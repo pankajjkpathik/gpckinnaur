@@ -128,7 +128,7 @@ export function PortalShell({
           </div>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 w-full [&_.container]:max-w-[1400px]">{children}</main>
     </div>
   );
 }
