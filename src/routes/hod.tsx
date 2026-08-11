@@ -368,7 +368,8 @@ function HodSidebar({
           </div>
         </div>
       )}
-    </div>
+    </>
+
   );
 }
 
