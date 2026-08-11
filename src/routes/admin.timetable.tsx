@@ -80,7 +80,10 @@ function TimetablePage() {
       }
       return upsertTimetableSlot({ data: { branch, semester: sem, academic_year: year, ...d } });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["timetable"] }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["timetable", branch, sem, year] });
+      await qc.refetchQueries({ queryKey: ["timetable", branch, sem, year] });
+    },
   });
 
   const pub = useMutation({
@@ -192,6 +195,16 @@ function TimetablePage() {
         {save.error && (
 
           <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>
+        )}
+        {ttQ.error && (
+          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">
+            Could not load timetable entries: {ttQ.error.message}
+          </p>
+        )}
+        {save.isSuccess && !save.isPending && (
+          <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
+            Timetable entry saved and refreshed.
+          </p>
         )}
 
         <div className="bg-white border rounded-lg p-4 tt-print-area">
