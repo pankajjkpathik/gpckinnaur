@@ -74,7 +74,7 @@ function ParentDashboard() {
   return (
     <div className="min-h-screen bg-emerald-50/40">
       <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="container mx-auto max-w-[1400px] px-3 sm:px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <img src={logoAsset.url} alt="GPK" className="w-10 h-10 rounded-full bg-white p-0.5 shrink-0" />
             <div className="min-w-0">
