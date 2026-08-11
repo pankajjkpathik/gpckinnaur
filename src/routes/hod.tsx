@@ -454,7 +454,7 @@ function HodPortal() {
   return (
     <div className="min-h-screen bg-[#f7f7fb]">
       <header className="bg-white border-b sticky top-0 z-30">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="container mx-auto max-w-[1400px] px-3 sm:px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setMobileNavOpen((o) => !o)}
@@ -486,7 +486,7 @@ function HodPortal() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6 flex gap-6">
+      <div className="container mx-auto max-w-[1400px] px-3 sm:px-4 py-4 sm:py-6 flex gap-4 sm:gap-6">
         <HodSidebar
           active={view}
           onNav={navTo}

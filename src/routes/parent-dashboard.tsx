@@ -74,7 +74,7 @@ function ParentDashboard() {
   return (
     <div className="min-h-screen bg-emerald-50/40">
       <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="container mx-auto max-w-[1400px] px-3 sm:px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <img src={logoAsset.url} alt="GPK" className="w-10 h-10 rounded-full bg-white p-0.5 shrink-0" />
             <div className="min-w-0">
@@ -104,7 +104,7 @@ function ParentDashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto max-w-[1400px] px-3 sm:px-4 py-4 sm:py-6">
         <div className="mb-5">
           <HeroBanner
             name={st.name || "Guardian"}
@@ -120,7 +120,7 @@ function ParentDashboard() {
         </div>
 
 
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-3 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 mb-5">
           {tabs.map((t) => (
             <button
               key={t.key}
