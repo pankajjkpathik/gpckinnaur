@@ -60,7 +60,7 @@ function initialsFromStaff(s?: TTStaff | null) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function TimetableGrid({
-  periods, slots, subjects, staff, editable = false, onSaveSlot,
+  periods, slots, subjects, staff, editable = false, onSaveSlot, onDeleteSlot,
   institutionLine, classLine, classInchargeName,
 }: {
   periods: TTPeriod[];
@@ -74,10 +74,12 @@ export function TimetableGrid({
     group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
     combined: boolean;
   }) => void;
+  onDeleteSlot?: (payload: { id: number; branch: string }) => void | Promise<void>;
   institutionLine?: string;
   classLine?: string;
   classInchargeName?: string;
 }) {
+
   // group slots by day+period; can hold 1..2 slots (for G1/G2)
   const slotMap = useMemo(() => {
     const m = new Map<string, TTSlot[]>();
