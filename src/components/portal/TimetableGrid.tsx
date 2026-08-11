@@ -346,6 +346,7 @@ export function TimetableGrid({
           subjects={subjects ?? []}
           staff={(staff ?? []).filter((s) => !s.role || ["faculty", "hod"].includes(s.role))}
           onClose={() => setEditing(null)}
+          onDelete={onDeleteSlot ? async (p) => { await onDeleteSlot(p); setEditing(null); } : undefined}
           onSave={(payload) => {
             onSaveSlot?.({ day_of_week: editing.day, period_no: editing.period.period_no, ...payload });
             setEditing(null);
@@ -356,7 +357,7 @@ export function TimetableGrid({
   );
 }
 
-function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
+function EditSlotModal({ editing, subjects, staff, onClose, onSave, onDelete }: {
   editing: { day: number; period: TTPeriod; slot?: TTSlot; group: string };
   subjects: TTSubject[];
   staff: TTStaff[];
@@ -366,6 +367,7 @@ function EditSlotModal({ editing, subjects, staff, onClose, onSave }: {
     group_label: string; span_periods: number; co_staff_ids: number[]; guest_faculty: string | null;
     combined: boolean;
   }) => void;
+  onDelete?: (p: { id: number; branch: string }) => void | Promise<void>;
 }) {
   const initialCombined = editing.slot?.group_label === "CMB";
   const [subjId, setSubjId] = useState<number | "">(editing.slot?.subject_id ?? "");
