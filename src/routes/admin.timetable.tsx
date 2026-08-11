@@ -13,6 +13,8 @@ import {
   listTimetable,
   upsertTimetableSlot,
   publishTimetable,
+  deleteTimetableSlot,
+
 } from "@/lib/academic.functions";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import logoAsset from "@/assets/logo.png.asset.json";
@@ -86,11 +88,20 @@ function TimetablePage() {
     },
   });
 
+  const del = useMutation({
+    mutationFn: (p: { id: number; branch: string }) => deleteTimetableSlot({ data: p }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["timetable", branch, sem, year] });
+      await qc.refetchQueries({ queryKey: ["timetable", branch, sem, year] });
+    },
+  });
+
   const pub = useMutation({
     mutationFn: (p: boolean) =>
       publishTimetable({ data: { branch, semester: sem, academic_year: year, published: p } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["timetable"] }),
   });
+
 
   const isPublished = (ttQ.data ?? []).some((s: any) => s.published);
 
@@ -196,16 +207,28 @@ function TimetablePage() {
 
           <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{save.error.message}</p>
         )}
+        {del.error && (
+          <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">{del.error.message}</p>
+        )}
         {ttQ.error && (
           <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">
             Could not load timetable entries: {ttQ.error.message}
           </p>
+        )}
+        {(save.isPending || del.isPending || ttQ.isFetching) && (
+          <p className="text-xs text-gray-600 bg-gray-50 border rounded p-2">Refreshing timetable…</p>
         )}
         {save.isSuccess && !save.isPending && (
           <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
             Timetable entry saved and refreshed.
           </p>
         )}
+        {del.isSuccess && !del.isPending && (
+          <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
+            Timetable entry deleted and refreshed.
+          </p>
+        )}
+
 
         <div className="bg-white border rounded-lg p-4 tt-print-area">
           {/* Print-only header with institute logos */}
@@ -230,6 +253,8 @@ function TimetablePage() {
             staff={staffQ.data as any}
             editable
             onSaveSlot={(p) => save.mutate(p)}
+            onDeleteSlot={(p) => del.mutateAsync(p).then(() => undefined)}
+
             institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
             classLine={classLabel}
             classInchargeName={(() => {
