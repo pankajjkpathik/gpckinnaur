@@ -253,6 +253,8 @@ function TimetablePage() {
             staff={staffQ.data as any}
             editable
             onSaveSlot={(p) => save.mutate(p)}
+            onDeleteSlot={(p) => del.mutateAsync(p).then(() => undefined)}
+
             institutionLine="Govt. Polytechnic Kinnaur, Camp at GP Rohru Distt. Shimla (H.P.)"
             classLine={classLabel}
             classInchargeName={(() => {
