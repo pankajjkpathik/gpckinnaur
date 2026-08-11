@@ -143,7 +143,7 @@ function AdminHub() {
 
   return (
     <PortalShell title="Admin Console" subtitle="System Configuration" me={me as any} accent="rose">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto max-w-[1400px] px-3 sm:px-4 py-4 sm:py-6">
         {view === "home" && <HomeView me={me as any} onNav={setView} />}
         {view === "classes" && <ClassesView onBack={() => setView("home")} />}
         {view === "faculty" && <FacultyView onBack={() => setView("home")} />}
