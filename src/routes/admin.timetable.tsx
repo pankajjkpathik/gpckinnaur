@@ -13,6 +13,8 @@ import {
   listTimetable,
   upsertTimetableSlot,
   publishTimetable,
+  deleteTimetableSlot,
+
 } from "@/lib/academic.functions";
 import { TimetableGrid } from "@/components/portal/TimetableGrid";
 import logoAsset from "@/assets/logo.png.asset.json";
