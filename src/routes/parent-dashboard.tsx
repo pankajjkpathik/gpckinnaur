@@ -104,7 +104,7 @@ function ParentDashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto max-w-[1400px] px-3 sm:px-4 py-4 sm:py-6">
         <div className="mb-5">
           <HeroBanner
             name={st.name || "Guardian"}
