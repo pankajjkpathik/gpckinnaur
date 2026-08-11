@@ -196,9 +196,9 @@ export function TimetableGrid({
           <thead>
             <tr>
               <th className="border bg-gray-50 px-3 py-2 text-gray-600 font-semibold text-left min-w-[64px]">Day</th>
-              {periods.map((p) => (
+              {cols.map((p) => (
                 <th key={p.id} className="border bg-gray-50 px-2 py-2 text-center font-semibold text-gray-600 min-w-[92px]">
-                  {p.is_break ? "" : <div>{p.period_no}</div>}
+                  {p.is_break && !busyPeriodNos.has(p.period_no) ? "" : <div>{p.period_no}</div>}
                   <div className="text-[10px] font-normal text-gray-400">{p.start_time}{p.end_time ? ` - ${p.end_time}` : ""}</div>
                 </th>
               ))}
@@ -210,9 +210,11 @@ export function TimetableGrid({
               return (
                 <tr key={d.v}>
                   <td className="border bg-gray-50 px-3 py-3 font-medium text-gray-700">{d.label}</td>
-                  {periods.map((p) => {
+                  {cols.map((p) => {
                     if (skip > 0) { skip--; return null; }
-                    if (p.is_break) {
+                    // A break period still shows its entries when classes were
+                    // scheduled in it; otherwise it renders as a break band.
+                    if (p.is_break && !busyPeriodNos.has(p.period_no)) {
                       return (
                         <td key={p.id} className="border bg-gray-100 text-center align-middle">
                           <span className="text-[9px] font-bold text-gray-500 tracking-wider" style={{ writingMode: "vertical-rl" }}>
@@ -231,12 +233,13 @@ export function TimetableGrid({
                     let colSpan = 1;
                     if (span > 1) {
                       let taken = 0;
-                      const startIdx = periods.findIndex((x) => x.id === p.id);
-                      for (let i = startIdx + 1; i < periods.length && taken < span - 1; i++) {
-                        if (!periods[i].is_break) { colSpan++; taken++; }
+                      const startIdx = cols.findIndex((x) => x.id === p.id);
+                      for (let i = startIdx + 1; i < cols.length && taken < span - 1; i++) {
+                        if (!cols[i].is_break) { colSpan++; taken++; }
                       }
                       skip = colSpan - 1;
                     }
+
                     if (slotsHere.length === 0) {
                       const first = slotsHere[0];
                       return (
