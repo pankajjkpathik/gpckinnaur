@@ -31,14 +31,29 @@ async function assertSubjectAccess(
     throw new Error("Forbidden: subject scope not resolvable.");
   }
 
+  const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+  const staffName = staff?.name ?? "";
+  const firstName = staffName.split(" ")[0] || "";
+
   let q = supabaseAdmin
     .from("faculty_assignments")
     .select("id")
-    .eq("staff_id", me.id)
     .eq("subject_id", args.subject_id)
     .eq("branch", branch)
     .eq("semester", semester)
     .limit(1);
+
+  if (staffName) {
+    // Robust name matching: full name OR first name match in guest_faculty field
+    let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+    if (firstName.length > 2) {
+      orFilter += `,guest_faculty.ilike.%${firstName}%`;
+    }
+    q = q.or(orFilter);
+  } else {
+    q = q.eq("staff_id", me.id);
+  }
+
   if (args.academic_year) q = q.eq("academic_year", args.academic_year);
   const { data } = await q;
   if (!data || data.length === 0) {
@@ -83,6 +98,7 @@ export const facultyDashboard = createServerFn({ method: "GET" })
     // We try the provided year first. We also check for guest_faculty entries matching the user's name.
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
+    const firstName = staffName.split(" ")[0] || "";
     
     let q = supabaseAdmin
       .from("faculty_assignments")
@@ -91,7 +107,11 @@ export const facultyDashboard = createServerFn({ method: "GET" })
       
     if (staffName) {
       // Use case-insensitive name match to bridge guest entries to staff accounts.
-      q = q.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+      let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+      if (firstName.length > 2) {
+        orFilter += `,guest_faculty.ilike.%${firstName}%`;
+      }
+      q = q.or(orFilter);
     } else {
       q = q.eq("staff_id", me.id);
     }
@@ -171,6 +191,7 @@ export const getAttendance = createServerFn({ method: "GET" })
     // Use the broader access check that includes name-matching for guest entries
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
+    const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
       .from("faculty_assignments")
@@ -182,7 +203,11 @@ export const getAttendance = createServerFn({ method: "GET" })
       .limit(1);
 
     if (staffName) {
-      accessQ = accessQ.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+      let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+      if (firstName.length > 2) {
+        orFilter += `,guest_faculty.ilike.%${firstName}%`;
+      }
+      accessQ = accessQ.or(orFilter);
     } else {
       accessQ = accessQ.eq("staff_id", me.id);
     }
@@ -287,6 +312,7 @@ export const getMarks = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
+    const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
       .from("faculty_assignments")
@@ -298,7 +324,11 @@ export const getMarks = createServerFn({ method: "GET" })
       .limit(1);
 
     if (staffName) {
-      accessQ = accessQ.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+      let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+      if (firstName.length > 2) {
+        orFilter += `,guest_faculty.ilike.%${firstName}%`;
+      }
+      accessQ = accessQ.or(orFilter);
     } else {
       accessQ = accessQ.eq("staff_id", me.id);
     }
@@ -361,6 +391,7 @@ export const saveMarks = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
+    const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
       .from("faculty_assignments")
@@ -370,7 +401,11 @@ export const saveMarks = createServerFn({ method: "POST" })
       .limit(1);
 
     if (staffName) {
-      accessQ = accessQ.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+      let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+      if (firstName.length > 2) {
+        orFilter += `,guest_faculty.ilike.%${firstName}%`;
+      }
+      accessQ = accessQ.or(orFilter);
     } else {
       accessQ = accessQ.eq("staff_id", me.id);
     }
