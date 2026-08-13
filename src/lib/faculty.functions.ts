@@ -80,13 +80,22 @@ export const facultyDashboard = createServerFn({ method: "GET" })
     const dow = today.getDay() === 0 ? 7 : today.getDay(); // 1=Mon..7=Sun
 
     // 1. Get assignments (the direct source of truth for faculty subjects)
-    // We try the provided year first, but fallback to any assignment to ensure visibility
-    // while the session transition is finalized.
-    const { data: assignments } = await supabaseAdmin
+    // We try the provided year first. We also check for guest_faculty entries matching the user's name.
+    const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+    const staffName = staff?.name ?? "";
+    
+    let q = supabaseAdmin
       .from("faculty_assignments")
       .select("id, branch, semester, subject_id, group_label, guest_faculty, subjects(code,name)")
-      .or(`staff_id.eq.${me.id},guest_faculty.ilike.%${me.name}%`)
       .eq("academic_year", data.academic_year);
+      
+    if (staffName) {
+      q = q.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+    } else {
+      q = q.eq("staff_id", me.id);
+    }
+    
+    const { data: assignments } = await q;
 
     // 2. Get today's classes from timetable
     const { data: classes } = await supabaseAdmin
