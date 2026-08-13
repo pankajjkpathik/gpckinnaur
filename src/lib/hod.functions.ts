@@ -27,14 +27,23 @@ export const hodDashboard = createServerFn({ method: "GET" })
 export const hodPendingLessonPlans = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe) }).parse(d))
   .handler(async ({ data }) => {
-    await requireRole(hodRoles);
+    const me = await requireRole(hodRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
+    const { deptToBranch } = await import("./branch");
+    const branch = deptToBranch(me.department);
+
+    let q = supabaseAdmin
       .from("lesson_plans")
       .select("*, subjects(code,name), staff_users(username,department), syllabus_units(unit_no,title)")
       .eq("status", "submitted")
       .eq("academic_year", data.academic_year)
       .order("updated_at");
+
+    if (me.role === "hod" && branch) {
+      q = q.eq("branch", branch);
+    }
+
+    const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     return rows ?? [];
   });
@@ -43,15 +52,24 @@ export const hodPendingLessonPlans = createServerFn({ method: "GET" })
 export const hodPendingMarks = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ academic_year: z.string().regex(yearRe) }).parse(d))
   .handler(async ({ data }) => {
-    await requireRole(hodRoles);
+    const me = await requireRole(hodRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { deptToBranch } = await import("./branch");
+    const branch = deptToBranch(me.department);
+
     // Group by (subject_id, exam_type, entered_by)
-    const { data: rows, error } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("marks")
-      .select("subject_id, exam_type, entered_by, academic_year, subjects(code,name,branch,semester), staff_users:entered_by(username)")
+      .select("subject_id, exam_type, entered_by, academic_year, group_label, subjects!inner(code,name,branch,semester), staff_users:entered_by(username)")
       .eq("submitted_to_hod", true)
       .eq("approved_by_hod", false)
       .eq("academic_year", data.academic_year);
+
+    if (me.role === "hod" && branch) {
+      q = q.eq("subjects.branch", branch);
+    }
+
+    const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     const groups = new Map<string, any>();
     (rows ?? []).forEach((r: any) => {
@@ -244,18 +262,27 @@ export const hodMarksGroups = createServerFn({ method: "GET" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(hodRoles);
+    const me = await requireRole(hodRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { deptToBranch } = await import("./branch");
+    const branch = deptToBranch(me.department);
+
     let q = supabaseAdmin
       .from("marks")
       .select(
-        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, reviewed_at, updated_at, group_label, subjects(code,name,branch,semester), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
+        "subject_id, exam_type, entered_by, academic_year, approved_by_hod, submitted_to_hod, returned_remarks, reviewed_at, updated_at, group_label, subjects!inner(code,name,branch,semester), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
       )
       .eq("academic_year", data.academic_year);
+
     if (data.status === "approved") q = q.eq("approved_by_hod", true);
     else if (data.status === "pending") q = q.eq("submitted_to_hod", true).eq("approved_by_hod", false);
     else if (data.status === "returned")
       q = q.eq("submitted_to_hod", false).not("returned_remarks", "is", null);
+
+    if (me.role === "hod" && branch) {
+      q = q.eq("subjects.branch", branch);
+    }
+
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     const groups = new Map<string, any>();
@@ -280,18 +307,27 @@ export const hodExportApprovedMarks = createServerFn({ method: "GET" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(hodRoles);
+    const me = await requireRole(hodRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { deptToBranch } = await import("./branch");
+    const myBranch = deptToBranch(me.department);
+
     let q = supabaseAdmin
       .from("marks")
       .select(
         "id, subject_id, exam_type, obtained, max_marks, remarks, reviewed_at, submitted_to_hod, approved_by_hod, returned_remarks, group_label, subjects!inner(code,name,branch,semester), students(enrollment_no,name), staff_users:entered_by(username,name), reviewer:reviewed_by(username,name)",
       )
       .eq("academic_year", data.academic_year);
+
     if (data.status === "approved") q = q.eq("approved_by_hod", true);
     else if (data.status === "pending") q = q.eq("submitted_to_hod", true).eq("approved_by_hod", false);
     else if (data.status === "returned") q = q.eq("submitted_to_hod", false).not("returned_remarks", "is", null);
     if (data.exam_type) q = q.eq("exam_type", data.exam_type);
+
+    if (me.role === "hod" && myBranch) {
+      q = q.eq("subjects.branch", myBranch);
+    }
+
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     let list = rows ?? [];

@@ -436,7 +436,7 @@ export const upsertAssignment = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    await requireRole(adminRoles);
+    const me = await requireRole(adminRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { saveAssignmentRow } = await import("./assignment-save.server");
     await saveAssignmentRow(supabaseAdmin, data);
@@ -1046,7 +1046,7 @@ const assignRowSchema = z.object({
 });
 
 export const bulkImportAssignments = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(2000) }).parse(d))
+  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(500) }).parse(d))
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -1111,7 +1111,7 @@ const ttRowSchema = z.object({
 const DAY_MAP: Record<string, number> = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
 export const bulkImportTimetable = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(5000) }).parse(d))
+  .inputValidator((d) => z.object({ rows: z.array(z.record(z.string(), z.any())).min(1).max(1000) }).parse(d))
   .handler(async ({ data }) => {
     await requireRole(adminRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

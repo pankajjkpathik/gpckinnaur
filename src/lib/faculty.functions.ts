@@ -156,7 +156,8 @@ export const facultyDashboard = createServerFn({ method: "GET" })
 export const classRoster = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ branch: z.string(), semester: z.number().int() }).parse(d))
   .handler(async ({ data }) => {
-    await requireRole(facultyRoles);
+    const me = await requireRole(facultyRoles);
+    await assertClassAccess(me, { branch: data.branch, semester: data.semester });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("students")
@@ -1002,11 +1003,12 @@ export const monthlyAttendanceRegister = createServerFn({ method: "GET" })
       semester: z.number().int(),
       year: z.number().int(),
       month: z.number().int().min(1).max(12),
+      academic_year: z.string().regex(yearRe).optional(),
     }).parse(d),
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
-    await assertClassAccess(me, { branch: data.branch, semester: data.semester });
+    await assertClassAccess(me, { branch: data.branch, semester: data.semester, academic_year: data.academic_year });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const students = await loadRoster(data.branch, data.semester);
     const { data: subs } = await supabaseAdmin

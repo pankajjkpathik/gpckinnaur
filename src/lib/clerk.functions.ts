@@ -101,21 +101,27 @@ export const clerkBulkImportStudents = createServerFn({ method: "POST" })
     const hash = await bcrypt.hash(data.defaultPassword, 12);
     const inserted: string[] = [];
     const failed: { enrollment_no: string; reason: string }[] = [];
-    for (const r of data.rows) {
-      const { error } = await supabaseAdmin.from("students").insert({
-        enrollment_no: r.enrollment_no.toUpperCase(),
-        name: r.name,
-        father_name: r.father_name || null,
-        branch: r.branch,
-        semester: r.semester,
-        batch_year: r.batch_year,
-        email: r.email || null,
-        phone: r.phone || null,
-        password_hash: hash,
-        is_active: true,
-      });
-      if (error) failed.push({ enrollment_no: r.enrollment_no, reason: error.message });
-      else inserted.push(r.enrollment_no);
+    
+    // Process in batches of 50 to prevent timeout/exhaustion
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < data.rows.length; i += BATCH_SIZE) {
+      const batch = data.rows.slice(i, i + BATCH_SIZE);
+      for (const r of batch) {
+        const { error } = await supabaseAdmin.from("students").insert({
+          enrollment_no: r.enrollment_no.toUpperCase(),
+          name: r.name,
+          father_name: r.father_name || null,
+          branch: r.branch,
+          semester: r.semester,
+          batch_year: r.batch_year,
+          email: r.email || null,
+          phone: r.phone || null,
+          password_hash: hash,
+          is_active: true,
+        });
+        if (error) failed.push({ enrollment_no: r.enrollment_no, reason: error.message });
+        else inserted.push(r.enrollment_no);
+      }
     }
     return { inserted: inserted.length, failed };
   });
