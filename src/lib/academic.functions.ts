@@ -1088,7 +1088,7 @@ export const bulkImportAssignments = createServerFn({ method: "POST" })
     let inserted = 0;
     if (payload.length) {
       const { error, count } = await supabaseAdmin.from("faculty_assignments").upsert(payload, {
-        onConflict: "staff_id,subject_id,branch,semester,academic_year", count: "exact",
+        onConflict: "staff_id,subject_id,branch,semester,academic_year,group_label", count: "exact",
       });
       if (error) throw new Error(error.message);
       inserted = count ?? payload.length;
@@ -1167,7 +1167,7 @@ export const bulkImportTimetable = createServerFn({ method: "POST" })
     let inserted = 0;
     if (payload.length) {
       const { error, count } = await supabaseAdmin.from("timetable").upsert(payload, {
-        onConflict: "branch,semester,day_of_week,period_no,academic_year", count: "exact",
+        onConflict: "branch,semester,day_of_week,period_no,academic_year,group_label", count: "exact",
       });
       if (error) throw new Error(error.message);
       inserted = count ?? payload.length;
