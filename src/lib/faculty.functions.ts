@@ -32,7 +32,7 @@ async function assertSubjectAccess(
   }
 
   const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
-  const staffName = staff?.name ?? "";
+  const staffName = (staff?.name ?? "").trim();
   const firstName = staffName.split(" ")[0] || "";
 
   let q = supabaseAdmin
@@ -44,8 +44,11 @@ async function assertSubjectAccess(
     .limit(1);
 
   if (staffName) {
-    // Robust name matching: full name OR first name match in guest_faculty field
+    // Robust name matching: staff_id match OR full name OR first name match in guest_faculty field.
+    // We use ilike to catch minor variations and trailing spaces.
     let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+    // If the name has common variations (like "Chatanta" vs "Chantanta"), 
+    // we bridge by the unique part of the name if possible, or just the first name.
     if (firstName.length > 2) {
       orFilter += `,guest_faculty.ilike.%${firstName}%`;
     }
@@ -70,13 +73,28 @@ async function assertClassAccess(
   const held = [me.role, ...(me.extraRoles ?? [])];
   if (held.some((r) => ["super_admin", "principal", "hod"].includes(r as string))) return;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+  const staffName = (staff?.name ?? "").trim();
+  const firstName = staffName.split(" ")[0] || "";
+
   let q = supabaseAdmin
     .from("faculty_assignments")
     .select("id")
-    .eq("staff_id", me.id)
     .eq("branch", args.branch)
     .eq("semester", args.semester)
     .limit(1);
+
+  if (staffName) {
+    let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+    if (firstName.length > 2) {
+      orFilter += `,guest_faculty.ilike.%${firstName}%`;
+    }
+    q = q.or(orFilter);
+  } else {
+    q = q.eq("staff_id", me.id);
+  }
+
   if (args.academic_year) q = q.eq("academic_year", args.academic_year);
   const { data } = await q;
   if (!data || data.length === 0) {
@@ -97,7 +115,7 @@ export const facultyDashboard = createServerFn({ method: "GET" })
     // 1. Get assignments (the direct source of truth for faculty subjects)
     // We try the provided year first. We also check for guest_faculty entries matching the user's name.
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
-    const staffName = staff?.name ?? "";
+    const staffName = (staff?.name ?? "").trim();
     const firstName = staffName.split(" ")[0] || "";
     
     let q = supabaseAdmin
