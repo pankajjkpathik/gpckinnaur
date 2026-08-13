@@ -131,11 +131,6 @@ const MARKS_ENTRY_TESTS: { key: (typeof EXAM_TYPES)[number]; label: string; defa
 
 const DAY_LABELS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-function defaultAY() {
-  const d = new Date();
-  const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
-  return `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
-}
 
 // QuickCard is imported from the shared portal component.
 
@@ -167,7 +162,8 @@ function FacultyPortal() {
   }, [me, isLoading, nav]);
 
   const [view, setView] = useState<View>("home");
-  const [ay] = useState(defaultAY());
+  const session = useActiveSession();
+  const ay = session.year;
 
   if (isLoading || !me) return <div className="min-h-screen flex items-center justify-center text-sm">Loading…</div>;
 
