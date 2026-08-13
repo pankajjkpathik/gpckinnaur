@@ -199,7 +199,7 @@ function TimetablePage() {
             '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            As you can see, the subjects are allocated but , when I am trying to open Record Attendance, Enter Marks, Semester Marks etc. no subjects are being shown in these portals. Kindly rectify
+                                            still the problem is same, no subjects still not reflected
           </p>
         </div>
 
