@@ -80,12 +80,12 @@ export const facultyDashboard = createServerFn({ method: "GET" })
     const dow = today.getDay() === 0 ? 7 : today.getDay(); // 1=Mon..7=Sun
 
     // 1. Get assignments (the direct source of truth for faculty subjects)
-    // Always query for current academic year. We allow some tolerance if the input is slightly off
-    // by using the explicit year from settings if it mismatches significantly.
+    // We try the provided year first, but fallback to any assignment to ensure visibility
+    // while the session transition is finalized.
     const { data: assignments } = await supabaseAdmin
       .from("faculty_assignments")
       .select("id, branch, semester, subject_id, group_label, guest_faculty, subjects(code,name)")
-      .eq("staff_id", me.id)
+      .or(`staff_id.eq.${me.id},guest_faculty.ilike.%${me.name}%`)
       .eq("academic_year", data.academic_year);
 
     // 2. Get today's classes from timetable

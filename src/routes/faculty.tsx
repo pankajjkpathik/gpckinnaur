@@ -1644,13 +1644,16 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
               className="border rounded w-full px-3 py-2"
             >
               <option value="">Select…</option>
-              {(asg.data ?? []).map((x: any) => (
-                <option key={x.id} value={x.id}>
-                  {x.subjects?.name || x.subjects?.code} ({x.branch?.toUpperCase() || x.branch}-Sem{x.semester}
-                  {x.group_label && x.group_label !== "CMB" ? ` ${x.group_label}` : ""}
-                  {x.guest_faculty ? ` [Guest: ${x.guest_faculty}]` : ""})
-                </option>
-              ))}
+              {(asg.data ?? []).map((x: any) => {
+                const subjName = x.subjects?.name || x.subjects?.code || "Unknown Subject";
+                return (
+                  <option key={x.id} value={x.id}>
+                    {subjName} ({x.branch?.toUpperCase() || x.branch}-Sem{x.semester}
+                    {x.group_label && x.group_label !== "CMB" ? ` ${x.group_label}` : ""}
+                    {x.guest_faculty ? ` [Guest: ${x.guest_faculty}]` : ""})
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div>
