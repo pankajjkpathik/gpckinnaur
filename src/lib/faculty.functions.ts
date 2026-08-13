@@ -31,14 +31,29 @@ async function assertSubjectAccess(
     throw new Error("Forbidden: subject scope not resolvable.");
   }
 
+  const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+  const staffName = staff?.name ?? "";
+  const firstName = staffName.split(" ")[0] || "";
+
   let q = supabaseAdmin
     .from("faculty_assignments")
     .select("id")
-    .eq("staff_id", me.id)
     .eq("subject_id", args.subject_id)
     .eq("branch", branch)
     .eq("semester", semester)
     .limit(1);
+
+  if (staffName) {
+    // Robust name matching: full name OR first name match in guest_faculty field
+    let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+    if (firstName.length > 2) {
+      orFilter += `,guest_faculty.ilike.%${firstName}%`;
+    }
+    q = q.or(orFilter);
+  } else {
+    q = q.eq("staff_id", me.id);
+  }
+
   if (args.academic_year) q = q.eq("academic_year", args.academic_year);
   const { data } = await q;
   if (!data || data.length === 0) {
