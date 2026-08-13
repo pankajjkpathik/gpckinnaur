@@ -391,6 +391,7 @@ export const saveMarks = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
+    const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
       .from("faculty_assignments")
@@ -400,7 +401,11 @@ export const saveMarks = createServerFn({ method: "POST" })
       .limit(1);
 
     if (staffName) {
-      accessQ = accessQ.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+      let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+      if (firstName.length > 2) {
+        orFilter += `,guest_faculty.ilike.%${firstName}%`;
+      }
+      accessQ = accessQ.or(orFilter);
     } else {
       accessQ = accessQ.eq("staff_id", me.id);
     }
