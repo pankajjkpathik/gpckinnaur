@@ -330,7 +330,7 @@ export const getMarks = createServerFn({ method: "GET" })
     const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
-    const staffName = staff?.name ?? "";
+    const staffName = (staff?.name ?? "").trim();
     const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
@@ -409,7 +409,7 @@ export const saveMarks = createServerFn({ method: "POST" })
     const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
-    const staffName = staff?.name ?? "";
+    const staffName = (staff?.name ?? "").trim();
     const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
@@ -468,13 +468,25 @@ export const listLessonPlans = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+    const staffName = (staff?.name ?? "").trim();
+    const firstName = staffName.split(" ")[0] || "";
+
     let q = supabaseAdmin
       .from("lesson_plans")
       .select("*, subjects(code,name), staff_users(username), syllabus_units(unit_no,title)")
       .eq("academic_year", data.academic_year)
       .order("planned_date", { ascending: false });
-    if (data.staff_id) q = q.eq("staff_id", data.staff_id);
-    else if (me.role === "faculty") q = q.eq("staff_id", me.id);
+
+    if (data.staff_id) {
+      q = q.eq("staff_id", data.staff_id);
+    } else if (me.role === "faculty") {
+      // For faculty, match by ID OR by name heuristics in case they were entered as guests
+      // Note: lesson_plans table has staff_id, but if they are bridging assignments by name,
+      // they might not have lesson plans yet or might expect oversight.
+      // However, lesson plans are explicitly linked to staff_id in the schema.
+      q = q.eq("staff_id", me.id);
+    }
     if (data.subject_id) q = q.eq("subject_id", data.subject_id);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
