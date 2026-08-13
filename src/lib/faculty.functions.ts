@@ -191,6 +191,7 @@ export const getAttendance = createServerFn({ method: "GET" })
     // Use the broader access check that includes name-matching for guest entries
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
+    const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
       .from("faculty_assignments")
@@ -202,7 +203,11 @@ export const getAttendance = createServerFn({ method: "GET" })
       .limit(1);
 
     if (staffName) {
-      accessQ = accessQ.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+      let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+      if (firstName.length > 2) {
+        orFilter += `,guest_faculty.ilike.%${firstName}%`;
+      }
+      accessQ = accessQ.or(orFilter);
     } else {
       accessQ = accessQ.eq("staff_id", me.id);
     }
