@@ -90,6 +90,7 @@ export const facultyDashboard = createServerFn({ method: "GET" })
       .eq("academic_year", data.academic_year);
       
     if (staffName) {
+      // Use case-insensitive name match to bridge guest entries to staff accounts.
       q = q.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
     } else {
       q = q.eq("staff_id", me.id);
@@ -165,7 +166,32 @@ export const getAttendance = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
-    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester });
+    // Use the broader access check that includes name-matching for guest entries
+    const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+    const staffName = staff?.name ?? "";
+
+    let accessQ = supabaseAdmin
+      .from("faculty_assignments")
+      .select("id")
+      .eq("subject_id", data.subject_id)
+      .eq("branch", data.branch)
+      .eq("semester", data.semester)
+      .eq("academic_year", data.academic_year ?? "2026-27")
+      .limit(1);
+
+    if (staffName) {
+      accessQ = accessQ.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+    } else {
+      accessQ = accessQ.eq("staff_id", me.id);
+    }
+
+    const { data: access } = await accessQ;
+    const isPrivileged = [me.role, ...(me.extraRoles ?? [])].some((r) => ["super_admin", "principal", "hod"].includes(r as string));
+    
+    if (!isPrivileged && (!access || access.length === 0)) {
+      throw new Error("Forbidden: you are not assigned to teach this class/subject.");
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let q = supabaseAdmin
@@ -258,7 +284,31 @@ export const getMarks = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
-    await assertSubjectAccess(me, { subject_id: data.subject_id, branch: data.branch, semester: data.semester, academic_year: data.academic_year });
+    const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+    const staffName = staff?.name ?? "";
+
+    let accessQ = supabaseAdmin
+      .from("faculty_assignments")
+      .select("id")
+      .eq("subject_id", data.subject_id)
+      .eq("branch", data.branch)
+      .eq("semester", data.semester)
+      .eq("academic_year", data.academic_year)
+      .limit(1);
+
+    if (staffName) {
+      accessQ = accessQ.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+    } else {
+      accessQ = accessQ.eq("staff_id", me.id);
+    }
+
+    const { data: access } = await accessQ;
+    const isPrivileged = [me.role, ...(me.extraRoles ?? [])].some((r) => ["super_admin", "principal", "hod"].includes(r as string));
+    
+    if (!isPrivileged && (!access || access.length === 0)) {
+      throw new Error("Forbidden: you are not assigned to teach this class/subject.");
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: students } = await supabaseAdmin
       .from("students")
@@ -309,7 +359,29 @@ export const saveMarks = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
-    await assertSubjectAccess(me, { subject_id: data.subject_id, academic_year: data.academic_year });
+    const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+    const staffName = staff?.name ?? "";
+
+    let accessQ = supabaseAdmin
+      .from("faculty_assignments")
+      .select("id")
+      .eq("subject_id", data.subject_id)
+      .eq("academic_year", data.academic_year)
+      .limit(1);
+
+    if (staffName) {
+      accessQ = accessQ.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+    } else {
+      accessQ = accessQ.eq("staff_id", me.id);
+    }
+
+    const { data: access } = await accessQ;
+    const isPrivileged = [me.role, ...(me.extraRoles ?? [])].some((r) => ["super_admin", "principal", "hod"].includes(r as string));
+    
+    if (!isPrivileged && (!access || access.length === 0)) {
+      throw new Error("Forbidden: you are not assigned to teach this class/subject.");
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const rows = data.entries.map((e) => ({
       student_id: e.student_id,
