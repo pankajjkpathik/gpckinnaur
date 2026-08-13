@@ -166,6 +166,8 @@ export const getAttendance = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     // Use the broader access check that includes name-matching for guest entries
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
@@ -176,7 +178,7 @@ export const getAttendance = createServerFn({ method: "GET" })
       .eq("subject_id", data.subject_id)
       .eq("branch", data.branch)
       .eq("semester", data.semester)
-      .eq("academic_year", data.academic_year ?? "2026-27")
+      .eq("academic_year", "2026-27") // Attendance is for active session
       .limit(1);
 
     if (staffName) {
@@ -191,8 +193,6 @@ export const getAttendance = createServerFn({ method: "GET" })
     if (!isPrivileged && (!access || access.length === 0)) {
       throw new Error("Forbidden: you are not assigned to teach this class/subject.");
     }
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let q = supabaseAdmin
       .from("students")
@@ -284,6 +284,7 @@ export const getMarks = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
 
@@ -308,8 +309,6 @@ export const getMarks = createServerFn({ method: "GET" })
     if (!isPrivileged && (!access || access.length === 0)) {
       throw new Error("Forbidden: you are not assigned to teach this class/subject.");
     }
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: students } = await supabaseAdmin
       .from("students")
       .select("id, enrollment_no, name")
@@ -359,6 +358,7 @@ export const saveMarks = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
 
@@ -381,8 +381,6 @@ export const saveMarks = createServerFn({ method: "POST" })
     if (!isPrivileged && (!access || access.length === 0)) {
       throw new Error("Forbidden: you are not assigned to teach this class/subject.");
     }
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const rows = data.entries.map((e) => ({
       student_id: e.student_id,
       subject_id: data.subject_id,
