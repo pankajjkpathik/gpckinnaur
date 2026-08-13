@@ -196,7 +196,11 @@ function TimetablePage() {
         <div>
           <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
           <p className="text-xs text-gray-400">
-            View and edit the weekly schedule for any class. Click any slot to edit. Effective from 01-08-2026.
+            '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+                                        
+                                            
+                                            list out all the rules you imlemented while making Time Table Builder
+
           </p>
         </div>
 
