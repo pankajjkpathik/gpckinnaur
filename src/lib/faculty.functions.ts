@@ -98,6 +98,7 @@ export const facultyDashboard = createServerFn({ method: "GET" })
     // We try the provided year first. We also check for guest_faculty entries matching the user's name.
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
     const staffName = staff?.name ?? "";
+    const firstName = staffName.split(" ")[0] || "";
     
     let q = supabaseAdmin
       .from("faculty_assignments")
@@ -106,7 +107,11 @@ export const facultyDashboard = createServerFn({ method: "GET" })
       
     if (staffName) {
       // Use case-insensitive name match to bridge guest entries to staff accounts.
-      q = q.or(`staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`);
+      let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+      if (firstName.length > 2) {
+        orFilter += `,guest_faculty.ilike.%${firstName}%`;
+      }
+      q = q.or(orFilter);
     } else {
       q = q.eq("staff_id", me.id);
     }
