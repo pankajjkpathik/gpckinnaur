@@ -538,6 +538,17 @@ export const upsertTimetableSlot = createServerFn({ method: "POST" })
         if (c.branch === data.branch && c.semester === data.semester && (c.group_label || "") === group_label) return false;
         // A combined slot is taught to multiple classes at once — never a clash.
         if ((c.group_label || "") === "CMB") return false;
+        
+        // ALLOW staff to take multiple classes in the same slot if branches are Civil 3rd and Civil 5th
+        // as requested by the user for "staff engagements" scenarios.
+        const isCivil3rd = data.branch === 'civil' && data.semester === 3;
+        const isCivil5th = data.branch === 'civil' && data.semester === 5;
+        const isClashCivil3rd = c.branch === 'civil' && c.semester === 3;
+        const isClashCivil5th = c.branch === 'civil' && c.semester === 5;
+        
+        const isCivilSharedSlot = (isCivil3rd && isClashCivil5th) || (isCivil5th && isClashCivil3rd);
+        if (isCivilSharedSlot) return false;
+
         const theirs: number[] = [c.staff_id, ...(c.co_staff_ids ?? [])].filter(Boolean);
         return theirs.some((sid) => allStaff.includes(sid));
       });
