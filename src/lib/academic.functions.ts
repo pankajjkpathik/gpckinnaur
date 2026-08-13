@@ -402,7 +402,12 @@ export const listAssignments = createServerFn({ method: "GET" })
       // If we have a name from a staff record, we should also check for guest_faculty matches
       const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", data.staff_id).maybeSingle();
       if (staff?.name) {
-        q = q.or(`staff_id.eq.${data.staff_id},guest_faculty.ilike.%${staff.name}%`);
+        const firstName = staff.name.split(" ")[0] || "";
+        let orFilter = `staff_id.eq.${data.staff_id},guest_faculty.ilike.%${staff.name}%`;
+        if (firstName.length > 2) {
+          orFilter += `,guest_faculty.ilike.%${firstName}%`;
+        }
+        q = q.or(orFilter);
       } else {
         q = q.eq("staff_id", data.staff_id);
       }
