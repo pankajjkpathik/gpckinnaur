@@ -235,7 +235,7 @@ export function TimetableGrid({
                     // Only merge colSpan for a whole-class slot. Grouped (G1/G2) slots
                     // must stay per-period so each group can hold different subjects
                     // in consecutive periods.
-                    const isWhole = (s: TTSlot) => !s.group_label || s.group_label === "CMB";
+                    const isWhole = (s: TTSlot) => !s.group_label || s.group_label === "CMB" || s.group_label === "";
                     const wholeClass = slotsHere.find(isWhole);
                     const span = Math.max(1, wholeClass?.span_periods || 1);
                     let colSpan = 1;
@@ -274,6 +274,8 @@ export function TimetableGrid({
                     }
                     // One or more grouped slots (G1/G2/G3) sharing the same period → stack halves,
                     // with a "+ Gx" affordance for any missing group when editable.
+                    // If a wholeClass (including CMB) exists, it should have been caught above.
+                    // If we reach here and there is a wholeClass, it means something is wrong with the grouping logic.
                     const sorted = [...slotsHere]
                       .filter((s) => s.group_label && s.group_label !== "CMB")
                       .sort((a, b) => (a.group_label || "").localeCompare(b.group_label || ""));
