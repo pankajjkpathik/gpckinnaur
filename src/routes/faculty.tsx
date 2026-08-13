@@ -1650,8 +1650,9 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
               <option value="">Select…</option>
               {(asg.data ?? []).map((x: any) => (
                 <option key={x.id} value={x.id}>
-                  {x.subjects?.name || x.subjects?.code} ({x.branch}-Sem{x.semester}
-                  {x.group_label ? ` ${x.group_label}` : ""})
+                  {x.subjects?.name || x.subjects?.code} ({x.branch?.toUpperCase() || x.branch}-Sem{x.semester}
+                  {x.group_label && x.group_label !== "CMB" ? ` ${x.group_label}` : ""}
+                  {x.guest_faculty ? ` [Guest: ${x.guest_faculty}]` : ""})
                 </option>
               ))}
             </select>
@@ -1730,7 +1731,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                     name: s.name,
                     status: (marks[s.id] ?? "present").toUpperCase(),
                   }));
-                  const groupText = a.group_label ? ` Group ${a.group_label}` : "";
+                  const groupText = a.group_label && a.group_label !== "CMB" ? ` Group ${a.group_label}` : "";
                   exportRows({
                     filename: `Attendance_${a.branch}_Sem${a.semester}${groupText}_${date}_P${pno}`,
                     title: `Attendance Report: ${selectedSubject}`,
@@ -1756,7 +1757,7 @@ function AttendanceView({ ay, me, onBack }: { ay: string; me: any; onBack: () =>
                     name: s.name,
                     status: (marks[s.id] ?? "present").toUpperCase(),
                   }));
-                  const groupText = a.group_label ? ` Group ${a.group_label}` : "";
+                  const groupText = a.group_label && a.group_label !== "CMB" ? ` Group ${a.group_label}` : "";
                   exportRows({
                     filename: `Attendance_${a.branch}_Sem${a.semester}${groupText}_${date}_P${pno}`,
                     title: `Attendance Report: ${selectedSubject}`,

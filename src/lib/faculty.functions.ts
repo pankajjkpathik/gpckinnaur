@@ -87,7 +87,7 @@ export const facultyDashboard = createServerFn({ method: "GET" })
       .order("period_no");
     const { data: assignments } = await supabaseAdmin
       .from("faculty_assignments")
-      .select("id, branch, semester, subject_id, subjects(code,name)")
+      .select("id, branch, semester, subject_id, group_label, guest_faculty, subjects(code,name)")
       .eq("staff_id", me.id)
       .eq("academic_year", data.academic_year);
     const { data: leaveBalance } = await supabaseAdmin
