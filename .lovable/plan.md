@@ -1,55 +1,25 @@
-## Student Portal Rework
+# Plan: Fix Faculty Subject Visibility in Portal
 
-Four changes to `src/routes/student-dashboard.tsx` (+ one small server-function addition).
+The faculty portal is failing to show assigned subjects in Record Attendance and Marks entry sections despite assignments being made. This is likely due to the application of a session filter (2026-27) that might not match the actual data in the `faculty_assignments` table, or a cache issue with the `listAssignments` function.
 
-### 1. Two-panel layout (LHS options / RHS output)
+## Proposed Changes
 
-Replace the current "cards grid → back button" flow with a persistent sidebar.
+### 1. Hardening Server Functions
+- **File**: `src/lib/faculty.functions.ts`
+- **Action**: Update `facultyDashboard` to return all assignments if the specific year query fails, and ensure `getAttendance`/`getMarks` are more resilient to year mismatches.
+- **Action**: Ensure `assertSubjectAccess` properly handles guest faculty and year-agnostic checks where appropriate.
 
-```text
-┌─ Header (logo · profile · logout) ────────────────────────────┐
-├──────────────┬────────────────────────────────────────────────┤
-│ Sidebar      │ Active view                                    │
-│ (sticky)     │                                                │
-│ • Home       │   My Attendance  /  My Marks  /  Timetable…   │
-│ • Attendance │                                                │
-│ • Marks      │   (content changes when a sidebar item is      │
-│ • Results    │    clicked, URL unchanged)                     │
-│ • Lesson     │                                                │
-│   Plans      │                                                │
-│ • Syllabus…  │                                                │
-└──────────────┴────────────────────────────────────────────────┘
-```
+### 2. UI Robustness in Faculty Portal
+- **File**: `src/routes/faculty.tsx`
+- **Action**: Update `AttendanceView` and `MarksView` to fallback to the `assignments` list provided by the `facultyDashboard` query if `listAssignments` returns empty.
+- **Action**: Explicitly pass the active session year to all academic queries to ensure synchronization.
+- **Action**: Add a "Refresh Data" button or mechanism to force refetching of assignments.
 
-- Sidebar shows every card that used to live on the "home" grid, in the same order, with the same icon + color accent.
-- Active item highlighted; collapse toggle for narrow screens (hamburger on mobile).
-- Remove the `BackBtn` from each view — sidebar is always visible.
-- Home view becomes a summary dashboard (welcome + today's periods + attendance stat) rather than a card grid.
+### 3. Debugging and Verification
+- **Action**: Use `supabase--read_query` to verify the content of `faculty_assignments` for the current user and session.
+- **Action**: Verify that the `academic_year` string format in the database ("2026-27") exactly matches what is being sent by the UI.
 
-### 2. Lesson Plans not showing
-
-
-`LessonPlanLibrary` reads `pdf_documents` where `doc_type = 'lesson_plan'` via `pdfDocListShared`. Fix by:
-- Passing `defaultBranch={me.branch}` and `defaultSemester={me.semester}` so the list is pre-scoped to the student's class instead of the "All branches / All semesters" default (which sometimes returns 0 rows if uploads exist but the shared endpoint hits an OR-filter edge case).
-- Hiding the branch/semester filter dropdowns for students (they only need their own class).
-- If nothing exists for the student's class, still show the empty-state row (unchanged).
-
-### 3. Syllabus Coverage — only student's own subjects
-
-`coverageSummary` already forces student scope server-side, but the UI still shows the `filters` selectors (empty). Fix:
-- Pass explicit `scope={{ branch: me.branch, semester: me.semester }}` and no `filters` prop so the UI table hides the filter row entirely.
-- Below the coverage table, keep the "Syllabus units" list from `studentSyllabus` (already class-scoped).
-
-### 4. Timetable → same visual as HOD/Principal
-
-Replace the ad-hoc table in `TimetableView` with the shared `<TimetableGrid>` component (read-only):
-- Fetch periods via `listPeriods()` (already exposed).
-- Feed the existing `studentTimetable` output as `slots` — the shape (`day_of_week, period_no, subject_id, staff_id, subjects{code,name}, staff_users{username}`) already matches `TTSlot`; add missing optional fields with a small mapper.
-- Pass `institutionLine="Govt. Polytechnic Kinnaur…"` and `classLine="${branchLabel} — ${ord(sem)} Semester"` for parity with HOD.
-- `editable={false}`; no `onSaveSlot`.
-
-### Files touched
-
-- `src/routes/student-dashboard.tsx` — sidebar shell, 4 view rewrites.
-- No schema changes, no other routes touched.
-
+## Technical Details
+- The portal currently uses `useActiveSession()` which returns `2026-27`. I will verify if the database has records with this exact string.
+- I will ensure `listAssignments` (from `academic.functions.ts`) isn't being shadowed or misconfigured in the Faculty views.
+- I will update the command text in `admin.timetable.tsx` to reflect the progress.
