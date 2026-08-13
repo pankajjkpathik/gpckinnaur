@@ -455,7 +455,6 @@ export const listTimetable = createServerFn({ method: "POST" })
       .from("timetable")
       .select("*, subjects(code,name,branch,semester), staff_users(username,name)")
       .eq("academic_year", data.academic_year)
-      .eq("day_of_week", 1) // Dummy to initialize, we'll filter manually or use or()
       .or(`and(branch.eq.${data.branch},semester.eq.${data.semester}),group_label.eq.CMB`)
       .order("day_of_week")
       .order("period_no");
