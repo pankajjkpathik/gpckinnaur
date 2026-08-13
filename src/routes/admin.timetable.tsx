@@ -199,7 +199,31 @@ function TimetablePage() {
             '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            list out all the rules you imlemented while making Time Table Builder
+                                            regenerate the entire loic of time table and delete all the entries till now.. The rules to follow are:
+Summary of implemented rules for the Timetable Builder:
+
+1.  Branch-Specific Timetables: Even for common first-year subjects, Civil and Mechanical maintain separate schedules to avoid cross-departmental coordination overhead.
+
+2.  Combined Classes (CMB): Support for merging Civil and Mechanical slots (e.g., for EWP, EG, Maths). Saving in one branch mirrors the entry to the other, sharing faculty but allowing branch-specific subject IDs.
+
+3.  Conflict Validation: 
+
+    *   Prevents faculty from being scheduled in two different places simultaneously.
+
+    *   Staff Engagement Exception: Specifically allows the same faculty member to be scheduled for Civil 3rd and Civil 5th semesters at the same time to accommodate staff shortages.
+
+    *   Conflict checks are bypassed for Combined (CMB) labels as they intentionally share a teacher.
+
+4.  Academic Session Integrity: Entries are tied to the active academic year (e.g., 2026-27). Saving is restricted to the active session to prevent historical data corruption.
+
+5.  Bell Schedule Flexibility: The grid dynamically generates based on configured "Periods" but will synthesize a default 8-period grid or show stray database entries if the schedule is missing, ensuring no data is ever hidden.
+
+6.  Un-combining Logic: When a combined slot is changed back to a standard slot, the system re-validates faculty availability independently for both branches before allowing the split.
+
+7.  Auto-Sync: Timetable saves automatically update the "Faculty Subject Allotments" table, ensuring consistency across HOD and Faculty portals.
+
+8.  Student Grouping: Supports split-class activities (G1, G2) within the same period, stacking them visually in the grid.
+
 
           </p>
         </div>
