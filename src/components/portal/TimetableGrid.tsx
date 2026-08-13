@@ -170,14 +170,15 @@ export function TimetableGrid({
     const initList = [primary, ...cos].filter(Boolean).join("/");
     const guest = (s.guest_faculty || "").trim();
     const isCombined = s.group_label === "CMB";
+    const groupLabel = s.group_label === "CMB" ? "" : (s.group_label || "");
     return (
       <div className="px-1 leading-tight">
         {isCombined ? (
           <div className="text-[9px] font-bold text-indigo-700">
             (Combined{s.branch ? ` with ${s.branch.toUpperCase()}` : ""})
           </div>
-        ) : s.group_label ? (
-          <div className="text-[9px] font-bold text-gray-600">({s.group_label})</div>
+        ) : groupLabel ? (
+          <div className="text-[9px] font-bold text-gray-600">({groupLabel})</div>
         ) : null}
         <div className="font-semibold text-gray-800 text-[11px]">{code}</div>
         {initList && <div className="text-[10px] text-gray-500">({initList})</div>}
@@ -278,6 +279,21 @@ export function TimetableGrid({
                       .sort((a, b) => (a.group_label || "").localeCompare(b.group_label || ""));
                     const usedGroups = new Set(sorted.map((s) => s.group_label as string));
                     const rows: Array<{ slot?: TTSlot; group: string }> = sorted.map((s) => ({ slot: s, group: s.group_label as string }));
+                    
+                    if (rows.length === 0 && wholeClass) {
+                      // This shouldn't happen based on isWhole logic but let's be safe
+                      return (
+                        <td key={p.id}
+                          colSpan={colSpan}
+                          onClick={() => editable && setEditing({ day: d.v, period: p, slot: wholeClass, group: "CMB" })}
+                          className={`border text-center align-middle h-14 ${editable ? "cursor-pointer hover:ring-2 hover:ring-[#7b1f4c]/40" : ""}`}
+                          style={{ backgroundColor: colorFor(wholeClass.subject_id) }}
+                        >
+                          {renderSlotContent(wholeClass)}
+                        </td>
+                      );
+                    }
+
                     if (editable && rows.length < 2) {
                       const nextGroup = ["G1", "G2", "G3"].find((g) => !usedGroups.has(g)) || "G2";
                       rows.push({ group: nextGroup });
