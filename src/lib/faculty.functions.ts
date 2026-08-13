@@ -78,6 +78,15 @@ export const facultyDashboard = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const today = new Date();
     const dow = today.getDay() === 0 ? 7 : today.getDay(); // 1=Mon..7=Sun
+
+    // 1. Get assignments (the direct source of truth for faculty subjects)
+    const { data: assignments } = await supabaseAdmin
+      .from("faculty_assignments")
+      .select("id, branch, semester, subject_id, group_label, guest_faculty, subjects(code,name)")
+      .eq("staff_id", me.id)
+      .eq("academic_year", data.academic_year);
+
+    // 2. Get today's classes from timetable
     const { data: classes } = await supabaseAdmin
       .from("timetable")
       .select("*, subjects(code,name)")
@@ -85,11 +94,7 @@ export const facultyDashboard = createServerFn({ method: "GET" })
       .eq("academic_year", data.academic_year)
       .eq("day_of_week", dow)
       .order("period_no");
-    const { data: assignments } = await supabaseAdmin
-      .from("faculty_assignments")
-      .select("id, branch, semester, subject_id, group_label, guest_faculty, subjects(code,name)")
-      .eq("staff_id", me.id)
-      .eq("academic_year", data.academic_year);
+
     const { data: leaveBalance } = await supabaseAdmin
       .from("leave_applications")
       .select("id, leave_type, from_date, to_date, status")
@@ -97,12 +102,14 @@ export const facultyDashboard = createServerFn({ method: "GET" })
       .eq("applicant_id", me.id)
       .order("applied_at", { ascending: false })
       .limit(5);
+
     const { data: pendingLessons } = await supabaseAdmin
       .from("lesson_plans")
       .select("id, topic, status")
       .eq("staff_id", me.id)
       .eq("academic_year", data.academic_year)
       .in("status", ["draft", "returned"]);
+
     return {
       today_classes: classes ?? [],
       assignments: assignments ?? [],
