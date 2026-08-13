@@ -196,7 +196,10 @@ function TimetablePage() {
         <div>
           <h1 className="text-xl font-bold text-gray-800">Timetable</h1>
           <p className="text-xs text-gray-400">
-            You can see that combined classes are not being reflected, instead G1 is reflectd. Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.
+            '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+                                        
+                                            
+                                            still showing G1
           </p>
         </div>
 
