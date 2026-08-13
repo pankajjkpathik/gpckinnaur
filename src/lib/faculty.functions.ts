@@ -32,7 +32,7 @@ async function assertSubjectAccess(
   }
 
   const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
-  const staffName = staff?.name ?? "";
+  const staffName = (staff?.name ?? "").trim();
   const firstName = staffName.split(" ")[0] || "";
 
   let q = supabaseAdmin
@@ -44,8 +44,11 @@ async function assertSubjectAccess(
     .limit(1);
 
   if (staffName) {
-    // Robust name matching: full name OR first name match in guest_faculty field
+    // Robust name matching: staff_id match OR full name OR first name match in guest_faculty field.
+    // We use ilike to catch minor variations and trailing spaces.
     let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+    // If the name has common variations (like "Chatanta" vs "Chantanta"), 
+    // we bridge by the unique part of the name if possible, or just the first name.
     if (firstName.length > 2) {
       orFilter += `,guest_faculty.ilike.%${firstName}%`;
     }
@@ -70,13 +73,28 @@ async function assertClassAccess(
   const held = [me.role, ...(me.extraRoles ?? [])];
   if (held.some((r) => ["super_admin", "principal", "hod"].includes(r as string))) return;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+  const staffName = (staff?.name ?? "").trim();
+  const firstName = staffName.split(" ")[0] || "";
+
   let q = supabaseAdmin
     .from("faculty_assignments")
     .select("id")
-    .eq("staff_id", me.id)
     .eq("branch", args.branch)
     .eq("semester", args.semester)
     .limit(1);
+
+  if (staffName) {
+    let orFilter = `staff_id.eq.${me.id},guest_faculty.ilike.%${staffName}%`;
+    if (firstName.length > 2) {
+      orFilter += `,guest_faculty.ilike.%${firstName}%`;
+    }
+    q = q.or(orFilter);
+  } else {
+    q = q.eq("staff_id", me.id);
+  }
+
   if (args.academic_year) q = q.eq("academic_year", args.academic_year);
   const { data } = await q;
   if (!data || data.length === 0) {
@@ -97,7 +115,7 @@ export const facultyDashboard = createServerFn({ method: "GET" })
     // 1. Get assignments (the direct source of truth for faculty subjects)
     // We try the provided year first. We also check for guest_faculty entries matching the user's name.
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
-    const staffName = staff?.name ?? "";
+    const staffName = (staff?.name ?? "").trim();
     const firstName = staffName.split(" ")[0] || "";
     
     let q = supabaseAdmin
@@ -312,7 +330,7 @@ export const getMarks = createServerFn({ method: "GET" })
     const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
-    const staffName = staff?.name ?? "";
+    const staffName = (staff?.name ?? "").trim();
     const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
@@ -391,7 +409,7 @@ export const saveMarks = createServerFn({ method: "POST" })
     const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
-    const staffName = staff?.name ?? "";
+    const staffName = (staff?.name ?? "").trim();
     const firstName = staffName.split(" ")[0] || "";
 
     let accessQ = supabaseAdmin
@@ -450,13 +468,25 @@ export const listLessonPlans = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const me = await requireRole(facultyRoles);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", me.id).maybeSingle();
+    const staffName = (staff?.name ?? "").trim();
+    const firstName = staffName.split(" ")[0] || "";
+
     let q = supabaseAdmin
       .from("lesson_plans")
       .select("*, subjects(code,name), staff_users(username), syllabus_units(unit_no,title)")
       .eq("academic_year", data.academic_year)
       .order("planned_date", { ascending: false });
-    if (data.staff_id) q = q.eq("staff_id", data.staff_id);
-    else if (me.role === "faculty") q = q.eq("staff_id", me.id);
+
+    if (data.staff_id) {
+      q = q.eq("staff_id", data.staff_id);
+    } else if (me.role === "faculty") {
+      // For faculty, match by ID OR by name heuristics in case they were entered as guests
+      // Note: lesson_plans table has staff_id, but if they are bridging assignments by name,
+      // they might not have lesson plans yet or might expect oversight.
+      // However, lesson plans are explicitly linked to staff_id in the schema.
+      q = q.eq("staff_id", me.id);
+    }
     if (data.subject_id) q = q.eq("subject_id", data.subject_id);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
