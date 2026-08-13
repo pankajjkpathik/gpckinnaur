@@ -199,7 +199,7 @@ function TimetablePage() {
             '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            check attendance portal, as the faculty is not able to see the subject name and not able to load the student roster
+                                            subjects are still not available, though faculty assignments is done
           </p>
         </div>
 
