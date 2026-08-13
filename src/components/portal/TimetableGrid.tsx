@@ -169,11 +169,16 @@ export function TimetableGrid({
     const cos = (s.co_staff_ids ?? []).map((id) => initialsFromStaff(staffById.get(id))).filter(Boolean);
     const initList = [primary, ...cos].filter(Boolean).join("/");
     const guest = (s.guest_faculty || "").trim();
+    const isCombined = s.group_label === "CMB";
     return (
       <div className="px-1 leading-tight">
-        {s.group_label === "CMB"
-          ? <div className="text-[9px] font-bold text-indigo-700">(Combined)</div>
-          : s.group_label ? <div className="text-[9px] font-bold text-gray-600">({s.group_label})</div> : null}
+        {isCombined ? (
+          <div className="text-[9px] font-bold text-indigo-700">
+            (Combined{s.branch ? ` with ${s.branch.toUpperCase()}` : ""})
+          </div>
+        ) : s.group_label ? (
+          <div className="text-[9px] font-bold text-gray-600">({s.group_label})</div>
+        ) : null}
         <div className="font-semibold text-gray-800 text-[11px]">{code}</div>
         {initList && <div className="text-[10px] text-gray-500">({initList})</div>}
         {guest && <div className="text-[10px] italic text-emerald-700">Guest: {guest}</div>}

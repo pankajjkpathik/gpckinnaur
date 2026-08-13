@@ -454,13 +454,25 @@ export const listTimetable = createServerFn({ method: "POST" })
     const { data: rows, error } = await supabaseAdmin
       .from("timetable")
       .select("*, subjects(code,name,branch,semester), staff_users(username,name)")
-      .eq("branch", data.branch)
-      .eq("semester", data.semester)
       .eq("academic_year", data.academic_year)
+      .eq("day_of_week", 1) // Dummy to initialize, we'll filter manually or use or()
+      .or(`and(branch.eq.${data.branch},semester.eq.${data.semester}),group_label.eq.CMB`)
       .order("day_of_week")
       .order("period_no");
+    
     if (error) throw new Error(error.message);
-    return rows ?? [];
+
+    // Further filter the CMB slots to match the semester. 
+    // CMB slots are mirrored, but we want to be safe and only show ones 
+    // that belong to this semester's combined pair.
+    const filtered = (rows ?? []).filter(r => {
+      if (r.group_label === 'CMB') {
+        return r.semester === data.semester;
+      }
+      return r.branch === data.branch && r.semester === data.semester;
+    });
+
+    return filtered;
   });
 
 export const upsertTimetableSlot = createServerFn({ method: "POST" })
