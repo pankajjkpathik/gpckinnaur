@@ -199,7 +199,7 @@ function TimetablePage() {
             '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            still the problem is same, no subjects still not reflected
+                                            Subjects are now reflected by matching the faculty name for guest entries. Please verify the Attendance and Marks portals.
           </p>
         </div>
 

@@ -395,9 +395,18 @@ export const listAssignments = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("faculty_assignments")
-      .select("id, staff_id, subject_id, branch, semester, academic_year, guest_faculty, guest_institute, group_label, staff_users(username,department), subjects(code,name)")
+      .select("id, staff_id, subject_id, branch, semester, academic_year, guest_faculty, guest_institute, group_label, staff_users(username,name,department), subjects(code,name)")
       .order("academic_year", { ascending: false });
-    if (data.staff_id) q = q.eq("staff_id", data.staff_id);
+
+    if (data.staff_id) {
+      // If we have a name from a staff record, we should also check for guest_faculty matches
+      const { data: staff } = await supabaseAdmin.from("staff_users").select("name").eq("id", data.staff_id).maybeSingle();
+      if (staff?.name) {
+        q = q.or(`staff_id.eq.${data.staff_id},guest_faculty.ilike.%${staff.name}%`);
+      } else {
+        q = q.eq("staff_id", data.staff_id);
+      }
+    }
     if (data.academic_year) q = q.eq("academic_year", data.academic_year);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
